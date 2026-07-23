@@ -9,5 +9,14 @@ export const envValidationSchema = Joi.object({
     .uri({ scheme: ['postgres', 'postgresql'] })
     .required(),
   JWT_SECRET: Joi.string().min(32).required(),
-  CORS_ORIGIN: Joi.string().uri().default('http://localhost:5173'),
+  JWT_EXPIRES_IN: Joi.string()
+    .pattern(/^\d+(ms|s|m|h|d|w|y)$/)
+    .default('1h'),
+  REFRESH_TOKEN_EXPIRES_IN: Joi.string()
+    .pattern(/^\d+(ms|s|m|h|d|w|y)$/)
+    .default('7d'),
+  REFRESH_TOKEN_COOKIE_NAME: Joi.string().default('refresh_token'),
+  CORS_ORIGIN: Joi.string().uri().invalid('*').required(),
+  SEED_ADMIN_EMAIL: Joi.string().email().optional(),
+  SEED_ADMIN_PASSWORD: Joi.string().min(8).optional(),
 });

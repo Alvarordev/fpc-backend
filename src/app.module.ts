@@ -46,9 +46,9 @@ import { WebsocketsModule } from './websockets/websockets.module';
         synchronize: false,
       }),
     }),
+    UsersModule,
     AuthModule,
     HealthModule,
-    UsersModule,
     WebsocketsModule,
   ],
 })
