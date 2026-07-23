@@ -7,7 +7,10 @@ FROM base AS development
 COPY package*.json ./
 RUN npm ci
 
-COPY . .
+COPY --chown=node:node . .
+RUN chown -R node:node /app
+
+USER node
 
 CMD ["npm", "run", "start:dev"]
 
