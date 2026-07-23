@@ -1,0 +1,47 @@
+services:
+  api:
+    build:
+      context: .
+      target: development
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://fpc_dev:fpc_dev_password@postgres:5432/fpc_dev
+      JWT_SECRET: local-development-secret-change-before-any-deployment
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - node_modules_local:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fpc_local
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fpc_dev
+      POSTGRES_PASSWORD: fpc_dev_password
+      POSTGRES_DB: fpc_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata_local:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U fpc_dev -d fpc_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - fpc_local
+
+volumes:
+  node_modules_local:
+  pgdata_local:
+
+networks:
+  fpc_local:
+    driver: bridge
