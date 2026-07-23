@@ -1,4 +1,5 @@
 import { INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
 import type { Server } from 'node:http';
@@ -16,6 +17,7 @@ describe('Authentication (e2e)', () => {
   let app: INestApplication;
   let httpServer: Server;
   let usersService: UsersService;
+  let jwtService: JwtService;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -28,6 +30,7 @@ describe('Authentication (e2e)', () => {
     const server: unknown = app.getHttpServer();
     httpServer = server as Server;
     usersService = app.get(UsersService);
+    jwtService = app.get(JwtService);
   });
 
   beforeEach(async () => {
@@ -144,20 +147,19 @@ describe('Authentication (e2e)', () => {
   it('protects endpoints and enforces the ADMIN role when creating users', async () => {
     await request(httpServer).get('/users/me').expect(401);
 
-    await usersService.create({
+    const agent = await usersService.create({
       email: 'e2e-agent@example.test',
       password,
       role: UserRole.AGENT,
     });
-    const agentLogin = await request(httpServer)
-      .post('/auth/login')
-      .send({ email: 'e2e-agent@example.test', password })
-      .expect(201);
-    const agentLoginBody = agentLogin.body as unknown as LoginResponseBody;
+    const agentAccessToken = await jwtService.signAsync({
+      sub: agent.id,
+      role: agent.role,
+    });
 
     await request(httpServer)
       .post('/users')
-      .set('Authorization', `Bearer ${agentLoginBody.accessToken}`)
+      .set('Authorization', `Bearer ${agentAccessToken}`)
       .send({
         email: 'e2e-created@example.test',
         password,

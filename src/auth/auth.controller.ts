@@ -7,6 +7,7 @@ import {
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -14,7 +15,7 @@ import {
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
@@ -30,6 +31,7 @@ export class AuthController {
 
   @Post('login')
   @Public()
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Log in with email and password' })
   @ApiOkResponse({ type: LoginResponseDto })
@@ -56,6 +58,7 @@ export class AuthController {
 
   @Post('refresh')
   @Public()
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Rotate the refresh token and issue an access token',
