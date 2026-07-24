@@ -7,6 +7,9 @@ import { AuthModule } from './auth/auth.module';
 import { AgentsModule } from './agents/agents.module';
 import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
+import { HealthCentersModule } from './health-centers/health-centers.module';
+import { InteractionsModule } from './interactions/interactions.module';
+import { RemindersModule } from './reminders/reminders.module';
 import { UsersModule } from './users/users.module';
 import { PatientsModule } from './patients/patients.module';
 import { VolunteersModule } from './volunteers/volunteers.module';
@@ -54,6 +57,9 @@ import { WebsocketsModule } from './websockets/websockets.module';
     PatientsModule,
     AgentsModule,
     VolunteersModule,
+    HealthCentersModule,
+    InteractionsModule,
+    RemindersModule,
     HealthModule,
     WebsocketsModule,
   ],
