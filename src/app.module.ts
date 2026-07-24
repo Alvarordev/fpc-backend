@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 import { AuthModule } from './auth/auth.module';
 import { AgentsModule } from './agents/agents.module';
+import { AlertsModule } from './alerts/alerts.module';
 import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { HealthCentersModule } from './health-centers/health-centers.module';
@@ -15,10 +16,12 @@ import { PatientInsuranceModule } from './patient-insurance/patient-insurance.mo
 import { PatientMedicalAppointmentsModule } from './patient-medical-appointments/patient-medical-appointments.module';
 import { PatientSisAffiliationModule } from './patient-sis-affiliation/patient-sis-affiliation.module';
 import { PatientTreatmentsModule } from './patient-treatments/patient-treatments.module';
+import { PsychooncologyAppointmentsModule } from './psychooncology-appointments/psychooncology-appointments.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { UsersModule } from './users/users.module';
 import { PatientsModule } from './patients/patients.module';
 import { VolunteersModule } from './volunteers/volunteers.module';
+import { VolunteerAvailabilityModule } from './volunteer-availability/volunteer-availability.module';
 import { WebsocketsModule } from './websockets/websockets.module';
 
 @Module({
@@ -64,6 +67,7 @@ import { WebsocketsModule } from './websockets/websockets.module';
     PatientsModule,
     AgentsModule,
     VolunteersModule,
+    VolunteerAvailabilityModule,
     HealthCentersModule,
     InteractionsModule,
     RemindersModule,
@@ -72,6 +76,8 @@ import { WebsocketsModule } from './websockets/websockets.module';
     PatientTreatmentsModule,
     PatientMedicalAppointmentsModule,
     PatientSisAffiliationModule,
+    PsychooncologyAppointmentsModule,
+    AlertsModule,
     HealthModule,
     WebsocketsModule,
   ],

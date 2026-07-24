@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryColumn,
@@ -26,6 +27,11 @@ export enum AppointmentStatus {
 @Check('"session_number" > 0')
 @Check(`"modality" IN ('CALL','VIDEO_CALL')`)
 @Check(`"status" IN ('SCHEDULED','COMPLETED','CANCELLED','NO_ANSWER')`)
+@Index('IDX_psychooncology_appointments_patient_id', ['patientId'])
+@Index('IDX_psychooncology_appointments_volunteer_id', ['volunteerId'])
+@Index('IDX_psychooncology_appointments_interaction_id', ['interactionId'])
+@Index('IDX_psychooncology_appointments_availability_id', ['availabilityId'])
+@Index('IDX_psychooncology_appointments_status', ['status'])
 export class PsychooncologyAppointment {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'patient_id', type: 'uuid' }) patientId!: string;
@@ -66,6 +72,7 @@ export class PsychooncologyAppointment {
   sessionDetails!: string | null;
   @Column({ name: 'additional_observations', type: 'text', nullable: true })
   additionalObservations!: string | null;
+  @Column({ type: 'text', nullable: true }) recommendations!: string | null;
   @Column({ type: 'varchar', length: 30, nullable: true }) referral!:
     string | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryColumn,
@@ -17,6 +18,11 @@ export enum AlertStatus {
 }
 @Entity('alerts')
 @Check(`"status" IN ('ACTIVE','RESOLVED')`)
+@Index('IDX_alerts_health_center_id', ['healthCenterId'])
+@Index('IDX_alerts_interaction_id', ['interactionId'])
+@Index('IDX_alerts_created_by_id', ['createdById'])
+@Index('IDX_alerts_resolved_by_id', ['resolvedById'])
+@Index('IDX_alerts_status', ['status'])
 export class Alert {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'health_center_id', type: 'uuid' }) healthCenterId!: string;

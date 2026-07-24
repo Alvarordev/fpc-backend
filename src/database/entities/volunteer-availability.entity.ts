@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryColumn,
@@ -16,6 +17,8 @@ export enum AvailabilityStatus {
 @Entity('volunteer_availability')
 @Unique(['volunteerId', 'date', 'startTime'])
 @Check(`"status" IN ('AVAILABLE','RESERVED')`)
+@Index('IDX_volunteer_availability_volunteer_id', ['volunteerId'])
+@Index('IDX_volunteer_availability_status', ['status'])
 export class VolunteerAvailability {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'volunteer_id', type: 'uuid' }) volunteerId!: string;
