@@ -13,6 +13,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../database/entities/user-role.enum';
 import { CreateCompanionDto } from './dto/create-companion.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
+import { LinkCompanionDto } from './dto/link-companion.dto';
 import { DeactivatePatientDto } from './dto/deactivate-patient.dto';
 import { ListPatientsDto } from './dto/list-patients.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
@@ -46,6 +47,24 @@ export class PatientsController {
   @Roles(...PATIENT_WRITE_ROLES)
   createCompanion(@Param('id') id: string, @Body() input: CreateCompanionDto) {
     return this.patientsService.createCompanion(id, input);
+  }
+
+  @Post(':id/companions/link')
+  @Roles(...PATIENT_WRITE_ROLES)
+  linkCompanion(@Param('id') id: string, @Body() input: LinkCompanionDto) {
+    return this.patientsService.linkCompanion(id, input);
+  }
+
+  @Get(':id/companions')
+  @Roles(...PATIENT_READ_ROLES)
+  companions(@Param('id') id: string) {
+    return this.patientsService.findCompanions(id);
+  }
+
+  @Get(':id/accompanies')
+  @Roles(...PATIENT_READ_ROLES)
+  accompanies(@Param('id') id: string) {
+    return this.patientsService.findAccompanies(id);
   }
 
   @Get()

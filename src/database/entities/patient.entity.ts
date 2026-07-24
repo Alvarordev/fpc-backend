@@ -4,9 +4,6 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
   OneToOne,
   PrimaryColumn,
   UpdateDateColumn,
@@ -25,11 +22,9 @@ import { PatientStatus } from './patient-status.enum';
 @Check(
   '(("is_active" = true AND "deactivation_reason" IS NULL AND "deactivated_at" IS NULL AND "deactivation_reason_detail" IS NULL) OR ("is_active" = false AND "deactivation_reason" IS NOT NULL AND "deactivated_at" IS NOT NULL AND (("deactivation_reason" = \'OTHER\' AND "deactivation_reason_detail" IS NOT NULL) OR ("deactivation_reason" != \'OTHER\' AND "deactivation_reason_detail" IS NULL))))',
 )
-@Check('"role" != \'COMPANION\' OR "accompanies_patient_id" IS NOT NULL')
 @Index('IDX_patients_dni', ['dni'])
 @Index('IDX_patients_role', ['role'])
 @Index('IDX_patients_status', ['status'])
-@Index('IDX_patients_accompanies_patient_id', ['accompaniesPatientId'])
 export class Patient {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' })
   id!: string;
@@ -92,19 +87,6 @@ export class Patient {
 
   @Column({ name: 'deceased_at', type: 'date', nullable: true })
   deceasedAt!: string | null;
-
-  @Column({ name: 'accompanies_patient_id', type: 'uuid', nullable: true })
-  accompaniesPatientId!: string | null;
-
-  @ManyToOne(() => Patient, (patient) => patient.companions)
-  @JoinColumn({ name: 'accompanies_patient_id' })
-  accompaniesPatient!: Patient | null;
-
-  @OneToMany(() => Patient, (patient) => patient.accompaniesPatient)
-  companions!: Patient[];
-
-  @Column({ name: 'is_primary_informant', type: 'boolean', default: false })
-  isPrimaryInformant!: boolean;
 
   @OneToOne(() => PatientDetails, (details) => details.patient)
   details!: PatientDetails | null;

@@ -4,7 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { CompanionPatient } from '../database/entities/companion-patient.entity';
 import { DeactivationReason } from '../database/entities/deactivation-reason.enum';
 import { PatientDetails } from '../database/entities/patient-details.entity';
 import { PatientRole } from '../database/entities/patient-role.enum';
@@ -16,6 +17,7 @@ import { DeactivatePatientDto } from './dto/deactivate-patient.dto';
 import { ListPatientsDto } from './dto/list-patients.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { UpsertPatientDetailsDto } from './dto/upsert-patient-details.dto';
+import { LinkCompanionDto } from './dto/link-companion.dto';
 
 @Injectable()
 export class PatientsService {
@@ -24,6 +26,9 @@ export class PatientsService {
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(PatientDetails)
     private readonly detailsRepository: Repository<PatientDetails>,
+    @InjectRepository(CompanionPatient)
+    private readonly companionPatientsRepository: Repository<CompanionPatient>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async assertPatientRole(
@@ -61,14 +66,65 @@ export class PatientsService {
       PatientRole.PATIENT,
       PatientStatus.ENROLLED,
     );
-    return this.patientsRepository.save(
-      this.patientsRepository.create({
-        ...input,
-        accompaniesPatientId: patientId,
-        role: PatientRole.COMPANION,
-        status: PatientStatus.UNENROLLED,
+    return this.dataSource.transaction(async (manager) => {
+      const companion = await manager.getRepository(Patient).save(
+        manager.getRepository(Patient).create({
+          ...input,
+          role: PatientRole.COMPANION,
+          status: PatientStatus.UNENROLLED,
+        }),
+      );
+      await manager.getRepository(CompanionPatient).save(
+        manager.getRepository(CompanionPatient).create({
+          companionId: companion.id,
+          patientId,
+          isPrimaryInformant: input.isPrimaryInformant ?? false,
+        }),
+      );
+      return companion;
+    });
+  }
+
+  async linkCompanion(
+    patientId: string,
+    input: LinkCompanionDto,
+  ): Promise<CompanionPatient> {
+    await this.assertPatientRole(
+      patientId,
+      PatientRole.PATIENT,
+      PatientStatus.ENROLLED,
+    );
+    await this.assertPatientRole(
+      input.existingCompanionId,
+      PatientRole.COMPANION,
+    );
+    const existing = await this.companionPatientsRepository.findOne({
+      where: { companionId: input.existingCompanionId, patientId },
+    });
+    if (existing)
+      throw new ConflictException(
+        'Companion is already linked to this patient',
+      );
+    return this.companionPatientsRepository.save(
+      this.companionPatientsRepository.create({
+        companionId: input.existingCompanionId,
+        patientId,
+        isPrimaryInformant: input.isPrimaryInformant ?? false,
       }),
     );
+  }
+
+  async findCompanions(patientId: string): Promise<CompanionPatient[]> {
+    return this.companionPatientsRepository.find({
+      where: { patientId },
+      relations: { companion: true },
+    });
+  }
+  async findAccompanies(companionId: string): Promise<CompanionPatient[]> {
+    return this.companionPatientsRepository.find({
+      where: { companionId },
+      relations: { patient: true },
+    });
   }
 
   async findAll(
@@ -99,7 +155,7 @@ export class PatientsService {
   async findById(id: string): Promise<Patient> {
     const patient = await this.patientsRepository.findOne({
       where: { id },
-      relations: { details: true, companions: true },
+      relations: { details: true },
     });
     if (!patient) throw new NotFoundException('Patient not found');
     return patient;
