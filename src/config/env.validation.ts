@@ -19,4 +19,25 @@ export const envValidationSchema = Joi.object({
   CORS_ORIGIN: Joi.string().uri().invalid('*').required(),
   SEED_ADMIN_EMAIL: Joi.string().email().optional(),
   SEED_ADMIN_PASSWORD: Joi.string().min(8).optional(),
+  GEMINI_API_KEY: Joi.string().trim().optional().allow(''),
+  GEMINI_MODEL: Joi.string().trim().default('gemini-2.0-flash'),
+  PATIENT_SUMMARY_RATE_LIMIT: Joi.number().integer().min(1).default(10),
+  PATIENT_SUMMARY_RATE_LIMIT_WINDOW_SECONDS: Joi.number()
+    .integer()
+    .min(1)
+    .default(60),
+  PATIENT_SUMMARY_BATCH_SIZE: Joi.number()
+    .integer()
+    .min(1)
+    .max(100)
+    .default(10),
+  PATIENT_SUMMARY_PROCESSING_TIMEOUT_SECONDS: Joi.number()
+    .integer()
+    .min(60)
+    .default(300),
+  PATIENT_SUMMARY_MAX_ATTEMPTS: Joi.number()
+    .integer()
+    .min(1)
+    .max(20)
+    .default(3),
 });

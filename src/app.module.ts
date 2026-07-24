@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 import { AuthModule } from './auth/auth.module';
@@ -18,6 +19,7 @@ import { PatientsModule } from './patients/patients.module';
 import { VolunteersModule } from './volunteers/volunteers.module';
 import { VolunteerAvailabilityModule } from './volunteer-availability/volunteer-availability.module';
 import { WebsocketsModule } from './websockets/websockets.module';
+import { PatientSummariesModule } from './patient-summaries/patient-summaries.module';
 
 @Module({
   imports: [
@@ -47,6 +49,7 @@ import { WebsocketsModule } from './websockets/websockets.module';
         limit: 100,
       },
     ]),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -70,6 +73,7 @@ import { WebsocketsModule } from './websockets/websockets.module';
     AlertsModule,
     HealthModule,
     WebsocketsModule,
+    PatientSummariesModule,
   ],
 })
 export class AppModule {}
