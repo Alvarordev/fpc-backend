@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Enrollment } from '../database/entities/enrollment.entity';
 import { Interaction } from '../database/entities/interaction.entity';
+import { PatientSummary } from '../database/entities/patient-summary.entity';
+import { PatientSummariesModule } from '../patient-summaries/patient-summaries.module';
 import { PatientDiagnosesController } from './clinical/diagnoses/patient-diagnoses.controller';
 import { PatientDiagnosesService } from './clinical/diagnoses/patient-diagnoses.service';
 import { PatientInsuranceController } from './clinical/insurance/patient-insurance.controller';
@@ -41,7 +43,9 @@ import { PatientSymptomReportsService } from './symptom-reports/patient-symptom-
       PatientSymptomReport,
       Interaction,
       Enrollment,
+      PatientSummary,
     ]),
+    PatientSummariesModule,
   ],
   controllers: [
     PatientsController,

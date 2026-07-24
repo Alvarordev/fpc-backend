@@ -13,7 +13,10 @@ import { PatientTreatment } from '../patients/entities/patient-treatment.entity'
 import { Patient } from '../patients/entities/patient.entity';
 import { GeminiSummaryClient } from './gemini-summary.client';
 import { PatientSummaryPayloadService } from './patient-summary-payload.service';
+import { PatientSummaryInvalidationListener } from './patient-summary-invalidation.listener';
+import { PatientSummaryInvalidationService } from './patient-summary-invalidation.service';
 import { PatientSummaryRateLimiterService } from './patient-summary-rate-limiter.service';
+import { PatientSummaryOnDemandService } from './patient-summary-on-demand.service';
 import { PatientSummaryScheduler } from './patient-summary.scheduler';
 import { PatientSummaryStateService } from './patient-summary-state.service';
 import { PatientSummaryWorkerService } from './patient-summary-worker.service';
@@ -37,10 +40,14 @@ import { PatientSummaryWorkerService } from './patient-summary-worker.service';
   providers: [
     GeminiSummaryClient,
     PatientSummaryPayloadService,
+    PatientSummaryInvalidationService,
+    PatientSummaryInvalidationListener,
+    PatientSummaryOnDemandService,
     PatientSummaryRateLimiterService,
     PatientSummaryStateService,
     PatientSummaryWorkerService,
     PatientSummaryScheduler,
   ],
+  exports: [PatientSummaryInvalidationService, PatientSummaryOnDemandService],
 })
 export class PatientSummariesModule {}

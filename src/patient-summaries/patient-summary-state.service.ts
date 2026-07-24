@@ -31,6 +31,43 @@ export class PatientSummaryStateService {
     );
   }
 
+  async storeReady(
+    patientId: string,
+    result: { text: string; model: string },
+  ): Promise<void> {
+    await this.summaries.upsert(
+      {
+        patientId,
+        status: PatientSummaryStatus.READY,
+        summary: result.text,
+        model: result.model,
+        errorCode: null,
+        errorMessage: null,
+        attemptCount: 0,
+        availableAt: new Date(),
+        processingStartedAt: null,
+        completedAt: new Date(),
+      },
+      ['patientId'],
+    );
+  }
+
+  async markPending(patientId: string): Promise<void> {
+    await this.summaries.upsert(
+      {
+        patientId,
+        status: PatientSummaryStatus.PENDING,
+        errorCode: null,
+        errorMessage: null,
+        attemptCount: 0,
+        availableAt: new Date(),
+        processingStartedAt: null,
+        completedAt: null,
+      },
+      ['patientId'],
+    );
+  }
+
   async requeue(
     id: string,
     errorCode: string,

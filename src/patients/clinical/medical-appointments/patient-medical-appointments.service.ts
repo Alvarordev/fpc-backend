@@ -6,6 +6,7 @@ import { PatientMedicalAppointment } from '../../entities/patient-medical-appoin
 import { PatientRole } from '../../entities/patient-role.enum';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
 import { PatientsService } from '../../patients.service';
+import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
 import { CreatePatientMedicalAppointmentDto } from './patient-medical-appointments.dto';
 @Injectable()
 export class PatientMedicalAppointmentsService {
@@ -16,6 +17,7 @@ export class PatientMedicalAppointmentsService {
     private readonly interactions: Repository<Interaction>,
     private readonly patients: PatientsService,
     private readonly versioning: HistoryVersioningService,
+    private readonly invalidations: PatientSummaryInvalidationService,
   ) {}
   async create(
     patientId: string,
@@ -34,7 +36,7 @@ export class PatientMedicalAppointmentsService {
       ).existsBy({ id: input.interactionId }))
     )
       throw new NotFoundException('Interaction not found');
-    return manager
+    const appointment = await (manager
       ? this.versioning.replaceCurrent(
           PatientMedicalAppointment,
           { patientId, specialty: input.specialty, isCurrent: true },
@@ -45,7 +47,9 @@ export class PatientMedicalAppointmentsService {
           PatientMedicalAppointment,
           { patientId, specialty: input.specialty, isCurrent: true },
           { ...input, patientId },
-        );
+        ));
+    await this.invalidations.markDirty(patientId, manager);
+    return appointment;
   }
   findAll(patientId: string) {
     return this.repository.find({

@@ -10,6 +10,7 @@ import { PatientInsuranceService } from '../clinical/insurance/patient-insurance
 import { PatientMedicalAppointmentsService } from '../clinical/medical-appointments/patient-medical-appointments.service';
 import { PatientTreatmentsService } from '../clinical/treatments/patient-treatments.service';
 import { PatientsService } from '../patients.service';
+import { PatientSummaryInvalidationService } from '../../patient-summaries/patient-summary-invalidation.service';
 
 describe('clinical history services', () => {
   const patients = {
@@ -17,6 +18,9 @@ describe('clinical history services', () => {
   } as unknown as PatientsService;
   const replaceCurrent = jest.fn();
   const versioning = { replaceCurrent } as unknown as HistoryVersioningService;
+  const invalidations = {
+    markDirty: jest.fn(),
+  } as unknown as PatientSummaryInvalidationService;
   const interactions = {
     existsBy: jest.fn(),
   } as unknown as Repository<Interaction>;
@@ -33,6 +37,7 @@ describe('clinical history services', () => {
       interactions,
       patients,
       versioning,
+      invalidations,
     );
 
     await service.create('patient-id', {
@@ -58,6 +63,7 @@ describe('clinical history services', () => {
       interactions,
       patients,
       versioning,
+      invalidations,
     );
 
     await service.create('patient-id', {
@@ -86,6 +92,7 @@ describe('clinical history services', () => {
       interactions,
       patients,
       versioning,
+      invalidations,
     );
 
     await expect(

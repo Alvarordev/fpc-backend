@@ -5,6 +5,7 @@ import { Interaction } from '../../../database/entities/interaction.entity';
 import { PatientRole } from '../../entities/patient-role.enum';
 import { PatientSisAffiliation } from '../../entities/patient-sis-affiliation.entity';
 import { PatientsService } from '../../patients.service';
+import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
 import { CreatePatientSisAffiliationDto } from './patient-sis-affiliation.dto';
 @Injectable()
 export class PatientSisAffiliationService {
@@ -14,6 +15,7 @@ export class PatientSisAffiliationService {
     @InjectRepository(Interaction)
     private readonly interactions: Repository<Interaction>,
     private readonly patients: PatientsService,
+    private readonly invalidations: PatientSummaryInvalidationService,
   ) {}
   async create(
     patientId: string,
@@ -34,13 +36,15 @@ export class PatientSisAffiliationService {
       throw new NotFoundException('Interaction not found');
     const repository =
       manager?.getRepository(PatientSisAffiliation) ?? this.repository;
-    return repository.save(
+    const affiliation = await repository.save(
       repository.create({
         ...input,
         patientId,
         affiliatedAt: input.affiliatedAt ? new Date(input.affiliatedAt) : null,
       }),
     );
+    await this.invalidations.markDirty(patientId, manager);
+    return affiliation;
   }
   findAll(patientId: string) {
     return this.repository.find({

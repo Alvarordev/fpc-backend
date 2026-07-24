@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
+import { PatientSummary } from '../database/entities/patient-summary.entity';
+import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CompanionPatient } from './entities/companion-patient.entity';
 import { DeactivationReason } from './entities/deactivation-reason.enum';
 import { PatientDetails } from './entities/patient-details.entity';
@@ -28,7 +30,10 @@ export class PatientsService {
     private readonly detailsRepository: Repository<PatientDetails>,
     @InjectRepository(CompanionPatient)
     private readonly companionPatientsRepository: Repository<CompanionPatient>,
+    @InjectRepository(PatientSummary)
+    private readonly summaries: Repository<PatientSummary>,
     private readonly dataSource: DataSource,
+    private readonly invalidations: PatientSummaryInvalidationService,
   ) {}
 
   async assertPatientRole(
@@ -54,10 +59,15 @@ export class PatientsService {
     return patient;
   }
 
-  create(input: CreatePatientDto, manager?: EntityManager): Promise<Patient> {
+  async create(
+    input: CreatePatientDto,
+    manager?: EntityManager,
+  ): Promise<Patient> {
     const repository =
       manager?.getRepository(Patient) ?? this.patientsRepository;
-    return repository.save(repository.create({ ...input }));
+    const patient = await repository.save(repository.create({ ...input }));
+    await this.invalidations.markDirty(patient.id, manager);
+    return patient;
   }
 
   async createCompanion(
@@ -152,19 +162,22 @@ export class PatientsService {
     return { data, total };
   }
 
-  async findById(id: string): Promise<Patient> {
+  async findById(id: string): Promise<Patient & { summary: string | null }> {
     const patient = await this.patientsRepository.findOne({
       where: { id },
       relations: { details: true },
     });
     if (!patient) throw new NotFoundException('Patient not found');
-    return patient;
+    const stored = await this.summaries.findOneBy({ patientId: id });
+    return Object.assign(patient, { summary: stored?.summary ?? null });
   }
 
   async update(id: string, input: UpdatePatientDto): Promise<Patient> {
     const patient = await this.findById(id);
     Object.assign(patient, input);
-    return this.patientsRepository.save(patient);
+    const updated = await this.patientsRepository.save(patient);
+    await this.invalidations.markDirty(id);
+    return updated;
   }
 
   async deactivate(id: string, input: DeactivatePatientDto): Promise<Patient> {
@@ -175,7 +188,9 @@ export class PatientsService {
       input.reason === DeactivationReason.OTHER ? (input.detail ?? null) : null;
     patient.deactivatedAt = new Date();
     patient.deceasedAt = input.deceasedAt ?? null;
-    return this.patientsRepository.save(patient);
+    const deactivated = await this.patientsRepository.save(patient);
+    await this.invalidations.markDirty(id);
+    return deactivated;
   }
 
   async reactivate(id: string): Promise<Patient> {
@@ -185,7 +200,9 @@ export class PatientsService {
     patient.deactivationReasonDetail = null;
     patient.deactivatedAt = null;
     patient.deceasedAt = null;
-    return this.patientsRepository.save(patient);
+    const reactivated = await this.patientsRepository.save(patient);
+    await this.invalidations.markDirty(id);
+    return reactivated;
   }
 
   async upsertDetails(
@@ -199,11 +216,13 @@ export class PatientsService {
     const details = await repository.findOne({
       where: { patientId: id },
     });
-    return repository.save(
+    const saved = await repository.save(
       details
         ? Object.assign(details, input)
         : repository.create({ ...input, patientId: id }),
     );
+    await this.invalidations.markDirty(id, manager);
+    return saved;
   }
 
   private async createCompanionWithManager(

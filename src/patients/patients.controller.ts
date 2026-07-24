@@ -19,6 +19,7 @@ import { ListPatientsDto } from './dto/list-patients.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { UpsertPatientDetailsDto } from './dto/upsert-patient-details.dto';
 import { PatientsService } from './patients.service';
+import { PatientSummaryOnDemandService } from '../patient-summaries/patient-summary-on-demand.service';
 
 const PATIENT_READ_ROLES = [
   UserRole.ADMIN,
@@ -35,7 +36,10 @@ const PATIENT_WRITE_ROLES = [
 @Controller('patients')
 @ApiBearerAuth()
 export class PatientsController {
-  constructor(private readonly patientsService: PatientsService) {}
+  constructor(
+    private readonly patientsService: PatientsService,
+    private readonly summaries: PatientSummaryOnDemandService,
+  ) {}
 
   @Post()
   @Roles(...PATIENT_WRITE_ROLES)
@@ -71,6 +75,12 @@ export class PatientsController {
   @Roles(...PATIENT_READ_ROLES)
   findAll(@Query() filters: ListPatientsDto) {
     return this.patientsService.findAll(filters);
+  }
+
+  @Get(':id/summary')
+  @Roles(...PATIENT_READ_ROLES)
+  summary(@Param('id') id: string) {
+    return this.summaries.get(id);
   }
 
   @Get(':id')

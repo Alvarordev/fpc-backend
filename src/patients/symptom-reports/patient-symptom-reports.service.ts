@@ -6,6 +6,7 @@ import { Interaction } from '../../database/entities/interaction.entity';
 import { PatientRole } from '../entities/patient-role.enum';
 import { PatientSymptomReport } from '../entities/patient-symptom-report.entity';
 import { PatientsService } from '../patients.service';
+import { PatientSummaryInvalidationService } from '../../patient-summaries/patient-summary-invalidation.service';
 import { CreatePatientSymptomReportDto } from './patient-symptom-reports.dto';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class PatientSymptomReportsService {
     @InjectRepository(Enrollment)
     private readonly enrollments: Repository<Enrollment>,
     private readonly patients: PatientsService,
+    private readonly invalidations: PatientSummaryInvalidationService,
   ) {}
 
   async create(
@@ -43,7 +45,11 @@ export class PatientSymptomReportsService {
       throw new NotFoundException('Enrollment not found');
     const repository =
       manager?.getRepository(PatientSymptomReport) ?? this.repository;
-    return repository.save(repository.create({ ...input, patientId }));
+    const symptom = await repository.save(
+      repository.create({ ...input, patientId }),
+    );
+    await this.invalidations.markDirty(patientId, manager);
+    return symptom;
   }
 
   findAll(patientId: string) {

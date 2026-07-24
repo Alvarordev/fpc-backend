@@ -6,6 +6,7 @@ import { PatientRole } from '../../entities/patient-role.enum';
 import { PatientInsurance } from '../../entities/patient-insurance.entity';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
 import { PatientsService } from '../../patients.service';
+import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
 import { CreatePatientInsuranceDto } from './patient-insurance.dto';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class PatientInsuranceService {
     private readonly interactions: Repository<Interaction>,
     private readonly patients: PatientsService,
     private readonly versioning: HistoryVersioningService,
+    private readonly invalidations: PatientSummaryInvalidationService,
   ) {}
   async create(
     patientId: string,
@@ -24,7 +26,7 @@ export class PatientInsuranceService {
     manager?: EntityManager,
   ) {
     await this.assertReferences(patientId, input.interactionId, manager);
-    return manager
+    const insurance = await (manager
       ? this.versioning.replaceCurrent(
           PatientInsurance,
           { patientId, isCurrent: true },
@@ -35,7 +37,9 @@ export class PatientInsuranceService {
           PatientInsurance,
           { patientId, isCurrent: true },
           { ...input, patientId },
-        );
+        ));
+    await this.invalidations.markDirty(patientId, manager);
+    return insurance;
   }
   findAll(patientId: string) {
     return this.repository.find({

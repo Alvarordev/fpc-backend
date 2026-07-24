@@ -25,6 +25,7 @@ import { PatientSisAffiliationService } from '../patients/clinical/sis-affiliati
 import { PatientTreatmentsService } from '../patients/clinical/treatments/patient-treatments.service';
 import { PatientSymptomReportsService } from '../patients/symptom-reports/patient-symptom-reports.service';
 import { PatientsService } from '../patients/patients.service';
+import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CreateEnrollmentDto } from './enrollments.dto';
 
 @Injectable()
@@ -41,6 +42,7 @@ export class EnrollmentsService {
     private readonly appointments: PatientMedicalAppointmentsService,
     private readonly sisAffiliations: PatientSisAffiliationService,
     private readonly symptomReports: PatientSymptomReportsService,
+    private readonly invalidations: PatientSummaryInvalidationService,
   ) {}
 
   async create(input: CreateEnrollmentDto, userId: string, userRole: string) {
@@ -209,6 +211,7 @@ export class EnrollmentsService {
           manager,
         );
 
+      await this.invalidations.markDirty(patient.id, manager);
       return { ...enrollment, patient, companion, interaction };
     });
   }

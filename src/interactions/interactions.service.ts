@@ -13,6 +13,7 @@ import { Reminder } from '../database/entities/reminder.entity';
 import { ReminderStatus } from '../database/entities/reminder-status.enum';
 import { CreateInteractionDto, UpdateInteractionDto } from './interactions.dto';
 import { CreateReminderDto } from '../reminders/reminders.dto';
+import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 @Injectable()
 export class InteractionsService {
   constructor(
@@ -23,6 +24,7 @@ export class InteractionsService {
     @InjectRepository(Reminder)
     private readonly reminders: Repository<Reminder>,
     private readonly dataSource: DataSource,
+    private readonly invalidations: PatientSummaryInvalidationService,
   ) {}
   inferStatus(
     input: Pick<CreateInteractionDto, 'scheduledAt' | 'completedAt'>,
@@ -56,7 +58,7 @@ export class InteractionsService {
         );
       agentId = agent.id;
     }
-    return interactions.save(
+    const interaction = await interactions.save(
       interactions.create({
         ...input,
         agentId,
@@ -65,6 +67,8 @@ export class InteractionsService {
         completedAt: input.completedAt ? new Date(input.completedAt) : null,
       }),
     );
+    await this.invalidations.markDirty(interaction.subjectPatientId, manager);
+    return interaction;
   }
   async findOne(id: string, manager?: EntityManager) {
     const item = await (
@@ -96,6 +100,7 @@ export class InteractionsService {
       );
       current.nextInteractionId = next.id;
       await manager.getRepository(Interaction).save(current);
+      await this.invalidations.markDirty(current.subjectPatientId, manager);
       return next;
     });
   }
@@ -106,7 +111,9 @@ export class InteractionsService {
       input,
       input.completedAt ? { completedAt: new Date(input.completedAt) } : {},
     );
-    return this.interactions.save(item);
+    const interaction = await this.interactions.save(item);
+    await this.invalidations.markDirty(interaction.subjectPatientId);
+    return interaction;
   }
   async createReminder(
     id: string,
