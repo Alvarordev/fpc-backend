@@ -1,0 +1,75 @@
+import {
+  Check,
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { Interaction } from './interaction.entity';
+import { Patient } from './patient.entity';
+import { VolunteerAvailability } from './volunteer-availability.entity';
+import { Volunteer } from './volunteer.entity';
+export enum AppointmentModality {
+  CALL = 'CALL',
+  VIDEO_CALL = 'VIDEO_CALL',
+}
+export enum AppointmentStatus {
+  SCHEDULED = 'SCHEDULED',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  NO_ANSWER = 'NO_ANSWER',
+}
+@Entity('psychooncology_appointments')
+@Check('"session_number" > 0')
+@Check(`"modality" IN ('CALL','VIDEO_CALL')`)
+@Check(`"status" IN ('SCHEDULED','COMPLETED','CANCELLED','NO_ANSWER')`)
+export class PsychooncologyAppointment {
+  @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
+  @Column({ name: 'patient_id', type: 'uuid' }) patientId!: string;
+  @ManyToOne(() => Patient)
+  @JoinColumn({ name: 'patient_id' })
+  patient!: Patient;
+  @Column({ name: 'volunteer_id', type: 'uuid' }) volunteerId!: string;
+  @ManyToOne(() => Volunteer)
+  @JoinColumn({ name: 'volunteer_id' })
+  volunteer!: Volunteer;
+  @Column({ name: 'interaction_id', type: 'uuid' }) interactionId!: string;
+  @ManyToOne(() => Interaction)
+  @JoinColumn({ name: 'interaction_id' })
+  interaction!: Interaction;
+  @Column({ name: 'availability_id', type: 'uuid' }) availabilityId!: string;
+  @ManyToOne(() => VolunteerAvailability)
+  @JoinColumn({ name: 'availability_id' })
+  availability!: VolunteerAvailability;
+  @Column({
+    name: 'patient_email',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  patientEmail!: string | null;
+  @Column({ name: 'session_number', type: 'int' }) sessionNumber!: number;
+  @Column({ name: 'is_additional_session', type: 'boolean', default: false })
+  isAdditionalSession!: boolean;
+  @Column({ type: 'varchar', length: 20 }) modality!: AppointmentModality;
+  @Column({ type: 'varchar', length: 20, default: AppointmentStatus.SCHEDULED })
+  status!: AppointmentStatus;
+  @Column({ name: 'scheduled_at', type: 'timestamptz' }) scheduledAt!: Date;
+  @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })
+  completedAt!: Date | null;
+  @Column({ name: 'topic_addressed', type: 'text', nullable: true })
+  topicAddressed!: string | null;
+  @Column({ name: 'session_details', type: 'text', nullable: true })
+  sessionDetails!: string | null;
+  @Column({ name: 'additional_observations', type: 'text', nullable: true })
+  additionalObservations!: string | null;
+  @Column({ type: 'varchar', length: 30, nullable: true }) referral!:
+    string | null;
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt!: Date;
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt!: Date;
+}
