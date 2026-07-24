@@ -15,6 +15,7 @@ import { InteractionPurpose } from '../database/entities/interaction.enums';
 import { PatientRole } from '../database/entities/patient-role.enum';
 import { PatientStatus } from '../database/entities/patient-status.enum';
 import { Patient } from '../database/entities/patient.entity';
+import { PatientDiagnosis } from '../database/entities/patient-diagnosis.entity';
 import { InteractionsService } from '../interactions/interactions.service';
 import { PatientDiagnosesService } from '../patient-diagnoses/patient-diagnoses.service';
 import { PatientInsuranceService } from '../patient-insurance/patient-insurance.service';
@@ -66,11 +67,15 @@ export class EnrollmentsService {
       if (input.affiliationType === AffiliationType.SELF) {
         if (companionId || companionInput)
           throw new BadRequestException(
-            'SELF enrollment cannot include a companion',
+            'SELF enrollment cannot include a primary informant or companion',
           );
       } else if (Boolean(companionId) === Boolean(companionInput)) {
         throw new BadRequestException(
           'FAMILY_FRIEND enrollment requires exactly one companion',
+        );
+      } else if (companionInput && companionInput.isPrimaryInformant !== true) {
+        throw new BadRequestException(
+          'FAMILY_FRIEND enrollment requires a primary informant',
         );
       }
       if (insurance?.insuranceType === InsuranceType.SIS && sisAffiliation)
@@ -118,7 +123,10 @@ export class EnrollmentsService {
           if (!link)
             await this.patients.linkCompanion(
               patient.id,
-              { existingCompanionId: companion.id },
+              {
+                existingCompanionId: companion.id,
+                isPrimaryInformant: true,
+              },
               manager,
             );
         }
@@ -159,24 +167,28 @@ export class EnrollmentsService {
           { ...sisAffiliation, interactionId: interaction.id },
           manager,
         );
-      if (treatment && !diagnosis)
-        throw new BadRequestException(
-          'Enrollment treatment requires an enrollment diagnosis',
-        );
-      const createdDiagnosis = diagnosis
+      const treatmentDiagnosis = diagnosis
         ? await this.diagnoses.create(
             patient.id,
             { ...diagnosis, interactionId: interaction.id },
             manager,
           )
-        : null;
-      if (treatment && createdDiagnosis)
+        : treatment
+          ? await manager.getRepository(PatientDiagnosis).findOne({
+              where: { patientId: patient.id, isCurrent: true },
+            })
+          : null;
+      if (treatment && !treatmentDiagnosis)
+        throw new BadRequestException(
+          'Enrollment treatment requires a current diagnosis',
+        );
+      if (treatment && treatmentDiagnosis)
         await this.treatments.create(
           patient.id,
           {
             ...treatment,
             interactionId: interaction.id,
-            diagnosisId: createdDiagnosis.id,
+            diagnosisId: treatmentDiagnosis.id,
           },
           manager,
         );

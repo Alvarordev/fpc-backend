@@ -7,11 +7,19 @@ import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { Agent } from '../src/database/entities/agent.entity';
+import { CompanionPatient } from '../src/database/entities/companion-patient.entity';
 import { Enrollment } from '../src/database/entities/enrollment.entity';
 import { Interaction } from '../src/database/entities/interaction.entity';
+import {
+  InteractionPurpose,
+  InteractionStatus,
+  InteractionType,
+} from '../src/database/entities/interaction.enums';
 import { PatientDiagnosis } from '../src/database/entities/patient-diagnosis.entity';
 import { PatientInsurance } from '../src/database/entities/patient-insurance.entity';
+import { PatientRole } from '../src/database/entities/patient-role.enum';
 import { PatientSisAffiliation } from '../src/database/entities/patient-sis-affiliation.entity';
+import { PatientStatus } from '../src/database/entities/patient-status.enum';
 import { PatientSymptomReport } from '../src/database/entities/patient-symptom-report.entity';
 import { PatientTreatment } from '../src/database/entities/patient-treatment.entity';
 import { Patient } from '../src/database/entities/patient.entity';
@@ -92,6 +100,7 @@ describe('Enrollment wizard (e2e)', () => {
         symptomReport: { isPainPresent: true, painIntensity: 7 },
         currentlyReceivingTreatment: true,
         consentToContact: true,
+        consentToShareData: false,
         isOncologicalPatient: true,
         interactionQualityRating: 5,
       })
@@ -115,6 +124,8 @@ describe('Enrollment wizard (e2e)', () => {
     ).resolves.toMatchObject({
       patientId: body.patient.id,
       companionId: body.companion.id,
+      consentToContact: true,
+      consentToShareData: false,
     });
     await expect(
       dataSource.getRepository(PatientInsurance).findOneByOrFail({
@@ -143,6 +154,176 @@ describe('Enrollment wizard (e2e)', () => {
       interactionId: body.interaction.id,
       painIntensity: 7,
     });
+  });
+
+  it('links an existing companion to a second patient as primary informant', async () => {
+    const firstEnrollment = await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'First Shared Companion Patient',
+          primaryPhone: '4',
+          email: 'p7-first-shared@example.test',
+        },
+        companion: {
+          fullName: 'Shared Companion',
+          primaryPhone: '5',
+          email: 'p7-shared-companion@example.test',
+          isPrimaryInformant: true,
+        },
+        affiliationType: 'FAMILY_FRIEND',
+        interaction: { type: 'CALL' },
+      })
+      .expect(201);
+    const firstEnrollmentBody = firstEnrollment.body as {
+      companion: Patient;
+    };
+
+    const secondEnrollment = await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'Second Shared Companion Patient',
+          primaryPhone: '6',
+          email: 'p7-second-shared@example.test',
+        },
+        companionId: firstEnrollmentBody.companion.id,
+        affiliationType: 'FAMILY_FRIEND',
+        interaction: { type: 'CALL' },
+      })
+      .expect(201);
+    const secondEnrollmentBody = secondEnrollment.body as { patient: Patient };
+
+    await expect(
+      dataSource.getRepository(CompanionPatient).findOneByOrFail({
+        companionId: firstEnrollmentBody.companion.id,
+        patientId: secondEnrollmentBody.patient.id,
+      }),
+    ).resolves.toMatchObject({ isPrimaryInformant: true });
+  });
+
+  it('rejects enrollment when patientId belongs to a companion', async () => {
+    const companion = await dataSource.getRepository(Patient).save({
+      fullName: 'Cannot Enroll Companion',
+      primaryPhone: '7',
+      email: 'p7-cannot-enroll-companion@example.test',
+      role: PatientRole.COMPANION,
+      status: PatientStatus.UNENROLLED,
+    });
+
+    await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patientId: companion.id,
+        affiliationType: 'SELF',
+        interaction: { type: 'CALL' },
+      })
+      .expect(409);
+  });
+
+  it('rejects FAMILY_FRIEND enrollment without a primary informant', async () => {
+    await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'No Primary Informant Patient',
+          primaryPhone: '8',
+          email: 'p7-no-primary@example.test',
+        },
+        companion: {
+          fullName: 'Non-primary Companion',
+          primaryPhone: '9',
+          email: 'p7-non-primary@example.test',
+          isPrimaryInformant: false,
+        },
+        affiliationType: 'FAMILY_FRIEND',
+        interaction: { type: 'CALL' },
+      })
+      .expect(400);
+  });
+
+  it('rejects SELF enrollment with a primary informant', async () => {
+    await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'Self Enrollment Patient',
+          primaryPhone: '10',
+          email: 'p7-self-primary@example.test',
+        },
+        companion: {
+          fullName: 'Invalid Self Primary Informant',
+          primaryPhone: '11',
+          email: 'p7-self-primary-companion@example.test',
+          isPrimaryInformant: true,
+        },
+        affiliationType: 'SELF',
+        interaction: { type: 'CALL' },
+      })
+      .expect(400);
+  });
+
+  it('uses the current diagnosis for enrollment treatment and rejects when absent', async () => {
+    const patient = await dataSource.getRepository(Patient).save({
+      fullName: 'Existing Diagnosis Patient',
+      primaryPhone: '12',
+      email: 'p7-existing-diagnosis@example.test',
+      role: PatientRole.PATIENT,
+      status: PatientStatus.UNENROLLED,
+    });
+    const diagnosisInteraction = await dataSource
+      .getRepository(Interaction)
+      .save({
+        subjectPatientId: patient.id,
+        interlocutorId: patient.id,
+        agentId: agent.id,
+        type: InteractionType.CALL,
+        status: InteractionStatus.COMPLETED,
+        purpose: InteractionPurpose.FIRST_CONTACT,
+      });
+    const diagnosis = await dataSource.getRepository(PatientDiagnosis).save({
+      patientId: patient.id,
+      interactionId: diagnosisInteraction.id,
+      diagnosis: 'Existing cancer diagnosis',
+      isCurrent: true,
+    });
+
+    await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patientId: patient.id,
+        affiliationType: 'SELF',
+        interaction: { type: 'CALL' },
+        treatment: { treatmentType: 'Existing diagnosis treatment' },
+      })
+      .expect(201);
+
+    await expect(
+      dataSource.getRepository(PatientTreatment).findOneByOrFail({
+        patientId: patient.id,
+      }),
+    ).resolves.toMatchObject({ diagnosisId: diagnosis.id });
+
+    await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'Missing Diagnosis Patient',
+          primaryPhone: '13',
+          email: 'p7-missing-diagnosis@example.test',
+        },
+        affiliationType: 'SELF',
+        interaction: { type: 'CALL' },
+        treatment: { treatmentType: 'Missing diagnosis treatment' },
+      })
+      .expect(400);
   });
 
   it('rolls back all records when a late wizard validation fails', async () => {
