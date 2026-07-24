@@ -4,9 +4,12 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 import { AuthModule } from './auth/auth.module';
+import { AgentsModule } from './agents/agents.module';
 import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
+import { PatientsModule } from './patients/patients.module';
+import { VolunteersModule } from './volunteers/volunteers.module';
 import { WebsocketsModule } from './websockets/websockets.module';
 
 @Module({
@@ -48,6 +51,9 @@ import { WebsocketsModule } from './websockets/websockets.module';
     }),
     UsersModule,
     AuthModule,
+    PatientsModule,
+    AgentsModule,
+    VolunteersModule,
     HealthModule,
     WebsocketsModule,
   ],

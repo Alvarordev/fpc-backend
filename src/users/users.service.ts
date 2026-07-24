@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
 
@@ -31,8 +31,20 @@ export class UsersService {
     password: string;
     role: UserRole;
   }): Promise<User> {
+    return this.createWithManager(input, this.usersRepository.manager);
+  }
+
+  async createWithManager(
+    input: {
+      email: string;
+      password: string;
+      role: UserRole;
+    },
+    manager: EntityManager,
+  ): Promise<User> {
     const email = this.normalizeEmail(input.email);
-    const existingUser = await this.usersRepository.findOne({
+    const usersRepository = manager.getRepository(User);
+    const existingUser = await usersRepository.findOne({
       where: { email },
     });
 
@@ -41,13 +53,13 @@ export class UsersService {
     }
 
     const passwordHash = await bcrypt.hash(input.password, 12);
-    const user = this.usersRepository.create({
+    const user = usersRepository.create({
       email,
       passwordHash,
       role: input.role,
     });
 
-    return this.usersRepository.save(user);
+    return usersRepository.save(user);
   }
 
   async setActive(id: string, isActive: boolean): Promise<User> {
