@@ -7,6 +7,7 @@ import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { Agent } from '../src/database/entities/agent.entity';
+import { CompanionPatient } from '../src/database/entities/companion-patient.entity';
 import { PatientRole } from '../src/database/entities/patient-role.enum';
 import { PatientStatus } from '../src/database/entities/patient-status.enum';
 import { Patient } from '../src/database/entities/patient.entity';
@@ -63,11 +64,11 @@ describe('Patients, agents and volunteers (e2e)', () => {
       })
       .execute();
     await dataSource
-      .getRepository(Patient)
+      .getRepository(CompanionPatient)
       .createQueryBuilder()
       .delete()
       .where(
-        'accompanies_patient_id IN (SELECT id FROM patients WHERE email LIKE :prefix)',
+        'companion_id IN (SELECT id FROM patients WHERE email LIKE :prefix) OR patient_id IN (SELECT id FROM patients WHERE email LIKE :prefix)',
         { prefix: 'crud-%@example.test' },
       )
       .execute();
