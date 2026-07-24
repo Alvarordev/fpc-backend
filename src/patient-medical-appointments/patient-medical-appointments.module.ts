@@ -12,5 +12,6 @@ import { PatientMedicalAppointmentsService } from './patient-medical-appointment
   ],
   controllers: [PatientMedicalAppointmentsController],
   providers: [PatientMedicalAppointmentsService],
+  exports: [PatientMedicalAppointmentsService],
 })
 export class PatientMedicalAppointmentsModule {}

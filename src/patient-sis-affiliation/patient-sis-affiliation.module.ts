@@ -12,5 +12,6 @@ import { PatientSisAffiliationService } from './patient-sis-affiliation.service'
   ],
   controllers: [PatientSisAffiliationController],
   providers: [PatientSisAffiliationService],
+  exports: [PatientSisAffiliationService],
 })
 export class PatientSisAffiliationModule {}

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Interaction } from '../database/entities/interaction.entity';
 import { PatientRole } from '../database/entities/patient-role.enum';
 import { PatientInsurance } from '../database/entities/patient-insurance.entity';
@@ -18,13 +18,24 @@ export class PatientInsuranceService {
     private readonly patients: PatientsService,
     private readonly versioning: HistoryVersioningService,
   ) {}
-  async create(patientId: string, input: CreatePatientInsuranceDto) {
-    await this.assertReferences(patientId, input.interactionId);
-    return this.versioning.replaceCurrent(
-      PatientInsurance,
-      { patientId, isCurrent: true },
-      { ...input, patientId },
-    );
+  async create(
+    patientId: string,
+    input: CreatePatientInsuranceDto,
+    manager?: EntityManager,
+  ) {
+    await this.assertReferences(patientId, input.interactionId, manager);
+    return manager
+      ? this.versioning.replaceCurrent(
+          PatientInsurance,
+          { patientId, isCurrent: true },
+          { ...input, patientId },
+          manager,
+        )
+      : this.versioning.replaceCurrent(
+          PatientInsurance,
+          { patientId, isCurrent: true },
+          { ...input, patientId },
+        );
   }
   findAll(patientId: string) {
     return this.repository.find({
@@ -32,9 +43,22 @@ export class PatientInsuranceService {
       order: { createdAt: 'DESC' },
     });
   }
-  private async assertReferences(patientId: string, interactionId: string) {
-    await this.patients.assertPatientRole(patientId, PatientRole.PATIENT);
-    if (!(await this.interactions.existsBy({ id: interactionId })))
+  private async assertReferences(
+    patientId: string,
+    interactionId: string,
+    manager?: EntityManager,
+  ) {
+    await this.patients.assertPatientRole(
+      patientId,
+      PatientRole.PATIENT,
+      undefined,
+      manager,
+    );
+    if (
+      !(await (
+        manager?.getRepository(Interaction) ?? this.interactions
+      ).existsBy({ id: interactionId }))
+    )
       throw new NotFoundException('Interaction not found');
   }
 }

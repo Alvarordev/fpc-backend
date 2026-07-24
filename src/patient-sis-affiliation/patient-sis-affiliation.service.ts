@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Interaction } from '../database/entities/interaction.entity';
 import { PatientRole } from '../database/entities/patient-role.enum';
 import { PatientSisAffiliation } from '../database/entities/patient-sis-affiliation.entity';
@@ -15,12 +15,27 @@ export class PatientSisAffiliationService {
     private readonly interactions: Repository<Interaction>,
     private readonly patients: PatientsService,
   ) {}
-  async create(patientId: string, input: CreatePatientSisAffiliationDto) {
-    await this.patients.assertPatientRole(patientId, PatientRole.PATIENT);
-    if (!(await this.interactions.existsBy({ id: input.interactionId })))
+  async create(
+    patientId: string,
+    input: CreatePatientSisAffiliationDto,
+    manager?: EntityManager,
+  ) {
+    await this.patients.assertPatientRole(
+      patientId,
+      PatientRole.PATIENT,
+      undefined,
+      manager,
+    );
+    if (
+      !(await (
+        manager?.getRepository(Interaction) ?? this.interactions
+      ).existsBy({ id: input.interactionId }))
+    )
       throw new NotFoundException('Interaction not found');
-    return this.repository.save(
-      this.repository.create({
+    const repository =
+      manager?.getRepository(PatientSisAffiliation) ?? this.repository;
+    return repository.save(
+      repository.create({
         ...input,
         patientId,
         affiliatedAt: input.affiliatedAt ? new Date(input.affiliatedAt) : null,

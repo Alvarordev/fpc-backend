@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Interaction } from '../database/entities/interaction.entity';
 import { PatientDiagnosis } from '../database/entities/patient-diagnosis.entity';
 import { PatientRole } from '../database/entities/patient-role.enum';
@@ -17,15 +17,35 @@ export class PatientDiagnosesService {
     private readonly patients: PatientsService,
     private readonly versioning: HistoryVersioningService,
   ) {}
-  async create(patientId: string, input: CreatePatientDiagnosisDto) {
-    await this.patients.assertPatientRole(patientId, PatientRole.PATIENT);
-    if (!(await this.interactions.existsBy({ id: input.interactionId })))
-      throw new NotFoundException('Interaction not found');
-    return this.versioning.replaceCurrent(
-      PatientDiagnosis,
-      { patientId, isCurrent: true },
-      { ...input, patientId },
+  async create(
+    patientId: string,
+    input: CreatePatientDiagnosisDto,
+    manager?: EntityManager,
+  ) {
+    await this.patients.assertPatientRole(
+      patientId,
+      PatientRole.PATIENT,
+      undefined,
+      manager,
     );
+    if (
+      !(await (
+        manager?.getRepository(Interaction) ?? this.interactions
+      ).existsBy({ id: input.interactionId }))
+    )
+      throw new NotFoundException('Interaction not found');
+    return manager
+      ? this.versioning.replaceCurrent(
+          PatientDiagnosis,
+          { patientId, isCurrent: true },
+          { ...input, patientId },
+          manager,
+        )
+      : this.versioning.replaceCurrent(
+          PatientDiagnosis,
+          { patientId, isCurrent: true },
+          { ...input, patientId },
+        );
   }
   findAll(patientId: string) {
     return this.repository.find({

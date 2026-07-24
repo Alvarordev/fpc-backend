@@ -13,5 +13,6 @@ import { PatientTreatmentsService } from './patient-treatments.service';
   ],
   controllers: [PatientTreatmentsController],
   providers: [PatientTreatmentsService],
+  exports: [PatientTreatmentsService],
 })
 export class PatientTreatmentsModule {}

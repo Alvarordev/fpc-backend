@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Agent } from '../database/entities/agent.entity';
 import { InteractionStatus } from '../database/entities/interaction.enums';
 import { Interaction } from '../database/entities/interaction.entity';
@@ -33,19 +33,31 @@ export class InteractionsService {
         ? InteractionStatus.SCHEDULED
         : InteractionStatus.COMPLETED;
   }
-  async create(input: CreateInteractionDto, userId: string, userRole: string) {
-    await this.assertPatients(input.subjectPatientId, input.interlocutorId);
+  async create(
+    input: CreateInteractionDto,
+    userId: string,
+    userRole: string,
+    manager?: EntityManager,
+  ) {
+    await this.assertPatients(
+      manager,
+      input.subjectPatientId,
+      input.interlocutorId,
+    );
+    const agents = manager?.getRepository(Agent) ?? this.agents;
+    const interactions =
+      manager?.getRepository(Interaction) ?? this.interactions;
     let agentId = input.agentId ?? null;
     if (userRole === 'AGENT') {
-      const agent = await this.agents.findOne({ where: { userId } });
+      const agent = await agents.findOne({ where: { userId } });
       if (!agent)
         throw new BadRequestException(
           'Authenticated user has no agent profile',
         );
       agentId = agent.id;
     }
-    return this.interactions.save(
-      this.interactions.create({
+    return interactions.save(
+      interactions.create({
         ...input,
         agentId,
         status: this.inferStatus(input),
@@ -54,8 +66,10 @@ export class InteractionsService {
       }),
     );
   }
-  async findOne(id: string) {
-    const item = await this.interactions.findOne({ where: { id } });
+  async findOne(id: string, manager?: EntityManager) {
+    const item = await (
+      manager?.getRepository(Interaction) ?? this.interactions
+    ).findOne({ where: { id } });
     if (!item) throw new NotFoundException('Interaction not found');
     return item;
   }
@@ -65,8 +79,8 @@ export class InteractionsService {
     userId: string,
     role: string,
   ) {
-    return this.dataSource.transaction(async () => {
-      const current = await this.findOne(id);
+    return this.dataSource.transaction(async (manager) => {
+      const current = await this.findOne(id, manager);
       const next = await this.create(
         {
           ...input,
@@ -78,9 +92,10 @@ export class InteractionsService {
         },
         userId,
         role,
+        manager,
       );
       current.nextInteractionId = next.id;
-      await this.interactions.save(current);
+      await manager.getRepository(Interaction).save(current);
       return next;
     });
   }
@@ -111,10 +126,14 @@ export class InteractionsService {
       }),
     );
   }
-  private async assertPatients(...ids: string[]) {
-    const count = await this.patients.countBy({ id: ids[0] });
+  private async assertPatients(
+    manager: EntityManager | undefined,
+    ...ids: string[]
+  ) {
+    const patients = manager?.getRepository(Patient) ?? this.patients;
+    const count = await patients.countBy({ id: ids[0] });
     for (const id of ids)
-      if (!(await this.patients.existsBy({ id })))
+      if (!(await patients.existsBy({ id })))
         throw new NotFoundException('Patient not found');
     return count;
   }

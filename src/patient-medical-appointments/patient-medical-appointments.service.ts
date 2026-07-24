@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Interaction } from '../database/entities/interaction.entity';
 import { PatientMedicalAppointment } from '../database/entities/patient-medical-appointment.entity';
 import { PatientRole } from '../database/entities/patient-role.enum';
@@ -17,15 +17,35 @@ export class PatientMedicalAppointmentsService {
     private readonly patients: PatientsService,
     private readonly versioning: HistoryVersioningService,
   ) {}
-  async create(patientId: string, input: CreatePatientMedicalAppointmentDto) {
-    await this.patients.assertPatientRole(patientId, PatientRole.PATIENT);
-    if (!(await this.interactions.existsBy({ id: input.interactionId })))
-      throw new NotFoundException('Interaction not found');
-    return this.versioning.replaceCurrent(
-      PatientMedicalAppointment,
-      { patientId, specialty: input.specialty, isCurrent: true },
-      { ...input, patientId },
+  async create(
+    patientId: string,
+    input: CreatePatientMedicalAppointmentDto,
+    manager?: EntityManager,
+  ) {
+    await this.patients.assertPatientRole(
+      patientId,
+      PatientRole.PATIENT,
+      undefined,
+      manager,
     );
+    if (
+      !(await (
+        manager?.getRepository(Interaction) ?? this.interactions
+      ).existsBy({ id: input.interactionId }))
+    )
+      throw new NotFoundException('Interaction not found');
+    return manager
+      ? this.versioning.replaceCurrent(
+          PatientMedicalAppointment,
+          { patientId, specialty: input.specialty, isCurrent: true },
+          { ...input, patientId },
+          manager,
+        )
+      : this.versioning.replaceCurrent(
+          PatientMedicalAppointment,
+          { patientId, specialty: input.specialty, isCurrent: true },
+          { ...input, patientId },
+        );
   }
   findAll(patientId: string) {
     return this.repository.find({
