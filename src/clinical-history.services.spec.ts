@@ -1,14 +1,14 @@
 import { ConflictException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Interaction } from './database/entities/interaction.entity';
-import { PatientDiagnosis } from './database/entities/patient-diagnosis.entity';
-import { PatientInsurance } from './database/entities/patient-insurance.entity';
-import { PatientMedicalAppointment } from './database/entities/patient-medical-appointment.entity';
-import { PatientTreatment } from './database/entities/patient-treatment.entity';
-import { HistoryVersioningService } from './history-versioning/history-versioning.service';
-import { PatientInsuranceService } from './patient-insurance/patient-insurance.service';
-import { PatientMedicalAppointmentsService } from './patient-medical-appointments/patient-medical-appointments.service';
-import { PatientTreatmentsService } from './patient-treatments/patient-treatments.service';
+import { PatientDiagnosis } from './patients/entities/patient-diagnosis.entity';
+import { PatientInsurance } from './patients/entities/patient-insurance.entity';
+import { PatientMedicalAppointment } from './patients/entities/patient-medical-appointment.entity';
+import { PatientTreatment } from './patients/entities/patient-treatment.entity';
+import { HistoryVersioningService } from './patients/history-versioning/history-versioning.service';
+import { PatientInsuranceService } from './patients/clinical/insurance/patient-insurance.service';
+import { PatientMedicalAppointmentsService } from './patients/clinical/medical-appointments/patient-medical-appointments.service';
+import { PatientTreatmentsService } from './patients/clinical/treatments/patient-treatments.service';
 import { PatientsService } from './patients/patients.service';
 
 describe('clinical history services', () => {

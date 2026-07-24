@@ -11,13 +11,6 @@ import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { HealthCentersModule } from './health-centers/health-centers.module';
 import { InteractionsModule } from './interactions/interactions.module';
-import { HistoryVersioningModule } from './history-versioning/history-versioning.module';
-import { PatientDiagnosesModule } from './patient-diagnoses/patient-diagnoses.module';
-import { PatientInsuranceModule } from './patient-insurance/patient-insurance.module';
-import { PatientMedicalAppointmentsModule } from './patient-medical-appointments/patient-medical-appointments.module';
-import { PatientSisAffiliationModule } from './patient-sis-affiliation/patient-sis-affiliation.module';
-import { PatientTreatmentsModule } from './patient-treatments/patient-treatments.module';
-import { PatientSymptomReportsModule } from './patient-symptom-reports/patient-symptom-reports.module';
 import { PsychooncologyAppointmentsModule } from './psychooncology-appointments/psychooncology-appointments.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { UsersModule } from './users/users.module';
@@ -65,7 +58,6 @@ import { WebsocketsModule } from './websockets/websockets.module';
     }),
     UsersModule,
     AuthModule,
-    HistoryVersioningModule,
     PatientsModule,
     AgentsModule,
     VolunteersModule,
@@ -73,12 +65,6 @@ import { WebsocketsModule } from './websockets/websockets.module';
     HealthCentersModule,
     InteractionsModule,
     RemindersModule,
-    PatientInsuranceModule,
-    PatientDiagnosesModule,
-    PatientTreatmentsModule,
-    PatientMedicalAppointmentsModule,
-    PatientSisAffiliationModule,
-    PatientSymptomReportsModule,
     EnrollmentsModule,
     PsychooncologyAppointmentsModule,
     AlertsModule,

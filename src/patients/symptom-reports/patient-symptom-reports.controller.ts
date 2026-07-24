@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../database/entities/user-role.enum';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { UserRole } from '../../database/entities/user-role.enum';
 import { CreatePatientSymptomReportDto } from './patient-symptom-reports.dto';
 import { PatientSymptomReportsService } from './patient-symptom-reports.service';
 

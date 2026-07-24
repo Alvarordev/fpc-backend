@@ -4,7 +4,7 @@ import { Agent } from '../database/entities/agent.entity';
 import { Alert } from '../database/entities/alert.entity';
 import { HealthCenter } from '../database/entities/health-center.entity';
 import { Interaction } from '../database/entities/interaction.entity';
-import { Patient } from '../database/entities/patient.entity';
+import { Patient } from '../patients/entities/patient.entity';
 import { AlertsController } from './alerts.controller';
 import { AlertsService } from './alerts.service';
 

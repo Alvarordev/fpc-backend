@@ -8,9 +8,9 @@ import {
   ManyToOne,
   PrimaryColumn,
 } from 'typeorm';
-import { Enrollment } from './enrollment.entity';
-import { HealthCenter } from './health-center.entity';
-import { Interaction } from './interaction.entity';
+import { Enrollment } from '../../database/entities/enrollment.entity';
+import { HealthCenter } from '../../database/entities/health-center.entity';
+import { Interaction } from '../../database/entities/interaction.entity';
 import { Patient } from './patient.entity';
 
 @Entity('patient_symptom_reports')

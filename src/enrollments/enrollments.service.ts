@@ -6,24 +6,24 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { CompanionPatient } from '../database/entities/companion-patient.entity';
 import {
   AffiliationType,
   Enrollment,
 } from '../database/entities/enrollment.entity';
 import { InteractionPurpose } from '../database/entities/interaction.enums';
-import { PatientRole } from '../database/entities/patient-role.enum';
-import { PatientStatus } from '../database/entities/patient-status.enum';
-import { Patient } from '../database/entities/patient.entity';
-import { PatientDiagnosis } from '../database/entities/patient-diagnosis.entity';
+import { CompanionPatient } from '../patients/entities/companion-patient.entity';
+import { PatientDiagnosis } from '../patients/entities/patient-diagnosis.entity';
+import { InsuranceType } from '../patients/entities/patient-insurance.entity';
+import { PatientRole } from '../patients/entities/patient-role.enum';
+import { PatientStatus } from '../patients/entities/patient-status.enum';
+import { Patient } from '../patients/entities/patient.entity';
 import { InteractionsService } from '../interactions/interactions.service';
-import { PatientDiagnosesService } from '../patient-diagnoses/patient-diagnoses.service';
-import { PatientInsuranceService } from '../patient-insurance/patient-insurance.service';
-import { InsuranceType } from '../database/entities/patient-insurance.entity';
-import { PatientMedicalAppointmentsService } from '../patient-medical-appointments/patient-medical-appointments.service';
-import { PatientSisAffiliationService } from '../patient-sis-affiliation/patient-sis-affiliation.service';
-import { PatientTreatmentsService } from '../patient-treatments/patient-treatments.service';
-import { PatientSymptomReportsService } from '../patient-symptom-reports/patient-symptom-reports.service';
+import { PatientDiagnosesService } from '../patients/clinical/diagnoses/patient-diagnoses.service';
+import { PatientInsuranceService } from '../patients/clinical/insurance/patient-insurance.service';
+import { PatientMedicalAppointmentsService } from '../patients/clinical/medical-appointments/patient-medical-appointments.service';
+import { PatientSisAffiliationService } from '../patients/clinical/sis-affiliation/patient-sis-affiliation.service';
+import { PatientTreatmentsService } from '../patients/clinical/treatments/patient-treatments.service';
+import { PatientSymptomReportsService } from '../patients/symptom-reports/patient-symptom-reports.service';
 import { PatientsService } from '../patients/patients.service';
 import { CreateEnrollmentDto } from './enrollments.dto';
 

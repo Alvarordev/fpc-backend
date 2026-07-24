@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
-import { Interaction } from '../database/entities/interaction.entity';
-import { PatientRole } from '../database/entities/patient-role.enum';
-import { PatientInsurance } from '../database/entities/patient-insurance.entity';
-import { HistoryVersioningService } from '../history-versioning/history-versioning.service';
-import { PatientsService } from '../patients/patients.service';
+import { Interaction } from '../../../database/entities/interaction.entity';
+import { PatientRole } from '../../entities/patient-role.enum';
+import { PatientInsurance } from '../../entities/patient-insurance.entity';
+import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
+import { PatientsService } from '../../patients.service';
 import { CreatePatientInsuranceDto } from './patient-insurance.dto';
 
 @Injectable()

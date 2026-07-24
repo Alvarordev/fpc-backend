@@ -8,8 +8,8 @@ import {
   ManyToOne,
   PrimaryColumn,
 } from 'typeorm';
-import { HealthCenter } from './health-center.entity';
-import { Interaction } from './interaction.entity';
+import { HealthCenter } from '../../database/entities/health-center.entity';
+import { Interaction } from '../../database/entities/interaction.entity';
 import { Patient } from './patient.entity';
 
 export enum CancerStage {

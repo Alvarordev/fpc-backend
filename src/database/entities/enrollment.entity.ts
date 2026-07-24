@@ -9,7 +9,7 @@ import {
   PrimaryColumn,
 } from 'typeorm';
 import { Interaction } from './interaction.entity';
-import { Patient } from './patient.entity';
+import { Patient } from '../../patients/entities/patient.entity';
 
 export enum AffiliationType {
   SELF = 'SELF',

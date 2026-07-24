@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../database/entities/user-role.enum';
+import { Roles } from '../../../auth/decorators/roles.decorator';
+import { UserRole } from '../../../database/entities/user-role.enum';
 import { CreatePatientSisAffiliationDto } from './patient-sis-affiliation.dto';
 import { PatientSisAffiliationService } from './patient-sis-affiliation.service';
 const READ = [

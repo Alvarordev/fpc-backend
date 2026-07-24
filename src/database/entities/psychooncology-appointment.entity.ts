@@ -10,7 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Interaction } from './interaction.entity';
-import { Patient } from './patient.entity';
+import { Patient } from '../../patients/entities/patient.entity';
 import { VolunteerAvailability } from './volunteer-availability.entity';
 import { Volunteer } from './volunteer.entity';
 export enum AppointmentModality {

@@ -8,8 +8,8 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { PatientRole } from '../../database/entities/patient-role.enum';
-import { PatientStatus } from '../../database/entities/patient-status.enum';
+import { PatientRole } from '../entities/patient-role.enum';
+import { PatientStatus } from '../entities/patient-status.enum';
 
 export class ListPatientsDto {
   @IsOptional()

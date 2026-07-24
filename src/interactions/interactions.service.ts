@@ -8,7 +8,7 @@ import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Agent } from '../database/entities/agent.entity';
 import { InteractionStatus } from '../database/entities/interaction.enums';
 import { Interaction } from '../database/entities/interaction.entity';
-import { Patient } from '../database/entities/patient.entity';
+import { Patient } from '../patients/entities/patient.entity';
 import { Reminder } from '../database/entities/reminder.entity';
 import { ReminderStatus } from '../database/entities/reminder-status.enum';
 import { CreateInteractionDto, UpdateInteractionDto } from './interactions.dto';

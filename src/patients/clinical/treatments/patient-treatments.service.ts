@@ -5,12 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
-import { Interaction } from '../database/entities/interaction.entity';
-import { PatientDiagnosis } from '../database/entities/patient-diagnosis.entity';
-import { PatientRole } from '../database/entities/patient-role.enum';
-import { PatientTreatment } from '../database/entities/patient-treatment.entity';
-import { HistoryVersioningService } from '../history-versioning/history-versioning.service';
-import { PatientsService } from '../patients/patients.service';
+import { Interaction } from '../../../database/entities/interaction.entity';
+import { PatientDiagnosis } from '../../entities/patient-diagnosis.entity';
+import { PatientRole } from '../../entities/patient-role.enum';
+import { PatientTreatment } from '../../entities/patient-treatment.entity';
+import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
+import { PatientsService } from '../../patients.service';
 import { CreatePatientTreatmentDto } from './patient-treatments.dto';
 @Injectable()
 export class PatientTreatmentsService {

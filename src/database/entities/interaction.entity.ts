@@ -16,7 +16,7 @@ import {
   InteractionStatus,
   InteractionType,
 } from './interaction.enums';
-import { Patient } from './patient.entity';
+import { Patient } from '../../patients/entities/patient.entity';
 
 @Entity('interactions')
 @Check(

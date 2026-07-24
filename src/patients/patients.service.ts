@@ -5,12 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
-import { CompanionPatient } from '../database/entities/companion-patient.entity';
-import { DeactivationReason } from '../database/entities/deactivation-reason.enum';
-import { PatientDetails } from '../database/entities/patient-details.entity';
-import { PatientRole } from '../database/entities/patient-role.enum';
-import { PatientStatus } from '../database/entities/patient-status.enum';
-import { Patient } from '../database/entities/patient.entity';
+import { CompanionPatient } from './entities/companion-patient.entity';
+import { DeactivationReason } from './entities/deactivation-reason.enum';
+import { PatientDetails } from './entities/patient-details.entity';
+import { PatientRole } from './entities/patient-role.enum';
+import { PatientStatus } from './entities/patient-status.enum';
+import { Patient } from './entities/patient.entity';
 import { CreateCompanionDto } from './dto/create-companion.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { DeactivatePatientDto } from './dto/deactivate-patient.dto';

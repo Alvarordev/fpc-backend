@@ -8,7 +8,7 @@ import {
   ManyToOne,
   PrimaryColumn,
 } from 'typeorm';
-import { Interaction } from './interaction.entity';
+import { Interaction } from '../../database/entities/interaction.entity';
 import { Patient } from './patient.entity';
 
 export enum InsuranceType {

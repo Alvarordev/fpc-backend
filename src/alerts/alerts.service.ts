@@ -15,7 +15,7 @@ import {
   InteractionType,
 } from '../database/entities/interaction.enums';
 import { Interaction } from '../database/entities/interaction.entity';
-import { Patient } from '../database/entities/patient.entity';
+import { Patient } from '../patients/entities/patient.entity';
 import { User } from '../database/entities/user.entity';
 import { CreateAlertDto } from './alerts.dto';
 

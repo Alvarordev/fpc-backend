@@ -8,7 +8,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { DeactivationReason } from '../../database/entities/deactivation-reason.enum';
+import { DeactivationReason } from '../entities/deactivation-reason.enum';
 
 @ValidatorConstraint({ name: 'validDeactivationDetail', async: false })
 class ValidDeactivationDetailConstraint implements ValidatorConstraintInterface {
