@@ -34,6 +34,22 @@ export class VolunteerAvailabilityService {
     if (input.endTime <= input.startTime)
       throw new BadRequestException('End time must be after start time');
 
+    const conflicting = await this.availability
+      .createQueryBuilder('availability')
+      .where('availability.volunteer_id = :volunteerId', { volunteerId })
+      .andWhere('availability.date = :date', { date: input.date })
+      .andWhere('availability.start_time < :endTime', {
+        endTime: input.endTime,
+      })
+      .andWhere('availability.end_time > :startTime', {
+        startTime: input.startTime,
+      })
+      .getExists();
+    if (conflicting)
+      throw new ConflictException(
+        'Availability slot overlaps an existing slot',
+      );
+
     try {
       return await this.availability.save(
         this.availability.create({
@@ -46,7 +62,7 @@ export class VolunteerAvailabilityService {
       const databaseError = error as { driverError?: { code?: string } };
       if (
         error instanceof QueryFailedError &&
-        databaseError.driverError?.code === '23505'
+        ['23505', '23P01'].includes(databaseError.driverError?.code ?? '')
       )
         throw new ConflictException('Availability slot already exists');
       throw error;

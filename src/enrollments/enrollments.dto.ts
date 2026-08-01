@@ -28,6 +28,7 @@ import { UpsertPatientDetailsDto } from '../patients/dto/upsert-patient-details.
 
 export class EnrollmentInteractionDto {
   @IsIn(Object.values(InteractionType)) type!: InteractionType;
+  @IsOptional() @IsUUID() agentId?: string;
   @IsOptional() @IsString() notes?: string;
   @IsOptional() @IsDateString() scheduledAt?: string;
   @IsOptional() @IsDateString() completedAt?: string;

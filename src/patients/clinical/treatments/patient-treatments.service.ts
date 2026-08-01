@@ -43,7 +43,10 @@ export class PatientTreatmentsService {
       manager?.getRepository(Interaction) ?? this.interactions;
     const [diagnosis, interaction] = await Promise.all([
       diagnoses.findOne({ where: { id: input.diagnosisId } }),
-      interactions.existsBy({ id: input.interactionId }),
+      interactions.existsBy({
+        id: input.interactionId,
+        subjectPatientId: patientId,
+      }),
     ]);
     if (!diagnosis) throw new NotFoundException('Diagnosis not found');
     if (diagnosis.patientId !== patientId)

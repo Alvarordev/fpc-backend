@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -49,15 +50,12 @@ export class InteractionsService {
     const agents = manager?.getRepository(Agent) ?? this.agents;
     const interactions =
       manager?.getRepository(Interaction) ?? this.interactions;
-    let agentId = input.agentId ?? null;
-    if (userRole === 'AGENT') {
-      const agent = await agents.findOne({ where: { userId } });
-      if (!agent)
-        throw new BadRequestException(
-          'Authenticated user has no agent profile',
-        );
-      agentId = agent.id;
-    }
+    const agentId = await this.resolveAgentId(
+      input.agentId,
+      userId,
+      userRole,
+      agents,
+    );
     const interaction = await interactions.save(
       interactions.create({
         ...input,
@@ -77,6 +75,11 @@ export class InteractionsService {
     if (!item) throw new NotFoundException('Interaction not found');
     return item;
   }
+  async findOneForUser(id: string, userId: string, userRole: string) {
+    const item = await this.findOne(id);
+    await this.assertScope(item, userId, userRole);
+    return item;
+  }
   async scheduleNext(
     id: string,
     input: CreateInteractionDto,
@@ -85,6 +88,7 @@ export class InteractionsService {
   ) {
     return this.dataSource.transaction(async (manager) => {
       const current = await this.findOne(id, manager);
+      await this.assertScope(current, userId, role, manager);
       const next = await this.create(
         {
           ...input,
@@ -104,8 +108,14 @@ export class InteractionsService {
       return next;
     });
   }
-  async update(id: string, input: UpdateInteractionDto) {
+  async update(
+    id: string,
+    input: UpdateInteractionDto,
+    userId: string,
+    userRole: string,
+  ) {
     const item = await this.findOne(id);
+    await this.assertScope(item, userId, userRole);
     Object.assign(
       item,
       input,
@@ -121,17 +131,66 @@ export class InteractionsService {
       CreateReminderDto,
       'subjectPatientId' | 'createdFromInteractionId'
     >,
+    userId: string,
+    userRole: string,
   ) {
     const interaction = await this.findOne(id);
+    await this.assertScope(interaction, userId, userRole);
+    const assignedAgentId = await this.resolveAgentId(
+      input.assignedAgentId,
+      userId,
+      userRole,
+      this.agents,
+    );
     return this.reminders.save(
       this.reminders.create({
         ...input,
         subjectPatientId: interaction.subjectPatientId,
         createdFromInteractionId: id,
+        assignedAgentId,
         dueAt: new Date(input.dueAt),
         status: ReminderStatus.PENDING,
       }),
     );
+  }
+  private async resolveAgentId(
+    requestedAgentId: string | undefined,
+    userId: string,
+    userRole: string,
+    agents: Repository<Agent>,
+  ) {
+    if (userRole === 'AGENT') {
+      const agent = await agents.findOne({ where: { userId } });
+      if (!agent)
+        throw new BadRequestException(
+          'Authenticated user has no agent profile',
+        );
+      if (requestedAgentId && requestedAgentId !== agent.id)
+        throw new ForbiddenException(
+          'Agents cannot assign interactions to others',
+        );
+      return agent.id;
+    }
+    if (!requestedAgentId) throw new BadRequestException('agentId is required');
+    if (!(await agents.existsBy({ id: requestedAgentId })))
+      throw new NotFoundException('Agent not found');
+    return requestedAgentId;
+  }
+  private async assertScope(
+    interaction: Interaction,
+    userId: string,
+    userRole: string,
+    manager?: EntityManager,
+  ) {
+    if (userRole !== 'AGENT') return;
+    const agents = manager?.getRepository(Agent) ?? this.agents;
+    const agent = await agents.findOne({ where: { userId } });
+    if (!agent)
+      throw new BadRequestException('Authenticated user has no agent profile');
+    if (interaction.agentId !== agent.id)
+      throw new ForbiddenException(
+        'Agents can only access their own interactions',
+      );
   }
   private async assertPatients(
     manager: EntityManager | undefined,

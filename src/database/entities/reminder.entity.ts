@@ -34,11 +34,10 @@ export class Reminder {
   @ManyToOne(() => Interaction)
   @JoinColumn({ name: 'created_from_interaction_id' })
   createdFromInteraction!: Interaction | null;
-  @Column({ name: 'assigned_agent_id', type: 'uuid', nullable: true })
-  assignedAgentId!: string | null;
+  @Column({ name: 'assigned_agent_id', type: 'uuid' }) assignedAgentId!: string;
   @ManyToOne(() => Agent)
   @JoinColumn({ name: 'assigned_agent_id' })
-  assignedAgent!: Agent | null;
+  assignedAgent!: Agent;
   @Column({ name: 'due_at', type: 'timestamptz' }) dueAt!: Date;
   @Column({ type: 'text' }) description!: string;
   @Column({ type: 'varchar', length: 20, default: ReminderStatus.PENDING })

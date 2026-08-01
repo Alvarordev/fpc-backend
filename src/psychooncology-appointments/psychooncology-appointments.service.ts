@@ -44,7 +44,7 @@ export class PsychooncologyAppointmentsService {
   ) {}
 
   async create(input: CreatePsychooncologyAppointmentDto, user: User) {
-    const agentId = await this.agentIdFor(user);
+    const agentId = await this.resolveAgentId(input.agentId, user);
     return this.dataSource.transaction((manager) =>
       this.reserveAndCreate(manager, input, agentId),
     );
@@ -81,8 +81,7 @@ export class PsychooncologyAppointmentsService {
         .getOne();
       if (!appointment)
         throw new NotFoundException('Psycho-oncology appointment not found');
-      if (appointment.status === AppointmentStatus.CANCELLED)
-        throw new ConflictException('Cancelled appointments cannot be updated');
+      this.assertTransition(appointment, input, user);
 
       if (input.status === AppointmentStatus.CANCELLED) {
         const availability = await this.lockAvailability(
@@ -116,10 +115,40 @@ export class PsychooncologyAppointmentsService {
     });
   }
 
+  private assertTransition(
+    appointment: PsychooncologyAppointment,
+    input: UpdatePsychooncologyAppointmentDto,
+    user: User,
+  ) {
+    if (appointment.status !== AppointmentStatus.SCHEDULED)
+      throw new ConflictException('Closed appointments cannot be updated');
+
+    if (user.role === UserRole.VOLUNTEER) {
+      if (
+        input.status !== AppointmentStatus.NO_ANSWER ||
+        Object.keys(input).some((key) => key !== 'status')
+      )
+        throw new ForbiddenException(
+          'Volunteers can only mark their scheduled appointments as no answer',
+        );
+      return;
+    }
+
+    if (
+      input.status &&
+      ![
+        AppointmentStatus.COMPLETED,
+        AppointmentStatus.CANCELLED,
+        AppointmentStatus.NO_ANSWER,
+      ].includes(input.status)
+    )
+      throw new BadRequestException('Invalid appointment status transition');
+  }
+
   private async reserveAndCreate(
     manager: EntityManager,
     input: CreatePsychooncologyAppointmentDto,
-    agentId: string | null,
+    agentId: string,
   ) {
     // Lock the patient as well as the slot so concurrent bookings get sequential sessions.
     const patient = await manager
@@ -215,12 +244,26 @@ export class PsychooncologyAppointmentsService {
     return scheduledAt;
   }
 
-  private async agentIdFor(user: User) {
-    if (user.role !== UserRole.AGENT) return null;
-    const agent = await this.agents.findOne({ where: { userId: user.id } });
-    if (!agent)
-      throw new BadRequestException('Authenticated user has no agent profile');
-    return agent.id;
+  private async resolveAgentId(
+    requestedAgentId: string | undefined,
+    user: User,
+  ) {
+    if (user.role === UserRole.AGENT) {
+      const agent = await this.agents.findOne({ where: { userId: user.id } });
+      if (!agent)
+        throw new BadRequestException(
+          'Authenticated user has no agent profile',
+        );
+      if (requestedAgentId && requestedAgentId !== agent.id)
+        throw new ForbiddenException(
+          'Agents cannot assign appointments to others',
+        );
+      return agent.id;
+    }
+    if (!requestedAgentId) throw new BadRequestException('agentId is required');
+    if (!(await this.agents.existsBy({ id: requestedAgentId })))
+      throw new NotFoundException('Agent not found');
+    return requestedAgentId;
   }
 
   private async volunteerIdFor(user: User) {

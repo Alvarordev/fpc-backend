@@ -21,6 +21,7 @@ import { PatientSummaryRateLimiterService } from '../src/patient-summaries/patie
 import { PatientRole } from '../src/patients/entities/patient-role.enum';
 import { PatientStatus } from '../src/patients/entities/patient-status.enum';
 import { Patient } from '../src/patients/entities/patient.entity';
+import { Agent } from '../src/database/entities/agent.entity';
 import { PatientsService } from '../src/patients/patients.service';
 import { UsersService } from '../src/users/users.service';
 
@@ -38,6 +39,7 @@ describe('Patient summaries (e2e)', () => {
   let events: EventEmitter2;
   let adminToken: string;
   let volunteerToken: string;
+  let assignedAgentId: string;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -77,6 +79,18 @@ describe('Patient summaries (e2e)', () => {
       password: 'password123',
       role: UserRole.VOLUNTEER,
     });
+    const agentUser = await users.create({
+      email: 'p10-agent@example.test',
+      password: 'password123',
+      role: UserRole.AGENT,
+    });
+    assignedAgentId = (
+      await dataSource.getRepository(Agent).save({
+        userId: agentUser.id,
+        fullName: 'Prompt Ten Agent',
+        phone: '999',
+      })
+    ).id;
     adminToken = await jwt.signAsync({ sub: admin.id, role: admin.role });
     volunteerToken = await jwt.signAsync({
       sub: volunteer.id,
@@ -224,7 +238,7 @@ describe('Patient summaries (e2e)', () => {
           email: 'p10-enrollment@example.test',
         },
         affiliationType: 'SELF',
-        interaction: { type: 'CALL' },
+        interaction: { type: 'CALL', agentId: assignedAgentId },
       })
       .expect(201);
 
@@ -256,7 +270,7 @@ describe('Patient summaries (e2e)', () => {
           email: 'p10-rollback@example.test',
         },
         affiliationType: 'SELF',
-        interaction: { type: 'CALL' },
+        interaction: { type: 'CALL', agentId: assignedAgentId },
         treatment: { treatmentType: 'Requires a diagnosis' },
       })
       .expect(400);
@@ -382,6 +396,10 @@ async function clearSummaryData(dataSource: DataSource, emailPrefix: string) {
   await dataSource.query(`DELETE FROM patients WHERE email LIKE $1`, [
     emailPrefix,
   ]);
+  await dataSource.query(
+    'DELETE FROM agents WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1)',
+    [emailPrefix],
+  );
   await dataSource.query(`DELETE FROM users WHERE email LIKE $1`, [
     emailPrefix,
   ]);

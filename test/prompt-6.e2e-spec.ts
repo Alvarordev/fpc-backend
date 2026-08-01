@@ -33,6 +33,7 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
   let otherVolunteerToken: string;
   let volunteer: Volunteer;
   let otherVolunteer: Volunteer;
+  let agent: Agent;
   let patient: Patient;
   let secondPatient: Patient;
   let healthCenter: HealthCenter;
@@ -98,7 +99,7 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
       email: otherVolunteerUser.email,
       phone: '2',
     });
-    await dataSource.getRepository(Agent).save({
+    agent = await dataSource.getRepository(Agent).save({
       userId: agentUser.id,
       fullName: 'Prompt Six Agent',
       phone: '3',
@@ -139,6 +140,7 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
     const body = {
       availabilityId: availability.id,
       modality: 'VIDEO_CALL',
+      agentId: agent.id,
     };
     const responses = await Promise.all([
       request(server)
@@ -174,6 +176,7 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
       .send({
         patientId: patient.id,
         availabilityId: availability.id,
+        agentId: agent.id,
         modality: 'CALL',
       })
       .expect(201);
@@ -207,6 +210,7 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
         patientId: patient.id,
         availabilityId: availability.id,
         modality: 'CALL',
+        agentId: agent.id,
         isAdditionalSession: true,
       })
       .expect(201);
@@ -236,6 +240,7 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
         patientId: patient.id,
         availabilityId: otherAvailability.id,
         modality: 'CALL',
+        agentId: agent.id,
       })
       .expect(201);
     await request(server)
@@ -292,6 +297,42 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
         expect(resolved.status).toBe('RESOLVED');
         expect(resolved.resolvedById).toBeTruthy();
       });
+  });
+
+  it('rejects overlapping availability and preserves a no-answer slot', async () => {
+    const availability = await createAvailability(volunteer.id, adminToken);
+    await request(server)
+      .post(`/volunteers/${volunteer.id}/availability`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ date: '2030-01-01', startTime: '09:30', endTime: '10:30' })
+      .expect(409);
+
+    const created = await request(server)
+      .post('/psychooncology-appointments')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        patientId: patient.id,
+        availabilityId: availability.id,
+        modality: 'CALL',
+        agentId: agent.id,
+      })
+      .expect(201);
+    const appointment = created.body as PsychooncologyAppointment;
+
+    await request(server)
+      .patch(`/psychooncology-appointments/${appointment.id}`)
+      .set('Authorization', `Bearer ${volunteerToken}`)
+      .send({ status: 'NO_ANSWER' })
+      .expect(200);
+    await expect(
+      dataSource.getRepository(VolunteerAvailability).findOneByOrFail({
+        id: availability.id,
+      }),
+    ).resolves.toMatchObject({ status: AvailabilityStatus.RESERVED });
+    await request(server)
+      .patch(`/psychooncology-appointments/${appointment.id}/cancel`)
+      .set('Authorization', `Bearer ${agentToken}`)
+      .expect(409);
   });
 
   async function createAvailability(volunteerId: string, token: string) {

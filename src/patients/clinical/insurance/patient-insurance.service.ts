@@ -61,7 +61,7 @@ export class PatientInsuranceService {
     if (
       !(await (
         manager?.getRepository(Interaction) ?? this.interactions
-      ).existsBy({ id: interactionId }))
+      ).existsBy({ id: interactionId, subjectPatientId: patientId }))
     )
       throw new NotFoundException('Interaction not found');
   }

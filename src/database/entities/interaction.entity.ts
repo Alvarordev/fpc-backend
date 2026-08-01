@@ -42,11 +42,10 @@ export class Interaction {
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'interlocutor_id' })
   interlocutor!: Patient;
-  @Column({ name: 'agent_id', type: 'uuid', nullable: true }) agentId!:
-    string | null;
+  @Column({ name: 'agent_id', type: 'uuid' }) agentId!: string;
   @ManyToOne(() => Agent)
   @JoinColumn({ name: 'agent_id' })
-  agent!: Agent | null;
+  agent!: Agent;
   @Column({ type: 'varchar', length: 20 }) type!: InteractionType;
   @Column({ type: 'varchar', length: 20 }) status!: InteractionStatus;
   @Column({ type: 'varchar', length: 30 }) purpose!: InteractionPurpose;

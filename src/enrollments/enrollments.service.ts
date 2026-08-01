@@ -88,7 +88,10 @@ export class EnrollmentsService {
       const patient = patientId
         ? await manager
             .getRepository(Patient)
-            .findOne({ where: { id: patientId } })
+            .createQueryBuilder('patient')
+            .setLock('pessimistic_write')
+            .where('patient.id = :id', { id: patientId })
+            .getOne()
         : await this.patients.create(patientInput!, manager);
       if (!patient) throw new NotFoundException('Patient not found');
       if (patient.status !== PatientStatus.UNENROLLED)

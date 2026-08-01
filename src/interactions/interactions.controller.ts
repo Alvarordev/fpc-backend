@@ -15,14 +15,18 @@ export class InteractionsController {
   ) {
     return this.service.create(dto, user.id, user.role);
   }
-  @Get(':id') @Roles(...ROLES) findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+  @Get(':id') @Roles(...ROLES) findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.service.findOneForUser(id, user.id, user.role);
   }
   @Patch(':id') @Roles(...ROLES) update(
     @Param('id') id: string,
     @Body() dto: UpdateInteractionDto,
+    @CurrentUser() user: User,
   ) {
-    return this.service.update(id, dto);
+    return this.service.update(id, dto, user.id, user.role);
   }
   @Post(':id/schedule-next') @Roles(...ROLES) next(
     @Param('id') id: string,
@@ -34,7 +38,8 @@ export class InteractionsController {
   @Post(':id/reminders') @Roles(...ROLES) reminder(
     @Param('id') id: string,
     @Body() dto: CreateReminderDto,
+    @CurrentUser() user: User,
   ) {
-    return this.service.createReminder(id, dto);
+    return this.service.createReminder(id, dto, user.id, user.role);
   }
 }

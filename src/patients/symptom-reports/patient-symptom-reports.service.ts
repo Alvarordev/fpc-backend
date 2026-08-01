@@ -35,7 +35,12 @@ export class PatientSymptomReportsService {
     );
     const interactions =
       manager?.getRepository(Interaction) ?? this.interactions;
-    if (!(await interactions.existsBy({ id: input.interactionId })))
+    if (
+      !(await interactions.existsBy({
+        id: input.interactionId,
+        subjectPatientId: patientId,
+      }))
+    )
       throw new NotFoundException('Interaction not found');
     const enrollments = manager?.getRepository(Enrollment) ?? this.enrollments;
     if (

@@ -31,7 +31,7 @@ export class PatientSisAffiliationService {
     if (
       !(await (
         manager?.getRepository(Interaction) ?? this.interactions
-      ).existsBy({ id: input.interactionId }))
+      ).existsBy({ id: input.interactionId, subjectPatientId: patientId }))
     )
       throw new NotFoundException('Interaction not found');
     const repository =
