@@ -57,6 +57,20 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## OpenAPI contract
+
+`openapi/openapi.json` is the versioned HTTP contract consumed by the frontend.
+
+```bash
+# Regenerate after changing a controller or DTO
+$ npm run openapi:generate
+
+# Verify that the committed contract is current
+$ npm run openapi:check
+```
+
+The OpenAPI GitHub Actions workflow runs the check for pull requests and pushes to `main`.
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.

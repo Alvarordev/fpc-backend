@@ -11,8 +11,10 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
   ApiOperation,
+  ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
@@ -26,6 +28,7 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { RefreshResponseDto } from './dto/refresh-response.dto';
 
 @Controller('auth')
+@ApiTags('Authentication')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -34,7 +37,7 @@ export class AuthController {
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Log in with email and password' })
-  @ApiOkResponse({ type: LoginResponseDto })
+  @ApiCreatedResponse({ type: LoginResponseDto })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   async login(
     @Body() loginDto: LoginDto,
@@ -63,7 +66,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Rotate the refresh token and issue an access token',
   })
-  @ApiOkResponse({ type: RefreshResponseDto })
+  @ApiCreatedResponse({ type: RefreshResponseDto })
   @ApiUnauthorizedResponse({ description: 'Invalid refresh token' })
   async refresh(
     @Req() request: Request,
@@ -95,6 +98,8 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke the current refresh token' })
+  @ApiNoContentResponse()
+  @ApiUnauthorizedResponse()
   async logout(
     @CurrentUser() user: AuthenticatedUser,
     @Req() request: Request,

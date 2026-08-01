@@ -8,7 +8,18 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../database/entities/user-role.enum';
 import { CreateCompanionDto } from './dto/create-companion.dto';
@@ -18,6 +29,14 @@ import { DeactivatePatientDto } from './dto/deactivate-patient.dto';
 import { ListPatientsDto } from './dto/list-patients.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { UpsertPatientDetailsDto } from './dto/upsert-patient-details.dto';
+import {
+  CompanionPatientResponseDto,
+  PatientDetailsResponseDto,
+  PatientDetailsWithSummaryResponseDto,
+  PatientListResponseDto,
+  PatientResponseDto,
+  PatientSummaryResponseDto,
+} from './dto/patient-response.dto';
 import { PatientsService } from './patients.service';
 import { PatientSummaryOnDemandService } from '../patient-summaries/patient-summary-on-demand.service';
 
@@ -34,6 +53,7 @@ const PATIENT_WRITE_ROLES = [
 ];
 
 @Controller('patients')
+@ApiTags('Patients')
 @ApiBearerAuth()
 export class PatientsController {
   constructor(
@@ -43,76 +63,185 @@ export class PatientsController {
 
   @Post()
   @Roles(...PATIENT_WRITE_ROLES)
-  create(@Body() input: CreatePatientDto) {
-    return this.patientsService.create(input);
+  @ApiOperation({ summary: 'Create a patient' })
+  @ApiCreatedResponse({ type: PatientResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  async create(@Body() input: CreatePatientDto): Promise<PatientResponseDto> {
+    return PatientResponseDto.from(await this.patientsService.create(input));
   }
 
   @Post(':id/companions')
   @Roles(...PATIENT_WRITE_ROLES)
-  createCompanion(@Param('id') id: string, @Body() input: CreateCompanionDto) {
-    return this.patientsService.createCompanion(id, input);
+  @ApiOperation({ summary: 'Create and link a companion to a patient' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiCreatedResponse({ type: PatientResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiConflictResponse({ description: 'Patient cannot have companions' })
+  async createCompanion(
+    @Param('id') id: string,
+    @Body() input: CreateCompanionDto,
+  ): Promise<PatientResponseDto> {
+    return PatientResponseDto.from(
+      await this.patientsService.createCompanion(id, input),
+    );
   }
 
   @Post(':id/companions/link')
   @Roles(...PATIENT_WRITE_ROLES)
-  linkCompanion(@Param('id') id: string, @Body() input: LinkCompanionDto) {
-    return this.patientsService.linkCompanion(id, input);
+  @ApiOperation({ summary: 'Link an existing companion to a patient' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiCreatedResponse({ type: CompanionPatientResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Patient or companion not found' })
+  @ApiConflictResponse({ description: 'Companion is already linked' })
+  async linkCompanion(
+    @Param('id') id: string,
+    @Body() input: LinkCompanionDto,
+  ): Promise<CompanionPatientResponseDto> {
+    return CompanionPatientResponseDto.from(
+      await this.patientsService.linkCompanion(id, input),
+    );
   }
 
   @Get(':id/companions')
   @Roles(...PATIENT_READ_ROLES)
-  companions(@Param('id') id: string) {
-    return this.patientsService.findCompanions(id);
+  @ApiOperation({ summary: 'List companions linked to a patient' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: CompanionPatientResponseDto, isArray: true })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  async companions(
+    @Param('id') id: string,
+  ): Promise<CompanionPatientResponseDto[]> {
+    return (await this.patientsService.findCompanions(id)).map((link) =>
+      CompanionPatientResponseDto.from(link),
+    );
   }
 
   @Get(':id/accompanies')
   @Roles(...PATIENT_READ_ROLES)
-  accompanies(@Param('id') id: string) {
-    return this.patientsService.findAccompanies(id);
+  @ApiOperation({ summary: 'List patients linked to a companion' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: CompanionPatientResponseDto, isArray: true })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  async accompanies(
+    @Param('id') id: string,
+  ): Promise<CompanionPatientResponseDto[]> {
+    return (await this.patientsService.findAccompanies(id)).map((link) =>
+      CompanionPatientResponseDto.from(link),
+    );
   }
 
   @Get()
   @Roles(...PATIENT_READ_ROLES)
-  findAll(@Query() filters: ListPatientsDto) {
-    return this.patientsService.findAll(filters);
+  @ApiOperation({ summary: 'List patients' })
+  @ApiOkResponse({ type: PatientListResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  async findAll(
+    @Query() filters: ListPatientsDto,
+  ): Promise<PatientListResponseDto> {
+    return PatientListResponseDto.from(
+      await this.patientsService.findAll(filters),
+    );
   }
 
   @Get(':id/summary')
   @Roles(...PATIENT_READ_ROLES)
-  summary(@Param('id') id: string) {
-    return this.summaries.get(id);
+  @ApiOperation({ summary: 'Generate or retrieve a patient summary' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: PatientSummaryResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Patient not found' })
+  async summary(@Param('id') id: string): Promise<PatientSummaryResponseDto> {
+    return PatientSummaryResponseDto.from(await this.summaries.get(id));
   }
 
   @Get(':id')
   @Roles(...PATIENT_READ_ROLES)
-  findOne(@Param('id') id: string) {
-    return this.patientsService.findById(id);
+  @ApiOperation({ summary: 'Get a patient' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: PatientDetailsWithSummaryResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Patient not found' })
+  async findOne(
+    @Param('id') id: string,
+  ): Promise<PatientDetailsWithSummaryResponseDto> {
+    return PatientDetailsWithSummaryResponseDto.from(
+      await this.patientsService.findById(id),
+    );
   }
 
   @Patch(':id')
   @Roles(...PATIENT_WRITE_ROLES)
-  update(@Param('id') id: string, @Body() input: UpdatePatientDto) {
-    return this.patientsService.update(id, input);
+  @ApiOperation({ summary: 'Update a patient' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: PatientResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Patient not found' })
+  async update(
+    @Param('id') id: string,
+    @Body() input: UpdatePatientDto,
+  ): Promise<PatientResponseDto> {
+    return PatientResponseDto.from(
+      await this.patientsService.update(id, input),
+    );
   }
 
   @Patch(':id/deactivate')
   @Roles(...PATIENT_WRITE_ROLES)
-  deactivate(@Param('id') id: string, @Body() input: DeactivatePatientDto) {
-    return this.patientsService.deactivate(id, input);
+  @ApiOperation({ summary: 'Deactivate a patient' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: PatientResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Patient not found' })
+  async deactivate(
+    @Param('id') id: string,
+    @Body() input: DeactivatePatientDto,
+  ): Promise<PatientResponseDto> {
+    return PatientResponseDto.from(
+      await this.patientsService.deactivate(id, input),
+    );
   }
 
   @Patch(':id/reactivate')
   @Roles(...PATIENT_WRITE_ROLES)
-  reactivate(@Param('id') id: string) {
-    return this.patientsService.reactivate(id);
+  @ApiOperation({ summary: 'Reactivate a patient' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: PatientResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Patient not found' })
+  async reactivate(@Param('id') id: string): Promise<PatientResponseDto> {
+    return PatientResponseDto.from(await this.patientsService.reactivate(id));
   }
 
   @Put(':id/details')
   @Roles(...PATIENT_WRITE_ROLES)
+  @ApiOperation({ summary: 'Create or update patient details' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: PatientDetailsResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiConflictResponse({
+    description: 'Patient does not have the required role',
+  })
   upsertDetails(
     @Param('id') id: string,
     @Body() input: UpsertPatientDetailsDto,
-  ) {
-    return this.patientsService.upsertDetails(id, input);
+  ): Promise<PatientDetailsResponseDto> {
+    return this.patientsService
+      .upsertDetails(id, input)
+      .then((details) => PatientDetailsResponseDto.from(details));
   }
 }

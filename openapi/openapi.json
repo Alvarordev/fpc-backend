@@ -1,0 +1,6452 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/alerts": {
+      "post": {
+        "operationId": "AlertsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAlertDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The authenticated user has no agent profile"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Health center, follow-up, or patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an alert",
+        "tags": [
+          "alerts"
+        ]
+      },
+      "get": {
+        "operationId": "AlertsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List alerts",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/{id}": {
+      "get": {
+        "operationId": "AlertsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Alert not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an alert",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/{id}/resolve": {
+      "patch": {
+        "operationId": "AlertsController_resolve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The authenticated user has no agent profile"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Alert not found"
+          },
+          "409": {
+            "description": "Alert is already resolved"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Resolve an alert",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/agents": {
+      "post": {
+        "operationId": "AgentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAgentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an agent",
+        "tags": [
+          "agents"
+        ]
+      },
+      "get": {
+        "operationId": "AgentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgentResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List agents",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/agents/{id}": {
+      "get": {
+        "operationId": "AgentsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Agent not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an agent",
+        "tags": [
+          "agents"
+        ]
+      },
+      "patch": {
+        "operationId": "AgentsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAgentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          },
+          "404": {
+            "description": "Agent not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an agent",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/agents/{id}/deactivate": {
+      "patch": {
+        "operationId": "AgentsController_deactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          },
+          "404": {
+            "description": "Agent not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Deactivate an agent",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "summary": "Log in with email and password",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid refresh token"
+          }
+        },
+        "summary": "Rotate the refresh token and issue an access token",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "401": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke the current refresh token",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/enrollments": {
+      "post": {
+        "operationId": "EnrollmentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEnrollmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Enrollment data is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agent assignment is not permitted"
+          },
+          "404": {
+            "description": "Patient, companion, or agent not found"
+          },
+          "409": {
+            "description": "Patient is already enrolled or enrollment data conflicts"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a patient enrollment",
+        "tags": [
+          "enrollments"
+        ]
+      }
+    },
+    "/enrollments/patient/{patientId}": {
+      "get": {
+        "operationId": "EnrollmentsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EnrollmentResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List a patient enrollments",
+        "tags": [
+          "enrollments"
+        ]
+      }
+    },
+    "/follow-ups": {
+      "post": {
+        "operationId": "FollowUpsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFollowUpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowUpResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Required agent assignment is missing"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only assign follow-ups to themselves"
+          },
+          "404": {
+            "description": "Patient or agent not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a follow-up",
+        "tags": [
+          "follow-ups"
+        ]
+      }
+    },
+    "/follow-ups/{id}": {
+      "get": {
+        "operationId": "FollowUpsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowUpResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The authenticated user has no agent profile"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only access their own follow-ups"
+          },
+          "404": {
+            "description": "Follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a follow-up",
+        "tags": [
+          "follow-ups"
+        ]
+      },
+      "patch": {
+        "operationId": "FollowUpsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFollowUpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowUpResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The authenticated user has no agent profile"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only update their own follow-ups"
+          },
+          "404": {
+            "description": "Follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a follow-up",
+        "tags": [
+          "follow-ups"
+        ]
+      }
+    },
+    "/follow-ups/{id}/schedule-next": {
+      "post": {
+        "operationId": "FollowUpsController_next",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFollowUpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowUpResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Required agent assignment is missing"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only access their own follow-ups"
+          },
+          "404": {
+            "description": "Follow-up, patient, or agent not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Schedule the next follow-up",
+        "tags": [
+          "follow-ups"
+        ]
+      }
+    },
+    "/follow-ups/{id}/reminders": {
+      "post": {
+        "operationId": "FollowUpsController_reminder",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReminderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Required agent assignment is missing"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only access their own follow-ups"
+          },
+          "404": {
+            "description": "Follow-up or agent not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a reminder from a follow-up",
+        "tags": [
+          "follow-ups"
+        ]
+      }
+    },
+    "/health-centers": {
+      "post": {
+        "operationId": "HealthCentersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHealthCenterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCenterResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator, foundation, or agent role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a health center",
+        "tags": [
+          "health-centers"
+        ]
+      },
+      "get": {
+        "operationId": "HealthCentersController_findAll",
+        "parameters": [
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isActive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HealthCenterResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List health centers",
+        "tags": [
+          "health-centers"
+        ]
+      }
+    },
+    "/health-centers/{id}": {
+      "get": {
+        "operationId": "HealthCentersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCenterResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Health center not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a health center",
+        "tags": [
+          "health-centers"
+        ]
+      },
+      "patch": {
+        "operationId": "HealthCentersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHealthCenterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCenterResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator, foundation, or agent role required"
+          },
+          "404": {
+            "description": "Health center not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a health center",
+        "tags": [
+          "health-centers"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Application health status\n\nThe Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Check application and database health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/patients": {
+      "post": {
+        "operationId": "PatientsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a patient",
+        "tags": [
+          "Patients"
+        ]
+      },
+      "get": {
+        "operationId": "PatientsController_findAll",
+        "parameters": [
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "UNKNOWN",
+                "PATIENT",
+                "COMPANION"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "UNENROLLED",
+                "ENROLLED"
+              ]
+            }
+          },
+          {
+            "name": "isActive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patients",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}/companions": {
+      "post": {
+        "operationId": "PatientsController_createCompanion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          },
+          "409": {
+            "description": "Patient cannot have companions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create and link a companion to a patient",
+        "tags": [
+          "Patients"
+        ]
+      },
+      "get": {
+        "operationId": "PatientsController_companions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CompanionPatientResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List companions linked to a patient",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}/companions/link": {
+      "post": {
+        "operationId": "PatientsController_linkCompanion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkCompanionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanionPatientResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or companion not found"
+          },
+          "409": {
+            "description": "Companion is already linked"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Link an existing companion to a patient",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}/accompanies": {
+      "get": {
+        "operationId": "PatientsController_accompanies",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CompanionPatientResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patients linked to a companion",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}/summary": {
+      "get": {
+        "operationId": "PatientsController_summary",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSummaryResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generate or retrieve a patient summary",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}": {
+      "get": {
+        "operationId": "PatientsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientDetailsWithSummaryResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a patient",
+        "tags": [
+          "Patients"
+        ]
+      },
+      "patch": {
+        "operationId": "PatientsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePatientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a patient",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}/deactivate": {
+      "patch": {
+        "operationId": "PatientsController_deactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivatePatientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Deactivate a patient",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}/reactivate": {
+      "patch": {
+        "operationId": "PatientsController_reactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reactivate a patient",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}/details": {
+      "put": {
+        "operationId": "PatientsController_upsertDetails",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPatientDetailsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientDetailsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          },
+          "409": {
+            "description": "Patient does not have the required role"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or update patient details",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{patientId}/diagnoses": {
+      "post": {
+        "operationId": "PatientDiagnosesController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientDiagnosisDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientDiagnosisResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a patient diagnosis",
+        "tags": [
+          "Patient diagnoses"
+        ]
+      },
+      "get": {
+        "operationId": "PatientDiagnosesController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientDiagnosisResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List a patient diagnosis history",
+        "tags": [
+          "Patient diagnoses"
+        ]
+      }
+    },
+    "/patients/{patientId}/insurance": {
+      "post": {
+        "operationId": "PatientInsuranceController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientInsuranceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientInsuranceResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record patient insurance",
+        "tags": [
+          "Patient insurance"
+        ]
+      },
+      "get": {
+        "operationId": "PatientInsuranceController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientInsuranceResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patient insurance history",
+        "tags": [
+          "Patient insurance"
+        ]
+      }
+    },
+    "/patients/{patientId}/medical-appointments": {
+      "post": {
+        "operationId": "PatientMedicalAppointmentsController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientMedicalAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientMedicalAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a patient medical appointment",
+        "tags": [
+          "Patient medical appointments"
+        ]
+      },
+      "get": {
+        "operationId": "PatientMedicalAppointmentsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientMedicalAppointmentResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List a patient medical appointment history",
+        "tags": [
+          "Patient medical appointments"
+        ]
+      }
+    },
+    "/patients/{patientId}/sis-affiliations": {
+      "post": {
+        "operationId": "PatientSisAffiliationController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientSisAffiliationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSisAffiliationResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a patient SIS affiliation",
+        "tags": [
+          "Patient SIS affiliations"
+        ]
+      },
+      "get": {
+        "operationId": "PatientSisAffiliationController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientSisAffiliationResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patient SIS affiliation history",
+        "tags": [
+          "Patient SIS affiliations"
+        ]
+      }
+    },
+    "/patients/{patientId}/treatments": {
+      "post": {
+        "operationId": "PatientTreatmentsController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientTreatmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientTreatmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient, follow-up, or diagnosis not found"
+          },
+          "409": {
+            "description": "Diagnosis does not belong to the patient"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a patient treatment",
+        "tags": [
+          "Patient treatments"
+        ]
+      },
+      "get": {
+        "operationId": "PatientTreatmentsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientTreatmentResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List a patient treatment history",
+        "tags": [
+          "Patient treatments"
+        ]
+      }
+    },
+    "/patients/{patientId}/symptom-reports": {
+      "post": {
+        "operationId": "PatientSymptomReportsController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientSymptomReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSymptomReportResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient, follow-up, or enrollment not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a patient symptom report",
+        "tags": [
+          "Patient symptom reports"
+        ]
+      },
+      "get": {
+        "operationId": "PatientSymptomReportsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientSymptomReportResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patient symptom reports",
+        "tags": [
+          "Patient symptom reports"
+        ]
+      }
+    },
+    "/psychooncology-appointments": {
+      "post": {
+        "operationId": "PsychooncologyAppointmentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePsychooncologyAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PsychooncologyAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Required agent assignment is missing"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents cannot assign appointments to others"
+          },
+          "404": {
+            "description": "Patient, availability slot, volunteer, or agent not found"
+          },
+          "409": {
+            "description": "Availability slot is reserved or volunteer is inactive"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Schedule a psycho-oncology appointment",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      },
+      "get": {
+        "operationId": "PsychooncologyAppointmentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PsychooncologyAppointmentResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The authenticated volunteer has no profile"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List psycho-oncology appointments",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      }
+    },
+    "/psychooncology-appointments/{id}": {
+      "get": {
+        "operationId": "PsychooncologyAppointmentsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PsychooncologyAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The authenticated volunteer has no profile"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Volunteers can only access their own appointments"
+          },
+          "404": {
+            "description": "Appointment not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a psycho-oncology appointment",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      },
+      "patch": {
+        "operationId": "PsychooncologyAppointmentsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePsychooncologyAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PsychooncologyAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid appointment status transition"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Volunteers have limited update permissions"
+          },
+          "404": {
+            "description": "Appointment or availability slot not found"
+          },
+          "409": {
+            "description": "Closed appointments cannot be updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a psycho-oncology appointment",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      }
+    },
+    "/psychooncology-appointments/{id}/cancel": {
+      "patch": {
+        "operationId": "PsychooncologyAppointmentsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PsychooncologyAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Appointment or availability slot not found"
+          },
+          "409": {
+            "description": "Closed appointments cannot be cancelled"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a psycho-oncology appointment",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      }
+    },
+    "/reminders": {
+      "post": {
+        "operationId": "RemindersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReminderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Required agent assignment is missing"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents cannot reassign reminders"
+          },
+          "404": {
+            "description": "Agent not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a reminder",
+        "tags": [
+          "reminders"
+        ]
+      },
+      "get": {
+        "operationId": "RemindersController_all",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReminderResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The authenticated user has no agent profile"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List reminders visible to the current user",
+        "tags": [
+          "reminders"
+        ]
+      }
+    },
+    "/reminders/{id}": {
+      "patch": {
+        "operationId": "RemindersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReminderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Closed reminders cannot be edited"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only update their own reminders"
+          },
+          "404": {
+            "description": "Reminder or agent not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a pending reminder",
+        "tags": [
+          "reminders"
+        ]
+      }
+    },
+    "/reminders/{id}/complete": {
+      "patch": {
+        "operationId": "RemindersController_complete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteReminderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Reminder is not pending or the follow-up is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only complete their own reminders"
+          },
+          "404": {
+            "description": "Reminder not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Complete a pending reminder",
+        "tags": [
+          "reminders"
+        ]
+      }
+    },
+    "/reminders/{id}/dismiss": {
+      "patch": {
+        "operationId": "RemindersController_dismiss",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Only pending reminders can be dismissed"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only dismiss their own reminders"
+          },
+          "404": {
+            "description": "Reminder not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Dismiss a pending reminder",
+        "tags": [
+          "reminders"
+        ]
+      }
+    },
+    "/users": {
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "409": {
+            "description": "Email already exists"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/me": {
+      "get": {
+        "operationId": "UsersController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the authenticated user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/volunteers/{volunteerId}/availability": {
+      "post": {
+        "operationId": "VolunteerAvailabilityController_create",
+        "parameters": [
+          {
+            "name": "volunteerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVolunteerAvailabilityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerAvailabilityResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "End time must be after start time"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Volunteers can only manage their own availability"
+          },
+          "404": {
+            "description": "Volunteer not found"
+          },
+          "409": {
+            "description": "Volunteer is inactive or the slot overlaps an existing slot"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a volunteer availability slot",
+        "tags": [
+          "volunteer-availability"
+        ]
+      },
+      "get": {
+        "operationId": "VolunteerAvailabilityController_findAll",
+        "parameters": [
+          {
+            "name": "volunteerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VolunteerAvailabilityResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Volunteers can only view their own availability"
+          },
+          "404": {
+            "description": "Volunteer not found"
+          },
+          "409": {
+            "description": "Volunteer is inactive"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List a volunteer availability slots",
+        "tags": [
+          "volunteer-availability"
+        ]
+      }
+    },
+    "/volunteers/{volunteerId}/availability/{id}": {
+      "delete": {
+        "operationId": "VolunteerAvailabilityController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "volunteerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Slot removed"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Volunteers can only manage their own availability"
+          },
+          "404": {
+            "description": "Volunteer or availability slot not found"
+          },
+          "409": {
+            "description": "Volunteer is inactive or availability is reserved"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a volunteer availability slot",
+        "tags": [
+          "volunteer-availability"
+        ]
+      }
+    },
+    "/volunteers": {
+      "post": {
+        "operationId": "VolunteersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVolunteerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a volunteer",
+        "tags": [
+          "volunteers"
+        ]
+      },
+      "get": {
+        "operationId": "VolunteersController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VolunteerResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List volunteers",
+        "tags": [
+          "volunteers"
+        ]
+      }
+    },
+    "/volunteers/{id}": {
+      "get": {
+        "operationId": "VolunteersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Volunteer not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a volunteer",
+        "tags": [
+          "volunteers"
+        ]
+      },
+      "patch": {
+        "operationId": "VolunteersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVolunteerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          },
+          "404": {
+            "description": "Volunteer not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a volunteer",
+        "tags": [
+          "volunteers"
+        ]
+      }
+    },
+    "/volunteers/{id}/deactivate": {
+      "patch": {
+        "operationId": "VolunteersController_deactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          },
+          "404": {
+            "description": "Volunteer not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Deactivate a volunteer user account",
+        "tags": [
+          "volunteers"
+        ]
+      }
+    },
+    "/volunteers/{id}/pause": {
+      "patch": {
+        "operationId": "VolunteersController_pause",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          },
+          "404": {
+            "description": "Volunteer not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Pause a volunteer",
+        "tags": [
+          "volunteers"
+        ]
+      }
+    },
+    "/volunteers/{id}/resume": {
+      "patch": {
+        "operationId": "VolunteersController_resume",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          },
+          "404": {
+            "description": "Volunteer not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Resume a volunteer",
+        "tags": [
+          "volunteers"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "FPC Backend API",
+    "description": "FPC backend API documentation",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "CreateAlertDto": {
+        "type": "object",
+        "properties": {
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "interlocutorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpType": {
+            "type": "string",
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ]
+          },
+          "followUpNotes": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "healthCenterId",
+          "title",
+          "description"
+        ]
+      },
+      "AlertResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "RESOLVED"
+            ],
+            "type": "string"
+          },
+          "resolvedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "resolvedById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "healthCenterId",
+          "followUpId",
+          "createdById",
+          "title",
+          "description",
+          "status",
+          "resolvedAt",
+          "resolvedById",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateAgentDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "fullName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "fullName",
+          "phone"
+        ]
+      },
+      "AgentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "fullName",
+          "phone",
+          "createdAt"
+        ]
+      },
+      "UpdateAgentDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 50
+          }
+        }
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "admin@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "example": "secure-password"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "AuthenticatedUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "enum": [
+              "ADMIN",
+              "FOUNDATION",
+              "AGENT",
+              "VOLUNTEER"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthenticatedUserResponseDto"
+          }
+        },
+        "required": [
+          "accessToken",
+          "user"
+        ]
+      },
+      "RefreshResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accessToken"
+        ]
+      },
+      "CreatePatientDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "primaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "dni": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "birthDate": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "maxLength": 10
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email"
+          }
+        },
+        "required": [
+          "fullName",
+          "primaryPhone"
+        ]
+      },
+      "EnrollmentFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ]
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "scheduledAt": {
+            "type": "string"
+          },
+          "completedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "CreateCompanionDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "primaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "dni": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "birthDate": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "maxLength": 10
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email"
+          },
+          "isPrimaryInformant": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "fullName",
+          "primaryPhone"
+        ]
+      },
+      "UpsertPatientDetailsDto": {
+        "type": "object",
+        "properties": {
+          "birthDepartment": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "currentAddress": {
+            "type": "string"
+          },
+          "currentDistrict": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "currentDepartment": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "dniMatchesAddress": {
+            "type": "boolean"
+          },
+          "travelTimeToHospital": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "emergencyContactName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "emergencyContactPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "zoneType": {
+            "type": "string",
+            "maxLength": 10
+          },
+          "emergencyContactGender": {
+            "type": "string",
+            "maxLength": 10
+          },
+          "educationLevel": {
+            "enum": [
+              "INITIAL",
+              "PRIMARY_INCOMPLETE",
+              "PRIMARY",
+              "SECONDARY_INCOMPLETE",
+              "SECONDARY",
+              "TECHNICAL",
+              "TECHNICAL_INCOMPLETE",
+              "HIGHER",
+              "HIGHER_INCOMPLETE",
+              "NONE"
+            ],
+            "type": "string"
+          },
+          "nativeLanguage": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "requiresTranslation": {
+            "type": "boolean"
+          }
+        }
+      },
+      "EnrollmentInsuranceDto": {
+        "type": "object",
+        "properties": {
+          "insuranceType": {
+            "enum": [
+              "SIS",
+              "ESSALUD",
+              "EPS",
+              "FUERZAS_ARMADAS",
+              "SALUDPOL",
+              "NONE"
+            ],
+            "type": "string"
+          },
+          "epsProvider": {
+            "enum": [
+              "RIMAC",
+              "PACIFICO",
+              "MAPFRE",
+              "SANITAS",
+              "LA_POSITIVA",
+              "ONCOSALUD",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "insuranceType"
+        ]
+      },
+      "EnrollmentSisAffiliationDto": {
+        "type": "object",
+        "properties": {
+          "canAffiliate": {
+            "type": "boolean"
+          },
+          "expectedDate": {
+            "type": "string"
+          },
+          "cantAffiliateReason": {
+            "type": "string"
+          },
+          "affiliatedAt": {
+            "type": "string"
+          },
+          "comments": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "canAffiliate"
+        ]
+      },
+      "EnrollmentDiagnosisDto": {
+        "type": "object",
+        "properties": {
+          "diagnosis": {
+            "type": "string"
+          },
+          "cancerStage": {
+            "enum": [
+              "STAGE_1",
+              "STAGE_2",
+              "STAGE_3",
+              "STAGE_4",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "diagnosisDate": {
+            "type": "string"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosisSpecialty": {
+            "type": "string"
+          },
+          "symptomLeadingToCheckup": {
+            "type": "string"
+          },
+          "waitTimeForDiagnosis": {
+            "type": "string"
+          },
+          "hasMedicalReport": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "diagnosis"
+        ]
+      },
+      "EnrollmentTreatmentDto": {
+        "type": "object",
+        "properties": {
+          "treatmentType": {
+            "type": "string"
+          },
+          "treatmentFrequency": {
+            "type": "string"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "notReceivingReason": {
+            "type": "string"
+          },
+          "treatmentSituation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "treatmentType"
+        ]
+      },
+      "EnrollmentMedicalAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string"
+          },
+          "appointmentDate": {
+            "type": "string"
+          },
+          "nextAppointmentDate": {
+            "type": "string"
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          },
+          "referredTo": {
+            "type": "string"
+          },
+          "difficulties": {
+            "type": "string"
+          },
+          "isFirstConsultation": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "specialty"
+        ]
+      },
+      "EnrollmentSymptomReportDto": {
+        "type": "object",
+        "properties": {
+          "discomfortSeverity": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "discomfortDescription": {
+            "type": "string"
+          },
+          "symptomDuration": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "symptomFrequency": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "isPainPresent": {
+            "type": "boolean"
+          },
+          "painIntensity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "painLocation": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "painDescription": {
+            "type": "string"
+          },
+          "hasSoughtMedicalConsultation": {
+            "type": "boolean"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255
+          }
+        }
+      },
+      "CreateEnrollmentDto": {
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patient": {
+            "$ref": "#/components/schemas/CreatePatientDto"
+          },
+          "followUp": {
+            "$ref": "#/components/schemas/EnrollmentFollowUpDto"
+          },
+          "affiliationType": {
+            "type": "string",
+            "enum": [
+              "SELF",
+              "FAMILY_FRIEND"
+            ]
+          },
+          "companionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companion": {
+            "$ref": "#/components/schemas/CreateCompanionDto"
+          },
+          "details": {
+            "$ref": "#/components/schemas/UpsertPatientDetailsDto"
+          },
+          "insurance": {
+            "$ref": "#/components/schemas/EnrollmentInsuranceDto"
+          },
+          "sisAffiliation": {
+            "$ref": "#/components/schemas/EnrollmentSisAffiliationDto"
+          },
+          "diagnosis": {
+            "$ref": "#/components/schemas/EnrollmentDiagnosisDto"
+          },
+          "treatment": {
+            "$ref": "#/components/schemas/EnrollmentTreatmentDto"
+          },
+          "medicalAppointments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentMedicalAppointmentDto"
+            }
+          },
+          "symptomReport": {
+            "$ref": "#/components/schemas/EnrollmentSymptomReportDto"
+          },
+          "currentlyAttendingConsultations": {
+            "type": "boolean"
+          },
+          "currentlyReceivingTreatment": {
+            "type": "boolean"
+          },
+          "entrySource": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "entrySubSource": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "consentToContact": {
+            "type": "boolean"
+          },
+          "consentToShareData": {
+            "type": "boolean"
+          },
+          "requiresTransportation": {
+            "type": "boolean"
+          },
+          "hasMobilityIssues": {
+            "type": "boolean"
+          },
+          "isOncologicalPatient": {
+            "type": "boolean"
+          },
+          "surveyAccepted": {
+            "type": "boolean"
+          },
+          "followUpQualityRating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "followUp",
+          "affiliationType"
+        ]
+      },
+      "EnrollmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "affiliationType": {
+            "enum": [
+              "SELF",
+              "FAMILY_FRIEND"
+            ],
+            "type": "string"
+          },
+          "companionId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "currentlyAttendingConsultations": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "currentlyReceivingTreatment": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "entrySource": {
+            "type": "string",
+            "nullable": true
+          },
+          "entrySubSource": {
+            "type": "string",
+            "nullable": true
+          },
+          "consentToContact": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "consentToShareData": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "requiresTransportation": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "hasMobilityIssues": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "isOncologicalPatient": {
+            "type": "boolean"
+          },
+          "surveyAccepted": {
+            "type": "boolean"
+          },
+          "followUpQualityRating": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 5
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "affiliationType",
+          "companionId",
+          "currentlyAttendingConsultations",
+          "currentlyReceivingTreatment",
+          "entrySource",
+          "entrySubSource",
+          "consentToContact",
+          "consentToShareData",
+          "requiresTransportation",
+          "hasMobilityIssues",
+          "isOncologicalPatient",
+          "surveyAccepted",
+          "followUpQualityRating",
+          "createdAt"
+        ]
+      },
+      "CreateFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "interlocutorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ],
+            "type": "string"
+          },
+          "purpose": {
+            "enum": [
+              "FIRST_CONTACT",
+              "ENROLLMENT",
+              "FOLLOW_UP",
+              "PSYCHOONCOLOGY_REFERRAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "scheduledAt": {
+            "type": "string"
+          },
+          "completedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subjectPatientId",
+          "interlocutorId",
+          "type",
+          "purpose"
+        ]
+      },
+      "FollowUpResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "interlocutorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "purpose": {
+            "enum": [
+              "FIRST_CONTACT",
+              "ENROLLMENT",
+              "FOLLOW_UP",
+              "PSYCHOONCOLOGY_REFERRAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "scheduledAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "nextFollowUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subjectPatientId",
+          "interlocutorId",
+          "agentId",
+          "type",
+          "status",
+          "purpose",
+          "scheduledAt",
+          "completedAt",
+          "notes",
+          "nextFollowUpId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ]
+          },
+          "completedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateReminderDto": {
+        "type": "object",
+        "properties": {
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dueAt": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "assignedAgentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdFromFollowUpId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "subjectPatientId",
+          "dueAt",
+          "description"
+        ]
+      },
+      "ReminderResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdFromFollowUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "assignedAgentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dueAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "DONE",
+              "DISMISSED"
+            ],
+            "type": "string"
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "resultingFollowUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subjectPatientId",
+          "createdFromFollowUpId",
+          "assignedAgentId",
+          "dueAt",
+          "description",
+          "status",
+          "completedAt",
+          "resultingFollowUpId",
+          "createdAt"
+        ]
+      },
+      "CreateHealthCenterDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "department": {
+            "type": "string",
+            "enum": [
+              "AMAZONAS",
+              "ANCASH",
+              "APURIMAC",
+              "AREQUIPA",
+              "AYACUCHO",
+              "CAJAMARCA",
+              "CALLAO",
+              "CUSCO",
+              "HUANCAVELICA",
+              "HUANUCO",
+              "ICA",
+              "JUNIN",
+              "LA_LIBERTAD",
+              "LAMBAYEQUE",
+              "LIMA",
+              "LORETO",
+              "MADRE_DE_DIOS",
+              "MOQUEGUA",
+              "PASCO",
+              "PIURA",
+              "PUNO",
+              "SAN_MARTIN",
+              "TACNA",
+              "TUMBES",
+              "UCAYALI"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "department"
+        ]
+      },
+      "HealthCenterResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "department": {
+            "enum": [
+              "AMAZONAS",
+              "ANCASH",
+              "APURIMAC",
+              "AREQUIPA",
+              "AYACUCHO",
+              "CAJAMARCA",
+              "CALLAO",
+              "CUSCO",
+              "HUANCAVELICA",
+              "HUANUCO",
+              "ICA",
+              "JUNIN",
+              "LA_LIBERTAD",
+              "LAMBAYEQUE",
+              "LIMA",
+              "LORETO",
+              "MADRE_DE_DIOS",
+              "MOQUEGUA",
+              "PASCO",
+              "PIURA",
+              "PUNO",
+              "SAN_MARTIN",
+              "TACNA",
+              "TUMBES",
+              "UCAYALI"
+            ],
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "department",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateHealthCenterDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "department": {
+            "type": "string",
+            "enum": [
+              "AMAZONAS",
+              "ANCASH",
+              "APURIMAC",
+              "AREQUIPA",
+              "AYACUCHO",
+              "CAJAMARCA",
+              "CALLAO",
+              "CUSCO",
+              "HUANCAVELICA",
+              "HUANUCO",
+              "ICA",
+              "JUNIN",
+              "LA_LIBERTAD",
+              "LAMBAYEQUE",
+              "LIMA",
+              "LORETO",
+              "MADRE_DE_DIOS",
+              "MOQUEGUA",
+              "PASCO",
+              "PIURA",
+              "PUNO",
+              "SAN_MARTIN",
+              "TACNA",
+              "TUMBES",
+              "UCAYALI"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PatientResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "dni": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryPhone": {
+            "type": "string"
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "role": {
+            "enum": [
+              "UNKNOWN",
+              "PATIENT",
+              "COMPANION"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "UNENROLLED",
+              "ENROLLED"
+            ],
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "deactivationReason": {
+            "nullable": true,
+            "enum": [
+              "DECEASED",
+              "WITHDREW_CONSENT",
+              "LOST_CONTACT",
+              "TRANSFERRED_OUT",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "deactivationReasonDetail": {
+            "type": "string",
+            "nullable": true
+          },
+          "deactivatedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "deceasedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "email",
+          "dni",
+          "birthDate",
+          "gender",
+          "primaryPhone",
+          "secondaryPhone",
+          "hasWhatsapp",
+          "role",
+          "status",
+          "isActive",
+          "deactivationReason",
+          "deactivationReasonDetail",
+          "deactivatedAt",
+          "deceasedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "LinkCompanionDto": {
+        "type": "object",
+        "properties": {
+          "existingCompanionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isPrimaryInformant": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "existingCompanionId"
+        ]
+      },
+      "CompanionPatientResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isPrimaryInformant": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "companion": {
+            "$ref": "#/components/schemas/PatientResponseDto"
+          },
+          "patient": {
+            "$ref": "#/components/schemas/PatientResponseDto"
+          }
+        },
+        "required": [
+          "id",
+          "companionId",
+          "patientId",
+          "isPrimaryInformant",
+          "createdAt"
+        ]
+      },
+      "PatientListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "data",
+          "total"
+        ]
+      },
+      "PatientSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "PENDING",
+              "PROCESSING",
+              "READY",
+              "FAILED"
+            ],
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "model": {
+            "type": "string",
+            "nullable": true
+          },
+          "source": {
+            "enum": [
+              "ON_DEMAND",
+              "STORED",
+              "PENDING"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "summary",
+          "model",
+          "source"
+        ]
+      },
+      "PatientDetailsResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "birthDepartment": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentDistrict": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentDepartment": {
+            "type": "string",
+            "nullable": true
+          },
+          "dniMatchesAddress": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "travelTimeToHospital": {
+            "type": "string",
+            "nullable": true
+          },
+          "emergencyContactName": {
+            "type": "string",
+            "nullable": true
+          },
+          "emergencyContactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "zoneType": {
+            "type": "string",
+            "nullable": true
+          },
+          "emergencyContactGender": {
+            "type": "string",
+            "nullable": true
+          },
+          "educationLevel": {
+            "nullable": true,
+            "enum": [
+              "INITIAL",
+              "PRIMARY_INCOMPLETE",
+              "PRIMARY",
+              "SECONDARY_INCOMPLETE",
+              "SECONDARY",
+              "TECHNICAL",
+              "TECHNICAL_INCOMPLETE",
+              "HIGHER",
+              "HIGHER_INCOMPLETE",
+              "NONE"
+            ],
+            "type": "string"
+          },
+          "nativeLanguage": {
+            "type": "string",
+            "nullable": true
+          },
+          "requiresTranslation": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "birthDepartment",
+          "currentAddress",
+          "currentDistrict",
+          "currentDepartment",
+          "dniMatchesAddress",
+          "travelTimeToHospital",
+          "emergencyContactName",
+          "emergencyContactPhone",
+          "zoneType",
+          "emergencyContactGender",
+          "educationLevel",
+          "nativeLanguage",
+          "requiresTranslation",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PatientDetailsWithSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "dni": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryPhone": {
+            "type": "string"
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "role": {
+            "enum": [
+              "UNKNOWN",
+              "PATIENT",
+              "COMPANION"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "UNENROLLED",
+              "ENROLLED"
+            ],
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "deactivationReason": {
+            "nullable": true,
+            "enum": [
+              "DECEASED",
+              "WITHDREW_CONSENT",
+              "LOST_CONTACT",
+              "TRANSFERRED_OUT",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "deactivationReasonDetail": {
+            "type": "string",
+            "nullable": true
+          },
+          "deactivatedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "deceasedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "details": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PatientDetailsResponseDto"
+              }
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "email",
+          "dni",
+          "birthDate",
+          "gender",
+          "primaryPhone",
+          "secondaryPhone",
+          "hasWhatsapp",
+          "role",
+          "status",
+          "isActive",
+          "deactivationReason",
+          "deactivationReasonDetail",
+          "deactivatedAt",
+          "deceasedAt",
+          "createdAt",
+          "updatedAt",
+          "details",
+          "summary"
+        ]
+      },
+      "UpdatePatientDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "primaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "dni": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "birthDate": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "maxLength": 10
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email"
+          }
+        }
+      },
+      "DeactivatePatientDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "enum": [
+              "DECEASED",
+              "WITHDREW_CONSENT",
+              "LOST_CONTACT",
+              "TRANSFERRED_OUT",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "deceasedAt": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "CreatePatientDiagnosisDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "cancerStage": {
+            "type": "string",
+            "enum": [
+              "STAGE_1",
+              "STAGE_2",
+              "STAGE_3",
+              "STAGE_4",
+              "UNKNOWN"
+            ]
+          },
+          "diagnosisDate": {
+            "type": "string"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosisSpecialty": {
+            "type": "string"
+          },
+          "symptomLeadingToCheckup": {
+            "type": "string"
+          },
+          "waitTimeForDiagnosis": {
+            "type": "string"
+          },
+          "hasMedicalReport": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "followUpId",
+          "diagnosis"
+        ]
+      },
+      "PatientDiagnosisResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "cancerStage": {
+            "nullable": true,
+            "enum": [
+              "STAGE_1",
+              "STAGE_2",
+              "STAGE_3",
+              "STAGE_4",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "diagnosisDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "diagnosisSpecialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "symptomLeadingToCheckup": {
+            "type": "string",
+            "nullable": true
+          },
+          "waitTimeForDiagnosis": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasMedicalReport": {
+            "type": "boolean"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "diagnosis",
+          "cancerStage",
+          "diagnosisDate",
+          "healthCenterId",
+          "diagnosisSpecialty",
+          "symptomLeadingToCheckup",
+          "waitTimeForDiagnosis",
+          "hasMedicalReport",
+          "isCurrent",
+          "changeReason",
+          "createdAt"
+        ]
+      },
+      "CreatePatientInsuranceDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "insuranceType": {
+            "type": "string",
+            "enum": [
+              "SIS",
+              "ESSALUD",
+              "EPS",
+              "FUERZAS_ARMADAS",
+              "SALUDPOL",
+              "NONE"
+            ]
+          },
+          "epsProvider": {
+            "type": "string",
+            "enum": [
+              "RIMAC",
+              "PACIFICO",
+              "MAPFRE",
+              "SANITAS",
+              "LA_POSITIVA",
+              "ONCOSALUD",
+              "OTHER"
+            ]
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "followUpId",
+          "insuranceType"
+        ]
+      },
+      "PatientInsuranceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "insuranceType": {
+            "enum": [
+              "SIS",
+              "ESSALUD",
+              "EPS",
+              "FUERZAS_ARMADAS",
+              "SALUDPOL",
+              "NONE"
+            ],
+            "type": "string"
+          },
+          "epsProvider": {
+            "nullable": true,
+            "enum": [
+              "RIMAC",
+              "PACIFICO",
+              "MAPFRE",
+              "SANITAS",
+              "LA_POSITIVA",
+              "ONCOSALUD",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "insuranceType",
+          "epsProvider",
+          "isCurrent",
+          "changeReason",
+          "startDate",
+          "endDate",
+          "createdAt"
+        ]
+      },
+      "CreatePatientMedicalAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string"
+          },
+          "appointmentDate": {
+            "type": "string"
+          },
+          "nextAppointmentDate": {
+            "type": "string"
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          },
+          "referredTo": {
+            "type": "string"
+          },
+          "difficulties": {
+            "type": "string"
+          },
+          "isFirstConsultation": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "followUpId",
+          "specialty"
+        ]
+      },
+      "PatientMedicalAppointmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string"
+          },
+          "appointmentDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "nextAppointmentDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          },
+          "referredTo": {
+            "type": "string",
+            "nullable": true
+          },
+          "difficulties": {
+            "type": "string",
+            "nullable": true
+          },
+          "isFirstConsultation": {
+            "type": "boolean"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "healthCenterId",
+          "specialty",
+          "appointmentDate",
+          "nextAppointmentDate",
+          "hasReferralSheet",
+          "referredTo",
+          "difficulties",
+          "isFirstConsultation",
+          "isCurrent",
+          "changeReason",
+          "createdAt"
+        ]
+      },
+      "CreatePatientSisAffiliationDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "canAffiliate": {
+            "type": "boolean"
+          },
+          "expectedDate": {
+            "type": "string"
+          },
+          "cantAffiliateReason": {
+            "type": "string"
+          },
+          "affiliatedAt": {
+            "type": "string"
+          },
+          "comments": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "followUpId",
+          "canAffiliate"
+        ]
+      },
+      "PatientSisAffiliationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "canAffiliate": {
+            "type": "boolean"
+          },
+          "expectedDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "cantAffiliateReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "affiliatedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "comments": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "canAffiliate",
+          "expectedDate",
+          "cantAffiliateReason",
+          "affiliatedAt",
+          "comments",
+          "createdAt"
+        ]
+      },
+      "CreatePatientTreatmentDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosisId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "treatmentType": {
+            "type": "string"
+          },
+          "treatmentFrequency": {
+            "type": "string"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "notReceivingReason": {
+            "type": "string"
+          },
+          "treatmentSituation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "followUpId",
+          "diagnosisId",
+          "treatmentType"
+        ]
+      },
+      "PatientTreatmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosisId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "treatmentType": {
+            "type": "string"
+          },
+          "treatmentFrequency": {
+            "type": "string",
+            "nullable": true
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "startDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "notReceivingReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "treatmentSituation": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "diagnosisId",
+          "treatmentType",
+          "treatmentFrequency",
+          "healthCenterId",
+          "startDate",
+          "endDate",
+          "isCurrent",
+          "changeReason",
+          "notReceivingReason",
+          "treatmentSituation",
+          "createdAt"
+        ]
+      },
+      "CreatePatientSymptomReportDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "discomfortSeverity": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "discomfortDescription": {
+            "type": "string"
+          },
+          "symptomDuration": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "symptomFrequency": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "isPainPresent": {
+            "type": "boolean"
+          },
+          "painIntensity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "painLocation": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "painDescription": {
+            "type": "string"
+          },
+          "hasSoughtMedicalConsultation": {
+            "type": "boolean"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "followUpId"
+        ]
+      },
+      "PatientSymptomReportResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "discomfortSeverity": {
+            "type": "string",
+            "nullable": true
+          },
+          "discomfortDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "symptomDuration": {
+            "type": "string",
+            "nullable": true
+          },
+          "symptomFrequency": {
+            "type": "string",
+            "nullable": true
+          },
+          "isPainPresent": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "painIntensity": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 10
+          },
+          "painLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "painDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasSoughtMedicalConsultation": {
+            "type": "boolean"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "enrollmentId",
+          "discomfortSeverity",
+          "discomfortDescription",
+          "symptomDuration",
+          "symptomFrequency",
+          "isPainPresent",
+          "painIntensity",
+          "painLocation",
+          "painDescription",
+          "hasSoughtMedicalConsultation",
+          "healthCenterId",
+          "specialty",
+          "createdAt"
+        ]
+      },
+      "CreatePsychooncologyAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "availabilityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientEmail": {
+            "type": "string"
+          },
+          "isAdditionalSession": {
+            "type": "boolean"
+          },
+          "modality": {
+            "type": "string",
+            "enum": [
+              "CALL",
+              "VIDEO_CALL"
+            ]
+          }
+        },
+        "required": [
+          "patientId",
+          "availabilityId",
+          "modality"
+        ]
+      },
+      "PsychooncologyAppointmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "volunteerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "availabilityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientEmail": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "sessionNumber": {
+            "type": "number"
+          },
+          "isAdditionalSession": {
+            "type": "boolean"
+          },
+          "modality": {
+            "enum": [
+              "CALL",
+              "VIDEO_CALL"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "scheduledAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "topicAddressed": {
+            "type": "string",
+            "nullable": true
+          },
+          "sessionDetails": {
+            "type": "string",
+            "nullable": true
+          },
+          "additionalObservations": {
+            "type": "string",
+            "nullable": true
+          },
+          "recommendations": {
+            "type": "string",
+            "nullable": true
+          },
+          "referral": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "volunteerId",
+          "followUpId",
+          "availabilityId",
+          "patientEmail",
+          "sessionNumber",
+          "isAdditionalSession",
+          "modality",
+          "status",
+          "scheduledAt",
+          "completedAt",
+          "topicAddressed",
+          "sessionDetails",
+          "additionalObservations",
+          "recommendations",
+          "referral",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdatePsychooncologyAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ]
+          },
+          "patientEmail": {
+            "type": "string"
+          },
+          "isAdditionalSession": {
+            "type": "boolean"
+          },
+          "topicAddressed": {
+            "type": "string"
+          },
+          "sessionDetails": {
+            "type": "string"
+          },
+          "additionalObservations": {
+            "type": "string"
+          },
+          "recommendations": {
+            "type": "string"
+          },
+          "referral": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateReminderDto": {
+        "type": "object",
+        "properties": {
+          "assignedAgentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dueAt": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CompleteReminderDto": {
+        "type": "object",
+        "properties": {
+          "resultingFollowUpId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "agent@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "example": "secure-password"
+          },
+          "role": {
+            "enum": [
+              "ADMIN",
+              "FOUNDATION",
+              "AGENT",
+              "VOLUNTEER"
+            ],
+            "type": "string",
+            "example": "AGENT"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "role"
+        ]
+      },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "enum": [
+              "ADMIN",
+              "FOUNDATION",
+              "AGENT",
+              "VOLUNTEER"
+            ],
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role",
+          "isActive"
+        ]
+      },
+      "CreateVolunteerAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "startTime": {
+            "type": "string"
+          },
+          "endTime": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "startTime",
+          "endTime"
+        ]
+      },
+      "VolunteerAvailabilityResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "volunteerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "example": "09:00:00"
+          },
+          "endTime": {
+            "type": "string",
+            "example": "10:00:00"
+          },
+          "status": {
+            "enum": [
+              "AVAILABLE",
+              "RESERVED"
+            ],
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "volunteerId",
+          "date",
+          "startTime",
+          "endTime",
+          "status",
+          "createdAt"
+        ]
+      },
+      "CreateVolunteerDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "firstName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "firstName",
+          "lastName",
+          "specialty",
+          "phone"
+        ]
+      },
+      "VolunteerResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "specialty": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "firstName",
+          "lastName",
+          "specialty",
+          "email",
+          "phone",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateVolunteerDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 50
+          }
+        }
+      }
+    }
+  }
+}

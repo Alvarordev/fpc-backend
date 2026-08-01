@@ -1,7 +1,20 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CreatePatientSymptomReportDto } from './patient-symptom-reports.dto';
+import { PatientSymptomReportResponseDto } from './patient-symptom-reports-response.dto';
 import { PatientSymptomReportsService } from './patient-symptom-reports.service';
 
 const READ = [
@@ -13,17 +26,43 @@ const READ = [
 const WRITE = [UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT];
 
 @Controller('patients/:patientId/symptom-reports')
+@ApiTags('Patient symptom reports')
+@ApiBearerAuth()
 export class PatientSymptomReportsController {
   constructor(private readonly service: PatientSymptomReportsService) {}
 
-  @Post() @Roles(...WRITE) create(
+  @Post()
+  @Roles(...WRITE)
+  @ApiOperation({ summary: 'Record a patient symptom report' })
+  @ApiParam({ name: 'patientId', format: 'uuid' })
+  @ApiCreatedResponse({ type: PatientSymptomReportResponseDto })
+  @ApiBadRequestResponse({ description: 'Invalid request payload' })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({
+    description: 'Patient, follow-up, or enrollment not found',
+  })
+  async create(
     @Param('patientId') patientId: string,
     @Body() dto: CreatePatientSymptomReportDto,
-  ) {
-    return this.service.create(patientId, dto);
+  ): Promise<PatientSymptomReportResponseDto> {
+    return PatientSymptomReportResponseDto.from(
+      await this.service.create(patientId, dto),
+    );
   }
 
-  @Get() @Roles(...READ) findAll(@Param('patientId') patientId: string) {
-    return this.service.findAll(patientId);
+  @Get()
+  @Roles(...READ)
+  @ApiOperation({ summary: 'List patient symptom reports' })
+  @ApiParam({ name: 'patientId', format: 'uuid' })
+  @ApiOkResponse({ type: PatientSymptomReportResponseDto, isArray: true })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  async findAll(
+    @Param('patientId') patientId: string,
+  ): Promise<PatientSymptomReportResponseDto[]> {
+    return (await this.service.findAll(patientId)).map((report) =>
+      PatientSymptomReportResponseDto.from(report),
+    );
   }
 }

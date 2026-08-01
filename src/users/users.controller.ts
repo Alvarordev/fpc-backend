@@ -1,8 +1,12 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
   ApiOperation,
+  ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -14,6 +18,7 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
+@ApiTags('Users')
 @ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -23,6 +28,8 @@ export class UsersController {
   @ApiOperation({ summary: 'Create a user' })
   @ApiCreatedResponse({ type: UserResponseDto })
   @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiConflictResponse({ description: 'Email already exists' })
   async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
     const user = await this.usersService.create(createUserDto);
     return UserResponseDto.from(user);
@@ -30,6 +37,8 @@ export class UsersController {
 
   @Get('me')
   @ApiOperation({ summary: 'Get the authenticated user' })
+  @ApiOkResponse({ type: UserResponseDto })
+  @ApiUnauthorizedResponse()
   me(@CurrentUser() user: User): UserResponseDto {
     return UserResponseDto.from(user);
   }
