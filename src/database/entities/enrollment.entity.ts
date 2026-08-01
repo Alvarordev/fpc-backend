@@ -8,7 +8,7 @@ import {
   ManyToOne,
   PrimaryColumn,
 } from 'typeorm';
-import { Interaction } from './interaction.entity';
+import { FollowUp } from './follow-up.entity';
 import { Patient } from '../../patients/entities/patient.entity';
 
 export enum AffiliationType {
@@ -19,10 +19,10 @@ export enum AffiliationType {
 @Entity('enrollments')
 @Check(`"affiliation_type" IN ('SELF','FAMILY_FRIEND')`)
 @Check(
-  '"interaction_quality_rating" IS NULL OR "interaction_quality_rating" BETWEEN 1 AND 5',
+  '"follow_up_quality_rating" IS NULL OR "follow_up_quality_rating" BETWEEN 1 AND 5',
 )
 @Index('IDX_enrollments_patient_id', ['patientId'])
-@Index('IDX_enrollments_interaction_id', ['interactionId'])
+@Index('IDX_enrollments_follow_up_id', ['followUpId'])
 @Index('IDX_enrollments_companion_id', ['companionId'])
 export class Enrollment {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
@@ -30,10 +30,10 @@ export class Enrollment {
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'patient_id' })
   patient!: Patient;
-  @Column({ name: 'interaction_id', type: 'uuid' }) interactionId!: string;
-  @ManyToOne(() => Interaction)
-  @JoinColumn({ name: 'interaction_id' })
-  interaction!: Interaction;
+  @Column({ name: 'follow_up_id', type: 'uuid' }) followUpId!: string;
+  @ManyToOne(() => FollowUp)
+  @JoinColumn({ name: 'follow_up_id' })
+  followUp!: FollowUp;
   @Column({ name: 'affiliation_type', type: 'varchar', length: 20 })
   affiliationType!: AffiliationType;
   @Column({ name: 'companion_id', type: 'uuid', nullable: true })
@@ -75,11 +75,11 @@ export class Enrollment {
   @Column({ name: 'survey_accepted', type: 'boolean', default: false })
   surveyAccepted!: boolean;
   @Column({
-    name: 'interaction_quality_rating',
+    name: 'follow_up_quality_rating',
     type: 'smallint',
     nullable: true,
   })
-  interactionQualityRating!: number | null;
+  followUpQualityRating!: number | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }

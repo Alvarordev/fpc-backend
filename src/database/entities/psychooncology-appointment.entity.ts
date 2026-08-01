@@ -9,7 +9,7 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Interaction } from './interaction.entity';
+import { FollowUp } from './follow-up.entity';
 import { Patient } from '../../patients/entities/patient.entity';
 import { VolunteerAvailability } from './volunteer-availability.entity';
 import { Volunteer } from './volunteer.entity';
@@ -29,7 +29,7 @@ export enum AppointmentStatus {
 @Check(`"status" IN ('SCHEDULED','COMPLETED','CANCELLED','NO_ANSWER')`)
 @Index('IDX_psychooncology_appointments_patient_id', ['patientId'])
 @Index('IDX_psychooncology_appointments_volunteer_id', ['volunteerId'])
-@Index('IDX_psychooncology_appointments_interaction_id', ['interactionId'])
+@Index('IDX_psychooncology_appointments_follow_up_id', ['followUpId'])
 @Index('IDX_psychooncology_appointments_availability_id', ['availabilityId'])
 @Index('IDX_psychooncology_appointments_status', ['status'])
 export class PsychooncologyAppointment {
@@ -42,10 +42,10 @@ export class PsychooncologyAppointment {
   @ManyToOne(() => Volunteer)
   @JoinColumn({ name: 'volunteer_id' })
   volunteer!: Volunteer;
-  @Column({ name: 'interaction_id', type: 'uuid' }) interactionId!: string;
-  @ManyToOne(() => Interaction)
-  @JoinColumn({ name: 'interaction_id' })
-  interaction!: Interaction;
+  @Column({ name: 'follow_up_id', type: 'uuid' }) followUpId!: string;
+  @ManyToOne(() => FollowUp)
+  @JoinColumn({ name: 'follow_up_id' })
+  followUp!: FollowUp;
   @Column({ name: 'availability_id', type: 'uuid' }) availabilityId!: string;
   @ManyToOne(() => VolunteerAvailability)
   @JoinColumn({ name: 'availability_id' })

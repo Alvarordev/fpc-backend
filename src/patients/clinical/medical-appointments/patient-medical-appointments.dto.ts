@@ -6,7 +6,7 @@ import {
   IsUUID,
 } from 'class-validator';
 export class CreatePatientMedicalAppointmentDto {
-  @IsUUID() interactionId!: string;
+  @IsUUID() followUpId!: string;
   @IsOptional() @IsUUID() healthCenterId?: string;
   @IsString() specialty!: string;
   @IsOptional() @IsDateString() appointmentDate?: string;

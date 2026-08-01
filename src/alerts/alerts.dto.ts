@@ -1,15 +1,15 @@
 import { IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
-import { InteractionType } from '../database/entities/interaction.enums';
+import { FollowUpType } from '../database/entities/follow-up.enums';
 
 export class CreateAlertDto {
   @IsUUID() healthCenterId!: string;
-  @IsOptional() @IsUUID() interactionId?: string;
+  @IsOptional() @IsUUID() followUpId?: string;
   @IsOptional() @IsUUID() subjectPatientId?: string;
   @IsOptional() @IsUUID() interlocutorId?: string;
   @IsOptional()
-  @IsIn(Object.values(InteractionType))
-  interactionType?: InteractionType;
-  @IsOptional() @IsString() interactionNotes?: string;
+  @IsIn(Object.values(FollowUpType))
+  followUpType?: FollowUpType;
+  @IsOptional() @IsString() followUpNotes?: string;
   @IsString() title!: string;
   @IsString() description!: string;
 }

@@ -12,13 +12,13 @@ import {
 } from 'typeorm';
 import { Agent } from './agent.entity';
 import {
-  InteractionPurpose,
-  InteractionStatus,
-  InteractionType,
-} from './interaction.enums';
+  FollowUpPurpose,
+  FollowUpStatus,
+  FollowUpType,
+} from './follow-up.enums';
 import { Patient } from '../../patients/entities/patient.entity';
 
-@Entity('interactions')
+@Entity('follow_ups')
 @Check(
   `"type" IN ('WHATSAPP','CALL','VIDEO_CALL','EMAIL','IN_PERSON','FACEBOOK')`,
 )
@@ -26,12 +26,12 @@ import { Patient } from '../../patients/entities/patient.entity';
 @Check(
   `"purpose" IN ('FIRST_CONTACT','ENROLLMENT','FOLLOW_UP','PSYCHOONCOLOGY_REFERRAL','OTHER')`,
 )
-@Index('IDX_interactions_subject_patient_id', ['subjectPatientId'])
-@Index('IDX_interactions_interlocutor_id', ['interlocutorId'])
-@Index('IDX_interactions_agent_id', ['agentId'])
-@Index('IDX_interactions_next_interaction_id', ['nextInteractionId'])
-@Index('IDX_interactions_status', ['status'])
-export class Interaction {
+@Index('IDX_follow_ups_subject_patient_id', ['subjectPatientId'])
+@Index('IDX_follow_ups_interlocutor_id', ['interlocutorId'])
+@Index('IDX_follow_ups_agent_id', ['agentId'])
+@Index('IDX_follow_ups_next_follow_up_id', ['nextFollowUpId'])
+@Index('IDX_follow_ups_status', ['status'])
+export class FollowUp {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'subject_patient_id', type: 'uuid' })
   subjectPatientId!: string;
@@ -46,24 +46,21 @@ export class Interaction {
   @ManyToOne(() => Agent)
   @JoinColumn({ name: 'agent_id' })
   agent!: Agent;
-  @Column({ type: 'varchar', length: 20 }) type!: InteractionType;
-  @Column({ type: 'varchar', length: 20 }) status!: InteractionStatus;
-  @Column({ type: 'varchar', length: 30 }) purpose!: InteractionPurpose;
+  @Column({ type: 'varchar', length: 20 }) type!: FollowUpType;
+  @Column({ type: 'varchar', length: 20 }) status!: FollowUpStatus;
+  @Column({ type: 'varchar', length: 30 }) purpose!: FollowUpPurpose;
   @Column({ name: 'scheduled_at', type: 'timestamptz', nullable: true })
   scheduledAt!: Date | null;
   @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })
   completedAt!: Date | null;
   @Column({ type: 'text', nullable: true }) notes!: string | null;
-  @Column({ name: 'next_interaction_id', type: 'uuid', nullable: true })
-  nextInteractionId!: string | null;
-  @ManyToOne(
-    () => Interaction,
-    (interaction) => interaction.previousInteractions,
-  )
-  @JoinColumn({ name: 'next_interaction_id' })
-  nextInteraction!: Interaction | null;
-  @OneToMany(() => Interaction, (interaction) => interaction.nextInteraction)
-  previousInteractions!: Interaction[];
+  @Column({ name: 'next_follow_up_id', type: 'uuid', nullable: true })
+  nextFollowUpId!: string | null;
+  @ManyToOne(() => FollowUp, (followUp) => followUp.previousFollowUps)
+  @JoinColumn({ name: 'next_follow_up_id' })
+  nextFollowUp!: FollowUp | null;
+  @OneToMany(() => FollowUp, (followUp) => followUp.nextFollowUp)
+  previousFollowUps!: FollowUp[];
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })

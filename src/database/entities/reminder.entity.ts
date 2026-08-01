@@ -9,17 +9,15 @@ import {
   PrimaryColumn,
 } from 'typeorm';
 import { Agent } from './agent.entity';
-import { Interaction } from './interaction.entity';
+import { FollowUp } from './follow-up.entity';
 import { Patient } from '../../patients/entities/patient.entity';
 import { ReminderStatus } from './reminder-status.enum';
 @Entity('reminders')
 @Check(`"status" IN ('PENDING','DONE','DISMISSED')`)
 @Index('IDX_reminders_subject_patient_id', ['subjectPatientId'])
-@Index('IDX_reminders_created_from_interaction_id', [
-  'createdFromInteractionId',
-])
+@Index('IDX_reminders_created_from_follow_up_id', ['createdFromFollowUpId'])
 @Index('IDX_reminders_assigned_agent_id', ['assignedAgentId'])
-@Index('IDX_reminders_resulting_interaction_id', ['resultingInteractionId'])
+@Index('IDX_reminders_resulting_follow_up_id', ['resultingFollowUpId'])
 @Index('IDX_reminders_status', ['status'])
 @Index('IDX_reminders_due_at', ['dueAt'])
 export class Reminder {
@@ -29,11 +27,11 @@ export class Reminder {
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'subject_patient_id' })
   subjectPatient!: Patient;
-  @Column({ name: 'created_from_interaction_id', type: 'uuid', nullable: true })
-  createdFromInteractionId!: string | null;
-  @ManyToOne(() => Interaction)
-  @JoinColumn({ name: 'created_from_interaction_id' })
-  createdFromInteraction!: Interaction | null;
+  @Column({ name: 'created_from_follow_up_id', type: 'uuid', nullable: true })
+  createdFromFollowUpId!: string | null;
+  @ManyToOne(() => FollowUp)
+  @JoinColumn({ name: 'created_from_follow_up_id' })
+  createdFromFollowUp!: FollowUp | null;
   @Column({ name: 'assigned_agent_id', type: 'uuid' }) assignedAgentId!: string;
   @ManyToOne(() => Agent)
   @JoinColumn({ name: 'assigned_agent_id' })
@@ -44,11 +42,11 @@ export class Reminder {
   status!: ReminderStatus;
   @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })
   completedAt!: Date | null;
-  @Column({ name: 'resulting_interaction_id', type: 'uuid', nullable: true })
-  resultingInteractionId!: string | null;
-  @ManyToOne(() => Interaction)
-  @JoinColumn({ name: 'resulting_interaction_id' })
-  resultingInteraction!: Interaction | null;
+  @Column({ name: 'resulting_follow_up_id', type: 'uuid', nullable: true })
+  resultingFollowUpId!: string | null;
+  @ManyToOne(() => FollowUp)
+  @JoinColumn({ name: 'resulting_follow_up_id' })
+  resultingFollowUp!: FollowUp | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }

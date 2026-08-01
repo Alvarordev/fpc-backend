@@ -14,11 +14,11 @@ import {
   PsychooncologyAppointment,
 } from '../database/entities/psychooncology-appointment.entity';
 import {
-  InteractionPurpose,
-  InteractionStatus,
-  InteractionType,
-} from '../database/entities/interaction.enums';
-import { Interaction } from '../database/entities/interaction.entity';
+  FollowUpPurpose,
+  FollowUpStatus,
+  FollowUpType,
+} from '../database/entities/follow-up.enums';
+import { FollowUp } from '../database/entities/follow-up.entity';
 import { Patient } from '../patients/entities/patient.entity';
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
@@ -100,10 +100,10 @@ export class PsychooncologyAppointmentsService {
         .getRepository(PsychooncologyAppointment)
         .save(appointment);
       if (input.status) {
-        await manager.getRepository(Interaction).update(
-          { id: appointment.interactionId },
+        await manager.getRepository(FollowUp).update(
+          { id: appointment.followUpId },
           {
-            status: input.status as unknown as InteractionStatus,
+            status: input.status as unknown as FollowUpStatus,
             completedAt:
               input.status === AppointmentStatus.COMPLETED
                 ? appointment.completedAt
@@ -124,9 +124,10 @@ export class PsychooncologyAppointmentsService {
       throw new ConflictException('Closed appointments cannot be updated');
 
     if (user.role === UserRole.VOLUNTEER) {
+      const { status, ...updates } = input;
       if (
-        input.status !== AppointmentStatus.NO_ANSWER ||
-        Object.keys(input).some((key) => key !== 'status')
+        status !== AppointmentStatus.NO_ANSWER ||
+        Object.values(updates).some((value) => value !== undefined)
       )
         throw new ForbiddenException(
           'Volunteers can only mark their scheduled appointments as no answer',
@@ -181,21 +182,21 @@ export class PsychooncologyAppointmentsService {
         where: { patientId: patient.id },
       })) + 1;
     const scheduledAt = this.slotDate(availability);
-    const interaction = await manager.getRepository(Interaction).save(
-      manager.getRepository(Interaction).create({
+    const followUp = await manager.getRepository(FollowUp).save(
+      manager.getRepository(FollowUp).create({
         subjectPatientId: patient.id,
         interlocutorId: patient.id,
         agentId,
         type:
           input.modality === AppointmentModality.CALL
-            ? InteractionType.CALL
-            : InteractionType.VIDEO_CALL,
-        status: InteractionStatus.SCHEDULED,
-        purpose: InteractionPurpose.PSYCHOONCOLOGY_REFERRAL,
+            ? FollowUpType.CALL
+            : FollowUpType.VIDEO_CALL,
+        status: FollowUpStatus.SCHEDULED,
+        purpose: FollowUpPurpose.PSYCHOONCOLOGY_REFERRAL,
         scheduledAt,
         completedAt: null,
         notes: null,
-        nextInteractionId: null,
+        nextFollowUpId: null,
       }),
     );
 
@@ -203,7 +204,7 @@ export class PsychooncologyAppointmentsService {
       manager.getRepository(PsychooncologyAppointment).create({
         patientId: patient.id,
         volunteerId: volunteer.id,
-        interactionId: interaction.id,
+        followUpId: followUp.id,
         availabilityId: availability.id,
         patientEmail: input.patientEmail ?? null,
         sessionNumber,

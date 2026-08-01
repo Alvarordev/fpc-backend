@@ -1,6 +1,6 @@
 import { ConflictException } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { Interaction } from '../../../database/entities/interaction.entity';
+import { FollowUp } from '../../database/entities/follow-up.entity';
 import { PatientDiagnosis } from '../entities/patient-diagnosis.entity';
 import { PatientInsurance } from '../entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../entities/patient-medical-appointment.entity';
@@ -21,27 +21,27 @@ describe('clinical history services', () => {
   const invalidations = {
     markDirty: jest.fn(),
   } as unknown as PatientSummaryInvalidationService;
-  const interactions = {
+  const followUps = {
     existsBy: jest.fn(),
-  } as unknown as Repository<Interaction>;
+  } as unknown as Repository<FollowUp>;
 
   beforeEach(() => jest.resetAllMocks());
 
   it('versions insurance by patient', async () => {
-    (interactions.existsBy as jest.Mock).mockResolvedValue(true);
+    (followUps.existsBy as jest.Mock).mockResolvedValue(true);
     replaceCurrent.mockResolvedValue({
       id: 'insurance-id',
     });
     const service = new PatientInsuranceService(
       {} as Repository<PatientInsurance>,
-      interactions,
+      followUps,
       patients,
       versioning,
       invalidations,
     );
 
     await service.create('patient-id', {
-      interactionId: 'interaction-id',
+      followUpId: 'followUp-id',
       insuranceType: 'SIS',
     });
 
@@ -50,24 +50,24 @@ describe('clinical history services', () => {
       { patientId: 'patient-id', isCurrent: true },
       {
         patientId: 'patient-id',
-        interactionId: 'interaction-id',
+        followUpId: 'followUp-id',
         insuranceType: 'SIS',
       },
     );
   });
 
   it('versions appointments independently by specialty', async () => {
-    (interactions.existsBy as jest.Mock).mockResolvedValue(true);
+    (followUps.existsBy as jest.Mock).mockResolvedValue(true);
     const service = new PatientMedicalAppointmentsService(
       {} as Repository<PatientMedicalAppointment>,
-      interactions,
+      followUps,
       patients,
       versioning,
       invalidations,
     );
 
     await service.create('patient-id', {
-      interactionId: 'interaction-id',
+      followUpId: 'followUp-id',
       specialty: 'ONCOLOGY',
     });
 
@@ -85,11 +85,11 @@ describe('clinical history services', () => {
     const diagnoses = {
       findOne: jest.fn().mockResolvedValue({ patientId: 'other-patient' }),
     } as unknown as Repository<PatientDiagnosis>;
-    (interactions.existsBy as jest.Mock).mockResolvedValue(true);
+    (followUps.existsBy as jest.Mock).mockResolvedValue(true);
     const service = new PatientTreatmentsService(
       {} as Repository<PatientTreatment>,
       diagnoses,
-      interactions,
+      followUps,
       patients,
       versioning,
       invalidations,
@@ -97,7 +97,7 @@ describe('clinical history services', () => {
 
     await expect(
       service.create('patient-id', {
-        interactionId: 'interaction-id',
+        followUpId: 'followUp-id',
         diagnosisId: 'diagnosis-id',
         treatmentType: 'Chemotherapy',
       }),

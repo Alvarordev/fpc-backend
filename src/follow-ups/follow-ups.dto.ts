@@ -6,24 +6,24 @@ import {
   IsUUID,
 } from 'class-validator';
 import {
-  InteractionPurpose,
-  InteractionStatus,
-  InteractionType,
-} from '../database/entities/interaction.enums';
-export class CreateInteractionDto {
+  FollowUpPurpose,
+  FollowUpStatus,
+  FollowUpType,
+} from '../database/entities/follow-up.enums';
+export class CreateFollowUpDto {
   @IsUUID() subjectPatientId!: string;
   @IsUUID() interlocutorId!: string;
   @IsOptional() @IsUUID() agentId?: string;
-  @IsIn(Object.values(InteractionType)) type!: InteractionType;
-  @IsIn(Object.values(InteractionPurpose)) purpose!: InteractionPurpose;
+  @IsIn(Object.values(FollowUpType)) type!: FollowUpType;
+  @IsIn(Object.values(FollowUpPurpose)) purpose!: FollowUpPurpose;
   @IsOptional() @IsString() notes?: string;
   @IsOptional() @IsDateString() scheduledAt?: string;
   @IsOptional() @IsDateString() completedAt?: string;
 }
-export class UpdateInteractionDto {
+export class UpdateFollowUpDto {
   @IsOptional() @IsString() notes?: string;
   @IsOptional()
-  @IsIn(Object.values(InteractionStatus))
-  status?: InteractionStatus;
+  @IsIn(Object.values(FollowUpStatus))
+  status?: FollowUpStatus;
   @IsOptional() @IsDateString() completedAt?: string;
 }

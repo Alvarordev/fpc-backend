@@ -12,7 +12,7 @@ import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { HealthCentersModule } from './health-centers/health-centers.module';
-import { InteractionsModule } from './interactions/interactions.module';
+import { FollowUpsModule } from './follow-ups/follow-ups.module';
 import { PsychooncologyAppointmentsModule } from './psychooncology-appointments/psychooncology-appointments.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { UsersModule } from './users/users.module';
@@ -68,7 +68,7 @@ import { PatientSummariesModule } from './patient-summaries/patient-summaries.mo
     VolunteersModule,
     VolunteerAvailabilityModule,
     HealthCentersModule,
-    InteractionsModule,
+    FollowUpsModule,
     RemindersModule,
     EnrollmentsModule,
     PsychooncologyAppointmentsModule,

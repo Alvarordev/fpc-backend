@@ -7,19 +7,19 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Agent } from '../database/entities/agent.entity';
-import { InteractionStatus } from '../database/entities/interaction.enums';
-import { Interaction } from '../database/entities/interaction.entity';
+import { FollowUpStatus } from '../database/entities/follow-up.enums';
+import { FollowUp } from '../database/entities/follow-up.entity';
 import { Patient } from '../patients/entities/patient.entity';
 import { Reminder } from '../database/entities/reminder.entity';
 import { ReminderStatus } from '../database/entities/reminder-status.enum';
-import { CreateInteractionDto, UpdateInteractionDto } from './interactions.dto';
+import { CreateFollowUpDto, UpdateFollowUpDto } from './follow-ups.dto';
 import { CreateReminderDto } from '../reminders/reminders.dto';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 @Injectable()
-export class InteractionsService {
+export class FollowUpsService {
   constructor(
-    @InjectRepository(Interaction)
-    private readonly interactions: Repository<Interaction>,
+    @InjectRepository(FollowUp)
+    private readonly followUps: Repository<FollowUp>,
     @InjectRepository(Patient) private readonly patients: Repository<Patient>,
     @InjectRepository(Agent) private readonly agents: Repository<Agent>,
     @InjectRepository(Reminder)
@@ -28,16 +28,16 @@ export class InteractionsService {
     private readonly invalidations: PatientSummaryInvalidationService,
   ) {}
   inferStatus(
-    input: Pick<CreateInteractionDto, 'scheduledAt' | 'completedAt'>,
-  ): InteractionStatus {
+    input: Pick<CreateFollowUpDto, 'scheduledAt' | 'completedAt'>,
+  ): FollowUpStatus {
     return input.completedAt
-      ? InteractionStatus.COMPLETED
+      ? FollowUpStatus.COMPLETED
       : input.scheduledAt && new Date(input.scheduledAt) > new Date()
-        ? InteractionStatus.SCHEDULED
-        : InteractionStatus.COMPLETED;
+        ? FollowUpStatus.SCHEDULED
+        : FollowUpStatus.COMPLETED;
   }
   async create(
-    input: CreateInteractionDto,
+    input: CreateFollowUpDto,
     userId: string,
     userRole: string,
     manager?: EntityManager,
@@ -48,16 +48,15 @@ export class InteractionsService {
       input.interlocutorId,
     );
     const agents = manager?.getRepository(Agent) ?? this.agents;
-    const interactions =
-      manager?.getRepository(Interaction) ?? this.interactions;
+    const followUps = manager?.getRepository(FollowUp) ?? this.followUps;
     const agentId = await this.resolveAgentId(
       input.agentId,
       userId,
       userRole,
       agents,
     );
-    const interaction = await interactions.save(
-      interactions.create({
+    const followUp = await followUps.save(
+      followUps.create({
         ...input,
         agentId,
         status: this.inferStatus(input),
@@ -65,14 +64,14 @@ export class InteractionsService {
         completedAt: input.completedAt ? new Date(input.completedAt) : null,
       }),
     );
-    await this.invalidations.markDirty(interaction.subjectPatientId, manager);
-    return interaction;
+    await this.invalidations.markDirty(followUp.subjectPatientId, manager);
+    return followUp;
   }
   async findOne(id: string, manager?: EntityManager) {
     const item = await (
-      manager?.getRepository(Interaction) ?? this.interactions
+      manager?.getRepository(FollowUp) ?? this.followUps
     ).findOne({ where: { id } });
-    if (!item) throw new NotFoundException('Interaction not found');
+    if (!item) throw new NotFoundException('Follow-up not found');
     return item;
   }
   async findOneForUser(id: string, userId: string, userRole: string) {
@@ -82,7 +81,7 @@ export class InteractionsService {
   }
   async scheduleNext(
     id: string,
-    input: CreateInteractionDto,
+    input: CreateFollowUpDto,
     userId: string,
     role: string,
   ) {
@@ -102,15 +101,15 @@ export class InteractionsService {
         role,
         manager,
       );
-      current.nextInteractionId = next.id;
-      await manager.getRepository(Interaction).save(current);
+      current.nextFollowUpId = next.id;
+      await manager.getRepository(FollowUp).save(current);
       await this.invalidations.markDirty(current.subjectPatientId, manager);
       return next;
     });
   }
   async update(
     id: string,
-    input: UpdateInteractionDto,
+    input: UpdateFollowUpDto,
     userId: string,
     userRole: string,
   ) {
@@ -121,21 +120,21 @@ export class InteractionsService {
       input,
       input.completedAt ? { completedAt: new Date(input.completedAt) } : {},
     );
-    const interaction = await this.interactions.save(item);
-    await this.invalidations.markDirty(interaction.subjectPatientId);
-    return interaction;
+    const followUp = await this.followUps.save(item);
+    await this.invalidations.markDirty(followUp.subjectPatientId);
+    return followUp;
   }
   async createReminder(
     id: string,
     input: Omit<
       CreateReminderDto,
-      'subjectPatientId' | 'createdFromInteractionId'
+      'subjectPatientId' | 'createdFromFollowUpId'
     >,
     userId: string,
     userRole: string,
   ) {
-    const interaction = await this.findOne(id);
-    await this.assertScope(interaction, userId, userRole);
+    const followUp = await this.findOne(id);
+    await this.assertScope(followUp, userId, userRole);
     const assignedAgentId = await this.resolveAgentId(
       input.assignedAgentId,
       userId,
@@ -145,8 +144,8 @@ export class InteractionsService {
     return this.reminders.save(
       this.reminders.create({
         ...input,
-        subjectPatientId: interaction.subjectPatientId,
-        createdFromInteractionId: id,
+        subjectPatientId: followUp.subjectPatientId,
+        createdFromFollowUpId: id,
         assignedAgentId,
         dueAt: new Date(input.dueAt),
         status: ReminderStatus.PENDING,
@@ -167,7 +166,7 @@ export class InteractionsService {
         );
       if (requestedAgentId && requestedAgentId !== agent.id)
         throw new ForbiddenException(
-          'Agents cannot assign interactions to others',
+          'Agents cannot assign follow-ups to others',
         );
       return agent.id;
     }
@@ -177,7 +176,7 @@ export class InteractionsService {
     return requestedAgentId;
   }
   private async assertScope(
-    interaction: Interaction,
+    followUp: FollowUp,
     userId: string,
     userRole: string,
     manager?: EntityManager,
@@ -187,9 +186,9 @@ export class InteractionsService {
     const agent = await agents.findOne({ where: { userId } });
     if (!agent)
       throw new BadRequestException('Authenticated user has no agent profile');
-    if (interaction.agentId !== agent.id)
+    if (followUp.agentId !== agent.id)
       throw new ForbiddenException(
-        'Agents can only access their own interactions',
+        'Agents can only access their own follow-ups',
       );
   }
   private async assertPatients(

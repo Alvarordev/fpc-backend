@@ -11,7 +11,7 @@ import {
 } from '../../entities/patient-insurance.entity';
 
 export class CreatePatientInsuranceDto {
-  @IsUUID() interactionId!: string;
+  @IsUUID() followUpId!: string;
   @IsIn(Object.values(InsuranceType)) insuranceType!: InsuranceType;
   @IsOptional() @IsIn(Object.values(EpsProvider)) epsProvider?: EpsProvider;
   @IsOptional() @IsString() changeReason?: string;

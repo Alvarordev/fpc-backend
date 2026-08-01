@@ -8,7 +8,7 @@ import {
   ManyToOne,
   PrimaryColumn,
 } from 'typeorm';
-import { Interaction } from '../../database/entities/interaction.entity';
+import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Patient } from './patient.entity';
 
 export enum InsuranceType {
@@ -41,17 +41,17 @@ export enum EpsProvider {
   where: '"is_current" = true',
 })
 @Index('IDX_patient_insurance_patient_id', ['patientId'])
-@Index('IDX_patient_insurance_interaction_id', ['interactionId'])
+@Index('IDX_patient_insurance_follow_up_id', ['followUpId'])
 export class PatientInsurance {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'patient_id', type: 'uuid' }) patientId!: string;
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'patient_id' })
   patient!: Patient;
-  @Column({ name: 'interaction_id', type: 'uuid' }) interactionId!: string;
-  @ManyToOne(() => Interaction)
-  @JoinColumn({ name: 'interaction_id' })
-  interaction!: Interaction;
+  @Column({ name: 'follow_up_id', type: 'uuid' }) followUpId!: string;
+  @ManyToOne(() => FollowUp)
+  @JoinColumn({ name: 'follow_up_id' })
+  followUp!: FollowUp;
   @Column({ name: 'insurance_type', type: 'varchar', length: 30 })
   insuranceType!: InsuranceType;
   @Column({ name: 'eps_provider', type: 'varchar', length: 30, nullable: true })

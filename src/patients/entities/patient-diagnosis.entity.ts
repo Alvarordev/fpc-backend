@@ -9,7 +9,7 @@ import {
   PrimaryColumn,
 } from 'typeorm';
 import { HealthCenter } from '../../database/entities/health-center.entity';
-import { Interaction } from '../../database/entities/interaction.entity';
+import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Patient } from './patient.entity';
 
 export enum CancerStage {
@@ -29,7 +29,7 @@ export enum CancerStage {
   where: '"is_current" = true',
 })
 @Index('IDX_patient_diagnoses_patient_id', ['patientId'])
-@Index('IDX_patient_diagnoses_interaction_id', ['interactionId'])
+@Index('IDX_patient_diagnoses_follow_up_id', ['followUpId'])
 @Index('IDX_patient_diagnoses_health_center_id', ['healthCenterId'])
 export class PatientDiagnosis {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
@@ -37,10 +37,10 @@ export class PatientDiagnosis {
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'patient_id' })
   patient!: Patient;
-  @Column({ name: 'interaction_id', type: 'uuid' }) interactionId!: string;
-  @ManyToOne(() => Interaction)
-  @JoinColumn({ name: 'interaction_id' })
-  interaction!: Interaction;
+  @Column({ name: 'follow_up_id', type: 'uuid' }) followUpId!: string;
+  @ManyToOne(() => FollowUp)
+  @JoinColumn({ name: 'follow_up_id' })
+  followUp!: FollowUp;
   @Column({ type: 'text' }) diagnosis!: string;
   @Column({ name: 'cancer_stage', type: 'varchar', length: 20, nullable: true })
   cancerStage!: CancerStage | null;

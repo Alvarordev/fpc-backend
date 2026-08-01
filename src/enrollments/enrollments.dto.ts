@@ -15,7 +15,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { AffiliationType } from '../database/entities/enrollment.entity';
-import { InteractionType } from '../database/entities/interaction.enums';
+import { FollowUpType } from '../database/entities/follow-up.enums';
 import { CreatePatientDiagnosisDto } from '../patients/clinical/diagnoses/patient-diagnoses.dto';
 import { CreatePatientInsuranceDto } from '../patients/clinical/insurance/patient-insurance.dto';
 import { CreatePatientMedicalAppointmentDto } from '../patients/clinical/medical-appointments/patient-medical-appointments.dto';
@@ -26,8 +26,8 @@ import { CreateCompanionDto } from '../patients/dto/create-companion.dto';
 import { CreatePatientDto } from '../patients/dto/create-patient.dto';
 import { UpsertPatientDetailsDto } from '../patients/dto/upsert-patient-details.dto';
 
-export class EnrollmentInteractionDto {
-  @IsIn(Object.values(InteractionType)) type!: InteractionType;
+export class EnrollmentFollowUpDto {
+  @IsIn(Object.values(FollowUpType)) type!: FollowUpType;
   @IsOptional() @IsUUID() agentId?: string;
   @IsOptional() @IsString() notes?: string;
   @IsOptional() @IsDateString() scheduledAt?: string;
@@ -36,27 +36,27 @@ export class EnrollmentInteractionDto {
 
 export class EnrollmentDiagnosisDto extends OmitType(
   CreatePatientDiagnosisDto,
-  ['interactionId'] as const,
+  ['followUpId'] as const,
 ) {}
 export class EnrollmentTreatmentDto extends OmitType(
   CreatePatientTreatmentDto,
-  ['interactionId', 'diagnosisId'] as const,
+  ['followUpId', 'diagnosisId'] as const,
 ) {}
 export class EnrollmentInsuranceDto extends OmitType(
   CreatePatientInsuranceDto,
-  ['interactionId'] as const,
+  ['followUpId'] as const,
 ) {}
 export class EnrollmentSisAffiliationDto extends OmitType(
   CreatePatientSisAffiliationDto,
-  ['interactionId'] as const,
+  ['followUpId'] as const,
 ) {}
 export class EnrollmentMedicalAppointmentDto extends OmitType(
   CreatePatientMedicalAppointmentDto,
-  ['interactionId'] as const,
+  ['followUpId'] as const,
 ) {}
 export class EnrollmentSymptomReportDto extends OmitType(
   CreatePatientSymptomReportDto,
-  ['interactionId', 'enrollmentId'] as const,
+  ['followUpId', 'enrollmentId'] as const,
 ) {}
 
 export class CreateEnrollmentDto {
@@ -66,8 +66,8 @@ export class CreateEnrollmentDto {
   @Type(() => CreatePatientDto)
   patient?: CreatePatientDto;
   @ValidateNested()
-  @Type(() => EnrollmentInteractionDto)
-  interaction!: EnrollmentInteractionDto;
+  @Type(() => EnrollmentFollowUpDto)
+  followUp!: EnrollmentFollowUpDto;
   @IsIn(Object.values(AffiliationType)) affiliationType!: AffiliationType;
   @IsOptional() @IsUUID() companionId?: string;
   @IsOptional()
@@ -113,5 +113,5 @@ export class CreateEnrollmentDto {
   @IsOptional() @IsBoolean() hasMobilityIssues?: boolean;
   @IsOptional() @IsBoolean() isOncologicalPatient?: boolean;
   @IsOptional() @IsBoolean() surveyAccepted?: boolean;
-  @IsOptional() @IsInt() @Min(1) @Max(5) interactionQualityRating?: number;
+  @IsOptional() @IsInt() @Min(1) @Max(5) followUpQualityRating?: number;
 }

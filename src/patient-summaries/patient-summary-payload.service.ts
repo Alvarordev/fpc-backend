@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Enrollment } from '../database/entities/enrollment.entity';
-import { Interaction } from '../database/entities/interaction.entity';
+import { FollowUp } from '../database/entities/follow-up.entity';
 import { Repository } from 'typeorm';
 import { PatientDiagnosis } from '../patients/entities/patient-diagnosis.entity';
 import { PatientInsurance } from '../patients/entities/patient-insurance.entity';
@@ -29,8 +29,8 @@ export class PatientSummaryPayloadService {
     private readonly symptoms: Repository<PatientSymptomReport>,
     @InjectRepository(Enrollment)
     private readonly enrollments: Repository<Enrollment>,
-    @InjectRepository(Interaction)
-    private readonly interactions: Repository<Interaction>,
+    @InjectRepository(FollowUp)
+    private readonly followUps: Repository<FollowUp>,
   ) {}
 
   async buildPrompt(patientId: string): Promise<string> {
@@ -48,7 +48,7 @@ export class PatientSummaryPayloadService {
       sis,
       symptoms,
       enrollment,
-      interactions,
+      followUps,
     ] = await Promise.all([
       this.diagnoses.find({ where: { patientId, isCurrent: true } }),
       this.insurance.find({ where: { patientId, isCurrent: true } }),
@@ -69,7 +69,7 @@ export class PatientSummaryPayloadService {
         order: { createdAt: 'DESC' },
         take: 1,
       }),
-      this.interactions.find({
+      this.followUps.find({
         where: { subjectPatientId: patientId },
         order: { createdAt: 'DESC' },
         take: 10,
@@ -140,7 +140,7 @@ export class PatientSummaryPayloadService {
         painDescription: item.painDescription,
         soughtMedicalConsultation: item.hasSoughtMedicalConsultation,
       })),
-      recentInteractions: interactions.map((item) => ({
+      recentFollowUps: followUps.map((item) => ({
         type: item.type,
         status: item.status,
         purpose: item.purpose,

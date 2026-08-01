@@ -1,4 +1,4 @@
-export enum InteractionType {
+export enum FollowUpType {
   WHATSAPP = 'WHATSAPP',
   CALL = 'CALL',
   VIDEO_CALL = 'VIDEO_CALL',
@@ -6,13 +6,13 @@ export enum InteractionType {
   IN_PERSON = 'IN_PERSON',
   FACEBOOK = 'FACEBOOK',
 }
-export enum InteractionStatus {
+export enum FollowUpStatus {
   SCHEDULED = 'SCHEDULED',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
   NO_ANSWER = 'NO_ANSWER',
 }
-export enum InteractionPurpose {
+export enum FollowUpPurpose {
   FIRST_CONTACT = 'FIRST_CONTACT',
   ENROLLMENT = 'ENROLLMENT',
   FOLLOW_UP = 'FOLLOW_UP',

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
-import { Interaction } from '../../../database/entities/interaction.entity';
+import { FollowUp } from '../../../database/entities/follow-up.entity';
 import { PatientDiagnosis } from '../../entities/patient-diagnosis.entity';
 import { PatientRole } from '../../entities/patient-role.enum';
 import { PatientTreatment } from '../../entities/patient-treatment.entity';
@@ -20,8 +20,8 @@ export class PatientTreatmentsService {
     private readonly repository: Repository<PatientTreatment>,
     @InjectRepository(PatientDiagnosis)
     private readonly diagnoses: Repository<PatientDiagnosis>,
-    @InjectRepository(Interaction)
-    private readonly interactions: Repository<Interaction>,
+    @InjectRepository(FollowUp)
+    private readonly followUps: Repository<FollowUp>,
     private readonly patients: PatientsService,
     private readonly versioning: HistoryVersioningService,
     private readonly invalidations: PatientSummaryInvalidationService,
@@ -39,19 +39,18 @@ export class PatientTreatmentsService {
     );
     const diagnoses =
       manager?.getRepository(PatientDiagnosis) ?? this.diagnoses;
-    const interactions =
-      manager?.getRepository(Interaction) ?? this.interactions;
-    const [diagnosis, interaction] = await Promise.all([
+    const followUps = manager?.getRepository(FollowUp) ?? this.followUps;
+    const [diagnosis, followUp] = await Promise.all([
       diagnoses.findOne({ where: { id: input.diagnosisId } }),
-      interactions.existsBy({
-        id: input.interactionId,
+      followUps.existsBy({
+        id: input.followUpId,
         subjectPatientId: patientId,
       }),
     ]);
     if (!diagnosis) throw new NotFoundException('Diagnosis not found');
     if (diagnosis.patientId !== patientId)
       throw new ConflictException('Diagnosis does not belong to patient');
-    if (!interaction) throw new NotFoundException('Interaction not found');
+    if (!followUp) throw new NotFoundException('Follow-up not found');
     const treatment = await (manager
       ? this.versioning.replaceCurrent(
           PatientTreatment,

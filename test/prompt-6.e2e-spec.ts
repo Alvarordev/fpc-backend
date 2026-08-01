@@ -9,7 +9,7 @@ import { AppModule } from '../src/app.module';
 import { Agent } from '../src/database/entities/agent.entity';
 import { Alert } from '../src/database/entities/alert.entity';
 import { HealthCenter } from '../src/database/entities/health-center.entity';
-import { Interaction } from '../src/database/entities/interaction.entity';
+import { FollowUp } from '../src/database/entities/follow-up.entity';
 import { Patient } from '../src/patients/entities/patient.entity';
 import { PsychooncologyAppointment } from '../src/database/entities/psychooncology-appointment.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
@@ -168,7 +168,7 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
     ).resolves.toMatchObject({ status: AvailabilityStatus.RESERVED });
   });
 
-  it('creates an interaction, releases cancelled slots, and numbers sessions', async () => {
+  it('creates a follow-up, releases cancelled slots, and numbers sessions', async () => {
     const availability = await createAvailability(volunteer.id, adminToken);
     const first = await request(server)
       .post('/psychooncology-appointments')
@@ -183,8 +183,8 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
     const firstAppointment = first.body as PsychooncologyAppointment;
     expect(firstAppointment.sessionNumber).toBe(1);
     await expect(
-      dataSource.getRepository(Interaction).findOneByOrFail({
-        id: firstAppointment.interactionId,
+      dataSource.getRepository(FollowUp).findOneByOrFail({
+        id: firstAppointment.followUpId,
       }),
     ).resolves.toMatchObject({
       subjectPatientId: patient.id,
@@ -278,8 +278,8 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
       .expect(201);
     const alert = created.body as Alert;
     await expect(
-      dataSource.getRepository(Interaction).findOneByOrFail({
-        id: alert.interactionId,
+      dataSource.getRepository(FollowUp).findOneByOrFail({
+        id: alert.followUpId,
       }),
     ).resolves.toMatchObject({
       subjectPatientId: patient.id,
@@ -355,7 +355,7 @@ async function clearPromptSixData(dataSource: DataSource, emailPrefix: string) {
     [emailPrefix, emailPrefix],
   );
   await dataSource.query(
-    'DELETE FROM interactions WHERE subject_patient_id IN (SELECT id FROM patients WHERE email LIKE $1) OR agent_id IN (SELECT id FROM agents WHERE user_id IN (SELECT id FROM users WHERE email LIKE $2))',
+    'DELETE FROM follow_ups WHERE subject_patient_id IN (SELECT id FROM patients WHERE email LIKE $1) OR agent_id IN (SELECT id FROM agents WHERE user_id IN (SELECT id FROM users WHERE email LIKE $2))',
     [emailPrefix, emailPrefix],
   );
   await dataSource.query(

@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import { Enrollment } from '../database/entities/enrollment.entity';
-import { Interaction } from '../database/entities/interaction.entity';
+import { FollowUp } from '../database/entities/follow-up.entity';
 import { PatientDiagnosis } from '../patients/entities/patient-diagnosis.entity';
 import { PatientInsurance } from '../patients/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../patients/entities/patient-medical-appointment.entity';
@@ -42,7 +42,7 @@ describe('PatientSummaryPayloadService', () => {
       { find } as unknown as Repository<PatientSisAffiliation>,
       { find } as unknown as Repository<PatientSymptomReport>,
       { find } as unknown as Repository<Enrollment>,
-      { find } as unknown as Repository<Interaction>,
+      { find } as unknown as Repository<FollowUp>,
     );
 
     const prompt = await service.buildPrompt('patient-id');

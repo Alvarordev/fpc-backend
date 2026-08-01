@@ -8,7 +8,7 @@ import {
   PrimaryColumn,
 } from 'typeorm';
 import { HealthCenter } from '../../database/entities/health-center.entity';
-import { Interaction } from '../../database/entities/interaction.entity';
+import { FollowUp } from '../../database/entities/follow-up.entity';
 import { PatientDiagnosis } from './patient-diagnosis.entity';
 import { Patient } from './patient.entity';
 
@@ -18,7 +18,7 @@ import { Patient } from './patient.entity';
   where: '"is_current" = true',
 })
 @Index('IDX_patient_treatments_patient_id', ['patientId'])
-@Index('IDX_patient_treatments_interaction_id', ['interactionId'])
+@Index('IDX_patient_treatments_follow_up_id', ['followUpId'])
 @Index('IDX_patient_treatments_diagnosis_id', ['diagnosisId'])
 @Index('IDX_patient_treatments_health_center_id', ['healthCenterId'])
 export class PatientTreatment {
@@ -27,10 +27,10 @@ export class PatientTreatment {
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'patient_id' })
   patient!: Patient;
-  @Column({ name: 'interaction_id', type: 'uuid' }) interactionId!: string;
-  @ManyToOne(() => Interaction)
-  @JoinColumn({ name: 'interaction_id' })
-  interaction!: Interaction;
+  @Column({ name: 'follow_up_id', type: 'uuid' }) followUpId!: string;
+  @ManyToOne(() => FollowUp)
+  @JoinColumn({ name: 'follow_up_id' })
+  followUp!: FollowUp;
   @Column({ name: 'diagnosis_id', type: 'uuid' }) diagnosisId!: string;
   @ManyToOne(() => PatientDiagnosis)
   @JoinColumn({ name: 'diagnosis_id' })

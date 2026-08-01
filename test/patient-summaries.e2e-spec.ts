@@ -238,7 +238,7 @@ describe('Patient summaries (e2e)', () => {
           email: 'p10-enrollment@example.test',
         },
         affiliationType: 'SELF',
-        interaction: { type: 'CALL', agentId: assignedAgentId },
+        followUp: { type: 'CALL', agentId: assignedAgentId },
       })
       .expect(201);
 
@@ -270,7 +270,7 @@ describe('Patient summaries (e2e)', () => {
           email: 'p10-rollback@example.test',
         },
         affiliationType: 'SELF',
-        interaction: { type: 'CALL', agentId: assignedAgentId },
+        followUp: { type: 'CALL', agentId: assignedAgentId },
         treatment: { treatmentType: 'Requires a diagnosis' },
       })
       .expect(400);
@@ -390,7 +390,7 @@ async function clearSummaryData(dataSource: DataSource, emailPrefix: string) {
     [emailPrefix],
   );
   await dataSource.query(
-    `DELETE FROM interactions WHERE subject_patient_id IN ${patientIds}`,
+    `DELETE FROM follow_ups WHERE subject_patient_id IN ${patientIds}`,
     [emailPrefix],
   );
   await dataSource.query(`DELETE FROM patients WHERE email LIKE $1`, [

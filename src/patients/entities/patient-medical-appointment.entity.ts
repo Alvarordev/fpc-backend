@@ -8,7 +8,7 @@ import {
   PrimaryColumn,
 } from 'typeorm';
 import { HealthCenter } from '../../database/entities/health-center.entity';
-import { Interaction } from '../../database/entities/interaction.entity';
+import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Patient } from './patient.entity';
 
 @Entity('patient_medical_appointments')
@@ -17,7 +17,7 @@ import { Patient } from './patient.entity';
   where: '"is_current" = true',
 })
 @Index('IDX_patient_medical_appointments_patient_id', ['patientId'])
-@Index('IDX_patient_medical_appointments_interaction_id', ['interactionId'])
+@Index('IDX_patient_medical_appointments_follow_up_id', ['followUpId'])
 @Index('IDX_patient_medical_appointments_health_center_id', ['healthCenterId'])
 export class PatientMedicalAppointment {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
@@ -25,10 +25,10 @@ export class PatientMedicalAppointment {
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'patient_id' })
   patient!: Patient;
-  @Column({ name: 'interaction_id', type: 'uuid' }) interactionId!: string;
-  @ManyToOne(() => Interaction)
-  @JoinColumn({ name: 'interaction_id' })
-  interaction!: Interaction;
+  @Column({ name: 'follow_up_id', type: 'uuid' }) followUpId!: string;
+  @ManyToOne(() => FollowUp)
+  @JoinColumn({ name: 'follow_up_id' })
+  followUp!: FollowUp;
   @Column({ name: 'health_center_id', type: 'uuid', nullable: true })
   healthCenterId!: string | null;
   @ManyToOne(() => HealthCenter)

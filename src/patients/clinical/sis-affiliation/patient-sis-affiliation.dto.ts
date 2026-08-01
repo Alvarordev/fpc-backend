@@ -6,7 +6,7 @@ import {
   IsUUID,
 } from 'class-validator';
 export class CreatePatientSisAffiliationDto {
-  @IsUUID() interactionId!: string;
+  @IsUUID() followUpId!: string;
   @IsBoolean() canAffiliate!: boolean;
   @IsOptional() @IsDateString() expectedDate?: string;
   @IsOptional() @IsString() cantAffiliateReason?: string;

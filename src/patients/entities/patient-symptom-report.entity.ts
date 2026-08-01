@@ -10,13 +10,13 @@ import {
 } from 'typeorm';
 import { Enrollment } from '../../database/entities/enrollment.entity';
 import { HealthCenter } from '../../database/entities/health-center.entity';
-import { Interaction } from '../../database/entities/interaction.entity';
+import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Patient } from './patient.entity';
 
 @Entity('patient_symptom_reports')
 @Check('"pain_intensity" IS NULL OR "pain_intensity" BETWEEN 0 AND 10')
 @Index('IDX_patient_symptom_reports_patient_id', ['patientId'])
-@Index('IDX_patient_symptom_reports_interaction_id', ['interactionId'])
+@Index('IDX_patient_symptom_reports_follow_up_id', ['followUpId'])
 @Index('IDX_patient_symptom_reports_enrollment_id', ['enrollmentId'])
 @Index('IDX_patient_symptom_reports_health_center_id', ['healthCenterId'])
 export class PatientSymptomReport {
@@ -25,10 +25,10 @@ export class PatientSymptomReport {
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'patient_id' })
   patient!: Patient;
-  @Column({ name: 'interaction_id', type: 'uuid' }) interactionId!: string;
-  @ManyToOne(() => Interaction)
-  @JoinColumn({ name: 'interaction_id' })
-  interaction!: Interaction;
+  @Column({ name: 'follow_up_id', type: 'uuid' }) followUpId!: string;
+  @ManyToOne(() => FollowUp)
+  @JoinColumn({ name: 'follow_up_id' })
+  followUp!: FollowUp;
   @Column({ name: 'enrollment_id', type: 'uuid', nullable: true })
   enrollmentId!: string | null;
   @ManyToOne(() => Enrollment)

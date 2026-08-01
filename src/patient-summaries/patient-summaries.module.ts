@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Enrollment } from '../database/entities/enrollment.entity';
-import { Interaction } from '../database/entities/interaction.entity';
+import { FollowUp } from '../database/entities/follow-up.entity';
 import { PatientSummaryRateLimit } from '../database/entities/patient-summary-rate-limit.entity';
 import { PatientSummary } from '../database/entities/patient-summary.entity';
 import { PatientDiagnosis } from '../patients/entities/patient-diagnosis.entity';
@@ -34,7 +34,7 @@ import { PatientSummaryWorkerService } from './patient-summary-worker.service';
       PatientSisAffiliation,
       PatientSymptomReport,
       Enrollment,
-      Interaction,
+      FollowUp,
     ]),
   ],
   providers: [

@@ -3,14 +3,14 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { User } from '../database/entities/user.entity';
 import { CreateReminderDto } from '../reminders/reminders.dto';
-import { CreateInteractionDto, UpdateInteractionDto } from './interactions.dto';
-import { InteractionsService } from './interactions.service';
+import { CreateFollowUpDto, UpdateFollowUpDto } from './follow-ups.dto';
+import { FollowUpsService } from './follow-ups.service';
 const ROLES = ['ADMIN', 'FOUNDATION', 'AGENT'];
-@Controller('interactions')
-export class InteractionsController {
-  constructor(private readonly service: InteractionsService) {}
+@Controller('follow-ups')
+export class FollowUpsController {
+  constructor(private readonly service: FollowUpsService) {}
   @Post() @Roles(...ROLES) create(
-    @Body() dto: CreateInteractionDto,
+    @Body() dto: CreateFollowUpDto,
     @CurrentUser() user: User,
   ) {
     return this.service.create(dto, user.id, user.role);
@@ -23,14 +23,14 @@ export class InteractionsController {
   }
   @Patch(':id') @Roles(...ROLES) update(
     @Param('id') id: string,
-    @Body() dto: UpdateInteractionDto,
+    @Body() dto: UpdateFollowUpDto,
     @CurrentUser() user: User,
   ) {
     return this.service.update(id, dto, user.id, user.role);
   }
   @Post(':id/schedule-next') @Roles(...ROLES) next(
     @Param('id') id: string,
-    @Body() dto: CreateInteractionDto,
+    @Body() dto: CreateFollowUpDto,
     @CurrentUser() user: User,
   ) {
     return this.service.scheduleNext(id, dto, user.id, user.role);

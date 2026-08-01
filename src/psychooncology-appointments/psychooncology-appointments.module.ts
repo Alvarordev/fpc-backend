@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Agent } from '../database/entities/agent.entity';
-import { Interaction } from '../database/entities/interaction.entity';
+import { FollowUp } from '../database/entities/follow-up.entity';
 import { Patient } from '../patients/entities/patient.entity';
 import { PsychooncologyAppointment } from '../database/entities/psychooncology-appointment.entity';
 import { VolunteerAvailability } from '../database/entities/volunteer-availability.entity';
@@ -16,7 +16,7 @@ import { PsychooncologyAppointmentsService } from './psychooncology-appointments
       VolunteerAvailability,
       Volunteer,
       Patient,
-      Interaction,
+      FollowUp,
       Agent,
     ]),
   ],

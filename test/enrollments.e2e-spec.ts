@@ -8,12 +8,12 @@ import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { Agent } from '../src/database/entities/agent.entity';
 import { Enrollment } from '../src/database/entities/enrollment.entity';
-import { Interaction } from '../src/database/entities/interaction.entity';
+import { FollowUp } from '../src/database/entities/follow-up.entity';
 import {
-  InteractionPurpose,
-  InteractionStatus,
-  InteractionType,
-} from '../src/database/entities/interaction.enums';
+  FollowUpPurpose,
+  FollowUpStatus,
+  FollowUpType,
+} from '../src/database/entities/follow-up.enums';
 import { CompanionPatient } from '../src/patients/entities/companion-patient.entity';
 import { PatientDiagnosis } from '../src/patients/entities/patient-diagnosis.entity';
 import { PatientInsurance } from '../src/patients/entities/patient-insurance.entity';
@@ -90,7 +90,7 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: true,
         },
         affiliationType: 'FAMILY_FRIEND',
-        interaction: { type: 'IN_PERSON', notes: 'Enrollment completed' },
+        followUp: { type: 'IN_PERSON', notes: 'Enrollment completed' },
         details: { currentDepartment: 'LIMA', requiresTranslation: true },
         insurance: { insuranceType: 'NONE' },
         sisAffiliation: { canAffiliate: true, comments: 'Start process' },
@@ -102,18 +102,18 @@ describe('Enrollment wizard (e2e)', () => {
         consentToContact: true,
         consentToShareData: false,
         isOncologicalPatient: true,
-        interactionQualityRating: 5,
+        followUpQualityRating: 5,
       })
       .expect(201);
 
     const body = response.body as Enrollment & {
       patient: Patient;
       companion: Patient;
-      interaction: Interaction;
+      followUp: FollowUp;
     };
     expect(body.patient).toMatchObject({ role: 'PATIENT', status: 'ENROLLED' });
     expect(body.companion).toMatchObject({ role: 'COMPANION' });
-    expect(body.interaction).toMatchObject({
+    expect(body.followUp).toMatchObject({
       subjectPatientId: body.patient.id,
       interlocutorId: body.companion.id,
       purpose: 'ENROLLMENT',
@@ -131,7 +131,7 @@ describe('Enrollment wizard (e2e)', () => {
       dataSource.getRepository(PatientInsurance).findOneByOrFail({
         patientId: body.patient.id,
       }),
-    ).resolves.toMatchObject({ interactionId: body.interaction.id });
+    ).resolves.toMatchObject({ followUpId: body.followUp.id });
     const diagnosis = await dataSource
       .getRepository(PatientDiagnosis)
       .findOneByOrFail({ patientId: body.patient.id });
@@ -144,14 +144,14 @@ describe('Enrollment wizard (e2e)', () => {
       dataSource.getRepository(PatientSisAffiliation).findOneByOrFail({
         patientId: body.patient.id,
       }),
-    ).resolves.toMatchObject({ interactionId: body.interaction.id });
+    ).resolves.toMatchObject({ followUpId: body.followUp.id });
     await expect(
       dataSource.getRepository(PatientSymptomReport).findOneByOrFail({
         patientId: body.patient.id,
       }),
     ).resolves.toMatchObject({
       enrollmentId: body.id,
-      interactionId: body.interaction.id,
+      followUpId: body.followUp.id,
       painIntensity: 7,
     });
   });
@@ -173,7 +173,7 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: true,
         },
         affiliationType: 'FAMILY_FRIEND',
-        interaction: { type: 'CALL' },
+        followUp: { type: 'CALL' },
       })
       .expect(201);
     const firstEnrollmentBody = firstEnrollment.body as {
@@ -191,7 +191,7 @@ describe('Enrollment wizard (e2e)', () => {
         },
         companionId: firstEnrollmentBody.companion.id,
         affiliationType: 'FAMILY_FRIEND',
-        interaction: { type: 'CALL' },
+        followUp: { type: 'CALL' },
       })
       .expect(201);
     const secondEnrollmentBody = secondEnrollment.body as { patient: Patient };
@@ -219,7 +219,7 @@ describe('Enrollment wizard (e2e)', () => {
       .send({
         patientId: companion.id,
         affiliationType: 'SELF',
-        interaction: { type: 'CALL' },
+        followUp: { type: 'CALL' },
       })
       .expect(409);
   });
@@ -241,7 +241,7 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: false,
         },
         affiliationType: 'FAMILY_FRIEND',
-        interaction: { type: 'CALL' },
+        followUp: { type: 'CALL' },
       })
       .expect(400);
   });
@@ -263,7 +263,7 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: true,
         },
         affiliationType: 'SELF',
-        interaction: { type: 'CALL' },
+        followUp: { type: 'CALL' },
       })
       .expect(400);
   });
@@ -276,19 +276,17 @@ describe('Enrollment wizard (e2e)', () => {
       role: PatientRole.PATIENT,
       status: PatientStatus.UNENROLLED,
     });
-    const diagnosisInteraction = await dataSource
-      .getRepository(Interaction)
-      .save({
-        subjectPatientId: patient.id,
-        interlocutorId: patient.id,
-        agentId: agent.id,
-        type: InteractionType.CALL,
-        status: InteractionStatus.COMPLETED,
-        purpose: InteractionPurpose.FIRST_CONTACT,
-      });
+    const diagnosisFollowUp = await dataSource.getRepository(FollowUp).save({
+      subjectPatientId: patient.id,
+      interlocutorId: patient.id,
+      agentId: agent.id,
+      type: FollowUpType.CALL,
+      status: FollowUpStatus.COMPLETED,
+      purpose: FollowUpPurpose.FIRST_CONTACT,
+    });
     const diagnosis = await dataSource.getRepository(PatientDiagnosis).save({
       patientId: patient.id,
-      interactionId: diagnosisInteraction.id,
+      followUpId: diagnosisFollowUp.id,
       diagnosis: 'Existing cancer diagnosis',
       isCurrent: true,
     });
@@ -299,7 +297,7 @@ describe('Enrollment wizard (e2e)', () => {
       .send({
         patientId: patient.id,
         affiliationType: 'SELF',
-        interaction: { type: 'CALL' },
+        followUp: { type: 'CALL' },
         treatment: { treatmentType: 'Existing diagnosis treatment' },
       })
       .expect(201);
@@ -320,7 +318,7 @@ describe('Enrollment wizard (e2e)', () => {
           email: 'p7-missing-diagnosis@example.test',
         },
         affiliationType: 'SELF',
-        interaction: { type: 'CALL' },
+        followUp: { type: 'CALL' },
         treatment: { treatmentType: 'Missing diagnosis treatment' },
       })
       .expect(400);
@@ -337,7 +335,7 @@ describe('Enrollment wizard (e2e)', () => {
           email: 'p7-rollback@example.test',
         },
         affiliationType: 'SELF',
-        interaction: { type: 'CALL' },
+        followUp: { type: 'CALL' },
         insurance: { insuranceType: 'NONE' },
         treatment: { treatmentType: 'This has no diagnosis' },
       })
@@ -349,7 +347,7 @@ describe('Enrollment wizard (e2e)', () => {
       }),
     ).resolves.toBe(0);
     await expect(
-      dataSource.getRepository(Interaction).count({
+      dataSource.getRepository(FollowUp).count({
         where: { agentId: agent.id },
       }),
     ).resolves.toBe(0);
@@ -398,7 +396,7 @@ async function clearPromptSevenData(
     [emailPrefix],
   );
   await dataSource.query(
-    `DELETE FROM interactions WHERE subject_patient_id IN ${patientIds} OR agent_id IN (SELECT id FROM agents WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1))`,
+    `DELETE FROM follow_ups WHERE subject_patient_id IN ${patientIds} OR agent_id IN (SELECT id FROM agents WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1))`,
     [emailPrefix],
   );
   await dataSource.query(

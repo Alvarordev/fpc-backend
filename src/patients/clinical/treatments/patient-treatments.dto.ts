@@ -1,6 +1,6 @@
 import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
 export class CreatePatientTreatmentDto {
-  @IsUUID() interactionId!: string;
+  @IsUUID() followUpId!: string;
   @IsUUID() diagnosisId!: string;
   @IsString() treatmentType!: string;
   @IsOptional() @IsString() treatmentFrequency?: string;

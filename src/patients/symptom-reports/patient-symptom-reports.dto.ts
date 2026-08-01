@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 
 export class CreatePatientSymptomReportDto {
-  @IsUUID() interactionId!: string;
+  @IsUUID() followUpId!: string;
   @IsOptional() @IsUUID() enrollmentId?: string;
   @IsOptional() @IsString() @MaxLength(20) discomfortSeverity?: string;
   @IsOptional() @IsString() discomfortDescription?: string;

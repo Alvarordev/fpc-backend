@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
-import { Interaction } from '../../../database/entities/interaction.entity';
+import { FollowUp } from '../../../database/entities/follow-up.entity';
 import { PatientRole } from '../../entities/patient-role.enum';
 import { PatientInsurance } from '../../entities/patient-insurance.entity';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
@@ -14,8 +14,8 @@ export class PatientInsuranceService {
   constructor(
     @InjectRepository(PatientInsurance)
     private readonly repository: Repository<PatientInsurance>,
-    @InjectRepository(Interaction)
-    private readonly interactions: Repository<Interaction>,
+    @InjectRepository(FollowUp)
+    private readonly followUps: Repository<FollowUp>,
     private readonly patients: PatientsService,
     private readonly versioning: HistoryVersioningService,
     private readonly invalidations: PatientSummaryInvalidationService,
@@ -25,7 +25,7 @@ export class PatientInsuranceService {
     input: CreatePatientInsuranceDto,
     manager?: EntityManager,
   ) {
-    await this.assertReferences(patientId, input.interactionId, manager);
+    await this.assertReferences(patientId, input.followUpId, manager);
     const insurance = await (manager
       ? this.versioning.replaceCurrent(
           PatientInsurance,
@@ -49,7 +49,7 @@ export class PatientInsuranceService {
   }
   private async assertReferences(
     patientId: string,
-    interactionId: string,
+    followUpId: string,
     manager?: EntityManager,
   ) {
     await this.patients.assertPatientRole(
@@ -59,10 +59,11 @@ export class PatientInsuranceService {
       manager,
     );
     if (
-      !(await (
-        manager?.getRepository(Interaction) ?? this.interactions
-      ).existsBy({ id: interactionId, subjectPatientId: patientId }))
+      !(await (manager?.getRepository(FollowUp) ?? this.followUps).existsBy({
+        id: followUpId,
+        subjectPatientId: patientId,
+      }))
     )
-      throw new NotFoundException('Interaction not found');
+      throw new NotFoundException('Follow-up not found');
   }
 }

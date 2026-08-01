@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { Agent } from './agent.entity';
 import { HealthCenter } from './health-center.entity';
-import { Interaction } from './interaction.entity';
+import { FollowUp } from './follow-up.entity';
 export enum AlertStatus {
   ACTIVE = 'ACTIVE',
   RESOLVED = 'RESOLVED',
@@ -19,7 +19,7 @@ export enum AlertStatus {
 @Entity('alerts')
 @Check(`"status" IN ('ACTIVE','RESOLVED')`)
 @Index('IDX_alerts_health_center_id', ['healthCenterId'])
-@Index('IDX_alerts_interaction_id', ['interactionId'])
+@Index('IDX_alerts_follow_up_id', ['followUpId'])
 @Index('IDX_alerts_created_by_id', ['createdById'])
 @Index('IDX_alerts_resolved_by_id', ['resolvedById'])
 @Index('IDX_alerts_status', ['status'])
@@ -29,10 +29,10 @@ export class Alert {
   @ManyToOne(() => HealthCenter)
   @JoinColumn({ name: 'health_center_id' })
   healthCenter!: HealthCenter;
-  @Column({ name: 'interaction_id', type: 'uuid' }) interactionId!: string;
-  @ManyToOne(() => Interaction)
-  @JoinColumn({ name: 'interaction_id' })
-  interaction!: Interaction;
+  @Column({ name: 'follow_up_id', type: 'uuid' }) followUpId!: string;
+  @ManyToOne(() => FollowUp)
+  @JoinColumn({ name: 'follow_up_id' })
+  followUp!: FollowUp;
   @Column({ name: 'created_by_id', type: 'uuid' }) createdById!: string;
   @ManyToOne(() => Agent)
   @JoinColumn({ name: 'created_by_id' })

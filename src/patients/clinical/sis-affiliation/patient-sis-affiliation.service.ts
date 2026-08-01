@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
-import { Interaction } from '../../../database/entities/interaction.entity';
+import { FollowUp } from '../../../database/entities/follow-up.entity';
 import { PatientRole } from '../../entities/patient-role.enum';
 import { PatientSisAffiliation } from '../../entities/patient-sis-affiliation.entity';
 import { PatientsService } from '../../patients.service';
@@ -12,8 +12,8 @@ export class PatientSisAffiliationService {
   constructor(
     @InjectRepository(PatientSisAffiliation)
     private readonly repository: Repository<PatientSisAffiliation>,
-    @InjectRepository(Interaction)
-    private readonly interactions: Repository<Interaction>,
+    @InjectRepository(FollowUp)
+    private readonly followUps: Repository<FollowUp>,
     private readonly patients: PatientsService,
     private readonly invalidations: PatientSummaryInvalidationService,
   ) {}
@@ -29,11 +29,12 @@ export class PatientSisAffiliationService {
       manager,
     );
     if (
-      !(await (
-        manager?.getRepository(Interaction) ?? this.interactions
-      ).existsBy({ id: input.interactionId, subjectPatientId: patientId }))
+      !(await (manager?.getRepository(FollowUp) ?? this.followUps).existsBy({
+        id: input.followUpId,
+        subjectPatientId: patientId,
+      }))
     )
-      throw new NotFoundException('Interaction not found');
+      throw new NotFoundException('Follow-up not found');
     const repository =
       manager?.getRepository(PatientSisAffiliation) ?? this.repository;
     const affiliation = await repository.save(

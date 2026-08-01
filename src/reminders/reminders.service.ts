@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { ReminderStatus } from '../database/entities/reminder-status.enum';
 import { Reminder } from '../database/entities/reminder.entity';
 import { Agent } from '../database/entities/agent.entity';
-import { Interaction } from '../database/entities/interaction.entity';
+import { FollowUp } from '../database/entities/follow-up.entity';
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
 import {
@@ -23,8 +23,8 @@ export class RemindersService {
     @InjectRepository(Reminder)
     private readonly repository: Repository<Reminder>,
     @InjectRepository(Agent) private readonly agents: Repository<Agent>,
-    @InjectRepository(Interaction)
-    private readonly interactions: Repository<Interaction>,
+    @InjectRepository(FollowUp)
+    private readonly followUps: Repository<FollowUp>,
   ) {}
   async create(input: CreateReminderDto, user: User) {
     const assignedAgentId = await this.resolveAgentId(
@@ -50,18 +50,18 @@ export class RemindersService {
     if (item.status !== ReminderStatus.PENDING)
       throw new BadRequestException('Only pending reminders can be completed');
     if (
-      input.resultingInteractionId &&
-      !(await this.interactions.existsBy({
-        id: input.resultingInteractionId,
+      input.resultingFollowUpId &&
+      !(await this.followUps.existsBy({
+        id: input.resultingFollowUpId,
         subjectPatientId: item.subjectPatientId,
       }))
     )
       throw new BadRequestException(
-        'Resulting interaction must belong to the reminder patient',
+        'Resulting follow-up must belong to the reminder patient',
       );
     item.status = ReminderStatus.DONE;
     item.completedAt = new Date();
-    item.resultingInteractionId = input.resultingInteractionId ?? null;
+    item.resultingFollowUpId = input.resultingFollowUpId ?? null;
     return this.repository.save(item);
   }
   async dismiss(id: string, user: User) {

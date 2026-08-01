@@ -4,7 +4,7 @@ export class CreateReminderDto {
   @IsDateString() dueAt!: string;
   @IsString() description!: string;
   @IsOptional() @IsUUID() assignedAgentId?: string;
-  @IsOptional() @IsUUID() createdFromInteractionId?: string;
+  @IsOptional() @IsUUID() createdFromFollowUpId?: string;
 }
 export class UpdateReminderDto {
   @IsOptional() @IsUUID() assignedAgentId?: string;
@@ -12,5 +12,5 @@ export class UpdateReminderDto {
   @IsOptional() @IsString() description?: string;
 }
 export class CompleteReminderDto {
-  @IsOptional() @IsUUID() resultingInteractionId?: string;
+  @IsOptional() @IsUUID() resultingFollowUpId?: string;
 }

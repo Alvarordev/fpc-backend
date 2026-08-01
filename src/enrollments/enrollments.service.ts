@@ -10,14 +10,14 @@ import {
   AffiliationType,
   Enrollment,
 } from '../database/entities/enrollment.entity';
-import { InteractionPurpose } from '../database/entities/interaction.enums';
+import { FollowUpPurpose } from '../database/entities/follow-up.enums';
 import { CompanionPatient } from '../patients/entities/companion-patient.entity';
 import { PatientDiagnosis } from '../patients/entities/patient-diagnosis.entity';
 import { InsuranceType } from '../patients/entities/patient-insurance.entity';
 import { PatientRole } from '../patients/entities/patient-role.enum';
 import { PatientStatus } from '../patients/entities/patient-status.enum';
 import { Patient } from '../patients/entities/patient.entity';
-import { InteractionsService } from '../interactions/interactions.service';
+import { FollowUpsService } from '../follow-ups/follow-ups.service';
 import { PatientDiagnosesService } from '../patients/clinical/diagnoses/patient-diagnoses.service';
 import { PatientInsuranceService } from '../patients/clinical/insurance/patient-insurance.service';
 import { PatientMedicalAppointmentsService } from '../patients/clinical/medical-appointments/patient-medical-appointments.service';
@@ -35,7 +35,7 @@ export class EnrollmentsService {
     private readonly enrollments: Repository<Enrollment>,
     private readonly dataSource: DataSource,
     private readonly patients: PatientsService,
-    private readonly interactions: InteractionsService,
+    private readonly followUps: FollowUpsService,
     private readonly insurance: PatientInsuranceService,
     private readonly diagnoses: PatientDiagnosesService,
     private readonly treatments: PatientTreatmentsService,
@@ -50,7 +50,7 @@ export class EnrollmentsService {
       const {
         patientId,
         patient: patientInput,
-        interaction: interactionInput,
+        followUp: followUpInput,
         companionId,
         companion: companionInput,
         details,
@@ -139,12 +139,12 @@ export class EnrollmentsService {
 
       if (details)
         await this.patients.upsertDetails(patient.id, details, manager);
-      const interaction = await this.interactions.create(
+      const followUp = await this.followUps.create(
         {
-          ...interactionInput,
+          ...followUpInput,
           subjectPatientId: patient.id,
           interlocutorId: companion?.id ?? patient.id,
-          purpose: InteractionPurpose.ENROLLMENT,
+          purpose: FollowUpPurpose.ENROLLMENT,
         },
         userId,
         userRole,
@@ -155,7 +155,7 @@ export class EnrollmentsService {
         enrollmentRepository.create({
           ...metadata,
           patientId: patient.id,
-          interactionId: interaction.id,
+          followUpId: followUp.id,
           companionId: companion?.id ?? null,
         }),
       );
@@ -163,19 +163,19 @@ export class EnrollmentsService {
       if (insurance)
         await this.insurance.create(
           patient.id,
-          { ...insurance, interactionId: interaction.id },
+          { ...insurance, followUpId: followUp.id },
           manager,
         );
       if (sisAffiliation)
         await this.sisAffiliations.create(
           patient.id,
-          { ...sisAffiliation, interactionId: interaction.id },
+          { ...sisAffiliation, followUpId: followUp.id },
           manager,
         );
       const treatmentDiagnosis = diagnosis
         ? await this.diagnoses.create(
             patient.id,
-            { ...diagnosis, interactionId: interaction.id },
+            { ...diagnosis, followUpId: followUp.id },
             manager,
           )
         : treatment
@@ -192,7 +192,7 @@ export class EnrollmentsService {
           patient.id,
           {
             ...treatment,
-            interactionId: interaction.id,
+            followUpId: followUp.id,
             diagnosisId: treatmentDiagnosis.id,
           },
           manager,
@@ -200,7 +200,7 @@ export class EnrollmentsService {
       for (const appointment of medicalAppointments ?? [])
         await this.appointments.create(
           patient.id,
-          { ...appointment, interactionId: interaction.id },
+          { ...appointment, followUpId: followUp.id },
           manager,
         );
       if (symptomReport)
@@ -208,14 +208,14 @@ export class EnrollmentsService {
           patient.id,
           {
             ...symptomReport,
-            interactionId: interaction.id,
+            followUpId: followUp.id,
             enrollmentId: enrollment.id,
           },
           manager,
         );
 
       await this.invalidations.markDirty(patient.id, manager);
-      return { ...enrollment, patient, companion, interaction };
+      return { ...enrollment, patient, companion, followUp };
     });
   }
 

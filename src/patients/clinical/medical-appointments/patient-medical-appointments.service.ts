@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
-import { Interaction } from '../../../database/entities/interaction.entity';
+import { FollowUp } from '../../../database/entities/follow-up.entity';
 import { PatientMedicalAppointment } from '../../entities/patient-medical-appointment.entity';
 import { PatientRole } from '../../entities/patient-role.enum';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
@@ -13,8 +13,8 @@ export class PatientMedicalAppointmentsService {
   constructor(
     @InjectRepository(PatientMedicalAppointment)
     private readonly repository: Repository<PatientMedicalAppointment>,
-    @InjectRepository(Interaction)
-    private readonly interactions: Repository<Interaction>,
+    @InjectRepository(FollowUp)
+    private readonly followUps: Repository<FollowUp>,
     private readonly patients: PatientsService,
     private readonly versioning: HistoryVersioningService,
     private readonly invalidations: PatientSummaryInvalidationService,
@@ -31,11 +31,12 @@ export class PatientMedicalAppointmentsService {
       manager,
     );
     if (
-      !(await (
-        manager?.getRepository(Interaction) ?? this.interactions
-      ).existsBy({ id: input.interactionId, subjectPatientId: patientId }))
+      !(await (manager?.getRepository(FollowUp) ?? this.followUps).existsBy({
+        id: input.followUpId,
+        subjectPatientId: patientId,
+      }))
     )
-      throw new NotFoundException('Interaction not found');
+      throw new NotFoundException('Follow-up not found');
     const appointment = await (manager
       ? this.versioning.replaceCurrent(
           PatientMedicalAppointment,

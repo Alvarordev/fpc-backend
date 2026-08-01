@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Enrollment } from '../database/entities/enrollment.entity';
-import { InteractionsModule } from '../interactions/interactions.module';
+import { FollowUpsModule } from '../follow-ups/follow-ups.module';
 import { PatientsModule } from '../patients/patients.module';
 import { PatientSummariesModule } from '../patient-summaries/patient-summaries.module';
 import { EnrollmentsController } from './enrollments.controller';
@@ -12,7 +12,7 @@ import { EnrollmentsService } from './enrollments.service';
     TypeOrmModule.forFeature([Enrollment]),
     PatientsModule,
     PatientSummariesModule,
-    InteractionsModule,
+    FollowUpsModule,
   ],
   controllers: [EnrollmentsController],
   providers: [EnrollmentsService],

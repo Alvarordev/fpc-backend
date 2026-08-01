@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { CancerStage } from '../../entities/patient-diagnosis.entity';
 export class CreatePatientDiagnosisDto {
-  @IsUUID() interactionId!: string;
+  @IsUUID() followUpId!: string;
   @IsString() diagnosis!: string;
   @IsOptional() @IsIn(Object.values(CancerStage)) cancerStage?: CancerStage;
   @IsOptional() @IsDateString() diagnosisDate?: string;
