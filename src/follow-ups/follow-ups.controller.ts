@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -8,6 +8,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -18,7 +19,11 @@ import { FollowUp } from '../database/entities/follow-up.entity';
 import { Reminder } from '../database/entities/reminder.entity';
 import { CreateReminderDto } from '../reminders/reminders.dto';
 import { ReminderResponseDto } from '../reminders/reminder-response.dto';
-import { CreateFollowUpDto, UpdateFollowUpDto } from './follow-ups.dto';
+import {
+  CreateFollowUpDto,
+  FindFollowUpsQueryDto,
+  UpdateFollowUpDto,
+} from './follow-ups.dto';
 import { FollowUpResponseDto } from './follow-up-response.dto';
 import { FollowUpsService } from './follow-ups.service';
 import { UserRole } from '../database/entities/user-role.enum';
@@ -48,6 +53,28 @@ export class FollowUpsController {
   @ApiNotFoundResponse({ description: 'Patient or agent not found' })
   create(@Body() dto: CreateFollowUpDto, @CurrentUser() user: User) {
     return this.service.create(dto, user.id, user.role).then(this.toFollowUp);
+  }
+  @Get()
+  @Roles(...READ)
+  @ApiOperation({ summary: 'List visible follow-ups' })
+  @ApiOkResponse({ type: FollowUpResponseDto, isArray: true })
+  @ApiQuery({ name: 'agentId', required: false, format: 'uuid' })
+  @ApiQuery({ name: 'patientId', required: false, format: 'uuid' })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_ANSWER'],
+  })
+  @ApiBadRequestResponse({
+    description: 'The authenticated agent has no profile',
+  })
+  findAll(
+    @Query() query: FindFollowUpsQueryDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.service
+      .findAllForUser(query, user)
+      .then((items) => items.map(this.toFollowUp));
   }
   @Get(':id')
   @Roles(...READ)
@@ -134,6 +161,7 @@ export class FollowUpsController {
     return {
       id: item.id,
       subjectPatientId: item.subjectPatientId,
+      subjectPatientName: item.subjectPatient?.fullName ?? null,
       interlocutorId: item.interlocutorId,
       agentId: item.agentId,
       type: item.type,

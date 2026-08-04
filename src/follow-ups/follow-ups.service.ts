@@ -12,7 +12,11 @@ import { FollowUp } from '../database/entities/follow-up.entity';
 import { Patient } from '../patients/entities/patient.entity';
 import { Reminder } from '../database/entities/reminder.entity';
 import { ReminderStatus } from '../database/entities/reminder-status.enum';
-import { CreateFollowUpDto, UpdateFollowUpDto } from './follow-ups.dto';
+import {
+  CreateFollowUpDto,
+  FindFollowUpsQueryDto,
+  UpdateFollowUpDto,
+} from './follow-ups.dto';
 import { CreateReminderDto } from '../reminders/reminders.dto';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { PatientAccessService } from '../patient-access/patient-access.service';
@@ -73,7 +77,7 @@ export class FollowUpsService {
   async findOne(id: string, manager?: EntityManager) {
     const item = await (
       manager?.getRepository(FollowUp) ?? this.followUps
-    ).findOne({ where: { id } });
+    ).findOne({ where: { id }, relations: { subjectPatient: true } });
     if (!item) throw new NotFoundException('Follow-up not found');
     return item;
   }
@@ -81,6 +85,36 @@ export class FollowUpsService {
     const item = await this.findOne(id);
     await this.access.assertCanRead(item.subjectPatientId, user);
     return item;
+  }
+  async findAllForUser(queryInput: FindFollowUpsQueryDto, user: User) {
+    const query = this.followUps
+      .createQueryBuilder('follow_up')
+      .leftJoinAndSelect('follow_up.subjectPatient', 'subject_patient')
+      .orderBy('follow_up.scheduled_at', 'ASC')
+      .addOrderBy('follow_up.created_at', 'DESC');
+
+    if (user.role === 'AGENT') {
+      const agent = await this.agents.findOne({ where: { userId: user.id } });
+      if (!agent)
+        throw new BadRequestException('Authenticated user has no agent profile');
+      query.andWhere('follow_up.agent_id = :agentId', { agentId: agent.id });
+    } else if (queryInput.agentId) {
+      query.andWhere('follow_up.agent_id = :agentId', {
+        agentId: queryInput.agentId,
+      });
+    }
+
+    if (queryInput.patientId)
+      query.andWhere('follow_up.subject_patient_id = :patientId', {
+        patientId: queryInput.patientId,
+      });
+    if (queryInput.status)
+      query.andWhere('follow_up.status = :status', {
+        status: queryInput.status,
+      });
+
+    await this.access.scopeQuery(query, 'follow_up.subject_patient_id', user);
+    return query.getMany();
   }
   async scheduleNext(
     id: string,

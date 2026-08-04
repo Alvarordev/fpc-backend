@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -9,6 +9,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -20,6 +21,7 @@ import { AppointmentStatus } from '../database/entities/psychooncology-appointme
 import { PsychooncologyAppointment } from '../database/entities/psychooncology-appointment.entity';
 import {
   CreatePsychooncologyAppointmentDto,
+  FindPsychooncologyAppointmentsQueryDto,
   UpdatePsychooncologyAppointmentDto,
 } from './psychooncology-appointments.dto';
 import { PsychooncologyAppointmentResponseDto } from './psychooncology-appointment-response.dto';
@@ -73,12 +75,22 @@ export class PsychooncologyAppointmentsController {
   @Roles(...READ)
   @ApiOperation({ summary: 'List psycho-oncology appointments' })
   @ApiOkResponse({ type: PsychooncologyAppointmentResponseDto, isArray: true })
+  @ApiQuery({ name: 'volunteerId', required: false, format: 'uuid' })
+  @ApiQuery({ name: 'patientId', required: false, format: 'uuid' })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_ANSWER'],
+  })
   @ApiBadRequestResponse({
     description: 'The authenticated volunteer has no profile',
   })
-  findAll(@CurrentUser() user: User) {
+  findAll(
+    @Query() query: FindPsychooncologyAppointmentsQueryDto,
+    @CurrentUser() user: User,
+  ) {
     return this.service
-      .findAll(user)
+      .findAll(query, user)
       .then((items) => items.map(this.toResponse));
   }
 

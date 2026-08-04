@@ -21,6 +21,7 @@ import { VolunteersModule } from './volunteers/volunteers.module';
 import { VolunteerAvailabilityModule } from './volunteer-availability/volunteer-availability.module';
 import { WebsocketsModule } from './websockets/websockets.module';
 import { PatientSummariesModule } from './patient-summaries/patient-summaries.module';
+import { CallCenterModule } from './call-center/call-center.module';
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { PatientSummariesModule } from './patient-summaries/patient-summaries.mo
     HealthModule,
     WebsocketsModule,
     PatientSummariesModule,
+    CallCenterModule,
   ],
 })
 export class AppModule {}

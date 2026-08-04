@@ -8,6 +8,7 @@ import {
 export class FollowUpResponseDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) subjectPatientId!: string;
+  @ApiProperty({ nullable: true }) subjectPatientName!: string | null;
   @ApiProperty({ format: 'uuid' }) interlocutorId!: string;
   @ApiProperty({ format: 'uuid' }) agentId!: string;
   @ApiProperty({ enum: FollowUpType }) type!: FollowUpType;

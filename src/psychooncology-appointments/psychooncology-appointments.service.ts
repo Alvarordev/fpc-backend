@@ -23,6 +23,7 @@ import { Volunteer } from '../database/entities/volunteer.entity';
 import { PatientAccessService } from '../patient-access/patient-access.service';
 import {
   CreatePsychooncologyAppointmentDto,
+  FindPsychooncologyAppointmentsQueryDto,
   UpdatePsychooncologyAppointmentDto,
 } from './psychooncology-appointments.dto';
 
@@ -41,11 +42,31 @@ export class PsychooncologyAppointmentsService {
     );
   }
 
-  async findAll(user: User) {
+  async findAll(
+    queryInput: FindPsychooncologyAppointmentsQueryDto,
+    user: User,
+  ) {
     const query = this.appointments
       .createQueryBuilder('appointment')
       .orderBy('appointment.scheduled_at', 'ASC');
-    await this.access.scopeQuery(query, 'appointment.patient_id', user);
+    const volunteerId = await this.access.volunteerIdFor(user);
+    if (volunteerId) {
+      query.andWhere('appointment.volunteer_id = :volunteerId', { volunteerId });
+    } else if (queryInput.volunteerId) {
+      query.andWhere('appointment.volunteer_id = :volunteerId', {
+        volunteerId: queryInput.volunteerId,
+      });
+    }
+    if (queryInput.patientId)
+      query.andWhere('appointment.patient_id = :patientId', {
+        patientId: queryInput.patientId,
+      });
+    if (queryInput.status)
+      query.andWhere('appointment.status = :status', {
+        status: queryInput.status,
+      });
+    if (!volunteerId)
+      await this.access.scopeQuery(query, 'appointment.patient_id', user);
     return query.getMany();
   }
 

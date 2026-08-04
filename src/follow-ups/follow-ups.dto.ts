@@ -27,3 +27,9 @@ export class UpdateFollowUpDto {
   status?: FollowUpStatus;
   @IsOptional() @IsDateString() completedAt?: string;
 }
+
+export class FindFollowUpsQueryDto {
+  @IsOptional() @IsUUID() agentId?: string;
+  @IsOptional() @IsUUID() patientId?: string;
+  @IsOptional() @IsIn(Object.values(FollowUpStatus)) status?: FollowUpStatus;
+}

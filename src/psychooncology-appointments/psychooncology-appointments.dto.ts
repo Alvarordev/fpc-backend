@@ -25,3 +25,9 @@ export class UpdatePsychooncologyAppointmentDto {
   @IsOptional() @IsString() recommendations?: string;
   @IsOptional() @IsString() referral?: string;
 }
+
+export class FindPsychooncologyAppointmentsQueryDto {
+  @IsOptional() @IsUUID() volunteerId?: string;
+  @IsOptional() @IsUUID() patientId?: string;
+  @IsOptional() @IsIn(Object.values(AppointmentStatus)) status?: AppointmentStatus;
+}

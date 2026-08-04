@@ -4,6 +4,8 @@ import { AgentsController } from '../agents/agents.controller';
 import { AgentsService } from '../agents/agents.service';
 import { AlertsController } from '../alerts/alerts.controller';
 import { AlertsService } from '../alerts/alerts.service';
+import { CallCenterController } from '../call-center/call-center.controller';
+import { CallCenterService } from '../call-center/call-center.service';
 import { AuthController } from '../auth/auth.controller';
 import { AuthService } from '../auth/auth.service';
 import { EnrollmentsController } from '../enrollments/enrollments.controller';
@@ -47,6 +49,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
   imports: [ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }])],
   controllers: [
     AlertsController,
+    CallCenterController,
     AgentsController,
     AuthController,
     EnrollmentsController,
@@ -69,6 +72,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
   providers: [
     { provide: AgentsService, useValue: {} },
     { provide: AlertsService, useValue: {} },
+    { provide: CallCenterService, useValue: {} },
     { provide: AuthService, useValue: {} },
     { provide: EnrollmentsService, useValue: {} },
     { provide: FollowUpsService, useValue: {} },

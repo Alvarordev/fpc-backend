@@ -170,6 +170,36 @@
         ]
       }
     },
+    "/call-center/workload": {
+      "get": {
+        "operationId": "CallCenterController_workload",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallCenterWorkloadResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get pending call center workload",
+        "tags": [
+          "call-center"
+        ]
+      }
+    },
     "/agents": {
       "post": {
         "operationId": "AgentsController_create",
@@ -609,6 +639,73 @@
           }
         ],
         "summary": "Create a follow-up",
+        "tags": [
+          "follow-ups"
+        ]
+      },
+      "get": {
+        "operationId": "FollowUpsController_findAll",
+        "parameters": [
+          {
+            "name": "agentId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "patientId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "SCHEDULED",
+                "COMPLETED",
+                "CANCELLED",
+                "NO_ANSWER"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FollowUpResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The authenticated agent has no profile"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List visible follow-ups",
         "tags": [
           "follow-ups"
         ]
@@ -2601,7 +2698,40 @@
       },
       "get": {
         "operationId": "PsychooncologyAppointmentsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "volunteerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "patientId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "SCHEDULED",
+                "COMPLETED",
+                "CANCELLED",
+                "NO_ANSWER"
+              ],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -3716,6 +3846,140 @@
           "updatedAt"
         ]
       },
+      "CallCenterAgentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "fullName"
+        ]
+      },
+      "CallCenterFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectPatientName": {
+            "type": "string"
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ],
+            "type": "string"
+          },
+          "purpose": {
+            "enum": [
+              "FIRST_CONTACT",
+              "ENROLLMENT",
+              "FOLLOW_UP",
+              "PSYCHOONCOLOGY_REFERRAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "scheduledAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "subjectPatientId",
+          "subjectPatientName",
+          "agentId",
+          "type",
+          "purpose",
+          "scheduledAt"
+        ]
+      },
+      "CallCenterReminderDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectPatientName": {
+            "type": "string"
+          },
+          "assignedAgentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string"
+          },
+          "dueAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subjectPatientId",
+          "subjectPatientName",
+          "assignedAgentId",
+          "description",
+          "dueAt"
+        ]
+      },
+      "CallCenterWorkloadResponseDto": {
+        "type": "object",
+        "properties": {
+          "agents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CallCenterAgentDto"
+            }
+          },
+          "scheduledFollowUps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CallCenterFollowUpDto"
+            }
+          },
+          "pendingReminders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CallCenterReminderDto"
+            }
+          }
+        },
+        "required": [
+          "agents",
+          "scheduledFollowUps",
+          "pendingReminders"
+        ]
+      },
       "CreateAgentDto": {
         "type": "object",
         "properties": {
@@ -4513,6 +4777,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "subjectPatientName": {
+            "type": "string",
+            "nullable": true
+          },
           "interlocutorId": {
             "type": "string",
             "format": "uuid"
@@ -4582,6 +4850,7 @@
         "required": [
           "id",
           "subjectPatientId",
+          "subjectPatientName",
           "interlocutorId",
           "agentId",
           "type",
