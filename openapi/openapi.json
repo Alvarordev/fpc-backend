@@ -48,7 +48,38 @@
       },
       "get": {
         "operationId": "AlertsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "RESOLVED"
+              ]
+            }
+          },
+          {
+            "name": "healthCenterId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "createdById",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -152,6 +183,9 @@
           "401": {
             "description": "JWT missing, invalid, or expired"
           },
+          "403": {
+            "description": "Administrator or agent role required"
+          },
           "404": {
             "description": "Alert not found"
           },
@@ -187,6 +221,9 @@
           },
           "401": {
             "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
           }
         },
         "security": [
@@ -3213,6 +3250,59 @@
         "tags": [
           "Users"
         ]
+      },
+      "get": {
+        "operationId": "UsersController_findAll",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List users",
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/me": {
@@ -3716,6 +3806,63 @@
           "volunteers"
         ]
       }
+    },
+    "/volunteer-calendar": {
+      "get": {
+        "operationId": "VolunteerCalendarController_findInRange",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date",
+              "example": "2026-08-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date",
+              "example": "2026-08-31",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerCalendarResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid date range"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator, agent, or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get volunteer availability and scheduled appointments",
+        "tags": [
+          "volunteer-calendar"
+        ]
+      }
     }
   },
   "info": {
@@ -3792,6 +3939,9 @@
             "type": "string",
             "format": "uuid"
           },
+          "healthCenterName": {
+            "type": "string"
+          },
           "followUpId": {
             "type": "string",
             "format": "uuid"
@@ -3799,6 +3949,9 @@
           "createdById": {
             "type": "string",
             "format": "uuid"
+          },
+          "createdByName": {
+            "type": "string"
           },
           "title": {
             "type": "string"
@@ -3823,6 +3976,15 @@
             "nullable": true,
             "format": "uuid"
           },
+          "resolvedByUserId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "resolvedByName": {
+            "type": "string",
+            "nullable": true
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string"
@@ -3835,13 +3997,17 @@
         "required": [
           "id",
           "healthCenterId",
+          "healthCenterName",
           "followUpId",
           "createdById",
+          "createdByName",
           "title",
           "description",
           "status",
           "resolvedAt",
           "resolvedById",
+          "resolvedByUserId",
+          "resolvedByName",
           "createdAt",
           "updatedAt"
         ]
@@ -5133,6 +5299,10 @@
           "isActive": {
             "type": "boolean"
           },
+          "patientCount": {
+            "type": "number",
+            "minimum": 0
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string"
@@ -5148,6 +5318,7 @@
           "slug",
           "department",
           "isActive",
+          "patientCount",
           "createdAt",
           "updatedAt"
         ]
@@ -6888,13 +7059,42 @@
           },
           "isActive": {
             "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
           }
         },
         "required": [
           "id",
           "email",
           "role",
-          "isActive"
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UserListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "data",
+          "total"
         ]
       },
       "CreateVolunteerAvailabilityDto": {
@@ -7074,6 +7274,146 @@
             "maxLength": 50
           }
         }
+      },
+      "VolunteerCalendarAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "example": "09:00:00"
+          },
+          "endTime": {
+            "type": "string",
+            "example": "10:00:00"
+          },
+          "status": {
+            "enum": [
+              "AVAILABLE",
+              "RESERVED"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "startTime",
+          "endTime",
+          "status"
+        ]
+      },
+      "VolunteerCalendarAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientName": {
+            "type": "string"
+          },
+          "availabilityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modality": {
+            "enum": [
+              "CALL",
+              "VIDEO_CALL"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "scheduledAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "patientName",
+          "availabilityId",
+          "modality",
+          "status",
+          "scheduledAt"
+        ]
+      },
+      "VolunteerCalendarVolunteerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "specialty": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "availabilitySlots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerCalendarAvailabilityDto"
+            }
+          },
+          "appointments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerCalendarAppointmentDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "specialty",
+          "isActive",
+          "availabilitySlots",
+          "appointments"
+        ]
+      },
+      "VolunteerCalendarResponseDto": {
+        "type": "object",
+        "properties": {
+          "volunteers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerCalendarVolunteerDto"
+            }
+          }
+        },
+        "required": [
+          "volunteers"
+        ]
       }
     }
   }

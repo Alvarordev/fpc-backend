@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiConflictResponse,
@@ -14,7 +14,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserResponseDto } from './dto/user-response.dto';
+import { ListUsersDto } from './dto/list-users.dto';
+import { UserListResponseDto, UserResponseDto } from './dto/user-response.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -33,6 +34,16 @@ export class UsersController {
   async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
     const user = await this.usersService.create(createUserDto);
     return UserResponseDto.from(user);
+  }
+
+  @Get()
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'List users' })
+  @ApiOkResponse({ type: UserListResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  async findAll(@Query() query: ListUsersDto): Promise<UserListResponseDto> {
+    return UserListResponseDto.from(await this.usersService.findAll(query));
   }
 
   @Get('me')

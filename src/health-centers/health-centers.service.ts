@@ -26,15 +26,21 @@ export class HealthCentersService {
     );
   }
   findAll(department?: string, isActive?: boolean) {
-    const query = this.repository.createQueryBuilder('healthCenter');
+    const query = this.repository
+      .createQueryBuilder('health_center')
+      .addSelect(this.patientCountSubquery(), 'patientCount');
     if (department)
-      query.andWhere('healthCenter.department = :department', { department });
+      query.andWhere('health_center.department = :department', { department });
     if (isActive !== undefined)
-      query.andWhere('healthCenter.is_active = :isActive', { isActive });
-    return query.getMany();
+      query.andWhere('health_center.is_active = :isActive', { isActive });
+    return this.withPatientCounts(query);
   }
   async findOne(id: string) {
-    const item = await this.repository.findOne({ where: { id } });
+    const query = this.repository
+      .createQueryBuilder('health_center')
+      .addSelect(this.patientCountSubquery(), 'patientCount')
+      .where('health_center.id = :id', { id });
+    const [item] = await this.withPatientCounts(query);
     if (!item) throw new NotFoundException('Health center not found');
     return item;
   }
@@ -42,6 +48,35 @@ export class HealthCentersService {
     const item = await this.findOne(id);
     Object.assign(item, input);
     if (input.name) item.slug = this.slug(input.name);
-    return this.repository.save(item);
+    await this.repository.save(item);
+    return this.findOne(id);
+  }
+
+  private async withPatientCounts(
+    query: ReturnType<Repository<HealthCenter>['createQueryBuilder']>,
+  ) {
+    const { entities, raw } = await query.getRawAndEntities();
+    return entities.map((item, index) =>
+      Object.assign(item, { patientCount: Number(raw[index].patientCount) }),
+    );
+  }
+
+  private patientCountSubquery(): string {
+    return `(
+      SELECT COUNT(DISTINCT linked_patient.patient_id)
+      FROM (
+        SELECT diagnosis.patient_id
+        FROM patient_diagnoses diagnosis
+        WHERE diagnosis.health_center_id = health_center.id
+        UNION
+        SELECT treatment.patient_id
+        FROM patient_treatments treatment
+        WHERE treatment.health_center_id = health_center.id
+        UNION
+        SELECT appointment.patient_id
+        FROM patient_medical_appointments appointment
+        WHERE appointment.health_center_id = health_center.id
+      ) linked_patient
+    )`;
   }
 }

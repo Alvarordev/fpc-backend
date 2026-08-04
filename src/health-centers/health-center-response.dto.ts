@@ -10,6 +10,7 @@ export class HealthCenterResponseDto {
   @ApiProperty() slug!: string;
   @ApiProperty({ enum: PERU_DEPARTMENTS }) department!: PeruDepartment;
   @ApiProperty() isActive!: boolean;
+  @ApiProperty({ minimum: 0 }) patientCount!: number;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
   @ApiProperty({ format: 'date-time' }) updatedAt!: Date;
 }

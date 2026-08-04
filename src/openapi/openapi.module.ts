@@ -41,6 +41,8 @@ import { VolunteerAvailabilityController } from '../volunteer-availability/volun
 import { VolunteerAvailabilityService } from '../volunteer-availability/volunteer-availability.service';
 import { VolunteersController } from '../volunteers/volunteers.controller';
 import { VolunteersService } from '../volunteers/volunteers.service';
+import { VolunteerCalendarController } from '../volunteer-calendar/volunteer-calendar.controller';
+import { VolunteerCalendarService } from '../volunteer-calendar/volunteer-calendar.service';
 import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
 
 // Controllers only need their route metadata to build the OpenAPI document.
@@ -68,6 +70,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     UsersController,
     VolunteerAvailabilityController,
     VolunteersController,
+    VolunteerCalendarController,
   ],
   providers: [
     { provide: AgentsService, useValue: {} },
@@ -93,6 +96,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     { provide: TypeOrmHealthIndicator, useValue: {} },
     { provide: VolunteerAvailabilityService, useValue: {} },
     { provide: VolunteersService, useValue: {} },
+    { provide: VolunteerCalendarService, useValue: {} },
   ],
 })
 export class OpenApiModule {}

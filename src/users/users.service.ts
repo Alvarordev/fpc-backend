@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { EntityManager, Repository } from 'typeorm';
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
+import { ListUsersDto } from './dto/list-users.dto';
 
 @Injectable()
 export class UsersService {
@@ -24,6 +25,17 @@ export class UsersService {
 
   findById(id: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { id } });
+  }
+
+  async findAll(
+    filters: ListUsersDto,
+  ): Promise<{ data: User[]; total: number }> {
+    const [data, total] = await this.usersRepository.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: filters.offset,
+      take: filters.limit,
+    });
+    return { data, total };
   }
 
   async create(input: {

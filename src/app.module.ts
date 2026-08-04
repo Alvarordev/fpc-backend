@@ -22,6 +22,7 @@ import { VolunteerAvailabilityModule } from './volunteer-availability/volunteer-
 import { WebsocketsModule } from './websockets/websockets.module';
 import { PatientSummariesModule } from './patient-summaries/patient-summaries.module';
 import { CallCenterModule } from './call-center/call-center.module';
+import { VolunteerCalendarModule } from './volunteer-calendar/volunteer-calendar.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { CallCenterModule } from './call-center/call-center.module';
     PatientsModule,
     AgentsModule,
     VolunteersModule,
+    VolunteerCalendarModule,
     VolunteerAvailabilityModule,
     HealthCentersModule,
     FollowUpsModule,

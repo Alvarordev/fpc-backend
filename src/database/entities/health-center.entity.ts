@@ -47,6 +47,7 @@ export class HealthCenter {
   @Column({ type: 'varchar', length: 50 }) department!: PeruDepartment;
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive!: boolean;
+  patientCount?: number;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })

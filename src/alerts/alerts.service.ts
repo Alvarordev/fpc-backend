@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -15,9 +16,10 @@ import {
   FollowUpType,
 } from '../database/entities/follow-up.enums';
 import { FollowUp } from '../database/entities/follow-up.entity';
+import { UserRole } from '../database/entities/user-role.enum';
 import { Patient } from '../patients/entities/patient.entity';
 import { User } from '../database/entities/user.entity';
-import { CreateAlertDto } from './alerts.dto';
+import { CreateAlertDto, FindAlertsDto } from './alerts.dto';
 import { PatientAccessService } from '../patient-access/patient-access.service';
 
 @Injectable()
@@ -41,7 +43,7 @@ export class AlertsService {
     if (!(await this.healthCenters.existsBy({ id: input.healthCenterId })))
       throw new NotFoundException('Health center not found');
 
-    return this.dataSource.transaction(async (manager) => {
+    const alert = await this.dataSource.transaction(async (manager) => {
       const followUpId = input.followUpId
         ? await this.existingFollowUp(input.followUpId)
         : await this.createFollowUp(input, agent.id, manager);
@@ -55,43 +57,69 @@ export class AlertsService {
           status: AlertStatus.ACTIVE,
           resolvedAt: null,
           resolvedById: null,
+          resolvedByUserId: null,
         }),
       );
     });
+    return this.findOne(alert.id, user);
   }
 
-  async findAll(user: User) {
-    const query = this.alerts
-      .createQueryBuilder('alert')
-      .innerJoin(FollowUp, 'follow_up', 'follow_up.id = alert.follow_up_id')
-      .orderBy('alert.created_at', 'DESC');
+  async findAll(filters: FindAlertsDto, user: User) {
+    const query = this.baseQuery().orderBy('alert.created_at', 'DESC');
+    if (filters.status)
+      query.andWhere('alert.status = :status', { status: filters.status });
+    if (filters.healthCenterId)
+      query.andWhere('alert.health_center_id = :healthCenterId', {
+        healthCenterId: filters.healthCenterId,
+      });
+    if (filters.createdById)
+      query.andWhere('alert.created_by_id = :createdById', {
+        createdById: filters.createdById,
+      });
     await this.access.scopeQuery(query, 'follow_up.subject_patient_id', user);
     return query.getMany();
   }
 
   async findOne(id: string, user: User) {
-    const alert = await this.alerts.findOne({ where: { id } });
+    const query = this.baseQuery().where('alert.id = :id', { id });
+    await this.access.scopeQuery(query, 'follow_up.subject_patient_id', user);
+    const alert = await query.getOne();
     if (!alert) throw new NotFoundException('Alert not found');
-    const followUp = await this.followUps.findOne({
-      where: { id: alert.followUpId },
-    });
-    if (!followUp) throw new NotFoundException('Follow-up not found');
-    await this.access.assertCanRead(followUp.subjectPatientId, user);
     return alert;
   }
 
   async resolve(id: string, user: User) {
-    const agent = await this.agents.findOne({ where: { userId: user.id } });
-    if (!agent)
-      throw new BadRequestException('Authenticated user has no agent profile');
-    const alert = await this.alerts.findOne({ where: { id } });
-    if (!alert) throw new NotFoundException('Alert not found');
+    if (![UserRole.ADMIN, UserRole.AGENT].includes(user.role))
+      throw new ForbiddenException('Administrator or agent role required');
+    const alert = await this.findOne(id, user);
     if (alert.status === AlertStatus.RESOLVED)
       throw new ConflictException('Alert is already resolved');
     alert.status = AlertStatus.RESOLVED;
     alert.resolvedAt = new Date();
-    alert.resolvedById = agent.id;
-    return this.alerts.save(alert);
+    if (user.role === UserRole.AGENT) {
+      const agent = await this.agents.findOne({ where: { userId: user.id } });
+      if (!agent)
+        throw new BadRequestException(
+          'Authenticated user has no agent profile',
+        );
+      alert.resolvedById = agent.id;
+      alert.resolvedByUserId = null;
+    } else {
+      alert.resolvedById = null;
+      alert.resolvedByUserId = user.id;
+    }
+    await this.alerts.save(alert);
+    return this.findOne(alert.id, user);
+  }
+
+  private baseQuery() {
+    return this.alerts
+      .createQueryBuilder('alert')
+      .innerJoinAndSelect('alert.followUp', 'follow_up')
+      .leftJoinAndSelect('alert.healthCenter', 'health_center')
+      .leftJoinAndSelect('alert.createdBy', 'created_by')
+      .leftJoinAndSelect('alert.resolvedBy', 'resolved_by')
+      .leftJoinAndSelect('alert.resolvedByUser', 'resolved_by_user');
   }
 
   private async existingFollowUp(id: string) {

@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiForbiddenResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -22,6 +23,7 @@ export class CallCenterController {
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Get pending call center workload' })
   @ApiOkResponse({ type: CallCenterWorkloadResponseDto })
+  @ApiForbiddenResponse({ description: 'Administrator role required' })
   workload() {
     return this.service.workload();
   }
