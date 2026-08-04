@@ -106,52 +106,57 @@ describe('Enrollment wizard (e2e)', () => {
       })
       .expect(201);
 
-    const body = response.body as Enrollment & {
-      patient: Patient;
-      companion: Patient;
-      followUp: FollowUp;
-    };
-    expect(body.patient).toMatchObject({ role: 'PATIENT', status: 'ENROLLED' });
-    expect(body.companion).toMatchObject({ role: 'COMPANION' });
-    expect(body.followUp).toMatchObject({
-      subjectPatientId: body.patient.id,
-      interlocutorId: body.companion.id,
+    const body = response.body as Enrollment;
+    const [patient, companion, followUp] = await Promise.all([
+      dataSource.getRepository(Patient).findOneByOrFail({ id: body.patientId }),
+      dataSource
+        .getRepository(Patient)
+        .findOneByOrFail({ id: body.companionId! }),
+      dataSource
+        .getRepository(FollowUp)
+        .findOneByOrFail({ id: body.followUpId }),
+    ]);
+    expect(patient).toMatchObject({ role: 'PATIENT', status: 'ENROLLED' });
+    expect(companion).toMatchObject({ role: 'COMPANION' });
+    expect(followUp).toMatchObject({
+      subjectPatientId: patient.id,
+      interlocutorId: companion.id,
       purpose: 'ENROLLMENT',
       status: 'COMPLETED',
     });
     await expect(
       dataSource.getRepository(Enrollment).findOneByOrFail({ id: body.id }),
     ).resolves.toMatchObject({
-      patientId: body.patient.id,
-      companionId: body.companion.id,
+      patientId: patient.id,
+      companionId: companion.id,
       consentToContact: true,
       consentToShareData: false,
     });
     await expect(
       dataSource.getRepository(PatientInsurance).findOneByOrFail({
-        patientId: body.patient.id,
+        patientId: patient.id,
       }),
-    ).resolves.toMatchObject({ followUpId: body.followUp.id });
+    ).resolves.toMatchObject({ followUpId: followUp.id });
     const diagnosis = await dataSource
       .getRepository(PatientDiagnosis)
-      .findOneByOrFail({ patientId: body.patient.id });
+      .findOneByOrFail({ patientId: patient.id });
     await expect(
       dataSource.getRepository(PatientTreatment).findOneByOrFail({
-        patientId: body.patient.id,
+        patientId: patient.id,
       }),
     ).resolves.toMatchObject({ diagnosisId: diagnosis.id });
     await expect(
       dataSource.getRepository(PatientSisAffiliation).findOneByOrFail({
-        patientId: body.patient.id,
+        patientId: patient.id,
       }),
-    ).resolves.toMatchObject({ followUpId: body.followUp.id });
+    ).resolves.toMatchObject({ followUpId: followUp.id });
     await expect(
       dataSource.getRepository(PatientSymptomReport).findOneByOrFail({
-        patientId: body.patient.id,
+        patientId: patient.id,
       }),
     ).resolves.toMatchObject({
       enrollmentId: body.id,
-      followUpId: body.followUp.id,
+      followUpId: followUp.id,
       painIntensity: 7,
     });
   });
@@ -176,9 +181,7 @@ describe('Enrollment wizard (e2e)', () => {
         followUp: { type: 'CALL' },
       })
       .expect(201);
-    const firstEnrollmentBody = firstEnrollment.body as {
-      companion: Patient;
-    };
+    const firstEnrollmentBody = firstEnrollment.body as Enrollment;
 
     const secondEnrollment = await request(server)
       .post('/enrollments')
@@ -189,17 +192,17 @@ describe('Enrollment wizard (e2e)', () => {
           primaryPhone: '6',
           email: 'p7-second-shared@example.test',
         },
-        companionId: firstEnrollmentBody.companion.id,
+        companionId: firstEnrollmentBody.companionId,
         affiliationType: 'FAMILY_FRIEND',
         followUp: { type: 'CALL' },
       })
       .expect(201);
-    const secondEnrollmentBody = secondEnrollment.body as { patient: Patient };
+    const secondEnrollmentBody = secondEnrollment.body as Enrollment;
 
     await expect(
       dataSource.getRepository(CompanionPatient).findOneByOrFail({
-        companionId: firstEnrollmentBody.companion.id,
-        patientId: secondEnrollmentBody.patient.id,
+        companionId: firstEnrollmentBody.companionId!,
+        patientId: secondEnrollmentBody.patientId,
       }),
     ).resolves.toMatchObject({ isPrimaryInformant: true });
   });

@@ -20,6 +20,11 @@ import { ReminderStatus } from './reminder-status.enum';
 @Index('IDX_reminders_resulting_follow_up_id', ['resultingFollowUpId'])
 @Index('IDX_reminders_status', ['status'])
 @Index('IDX_reminders_due_at', ['dueAt'])
+@Index('IDX_reminders_patient_due_timeline', [
+  'subjectPatientId',
+  'dueAt',
+  'id',
+])
 export class Reminder {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'subject_patient_id', type: 'uuid' })

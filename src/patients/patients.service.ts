@@ -20,6 +20,8 @@ import { ListPatientsDto } from './dto/list-patients.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { UpsertPatientDetailsDto } from './dto/upsert-patient-details.dto';
 import { LinkCompanionDto } from './dto/link-companion.dto';
+import { User } from '../database/entities/user.entity';
+import { PatientAccessService } from '../patient-access/patient-access.service';
 
 @Injectable()
 export class PatientsService {
@@ -34,7 +36,12 @@ export class PatientsService {
     private readonly summaries: Repository<PatientSummary>,
     private readonly dataSource: DataSource,
     private readonly invalidations: PatientSummaryInvalidationService,
+    private readonly access: PatientAccessService,
   ) {}
+
+  assertCanRead(patientId: string, user: User): Promise<void> {
+    return this.access.assertCanRead(patientId, user);
+  }
 
   async assertPatientRole(
     patientId: string,
@@ -124,23 +131,34 @@ export class PatientsService {
     );
   }
 
-  async findCompanions(patientId: string): Promise<CompanionPatient[]> {
+  async findCompanions(
+    patientId: string,
+    user: User,
+  ): Promise<CompanionPatient[]> {
+    await this.access.assertCanRead(patientId, user);
     return this.companionPatientsRepository.find({
       where: { patientId },
       relations: { companion: true },
     });
   }
-  async findAccompanies(companionId: string): Promise<CompanionPatient[]> {
-    return this.companionPatientsRepository.find({
-      where: { companionId },
-      relations: { patient: true },
-    });
+  async findAccompanies(
+    companionId: string,
+    user: User,
+  ): Promise<CompanionPatient[]> {
+    const query = this.companionPatientsRepository
+      .createQueryBuilder('link')
+      .leftJoinAndSelect('link.patient', 'patient')
+      .where('link.companion_id = :companionId', { companionId });
+    await this.access.scopeQuery(query, 'link.patient_id', user);
+    return query.getMany();
   }
 
   async findAll(
     filters: ListPatientsDto,
+    user: User,
   ): Promise<{ data: Patient[]; total: number }> {
     const query = this.patientsRepository.createQueryBuilder('patient');
+    await this.access.scopeQuery(query, 'patient.id', user);
     if (filters.role)
       query.andWhere('patient.role = :role', { role: filters.role });
     if (filters.status)
@@ -170,6 +188,14 @@ export class PatientsService {
     if (!patient) throw new NotFoundException('Patient not found');
     const stored = await this.summaries.findOneBy({ patientId: id });
     return Object.assign(patient, { summary: stored?.summary ?? null });
+  }
+
+  async findByIdForUser(
+    id: string,
+    user: User,
+  ): Promise<Patient & { summary: string | null }> {
+    await this.access.assertCanRead(id, user);
+    return this.findById(id);
   }
 
   async update(id: string, input: UpdatePatientDto): Promise<Patient> {

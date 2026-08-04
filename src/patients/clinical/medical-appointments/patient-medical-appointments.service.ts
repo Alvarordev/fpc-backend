@@ -8,6 +8,7 @@ import { HistoryVersioningService } from '../../history-versioning/history-versi
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
 import { CreatePatientMedicalAppointmentDto } from './patient-medical-appointments.dto';
+import { User } from '../../../database/entities/user.entity';
 @Injectable()
 export class PatientMedicalAppointmentsService {
   constructor(
@@ -52,7 +53,8 @@ export class PatientMedicalAppointmentsService {
     await this.invalidations.markDirty(patientId, manager);
     return appointment;
   }
-  findAll(patientId: string) {
+  async findAll(patientId: string, user: User) {
+    await this.patients.assertCanRead(patientId, user);
     return this.repository.find({
       where: { patientId },
       order: { createdAt: 'DESC' },

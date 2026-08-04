@@ -27,6 +27,7 @@ import {
   VolunteerAvailability,
 } from '../database/entities/volunteer-availability.entity';
 import { Volunteer } from '../database/entities/volunteer.entity';
+import { PatientAccessService } from '../patient-access/patient-access.service';
 import {
   CreatePsychooncologyAppointmentDto,
   UpdatePsychooncologyAppointmentDto,
@@ -37,10 +38,9 @@ export class PsychooncologyAppointmentsService {
   constructor(
     @InjectRepository(PsychooncologyAppointment)
     private readonly appointments: Repository<PsychooncologyAppointment>,
-    @InjectRepository(Volunteer)
-    private readonly volunteers: Repository<Volunteer>,
     @InjectRepository(Agent) private readonly agents: Repository<Agent>,
     private readonly dataSource: DataSource,
+    private readonly access: PatientAccessService,
   ) {}
 
   async create(input: CreatePsychooncologyAppointmentDto, user: User) {
@@ -51,18 +51,18 @@ export class PsychooncologyAppointmentsService {
   }
 
   async findAll(user: User) {
-    const volunteerId = await this.volunteerIdFor(user);
-    return this.appointments.find({
-      where: volunteerId ? { volunteerId } : {},
-      order: { scheduledAt: 'ASC' },
-    });
+    const query = this.appointments
+      .createQueryBuilder('appointment')
+      .orderBy('appointment.scheduled_at', 'ASC');
+    await this.access.scopeQuery(query, 'appointment.patient_id', user);
+    return query.getMany();
   }
 
   async findOne(id: string, user: User) {
     const appointment = await this.appointments.findOne({ where: { id } });
     if (!appointment)
       throw new NotFoundException('Psycho-oncology appointment not found');
-    await this.assertAppointmentScope(appointment, user);
+    await this.access.assertCanRead(appointment.patientId, user);
     return appointment;
   }
 
@@ -267,33 +267,14 @@ export class PsychooncologyAppointmentsService {
     return requestedAgentId;
   }
 
-  private async volunteerIdFor(user: User) {
-    if (user.role !== UserRole.VOLUNTEER) return null;
-    const volunteer = await this.volunteers.findOne({
-      where: { userId: user.id },
-    });
-    if (!volunteer)
-      throw new BadRequestException(
-        'Authenticated user has no volunteer profile',
-      );
-    return volunteer.id;
-  }
-
   private async assertUpdateScope(id: string, user: User) {
     const appointment = await this.appointments.findOne({ where: { id } });
     if (!appointment)
       throw new NotFoundException('Psycho-oncology appointment not found');
-    await this.assertAppointmentScope(appointment, user);
-  }
-
-  private async assertAppointmentScope(
-    appointment: PsychooncologyAppointment,
-    user: User,
-  ) {
-    const volunteerId = await this.volunteerIdFor(user);
+    const volunteerId = await this.access.volunteerIdFor(user);
     if (volunteerId && appointment.volunteerId !== volunteerId)
       throw new ForbiddenException(
-        'Volunteers can only access their own appointments',
+        'Volunteers can only modify their own appointments',
       );
   }
 }

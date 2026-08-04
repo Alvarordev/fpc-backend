@@ -26,6 +26,7 @@ import { PatientTreatmentsController } from '../patients/clinical/treatments/pat
 import { PatientTreatmentsService } from '../patients/clinical/treatments/patient-treatments.service';
 import { PatientsController } from '../patients/patients.controller';
 import { PatientsService } from '../patients/patients.service';
+import { PatientTimelineService } from '../patients/patient-timeline.service';
 import { PatientSymptomReportsController } from '../patients/symptom-reports/patient-symptom-reports.controller';
 import { PatientSymptomReportsService } from '../patients/symptom-reports/patient-symptom-reports.service';
 import { PsychooncologyAppointmentsController } from '../psychooncology-appointments/psychooncology-appointments.controller';
@@ -75,6 +76,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     { provide: HealthCheckService, useValue: {} },
     { provide: UsersService, useValue: {} },
     { provide: PatientsService, useValue: {} },
+    { provide: PatientTimelineService, useValue: {} },
     { provide: PatientDiagnosesService, useValue: {} },
     { provide: PatientInsuranceService, useValue: {} },
     { provide: PatientMedicalAppointmentsService, useValue: {} },

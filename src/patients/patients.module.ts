@@ -4,6 +4,7 @@ import { Enrollment } from '../database/entities/enrollment.entity';
 import { FollowUp } from '../database/entities/follow-up.entity';
 import { PatientSummary } from '../database/entities/patient-summary.entity';
 import { PatientSummariesModule } from '../patient-summaries/patient-summaries.module';
+import { PatientAccessModule } from '../patient-access/patient-access.module';
 import { PatientDiagnosesController } from './clinical/diagnoses/patient-diagnoses.controller';
 import { PatientDiagnosesService } from './clinical/diagnoses/patient-diagnoses.service';
 import { PatientInsuranceController } from './clinical/insurance/patient-insurance.controller';
@@ -28,6 +29,7 @@ import { PatientsController } from './patients.controller';
 import { PatientsService } from './patients.service';
 import { PatientSymptomReportsController } from './symptom-reports/patient-symptom-reports.controller';
 import { PatientSymptomReportsService } from './symptom-reports/patient-symptom-reports.service';
+import { PatientTimelineService } from './patient-timeline.service';
 
 @Module({
   imports: [
@@ -46,6 +48,7 @@ import { PatientSymptomReportsService } from './symptom-reports/patient-symptom-
       PatientSummary,
     ]),
     PatientSummariesModule,
+    PatientAccessModule,
   ],
   controllers: [
     PatientsController,
@@ -65,6 +68,7 @@ import { PatientSymptomReportsService } from './symptom-reports/patient-symptom-
     PatientSisAffiliationService,
     PatientTreatmentsService,
     PatientSymptomReportsService,
+    PatientTimelineService,
   ],
   exports: [
     PatientsService,

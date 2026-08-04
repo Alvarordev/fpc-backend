@@ -24,9 +24,10 @@ import { Patient } from '../src/patients/entities/patient.entity';
 import { Agent } from '../src/database/entities/agent.entity';
 import { PatientsService } from '../src/patients/patients.service';
 import { UsersService } from '../src/users/users.service';
+import { Volunteer } from '../src/database/entities/volunteer.entity';
 
 type PatientListResponse = { data: Array<Record<string, unknown>> };
-type EnrollmentResponse = { patient: { id: string } };
+type EnrollmentResponse = { patientId: string };
 
 describe('Patient summaries (e2e)', () => {
   const prefix = 'p10-%@example.test';
@@ -83,6 +84,14 @@ describe('Patient summaries (e2e)', () => {
       email: 'p10-agent@example.test',
       password: 'password123',
       role: UserRole.AGENT,
+    });
+    await dataSource.getRepository(Volunteer).save({
+      userId: volunteer.id,
+      firstName: 'Prompt Ten',
+      lastName: 'Volunteer',
+      specialty: 'Support',
+      email: volunteer.email,
+      phone: '998',
     });
     assignedAgentId = (
       await dataSource.getRepository(Agent).save({
@@ -247,12 +256,12 @@ describe('Patient summaries (e2e)', () => {
       ([event, payload]) =>
         event === PATIENT_DATA_CHANGED &&
         payload instanceof PatientDataChangedEvent &&
-        payload.patientId === enrollment.patient.id,
+        payload.patientId === enrollment.patientId,
     );
     expect(calls).toHaveLength(1);
     await expect(
       dataSource.getRepository(PatientSummary).findOneByOrFail({
-        patientId: enrollment.patient.id,
+        patientId: enrollment.patientId,
       }),
     ).resolves.toMatchObject({ status: PatientSummaryStatus.PENDING });
   });
@@ -303,7 +312,7 @@ describe('Patient summaries (e2e)', () => {
     ).resolves.toMatchObject({ status: PatientSummaryStatus.PENDING });
   });
 
-  it('allows patient readers and rejects unauthenticated summary requests', async () => {
+  it('rejects unauthenticated and unassigned volunteer summary requests', async () => {
     const patient = await createPatient(dataSource, 'roles');
     gemini.generate.mockResolvedValue({ text: 'Resumen', model: 'test-model' });
 
@@ -311,7 +320,7 @@ describe('Patient summaries (e2e)', () => {
     await request(server)
       .get(`/patients/${patient.id}/summary`)
       .set('Authorization', `Bearer ${volunteerToken}`)
-      .expect(200);
+      .expect(403);
   });
 });
 
@@ -398,6 +407,10 @@ async function clearSummaryData(dataSource: DataSource, emailPrefix: string) {
   ]);
   await dataSource.query(
     'DELETE FROM agents WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1)',
+    [emailPrefix],
+  );
+  await dataSource.query(
+    'DELETE FROM volunteers WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1)',
     [emailPrefix],
   );
   await dataSource.query(`DELETE FROM users WHERE email LIKE $1`, [

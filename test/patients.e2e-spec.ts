@@ -94,6 +94,14 @@ describe('Patients, agents and volunteers (e2e)', () => {
       password: 'password123',
       role: UserRole.VOLUNTEER,
     });
+    await dataSource.getRepository(Volunteer).save({
+      userId: volunteer.id,
+      firstName: 'CRUD',
+      lastName: 'Volunteer',
+      specialty: 'Support',
+      email: volunteer.email,
+      phone: '2',
+    });
     adminToken = await jwt.signAsync({ sub: admin.id, role: admin.role });
     volunteerToken = await jwt.signAsync({
       sub: volunteer.id,
@@ -210,7 +218,7 @@ describe('Patients, agents and volunteers (e2e)', () => {
     ).resolves.toBe(1);
   });
 
-  it('allows volunteers to read patients but not write them', async () => {
+  it('limits volunteers to assigned patients and denies writes', async () => {
     const patient = await dataSource.getRepository(Patient).save({
       fullName: 'Read',
       primaryPhone: '1',
@@ -219,11 +227,12 @@ describe('Patients, agents and volunteers (e2e)', () => {
     await request(server)
       .get('/patients')
       .set('Authorization', `Bearer ${volunteerToken}`)
-      .expect(200);
+      .expect(200)
+      .expect(({ body }) => expect(body.data).toEqual([]));
     await request(server)
       .get(`/patients/${patient.id}`)
       .set('Authorization', `Bearer ${volunteerToken}`)
-      .expect(200);
+      .expect(403);
     await request(server)
       .post('/patients')
       .set('Authorization', `Bearer ${volunteerToken}`)

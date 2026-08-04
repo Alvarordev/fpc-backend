@@ -27,6 +27,7 @@ import { PatientSymptomReportsService } from '../patients/symptom-reports/patien
 import { PatientsService } from '../patients/patients.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CreateEnrollmentDto } from './enrollments.dto';
+import { User } from '../database/entities/user.entity';
 
 @Injectable()
 export class EnrollmentsService {
@@ -219,7 +220,8 @@ export class EnrollmentsService {
     });
   }
 
-  findAll(patientId: string) {
+  async findAll(patientId: string, user: User) {
+    await this.patients.assertCanRead(patientId, user);
     return this.enrollments.find({
       where: { patientId },
       order: { createdAt: 'DESC' },

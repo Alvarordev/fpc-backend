@@ -12,6 +12,7 @@ import { Agent } from '../database/entities/agent.entity';
 import { FollowUp } from '../database/entities/follow-up.entity';
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
+import { PatientAccessService } from '../patient-access/patient-access.service';
 import {
   CreateReminderDto,
   CompleteReminderDto,
@@ -25,6 +26,7 @@ export class RemindersService {
     @InjectRepository(Agent) private readonly agents: Repository<Agent>,
     @InjectRepository(FollowUp)
     private readonly followUps: Repository<FollowUp>,
+    private readonly access: PatientAccessService,
   ) {}
   async create(input: CreateReminderDto, user: User) {
     const assignedAgentId = await this.resolveAgentId(
@@ -46,7 +48,7 @@ export class RemindersService {
   }
   async complete(id: string, input: CompleteReminderDto, user: User) {
     const item = await this.findOne(id);
-    await this.assertScope(item, user);
+    await this.assertWriteScope(item, user);
     if (item.status !== ReminderStatus.PENDING)
       throw new BadRequestException('Only pending reminders can be completed');
     if (
@@ -66,7 +68,7 @@ export class RemindersService {
   }
   async dismiss(id: string, user: User) {
     const item = await this.findOne(id);
-    await this.assertScope(item, user);
+    await this.assertWriteScope(item, user);
     if (item.status !== ReminderStatus.PENDING)
       throw new BadRequestException('Only pending reminders can be dismissed');
     item.status = ReminderStatus.DISMISSED;
@@ -74,7 +76,7 @@ export class RemindersService {
   }
   async update(id: string, input: UpdateReminderDto, user: User) {
     const item = await this.findOne(id);
-    await this.assertScope(item, user);
+    await this.assertWriteScope(item, user);
     if (item.status !== ReminderStatus.PENDING)
       throw new BadRequestException('Closed reminders cannot be edited');
     const assignedAgentId = input.assignedAgentId
@@ -89,16 +91,15 @@ export class RemindersService {
     return this.repository.save(item);
   }
   async findAll(user: User) {
-    const agentId = await this.agentIdFor(user);
-    return this.repository.find({
-      where: agentId ? { assignedAgentId: agentId } : {},
-    });
+    const query = this.repository.createQueryBuilder('reminder');
+    await this.access.scopeQuery(query, 'reminder.subject_patient_id', user);
+    return query.getMany();
   }
-  private async assertScope(item: Reminder, user: User) {
+  private async assertWriteScope(item: Reminder, user: User) {
     const agentId = await this.agentIdFor(user);
     if (agentId && item.assignedAgentId !== agentId)
       throw new ForbiddenException(
-        'Agents can only access their own reminders',
+        'Agents can only modify their own reminders',
       );
   }
   private async agentIdFor(user: User) {

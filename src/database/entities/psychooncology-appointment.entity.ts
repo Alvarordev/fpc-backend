@@ -32,6 +32,15 @@ export enum AppointmentStatus {
 @Index('IDX_psychooncology_appointments_follow_up_id', ['followUpId'])
 @Index('IDX_psychooncology_appointments_availability_id', ['availabilityId'])
 @Index('IDX_psychooncology_appointments_status', ['status'])
+@Index('IDX_psychooncology_appointments_volunteer_patient', [
+  'volunteerId',
+  'patientId',
+])
+@Index('IDX_psychooncology_appointments_patient_scheduled_timeline', [
+  'patientId',
+  'scheduledAt',
+  'id',
+])
 export class PsychooncologyAppointment {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'patient_id', type: 'uuid' }) patientId!: string;

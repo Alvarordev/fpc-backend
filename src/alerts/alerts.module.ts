@@ -7,10 +7,12 @@ import { FollowUp } from '../database/entities/follow-up.entity';
 import { Patient } from '../patients/entities/patient.entity';
 import { AlertsController } from './alerts.controller';
 import { AlertsService } from './alerts.service';
+import { PatientAccessModule } from '../patient-access/patient-access.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Alert, Agent, HealthCenter, FollowUp, Patient]),
+    PatientAccessModule,
   ],
   controllers: [AlertsController],
   providers: [AlertsService],

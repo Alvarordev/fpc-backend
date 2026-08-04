@@ -16,6 +16,8 @@ import { UserRole } from '../../../database/entities/user-role.enum';
 import { CreatePatientSisAffiliationDto } from './patient-sis-affiliation.dto';
 import { PatientSisAffiliationResponseDto } from './patient-sis-affiliation-response.dto';
 import { PatientSisAffiliationService } from './patient-sis-affiliation.service';
+import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
+import { User } from '../../../database/entities/user.entity';
 const READ = [
   UserRole.ADMIN,
   UserRole.FOUNDATION,
@@ -56,8 +58,9 @@ export class PatientSisAffiliationController {
   @ApiForbiddenResponse()
   async findAll(
     @Param('patientId') patientId: string,
+    @CurrentUser() user: User,
   ): Promise<PatientSisAffiliationResponseDto[]> {
-    return (await this.service.findAll(patientId)).map((affiliation) =>
+    return (await this.service.findAll(patientId, user)).map((affiliation) =>
       PatientSisAffiliationResponseDto.from(affiliation),
     );
   }

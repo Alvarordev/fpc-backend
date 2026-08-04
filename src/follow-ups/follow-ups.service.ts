@@ -15,6 +15,8 @@ import { ReminderStatus } from '../database/entities/reminder-status.enum';
 import { CreateFollowUpDto, UpdateFollowUpDto } from './follow-ups.dto';
 import { CreateReminderDto } from '../reminders/reminders.dto';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
+import { PatientAccessService } from '../patient-access/patient-access.service';
+import { User } from '../database/entities/user.entity';
 @Injectable()
 export class FollowUpsService {
   constructor(
@@ -26,6 +28,7 @@ export class FollowUpsService {
     private readonly reminders: Repository<Reminder>,
     private readonly dataSource: DataSource,
     private readonly invalidations: PatientSummaryInvalidationService,
+    private readonly access: PatientAccessService,
   ) {}
   inferStatus(
     input: Pick<CreateFollowUpDto, 'scheduledAt' | 'completedAt'>,
@@ -74,9 +77,9 @@ export class FollowUpsService {
     if (!item) throw new NotFoundException('Follow-up not found');
     return item;
   }
-  async findOneForUser(id: string, userId: string, userRole: string) {
+  async findOneForUser(id: string, user: User) {
     const item = await this.findOne(id);
-    await this.assertScope(item, userId, userRole);
+    await this.access.assertCanRead(item.subjectPatientId, user);
     return item;
   }
   async scheduleNext(
@@ -87,11 +90,11 @@ export class FollowUpsService {
   ) {
     return this.dataSource.transaction(async (manager) => {
       const current = await this.findOne(id, manager);
-      await this.assertScope(current, userId, role, manager);
+      await this.assertWriteScope(current, userId, role, manager);
       const next = await this.create(
         {
           ...input,
-          subjectPatientId: input.subjectPatientId ?? current.subjectPatientId,
+          subjectPatientId: current.subjectPatientId,
           interlocutorId: input.interlocutorId ?? current.interlocutorId,
           scheduledAt:
             input.scheduledAt ?? new Date(Date.now() + 60000).toISOString(),
@@ -114,7 +117,7 @@ export class FollowUpsService {
     userRole: string,
   ) {
     const item = await this.findOne(id);
-    await this.assertScope(item, userId, userRole);
+    await this.assertWriteScope(item, userId, userRole);
     Object.assign(
       item,
       input,
@@ -134,7 +137,7 @@ export class FollowUpsService {
     userRole: string,
   ) {
     const followUp = await this.findOne(id);
-    await this.assertScope(followUp, userId, userRole);
+    await this.assertWriteScope(followUp, userId, userRole);
     const assignedAgentId = await this.resolveAgentId(
       input.assignedAgentId,
       userId,
@@ -175,7 +178,7 @@ export class FollowUpsService {
       throw new NotFoundException('Agent not found');
     return requestedAgentId;
   }
-  private async assertScope(
+  private async assertWriteScope(
     followUp: FollowUp,
     userId: string,
     userRole: string,
@@ -188,7 +191,7 @@ export class FollowUpsService {
       throw new BadRequestException('Authenticated user has no agent profile');
     if (followUp.agentId !== agent.id)
       throw new ForbiddenException(
-        'Agents can only access their own follow-ups',
+        'Agents can only modify their own follow-ups',
       );
   }
   private async assertPatients(

@@ -16,6 +16,8 @@ import { UserRole } from '../../../database/entities/user-role.enum';
 import { CreatePatientMedicalAppointmentDto } from './patient-medical-appointments.dto';
 import { PatientMedicalAppointmentResponseDto } from './patient-medical-appointments-response.dto';
 import { PatientMedicalAppointmentsService } from './patient-medical-appointments.service';
+import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
+import { User } from '../../../database/entities/user.entity';
 const READ = [
   UserRole.ADMIN,
   UserRole.FOUNDATION,
@@ -56,8 +58,9 @@ export class PatientMedicalAppointmentsController {
   @ApiForbiddenResponse()
   async findAll(
     @Param('patientId') patientId: string,
+    @CurrentUser() user: User,
   ): Promise<PatientMedicalAppointmentResponseDto[]> {
-    return (await this.service.findAll(patientId)).map((appointment) =>
+    return (await this.service.findAll(patientId, user)).map((appointment) =>
       PatientMedicalAppointmentResponseDto.from(appointment),
     );
   }

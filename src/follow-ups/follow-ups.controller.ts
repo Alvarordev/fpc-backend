@@ -21,7 +21,14 @@ import { ReminderResponseDto } from '../reminders/reminder-response.dto';
 import { CreateFollowUpDto, UpdateFollowUpDto } from './follow-ups.dto';
 import { FollowUpResponseDto } from './follow-up-response.dto';
 import { FollowUpsService } from './follow-ups.service';
-const ROLES = ['ADMIN', 'FOUNDATION', 'AGENT'];
+import { UserRole } from '../database/entities/user-role.enum';
+const READ = [
+  UserRole.ADMIN,
+  UserRole.FOUNDATION,
+  UserRole.AGENT,
+  UserRole.VOLUNTEER,
+];
+const WRITE = [UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT];
 @Controller('follow-ups')
 @ApiTags('follow-ups')
 @ApiBearerAuth()
@@ -29,7 +36,7 @@ const ROLES = ['ADMIN', 'FOUNDATION', 'AGENT'];
 export class FollowUpsController {
   constructor(private readonly service: FollowUpsService) {}
   @Post()
-  @Roles(...ROLES)
+  @Roles(...WRITE)
   @ApiOperation({ summary: 'Create a follow-up' })
   @ApiCreatedResponse({ type: FollowUpResponseDto })
   @ApiBadRequestResponse({
@@ -43,7 +50,7 @@ export class FollowUpsController {
     return this.service.create(dto, user.id, user.role).then(this.toFollowUp);
   }
   @Get(':id')
-  @Roles(...ROLES)
+  @Roles(...READ)
   @ApiOperation({ summary: 'Get a follow-up' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: FollowUpResponseDto })
@@ -51,16 +58,14 @@ export class FollowUpsController {
     description: 'The authenticated user has no agent profile',
   })
   @ApiForbiddenResponse({
-    description: 'Agents can only access their own follow-ups',
+    description: 'Patient is not assigned to the volunteer',
   })
   @ApiNotFoundResponse({ description: 'Follow-up not found' })
   findOne(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.service
-      .findOneForUser(id, user.id, user.role)
-      .then(this.toFollowUp);
+    return this.service.findOneForUser(id, user).then(this.toFollowUp);
   }
   @Patch(':id')
-  @Roles(...ROLES)
+  @Roles(...WRITE)
   @ApiOperation({ summary: 'Update a follow-up' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: FollowUpResponseDto })
@@ -81,7 +86,7 @@ export class FollowUpsController {
       .then(this.toFollowUp);
   }
   @Post(':id/schedule-next')
-  @Roles(...ROLES)
+  @Roles(...WRITE)
   @ApiOperation({ summary: 'Schedule the next follow-up' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiCreatedResponse({ type: FollowUpResponseDto })
@@ -104,7 +109,7 @@ export class FollowUpsController {
       .then(this.toFollowUp);
   }
   @Post(':id/reminders')
-  @Roles(...ROLES)
+  @Roles(...WRITE)
   @ApiOperation({ summary: 'Create a reminder from a follow-up' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiCreatedResponse({ type: ReminderResponseDto })

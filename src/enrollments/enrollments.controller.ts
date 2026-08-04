@@ -57,9 +57,9 @@ export class EnrollmentsController {
   @ApiOperation({ summary: 'List a patient enrollments' })
   @ApiParam({ name: 'patientId', format: 'uuid' })
   @ApiOkResponse({ type: EnrollmentResponseDto, isArray: true })
-  findAll(@Param('patientId') patientId: string) {
+  findAll(@Param('patientId') patientId: string, @CurrentUser() user: User) {
     return this.service
-      .findAll(patientId)
+      .findAll(patientId, user)
       .then((items) => items.map(this.toResponse));
   }
 

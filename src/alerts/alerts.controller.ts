@@ -52,8 +52,10 @@ export class AlertsController {
   @Roles(...READ)
   @ApiOperation({ summary: 'List alerts' })
   @ApiOkResponse({ type: AlertResponseDto, isArray: true })
-  findAll() {
-    return this.service.findAll().then((items) => items.map(this.toResponse));
+  findAll(@CurrentUser() user: User) {
+    return this.service
+      .findAll(user)
+      .then((items) => items.map(this.toResponse));
   }
 
   @Get(':id')
@@ -62,8 +64,8 @@ export class AlertsController {
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AlertResponseDto })
   @ApiNotFoundResponse({ description: 'Alert not found' })
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(id).then(this.toResponse);
+  findOne(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.service.findOne(id, user).then(this.toResponse);
   }
 
   @Patch(':id/resolve')

@@ -5,8 +5,12 @@ import { Agent } from '../database/entities/agent.entity';
 import { FollowUp } from '../database/entities/follow-up.entity';
 import { RemindersController } from './reminders.controller';
 import { RemindersService } from './reminders.service';
+import { PatientAccessModule } from '../patient-access/patient-access.module';
 @Module({
-  imports: [TypeOrmModule.forFeature([Reminder, Agent, FollowUp])],
+  imports: [
+    TypeOrmModule.forFeature([Reminder, Agent, FollowUp]),
+    PatientAccessModule,
+  ],
   controllers: [RemindersController],
   providers: [RemindersService],
 })

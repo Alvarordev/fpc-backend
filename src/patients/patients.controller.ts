@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -19,6 +20,7 @@ import {
   ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../database/entities/user-role.enum';
@@ -39,6 +41,16 @@ import {
 } from './dto/patient-response.dto';
 import { PatientsService } from './patients.service';
 import { PatientSummaryOnDemandService } from '../patient-summaries/patient-summary-on-demand.service';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '../database/entities/user.entity';
+import { PatientTimelineService } from './patient-timeline.service';
+import {
+  FollowUpTimelineEventDto,
+  PatientTimelineQueryDto,
+  PatientTimelineResponseDto,
+  PsychooncologyAppointmentTimelineEventDto,
+  ReminderTimelineEventDto,
+} from './dto/patient-timeline.dto';
 
 const PATIENT_READ_ROLES = [
   UserRole.ADMIN,
@@ -55,10 +67,16 @@ const PATIENT_WRITE_ROLES = [
 @Controller('patients')
 @ApiTags('Patients')
 @ApiBearerAuth()
+@ApiExtraModels(
+  FollowUpTimelineEventDto,
+  ReminderTimelineEventDto,
+  PsychooncologyAppointmentTimelineEventDto,
+)
 export class PatientsController {
   constructor(
     private readonly patientsService: PatientsService,
     private readonly summaries: PatientSummaryOnDemandService,
+    private readonly timeline: PatientTimelineService,
   ) {}
 
   @Post()
@@ -116,8 +134,9 @@ export class PatientsController {
   @ApiForbiddenResponse()
   async companions(
     @Param('id') id: string,
+    @CurrentUser() user: User,
   ): Promise<CompanionPatientResponseDto[]> {
-    return (await this.patientsService.findCompanions(id)).map((link) =>
+    return (await this.patientsService.findCompanions(id, user)).map((link) =>
       CompanionPatientResponseDto.from(link),
     );
   }
@@ -131,8 +150,9 @@ export class PatientsController {
   @ApiForbiddenResponse()
   async accompanies(
     @Param('id') id: string,
+    @CurrentUser() user: User,
   ): Promise<CompanionPatientResponseDto[]> {
-    return (await this.patientsService.findAccompanies(id)).map((link) =>
+    return (await this.patientsService.findAccompanies(id, user)).map((link) =>
       CompanionPatientResponseDto.from(link),
     );
   }
@@ -145,9 +165,10 @@ export class PatientsController {
   @ApiForbiddenResponse()
   async findAll(
     @Query() filters: ListPatientsDto,
+    @CurrentUser() user: User,
   ): Promise<PatientListResponseDto> {
     return PatientListResponseDto.from(
-      await this.patientsService.findAll(filters),
+      await this.patientsService.findAll(filters, user),
     );
   }
 
@@ -159,8 +180,34 @@ export class PatientsController {
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
   @ApiNotFoundResponse({ description: 'Patient not found' })
-  async summary(@Param('id') id: string): Promise<PatientSummaryResponseDto> {
+  async summary(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ): Promise<PatientSummaryResponseDto> {
+    await this.patientsService.assertCanRead(id, user);
     return PatientSummaryResponseDto.from(await this.summaries.get(id));
+  }
+
+  @Get(':id/timeline')
+  @Roles(...PATIENT_READ_ROLES)
+  @ApiOperation({
+    summary: 'Get a patient timeline',
+    description:
+      'Returns the complete visible history. Admin, foundation, and agent roles can read all patient events. Volunteers can read all events only when any psycho-oncology appointment assigns them to the patient; otherwise the endpoint returns 403.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: PatientTimelineResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse({
+    description: 'Patient is not assigned to the volunteer',
+  })
+  @ApiNotFoundResponse({ description: 'Patient not found' })
+  timelineForPatient(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Query() query: PatientTimelineQueryDto,
+    @CurrentUser() user: User,
+  ): Promise<PatientTimelineResponseDto> {
+    return this.timeline.get(id, query, user);
   }
 
   @Get(':id')
@@ -173,9 +220,10 @@ export class PatientsController {
   @ApiNotFoundResponse({ description: 'Patient not found' })
   async findOne(
     @Param('id') id: string,
+    @CurrentUser() user: User,
   ): Promise<PatientDetailsWithSummaryResponseDto> {
     return PatientDetailsWithSummaryResponseDto.from(
-      await this.patientsService.findById(id),
+      await this.patientsService.findByIdForUser(id, user),
     );
   }
 

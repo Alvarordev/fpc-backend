@@ -646,7 +646,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Agents can only access their own follow-ups"
+            "description": "Patient is not assigned to the volunteer"
           },
           "404": {
             "description": "Follow-up not found"
@@ -1585,6 +1585,82 @@
           }
         ],
         "summary": "Generate or retrieve a patient summary",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}/timeline": {
+      "get": {
+        "description": "Returns the complete visible history. Admin, foundation, and agent roles can read all patient events. Volunteers can read all events only when any psycho-oncology appointment assigns them to the patient; otherwise the endpoint returns 403.",
+        "operationId": "PatientsController_timelineForPatient",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientTimelineResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": "Patient is not assigned to the volunteer"
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a patient timeline",
         "tags": [
           "Patients"
         ]
@@ -4780,6 +4856,168 @@
           }
         }
       },
+      "FollowUpTimelineEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "FOLLOW_UP"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ],
+            "type": "string"
+          },
+          "purpose": {
+            "enum": [
+              "FIRST_CONTACT",
+              "ENROLLMENT",
+              "FOLLOW_UP",
+              "PSYCHOONCOLOGY_REFERRAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "occurredAt",
+          "status",
+          "followUpId",
+          "type",
+          "purpose",
+          "notes"
+        ]
+      },
+      "ReminderTimelineEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "REMINDER"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "DONE",
+              "DISMISSED"
+            ],
+            "type": "string"
+          },
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "occurredAt",
+          "status",
+          "followUpId",
+          "description"
+        ]
+      },
+      "PsychooncologyAppointmentTimelineEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PSYCHOONCOLOGY_APPOINTMENT"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modality": {
+            "enum": [
+              "CALL",
+              "VIDEO_CALL"
+            ],
+            "type": "string"
+          },
+          "sessionNumber": {
+            "type": "number",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "occurredAt",
+          "status",
+          "followUpId",
+          "modality",
+          "sessionNumber"
+        ]
+      },
       "PatientResponseDto": {
         "type": "object",
         "properties": {
@@ -4996,6 +5234,47 @@
           "summary",
           "model",
           "source"
+        ]
+      },
+      "Object": {
+        "type": "object",
+        "properties": {}
+      },
+      "PatientTimelineResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FollowUpTimelineEventDto"
+                },
+                {
+                  "$ref": "#/components/schemas/ReminderTimelineEventDto"
+                },
+                {
+                  "$ref": "#/components/schemas/PsychooncologyAppointmentTimelineEventDto"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "FOLLOW_UP": "#/components/schemas/FollowUpTimelineEventDto",
+                  "REMINDER": "#/components/schemas/ReminderTimelineEventDto",
+                  "PSYCHOONCOLOGY_APPOINTMENT": "#/components/schemas/PsychooncologyAppointmentTimelineEventDto"
+                }
+              }
+            }
+          },
+          "total": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "data",
+          "total"
         ]
       },
       "PatientDetailsResponseDto": {

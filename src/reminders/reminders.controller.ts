@@ -22,7 +22,14 @@ import {
 } from './reminders.dto';
 import { ReminderResponseDto } from './reminder-response.dto';
 import { RemindersService } from './reminders.service';
-const ROLES = ['ADMIN', 'FOUNDATION', 'AGENT'];
+import { UserRole } from '../database/entities/user-role.enum';
+const READ = [
+  UserRole.ADMIN,
+  UserRole.FOUNDATION,
+  UserRole.AGENT,
+  UserRole.VOLUNTEER,
+];
+const WRITE = [UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT];
 @Controller('reminders')
 @ApiTags('reminders')
 @ApiBearerAuth()
@@ -30,7 +37,7 @@ const ROLES = ['ADMIN', 'FOUNDATION', 'AGENT'];
 export class RemindersController {
   constructor(private readonly service: RemindersService) {}
   @Post()
-  @Roles(...ROLES)
+  @Roles(...WRITE)
   @ApiOperation({ summary: 'Create a reminder' })
   @ApiCreatedResponse({ type: ReminderResponseDto })
   @ApiBadRequestResponse({
@@ -42,7 +49,7 @@ export class RemindersController {
     return this.service.create(dto, user).then(this.toResponse);
   }
   @Get()
-  @Roles(...ROLES)
+  @Roles(...READ)
   @ApiOperation({ summary: 'List reminders visible to the current user' })
   @ApiOkResponse({ type: ReminderResponseDto, isArray: true })
   @ApiBadRequestResponse({
@@ -54,7 +61,7 @@ export class RemindersController {
       .then((items) => items.map(this.toResponse));
   }
   @Patch(':id')
-  @Roles(...ROLES)
+  @Roles(...WRITE)
   @ApiOperation({ summary: 'Update a pending reminder' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: ReminderResponseDto })
@@ -71,7 +78,7 @@ export class RemindersController {
     return this.service.update(id, dto, user).then(this.toResponse);
   }
   @Patch(':id/complete')
-  @Roles(...ROLES)
+  @Roles(...WRITE)
   @ApiOperation({ summary: 'Complete a pending reminder' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: ReminderResponseDto })
@@ -90,7 +97,7 @@ export class RemindersController {
     return this.service.complete(id, dto, user).then(this.toResponse);
   }
   @Patch(':id/dismiss')
-  @Roles(...ROLES)
+  @Roles(...WRITE)
   @ApiOperation({ summary: 'Dismiss a pending reminder' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: ReminderResponseDto })

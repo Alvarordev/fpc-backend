@@ -8,6 +8,7 @@ import { VolunteerAvailability } from '../database/entities/volunteer-availabili
 import { Volunteer } from '../database/entities/volunteer.entity';
 import { PsychooncologyAppointmentsController } from './psychooncology-appointments.controller';
 import { PsychooncologyAppointmentsService } from './psychooncology-appointments.service';
+import { PatientAccessModule } from '../patient-access/patient-access.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { PsychooncologyAppointmentsService } from './psychooncology-appointments
       FollowUp,
       Agent,
     ]),
+    PatientAccessModule,
   ],
   controllers: [PsychooncologyAppointmentsController],
   providers: [PsychooncologyAppointmentsService],

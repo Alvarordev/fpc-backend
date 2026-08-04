@@ -18,6 +18,7 @@ import { FollowUp } from '../database/entities/follow-up.entity';
 import { Patient } from '../patients/entities/patient.entity';
 import { User } from '../database/entities/user.entity';
 import { CreateAlertDto } from './alerts.dto';
+import { PatientAccessService } from '../patient-access/patient-access.service';
 
 @Injectable()
 export class AlertsService {
@@ -30,6 +31,7 @@ export class AlertsService {
     private readonly followUps: Repository<FollowUp>,
     @InjectRepository(Patient) private readonly patients: Repository<Patient>,
     private readonly dataSource: DataSource,
+    private readonly access: PatientAccessService,
   ) {}
 
   async create(input: CreateAlertDto, user: User) {
@@ -58,13 +60,23 @@ export class AlertsService {
     });
   }
 
-  findAll() {
-    return this.alerts.find({ order: { createdAt: 'DESC' } });
+  async findAll(user: User) {
+    const query = this.alerts
+      .createQueryBuilder('alert')
+      .innerJoin(FollowUp, 'follow_up', 'follow_up.id = alert.follow_up_id')
+      .orderBy('alert.created_at', 'DESC');
+    await this.access.scopeQuery(query, 'follow_up.subject_patient_id', user);
+    return query.getMany();
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, user: User) {
     const alert = await this.alerts.findOne({ where: { id } });
     if (!alert) throw new NotFoundException('Alert not found');
+    const followUp = await this.followUps.findOne({
+      where: { id: alert.followUpId },
+    });
+    if (!followUp) throw new NotFoundException('Follow-up not found');
+    await this.access.assertCanRead(followUp.subjectPatientId, user);
     return alert;
   }
 
@@ -72,7 +84,8 @@ export class AlertsService {
     const agent = await this.agents.findOne({ where: { userId: user.id } });
     if (!agent)
       throw new BadRequestException('Authenticated user has no agent profile');
-    const alert = await this.findOne(id);
+    const alert = await this.alerts.findOne({ where: { id } });
+    if (!alert) throw new NotFoundException('Alert not found');
     if (alert.status === AlertStatus.RESOLVED)
       throw new ConflictException('Alert is already resolved');
     alert.status = AlertStatus.RESOLVED;
