@@ -80,6 +80,9 @@ export class EnrollmentsController {
       hasMobilityIssues: item.hasMobilityIssues,
       isOncologicalPatient: item.isOncologicalPatient,
       surveyAccepted: item.surveyAccepted,
+      caseComments: item.caseComments,
+      callStartedAt: item.callStartedAt,
+      callEndedAt: item.callEndedAt,
       followUpQualityRating: item.followUpQualityRating,
       createdAt: item.createdAt,
     };

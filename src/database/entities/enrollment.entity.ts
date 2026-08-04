@@ -74,6 +74,12 @@ export class Enrollment {
   isOncologicalPatient!: boolean;
   @Column({ name: 'survey_accepted', type: 'boolean', default: false })
   surveyAccepted!: boolean;
+  @Column({ name: 'case_comments', type: 'text', nullable: true })
+  caseComments!: string | null;
+  @Column({ name: 'call_started_at', type: 'timestamptz', nullable: true })
+  callStartedAt!: Date | null;
+  @Column({ name: 'call_ended_at', type: 'timestamptz', nullable: true })
+  callEndedAt!: Date | null;
   @Column({
     name: 'follow_up_quality_rating',
     type: 'smallint',

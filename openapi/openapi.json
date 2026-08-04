@@ -4299,6 +4299,9 @@
           },
           "requiresTranslation": {
             "type": "boolean"
+          },
+          "referredToSocialWorker": {
+            "type": "boolean"
           }
         }
       },
@@ -4487,6 +4490,15 @@
           "discomfortDescription": {
             "type": "string"
           },
+          "hasDiscomfort": {
+            "type": "boolean"
+          },
+          "signsAndSymptoms": {
+            "type": "string"
+          },
+          "indicationsReceived": {
+            "type": "string"
+          },
           "symptomDuration": {
             "type": "string",
             "maxLength": 50
@@ -4522,6 +4534,31 @@
             "maxLength": 255
           }
         }
+      },
+      "CreateEnrollmentFamilyTalkInterestDto": {
+        "type": "object",
+        "properties": {
+          "talkName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "familyMemberName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "familyMemberPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "familyMemberEmail": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "talkName",
+          "familyMemberName"
+        ]
       },
       "CreateEnrollmentDto": {
         "type": "object",
@@ -4610,6 +4647,21 @@
             "type": "number",
             "minimum": 1,
             "maximum": 5
+          },
+          "caseComments": {
+            "type": "string"
+          },
+          "callStartedAt": {
+            "type": "string"
+          },
+          "callEndedAt": {
+            "type": "string"
+          },
+          "familyPreventionTalkInterests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateEnrollmentFamilyTalkInterestDto"
+            }
           }
         },
         "required": [
@@ -4682,6 +4734,20 @@
           "surveyAccepted": {
             "type": "boolean"
           },
+          "caseComments": {
+            "type": "string",
+            "nullable": true
+          },
+          "callStartedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "callEndedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
           "followUpQualityRating": {
             "type": "number",
             "nullable": true,
@@ -4709,6 +4775,9 @@
           "hasMobilityIssues",
           "isOncologicalPatient",
           "surveyAccepted",
+          "caseComments",
+          "callStartedAt",
+          "callEndedAt",
           "followUpQualityRating",
           "createdAt"
         ]
@@ -6422,6 +6491,15 @@
             "maxLength": 20
           },
           "discomfortDescription": {
+            "type": "string"
+          },
+          "hasDiscomfort": {
+            "type": "boolean"
+          },
+          "signsAndSymptoms": {
+            "type": "string"
+          },
+          "indicationsReceived": {
             "type": "string"
           },
           "symptomDuration": {

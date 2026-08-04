@@ -18,6 +18,9 @@ export class EnrollmentResponseDto {
   @ApiProperty({ nullable: true }) hasMobilityIssues!: boolean | null;
   @ApiProperty() isOncologicalPatient!: boolean;
   @ApiProperty() surveyAccepted!: boolean;
+  @ApiProperty({ nullable: true }) caseComments!: string | null;
+  @ApiProperty({ format: 'date-time', nullable: true }) callStartedAt!: Date | null;
+  @ApiProperty({ format: 'date-time', nullable: true }) callEndedAt!: Date | null;
   @ApiProperty({ nullable: true, minimum: 1, maximum: 5 })
   followUpQualityRating!: number | null;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;

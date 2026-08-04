@@ -34,6 +34,13 @@ export class EnrollmentFollowUpDto {
   @IsOptional() @IsDateString() completedAt?: string;
 }
 
+export class CreateEnrollmentFamilyTalkInterestDto {
+  @IsString() @MaxLength(255) talkName!: string;
+  @IsString() @MaxLength(255) familyMemberName!: string;
+  @IsOptional() @IsString() @MaxLength(50) familyMemberPhone?: string;
+  @IsOptional() @IsString() @MaxLength(255) familyMemberEmail?: string;
+}
+
 export class EnrollmentDiagnosisDto extends OmitType(
   CreatePatientDiagnosisDto,
   ['followUpId'] as const,
@@ -114,4 +121,12 @@ export class CreateEnrollmentDto {
   @IsOptional() @IsBoolean() isOncologicalPatient?: boolean;
   @IsOptional() @IsBoolean() surveyAccepted?: boolean;
   @IsOptional() @IsInt() @Min(1) @Max(5) followUpQualityRating?: number;
+  @IsOptional() @IsString() caseComments?: string;
+  @IsOptional() @IsDateString() callStartedAt?: string;
+  @IsOptional() @IsDateString() callEndedAt?: string;
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateEnrollmentFamilyTalkInterestDto)
+  familyPreventionTalkInterests?: CreateEnrollmentFamilyTalkInterestDto[];
 }

@@ -43,6 +43,12 @@ export class PatientSymptomReport {
   discomfortSeverity!: string | null;
   @Column({ name: 'discomfort_description', type: 'text', nullable: true })
   discomfortDescription!: string | null;
+  @Column({ name: 'has_discomfort', type: 'boolean', nullable: true })
+  hasDiscomfort!: boolean | null;
+  @Column({ name: 'signs_and_symptoms', type: 'text', nullable: true })
+  signsAndSymptoms!: string | null;
+  @Column({ name: 'indications_received', type: 'text', nullable: true })
+  indicationsReceived!: string | null;
   @Column({
     name: 'symptom_duration',
     type: 'varchar',

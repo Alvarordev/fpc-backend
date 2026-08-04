@@ -10,6 +10,7 @@ import {
   AffiliationType,
   Enrollment,
 } from '../database/entities/enrollment.entity';
+import { EnrollmentFamilyTalkInterest } from '../database/entities/enrollment-family-talk-interest.entity';
 import { FollowUpPurpose } from '../database/entities/follow-up.enums';
 import { CompanionPatient } from '../patients/entities/companion-patient.entity';
 import { PatientDiagnosis } from '../patients/entities/patient-diagnosis.entity';
@@ -61,6 +62,7 @@ export class EnrollmentsService {
         treatment,
         medicalAppointments,
         symptomReport,
+        familyPreventionTalkInterests,
         ...metadata
       } = input;
       if (Boolean(patientId) === Boolean(patientInput))
@@ -155,11 +157,26 @@ export class EnrollmentsService {
       const enrollment = await enrollmentRepository.save(
         enrollmentRepository.create({
           ...metadata,
+          callStartedAt: metadata.callStartedAt
+            ? new Date(metadata.callStartedAt)
+            : null,
+          callEndedAt: metadata.callEndedAt
+            ? new Date(metadata.callEndedAt)
+            : null,
           patientId: patient.id,
           followUpId: followUp.id,
           companionId: companion?.id ?? null,
         }),
       );
+      if (familyPreventionTalkInterests?.length)
+        await manager.getRepository(EnrollmentFamilyTalkInterest).save(
+          familyPreventionTalkInterests.map((interest) =>
+            manager.getRepository(EnrollmentFamilyTalkInterest).create({
+              ...interest,
+              enrollmentId: enrollment.id,
+            }),
+          ),
+        );
 
       if (insurance)
         await this.insurance.create(

@@ -82,4 +82,9 @@ export class UpsertPatientDetailsDto {
   @IsOptional()
   @IsBoolean()
   requiresTranslation?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  referredToSocialWorker?: boolean;
 }

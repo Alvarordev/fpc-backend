@@ -14,6 +14,9 @@ export class CreatePatientSymptomReportDto {
   @IsOptional() @IsUUID() enrollmentId?: string;
   @IsOptional() @IsString() @MaxLength(20) discomfortSeverity?: string;
   @IsOptional() @IsString() discomfortDescription?: string;
+  @IsOptional() @IsBoolean() hasDiscomfort?: boolean;
+  @IsOptional() @IsString() signsAndSymptoms?: string;
+  @IsOptional() @IsString() indicationsReceived?: string;
   @IsOptional() @IsString() @MaxLength(50) symptomDuration?: string;
   @IsOptional() @IsString() @MaxLength(50) symptomFrequency?: string;
   @IsOptional() @IsBoolean() isPainPresent?: boolean;

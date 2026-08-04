@@ -111,6 +111,8 @@ export class PatientDetails {
 
   @Column({ name: 'requires_translation', type: 'boolean', default: false })
   requiresTranslation!: boolean;
+  @Column({ name: 'referred_to_social_worker', type: 'boolean', nullable: true })
+  referredToSocialWorker!: boolean | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
