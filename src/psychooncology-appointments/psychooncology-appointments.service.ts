@@ -7,17 +7,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
-import { Agent } from '../database/entities/agent.entity';
 import {
-  AppointmentModality,
   AppointmentStatus,
   PsychooncologyAppointment,
 } from '../database/entities/psychooncology-appointment.entity';
-import {
-  FollowUpPurpose,
-  FollowUpStatus,
-  FollowUpType,
-} from '../database/entities/follow-up.enums';
 import { FollowUp } from '../database/entities/follow-up.entity';
 import { Patient } from '../patients/entities/patient.entity';
 import { UserRole } from '../database/entities/user-role.enum';
@@ -38,15 +31,13 @@ export class PsychooncologyAppointmentsService {
   constructor(
     @InjectRepository(PsychooncologyAppointment)
     private readonly appointments: Repository<PsychooncologyAppointment>,
-    @InjectRepository(Agent) private readonly agents: Repository<Agent>,
     private readonly dataSource: DataSource,
     private readonly access: PatientAccessService,
   ) {}
 
   async create(input: CreatePsychooncologyAppointmentDto, user: User) {
-    const agentId = await this.resolveAgentId(input.agentId, user);
     return this.dataSource.transaction((manager) =>
-      this.reserveAndCreate(manager, input, agentId),
+      this.reserveAndCreate(manager, input, user),
     );
   }
 
@@ -99,18 +90,6 @@ export class PsychooncologyAppointmentsService {
       const saved = await manager
         .getRepository(PsychooncologyAppointment)
         .save(appointment);
-      if (input.status) {
-        await manager.getRepository(FollowUp).update(
-          { id: appointment.followUpId },
-          {
-            status: input.status as unknown as FollowUpStatus,
-            completedAt:
-              input.status === AppointmentStatus.COMPLETED
-                ? appointment.completedAt
-                : null,
-          },
-        );
-      }
       return saved;
     });
   }
@@ -149,7 +128,7 @@ export class PsychooncologyAppointmentsService {
   private async reserveAndCreate(
     manager: EntityManager,
     input: CreatePsychooncologyAppointmentDto,
-    agentId: string,
+    user: User,
   ) {
     // Lock the patient as well as the slot so concurrent bookings get sequential sessions.
     const patient = await manager
@@ -173,6 +152,15 @@ export class PsychooncologyAppointmentsService {
     if (!volunteer) throw new NotFoundException('Volunteer not found');
     if (!volunteer.isActive)
       throw new ConflictException('Volunteer is inactive');
+    await this.assertScheduleScope(availability.volunteerId, user);
+
+    const followUp = input.followUpId
+      ? await manager.getRepository(FollowUp).findOne({
+          where: { id: input.followUpId, subjectPatientId: patient.id },
+        })
+      : null;
+    if (input.followUpId && !followUp)
+      throw new BadRequestException('Follow-up does not belong to the patient');
 
     availability.status = AvailabilityStatus.RESERVED;
     await manager.getRepository(VolunteerAvailability).save(availability);
@@ -182,29 +170,11 @@ export class PsychooncologyAppointmentsService {
         where: { patientId: patient.id },
       })) + 1;
     const scheduledAt = this.slotDate(availability);
-    const followUp = await manager.getRepository(FollowUp).save(
-      manager.getRepository(FollowUp).create({
-        subjectPatientId: patient.id,
-        interlocutorId: patient.id,
-        agentId,
-        type:
-          input.modality === AppointmentModality.CALL
-            ? FollowUpType.CALL
-            : FollowUpType.VIDEO_CALL,
-        status: FollowUpStatus.SCHEDULED,
-        purpose: FollowUpPurpose.PSYCHOONCOLOGY_REFERRAL,
-        scheduledAt,
-        completedAt: null,
-        notes: null,
-        nextFollowUpId: null,
-      }),
-    );
-
     return manager.getRepository(PsychooncologyAppointment).save(
       manager.getRepository(PsychooncologyAppointment).create({
         patientId: patient.id,
         volunteerId: volunteer.id,
-        followUpId: followUp.id,
+        followUpId: followUp?.id ?? null,
         availabilityId: availability.id,
         patientEmail: input.patientEmail ?? null,
         sessionNumber,
@@ -245,26 +215,13 @@ export class PsychooncologyAppointmentsService {
     return scheduledAt;
   }
 
-  private async resolveAgentId(
-    requestedAgentId: string | undefined,
-    user: User,
-  ) {
-    if (user.role === UserRole.AGENT) {
-      const agent = await this.agents.findOne({ where: { userId: user.id } });
-      if (!agent)
-        throw new BadRequestException(
-          'Authenticated user has no agent profile',
-        );
-      if (requestedAgentId && requestedAgentId !== agent.id)
-        throw new ForbiddenException(
-          'Agents cannot assign appointments to others',
-        );
-      return agent.id;
-    }
-    if (!requestedAgentId) throw new BadRequestException('agentId is required');
-    if (!(await this.agents.existsBy({ id: requestedAgentId })))
-      throw new NotFoundException('Agent not found');
-    return requestedAgentId;
+  private async assertScheduleScope(volunteerId: string, user: User) {
+    if (user.role !== UserRole.VOLUNTEER) return;
+
+    if ((await this.access.volunteerIdFor(user)) !== volunteerId)
+      throw new ForbiddenException(
+        'Volunteers can only schedule appointments from their own availability',
+      );
   }
 
   private async assertUpdateScope(id: string, user: User) {

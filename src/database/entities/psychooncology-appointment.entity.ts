@@ -51,10 +51,11 @@ export class PsychooncologyAppointment {
   @ManyToOne(() => Volunteer)
   @JoinColumn({ name: 'volunteer_id' })
   volunteer!: Volunteer;
-  @Column({ name: 'follow_up_id', type: 'uuid' }) followUpId!: string;
+  @Column({ name: 'follow_up_id', type: 'uuid', nullable: true })
+  followUpId!: string | null;
   @ManyToOne(() => FollowUp)
   @JoinColumn({ name: 'follow_up_id' })
-  followUp!: FollowUp;
+  followUp!: FollowUp | null;
   @Column({ name: 'availability_id', type: 'uuid' }) availabilityId!: string;
   @ManyToOne(() => VolunteerAvailability)
   @JoinColumn({ name: 'availability_id' })

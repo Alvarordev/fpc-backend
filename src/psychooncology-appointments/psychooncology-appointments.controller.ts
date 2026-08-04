@@ -31,7 +31,13 @@ const READ = [
   UserRole.AGENT,
   UserRole.VOLUNTEER,
 ];
-const SCHEDULE = [UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT];
+const SCHEDULE = [
+  UserRole.ADMIN,
+  UserRole.FOUNDATION,
+  UserRole.AGENT,
+  UserRole.VOLUNTEER,
+];
+const CANCEL = [UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT];
 
 @Controller('psychooncology-appointments')
 @ApiTags('psychooncology-appointments')
@@ -45,16 +51,16 @@ export class PsychooncologyAppointmentsController {
   @ApiOperation({ summary: 'Schedule a psycho-oncology appointment' })
   @ApiCreatedResponse({ type: PsychooncologyAppointmentResponseDto })
   @ApiBadRequestResponse({
-    description: 'Required agent assignment is missing',
+    description: 'The follow-up does not belong to the patient',
   })
   @ApiConflictResponse({
     description: 'Availability slot is reserved or volunteer is inactive',
   })
   @ApiForbiddenResponse({
-    description: 'Agents cannot assign appointments to others',
+    description: 'Volunteers can only schedule appointments from their own availability',
   })
   @ApiNotFoundResponse({
-    description: 'Patient, availability slot, volunteer, or agent not found',
+    description: 'Patient, follow-up, availability slot, or volunteer not found',
   })
   create(
     @Body() dto: CreatePsychooncologyAppointmentDto,
@@ -116,7 +122,7 @@ export class PsychooncologyAppointmentsController {
   }
 
   @Patch(':id/cancel')
-  @Roles(...SCHEDULE)
+  @Roles(...CANCEL)
   @ApiOperation({ summary: 'Cancel a psycho-oncology appointment' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: PsychooncologyAppointmentResponseDto })

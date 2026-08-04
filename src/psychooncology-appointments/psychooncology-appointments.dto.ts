@@ -7,7 +7,7 @@ import {
 export class CreatePsychooncologyAppointmentDto {
   @IsUUID() patientId!: string;
   @IsUUID() availabilityId!: string;
-  @IsOptional() @IsUUID() agentId?: string;
+  @IsOptional() @IsUUID() followUpId?: string;
   @IsOptional() @IsString() patientEmail?: string;
   @IsOptional() @IsBoolean() isAdditionalSession?: boolean;
   @IsIn(Object.values(AppointmentModality)) modality!: AppointmentModality;

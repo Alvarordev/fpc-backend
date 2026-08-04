@@ -68,7 +68,7 @@ export class PsychooncologyAppointmentTimelineEventDto {
   kind!: PatientTimelineEventKind.PSYCHOONCOLOGY_APPOINTMENT;
   @ApiProperty({ format: 'date-time' }) occurredAt!: string;
   @ApiProperty({ enum: AppointmentStatus }) status!: AppointmentStatus;
-  @ApiProperty({ format: 'uuid' }) followUpId!: string;
+  @ApiProperty({ format: 'uuid', nullable: true }) followUpId!: string | null;
   @ApiProperty({ enum: AppointmentModality }) modality!: AppointmentModality;
   @ApiProperty({ minimum: 1 }) sessionNumber!: number;
 }

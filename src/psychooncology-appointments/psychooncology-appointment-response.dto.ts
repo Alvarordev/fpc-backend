@@ -8,7 +8,7 @@ export class PsychooncologyAppointmentResponseDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) patientId!: string;
   @ApiProperty({ format: 'uuid' }) volunteerId!: string;
-  @ApiProperty({ format: 'uuid' }) followUpId!: string;
+  @ApiProperty({ format: 'uuid', nullable: true }) followUpId!: string | null;
   @ApiProperty({ format: 'uuid' }) availabilityId!: string;
   @ApiProperty({ format: 'email', nullable: true }) patientEmail!:
     string | null;

@@ -140,7 +140,6 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
     const body = {
       availabilityId: availability.id,
       modality: 'VIDEO_CALL',
-      agentId: agent.id,
     };
     const responses = await Promise.all([
       request(server)
@@ -168,7 +167,7 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
     ).resolves.toMatchObject({ status: AvailabilityStatus.RESERVED });
   });
 
-  it('creates a follow-up, releases cancelled slots, and numbers sessions', async () => {
+  it('creates independent or linked appointments, releases cancelled slots, and numbers sessions', async () => {
     const availability = await createAvailability(volunteer.id, adminToken);
     const first = await request(server)
       .post('/psychooncology-appointments')
@@ -176,21 +175,24 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
       .send({
         patientId: patient.id,
         availabilityId: availability.id,
-        agentId: agent.id,
         modality: 'CALL',
       })
       .expect(201);
     const firstAppointment = first.body as PsychooncologyAppointment;
     expect(firstAppointment.sessionNumber).toBe(1);
-    await expect(
-      dataSource.getRepository(FollowUp).findOneByOrFail({
-        id: firstAppointment.followUpId,
-      }),
-    ).resolves.toMatchObject({
+    expect(firstAppointment.followUpId).toBeNull();
+
+    const followUp = await dataSource.getRepository(FollowUp).save({
       subjectPatientId: patient.id,
+      interlocutorId: patient.id,
+      agentId: agent.id,
       purpose: 'PSYCHOONCOLOGY_REFERRAL',
       type: 'CALL',
       status: 'SCHEDULED',
+      scheduledAt: null,
+      completedAt: null,
+      notes: null,
+      nextFollowUpId: null,
     });
 
     await request(server)
@@ -210,14 +212,14 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
         patientId: patient.id,
         availabilityId: availability.id,
         modality: 'CALL',
-        agentId: agent.id,
+        followUpId: followUp.id,
         isAdditionalSession: true,
       })
       .expect(201);
-    expect((second.body as PsychooncologyAppointment).sessionNumber).toBe(2);
+    expect(second.body).toMatchObject({ sessionNumber: 2, followUpId: followUp.id });
   });
 
-  it('limits volunteers to their own availability and appointments', async () => {
+  it('limits volunteers to their own availability and grants access after scheduling', async () => {
     await request(server)
       .post(`/volunteers/${otherVolunteer.id}/availability`)
       .set('Authorization', `Bearer ${volunteerToken}`)
@@ -233,6 +235,15 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
       otherVolunteer.id,
       adminToken,
     );
+    await request(server)
+      .post('/psychooncology-appointments')
+      .set('Authorization', `Bearer ${volunteerToken}`)
+      .send({
+        patientId: patient.id,
+        availabilityId: otherAvailability.id,
+        modality: 'CALL',
+      })
+      .expect(403);
     const appointment = await request(server)
       .post('/psychooncology-appointments')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -240,7 +251,20 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
         patientId: patient.id,
         availabilityId: otherAvailability.id,
         modality: 'CALL',
-        agentId: agent.id,
+      })
+      .expect(201);
+    const ownAvailability = await request(server)
+      .post(`/volunteers/${volunteer.id}/availability`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ date: '2030-01-02', startTime: '10:00', endTime: '11:00' })
+      .expect(201);
+    await request(server)
+      .post('/psychooncology-appointments')
+      .set('Authorization', `Bearer ${volunteerToken}`)
+      .send({
+        patientId: patient.id,
+        availabilityId: ownAvailability.body.id,
+        modality: 'CALL',
       })
       .expect(201);
     await request(server)
@@ -248,14 +272,15 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
         `/psychooncology-appointments/${(appointment.body as { id: string }).id}`,
       )
       .set('Authorization', `Bearer ${volunteerToken}`)
-      .expect(403);
+      .expect(200);
     await request(server)
       .get('/psychooncology-appointments')
       .set('Authorization', `Bearer ${otherVolunteerToken}`)
       .expect(200)
       .expect(({ body }: { body: PsychooncologyAppointment[] }) => {
-        expect(body).toHaveLength(1);
-        expect(body[0].volunteerId).toBe(otherVolunteer.id);
+        expect(body).toContainEqual(
+          expect.objectContaining({ volunteerId: otherVolunteer.id }),
+        );
       });
   });
 
@@ -314,7 +339,6 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
         patientId: patient.id,
         availabilityId: availability.id,
         modality: 'CALL',
-        agentId: agent.id,
       })
       .expect(201);
     const appointment = created.body as PsychooncologyAppointment;

@@ -2574,16 +2574,16 @@
             }
           },
           "400": {
-            "description": "Required agent assignment is missing"
+            "description": "The follow-up does not belong to the patient"
           },
           "401": {
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Agents cannot assign appointments to others"
+            "description": "Volunteers can only schedule appointments from their own availability"
           },
           "404": {
-            "description": "Patient, availability slot, volunteer, or agent not found"
+            "description": "Patient, follow-up, availability slot, or volunteer not found"
           },
           "409": {
             "description": "Availability slot is reserved or volunteer is inactive"
@@ -4994,6 +4994,7 @@
           },
           "followUpId": {
             "type": "string",
+            "nullable": true,
             "format": "uuid"
           },
           "modality": {
@@ -6294,7 +6295,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "agentId": {
+          "followUpId": {
             "type": "string",
             "format": "uuid"
           },
@@ -6335,6 +6336,7 @@
           },
           "followUpId": {
             "type": "string",
+            "nullable": true,
             "format": "uuid"
           },
           "availabilityId": {

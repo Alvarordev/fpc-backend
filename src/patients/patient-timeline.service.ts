@@ -129,7 +129,7 @@ export class PatientTimelineService {
       return {
         ...common,
         kind: row.kind,
-        followUpId: row.follow_up_id as string,
+        followUpId: row.follow_up_id,
         type: row.type,
         purpose: row.purpose,
         notes: row.notes,
