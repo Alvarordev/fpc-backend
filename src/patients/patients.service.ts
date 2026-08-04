@@ -4,14 +4,21 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, Repository } from 'typeorm';
+import { FollowUp } from '../database/entities/follow-up.entity';
 import { PatientSummary } from '../database/entities/patient-summary.entity';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CompanionPatient } from './entities/companion-patient.entity';
 import { DeactivationReason } from './entities/deactivation-reason.enum';
 import { PatientDetails } from './entities/patient-details.entity';
+import { PatientDiagnosis } from './entities/patient-diagnosis.entity';
+import { PatientInsurance } from './entities/patient-insurance.entity';
+import { PatientMedicalAppointment } from './entities/patient-medical-appointment.entity';
 import { PatientRole } from './entities/patient-role.enum';
+import { PatientSisAffiliation } from './entities/patient-sis-affiliation.entity';
 import { PatientStatus } from './entities/patient-status.enum';
+import { PatientSymptomReport } from './entities/patient-symptom-report.entity';
+import { PatientTreatment } from './entities/patient-treatment.entity';
 import { Patient } from './entities/patient.entity';
 import { CreateCompanionDto } from './dto/create-companion.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
@@ -34,6 +41,20 @@ export class PatientsService {
     private readonly companionPatientsRepository: Repository<CompanionPatient>,
     @InjectRepository(PatientSummary)
     private readonly summaries: Repository<PatientSummary>,
+    @InjectRepository(PatientDiagnosis)
+    private readonly diagnosesRepository: Repository<PatientDiagnosis>,
+    @InjectRepository(PatientTreatment)
+    private readonly treatmentsRepository: Repository<PatientTreatment>,
+    @InjectRepository(PatientInsurance)
+    private readonly insuranceRepository: Repository<PatientInsurance>,
+    @InjectRepository(PatientMedicalAppointment)
+    private readonly medicalAppointmentsRepository: Repository<PatientMedicalAppointment>,
+    @InjectRepository(PatientSisAffiliation)
+    private readonly sisAffiliationsRepository: Repository<PatientSisAffiliation>,
+    @InjectRepository(PatientSymptomReport)
+    private readonly symptomReportsRepository: Repository<PatientSymptomReport>,
+    @InjectRepository(FollowUp)
+    private readonly followUpsRepository: Repository<FollowUp>,
     private readonly dataSource: DataSource,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly access: PatientAccessService,
@@ -156,7 +177,16 @@ export class PatientsService {
   async findAll(
     filters: ListPatientsDto,
     user: User,
-  ): Promise<{ data: Patient[]; total: number }> {
+  ): Promise<{
+    data: Array<
+      Patient & {
+        currentDiagnosis: PatientDiagnosis | null;
+        currentDepartment: string | null;
+        latestFollowUp: FollowUp | null;
+      }
+    >;
+    total: number;
+  }> {
     const query = this.patientsRepository.createQueryBuilder('patient');
     await this.access.scopeQuery(query, 'patient.id', user);
     if (filters.role)
@@ -174,10 +204,54 @@ export class PatientsService {
       );
     const [data, total] = await query
       .orderBy('patient.created_at', 'DESC')
+      .addOrderBy('patient.id', 'DESC')
       .skip(filters.offset)
       .take(filters.limit)
       .getManyAndCount();
-    return { data, total };
+    if (!data.length) return { data: [], total };
+
+    const patientIds = data.map((patient) => patient.id);
+    const [details, currentDiagnoses, latestFollowUps] = await Promise.all([
+      this.detailsRepository.find({ where: { patientId: In(patientIds) } }),
+      this.diagnosesRepository
+        .createQueryBuilder('diagnosis')
+        .leftJoinAndSelect('diagnosis.healthCenter', 'healthCenter')
+        .where('diagnosis.patient_id IN (:...patientIds)', { patientIds })
+        .andWhere('diagnosis.is_current = true')
+        .getMany(),
+      this.followUpsRepository
+        .createQueryBuilder('followUp')
+        .distinctOn(['followUp.subject_patient_id'])
+        .where('followUp.subject_patient_id IN (:...patientIds)', {
+          patientIds,
+        })
+        .orderBy('followUp.subject_patient_id', 'ASC')
+        .addOrderBy(
+          'COALESCE(followUp.completed_at, followUp.scheduled_at, followUp.created_at)',
+          'DESC',
+        )
+        .addOrderBy('followUp.id', 'DESC')
+        .getMany(),
+    ]);
+    const departments = new Map(
+      details.map((details) => [details.patientId, details.currentDepartment]),
+    );
+    const diagnoses = new Map(
+      currentDiagnoses.map((diagnosis) => [diagnosis.patientId, diagnosis]),
+    );
+    const followUps = new Map(
+      latestFollowUps.map((followUp) => [followUp.subjectPatientId, followUp]),
+    );
+    return {
+      data: data.map((patient) =>
+        Object.assign(patient, {
+          currentDepartment: departments.get(patient.id) ?? null,
+          currentDiagnosis: diagnoses.get(patient.id) ?? null,
+          latestFollowUp: followUps.get(patient.id) ?? null,
+        }),
+      ),
+      total,
+    };
   }
 
   async findById(id: string): Promise<Patient & { summary: string | null }> {
@@ -193,9 +267,79 @@ export class PatientsService {
   async findByIdForUser(
     id: string,
     user: User,
-  ): Promise<Patient & { summary: string | null }> {
+  ): Promise<
+    Patient & {
+      summary: string | null;
+      diagnoses: PatientDiagnosis[];
+      treatments: PatientTreatment[];
+      insurance: PatientInsurance[];
+      medicalAppointments: PatientMedicalAppointment[];
+      sisAffiliations: PatientSisAffiliation[];
+      symptomReports: PatientSymptomReport[];
+      companions: CompanionPatient[];
+    }
+  > {
     await this.access.assertCanRead(id, user);
-    return this.findById(id);
+    const [
+      patient,
+      stored,
+      diagnoses,
+      treatments,
+      insurance,
+      medicalAppointments,
+      sisAffiliations,
+      symptomReports,
+      companions,
+    ] = await Promise.all([
+      this.patientsRepository.findOne({
+        where: { id },
+        relations: { details: true },
+      }),
+      this.summaries.findOneBy({ patientId: id }),
+      this.diagnosesRepository.find({
+        where: { patientId: id },
+        relations: { healthCenter: true },
+        order: { createdAt: 'DESC' },
+      }),
+      this.treatmentsRepository.find({
+        where: { patientId: id },
+        relations: { healthCenter: true, diagnosis: true },
+        order: { createdAt: 'DESC' },
+      }),
+      this.insuranceRepository.find({
+        where: { patientId: id },
+        order: { createdAt: 'DESC' },
+      }),
+      this.medicalAppointmentsRepository.find({
+        where: { patientId: id },
+        relations: { healthCenter: true },
+        order: { createdAt: 'DESC' },
+      }),
+      this.sisAffiliationsRepository.find({
+        where: { patientId: id },
+        order: { createdAt: 'DESC' },
+      }),
+      this.symptomReportsRepository.find({
+        where: { patientId: id },
+        order: { createdAt: 'DESC' },
+      }),
+      this.companionPatientsRepository.find({
+        where: { patientId: id },
+        relations: { companion: true },
+        order: { createdAt: 'DESC' },
+      }),
+    ]);
+    if (!patient) throw new NotFoundException('Patient not found');
+    return Object.assign(patient, {
+      summary: stored?.summary ?? null,
+      diagnoses,
+      treatments,
+      insurance,
+      medicalAppointments,
+      sisAffiliations,
+      symptomReports,
+      companions,
+    });
   }
 
   async update(id: string, input: UpdatePatientDto): Promise<Patient> {

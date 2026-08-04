@@ -111,8 +111,44 @@ export class PatientDetails {
 
   @Column({ name: 'requires_translation', type: 'boolean', default: false })
   requiresTranslation!: boolean;
-  @Column({ name: 'referred_to_social_worker', type: 'boolean', nullable: true })
+  @Column({
+    name: 'referred_to_social_worker',
+    type: 'boolean',
+    nullable: true,
+  })
   referredToSocialWorker!: boolean | null;
+
+  @Column({
+    name: 'evidence_of_domestic_violence',
+    type: 'boolean',
+    nullable: true,
+  })
+  evidenceOfDomesticViolence!: boolean | null;
+
+  @Column({ name: 'uses_wood_stove', type: 'boolean', nullable: true })
+  usesWoodStove!: boolean | null;
+
+  @Column({ name: 'is_working', type: 'boolean', nullable: true })
+  isWorking!: boolean | null;
+
+  @Column({
+    name: 'receives_financial_support',
+    type: 'boolean',
+    nullable: true,
+  })
+  receivesFinancialSupport!: boolean | null;
+
+  @Column({ name: 'has_conadis_card', type: 'boolean', nullable: true })
+  hasConadisCard!: boolean | null;
+
+  @Column({ name: 'knows_about_fissal', type: 'boolean', nullable: true })
+  knowsAboutFissal!: boolean | null;
+
+  @Column({ name: 'program_dropout_reason', type: 'text', nullable: true })
+  programDropoutReason!: string | null;
+
+  @Column({ name: 'program_dropout_date', type: 'date', nullable: true })
+  programDropoutDate!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

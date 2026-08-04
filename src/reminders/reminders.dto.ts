@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
 export class CreateReminderDto {
   @IsUUID() subjectPatientId!: string;
@@ -13,4 +14,11 @@ export class UpdateReminderDto {
 }
 export class CompleteReminderDto {
   @IsOptional() @IsUUID() resultingFollowUpId?: string;
+}
+
+export class ListRemindersDto {
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  patientId?: string;
 }

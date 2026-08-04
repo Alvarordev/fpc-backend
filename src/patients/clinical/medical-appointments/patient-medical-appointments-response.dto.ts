@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PatientMedicalAppointment } from '../../entities/patient-medical-appointment.entity';
 
 export class PatientMedicalAppointmentResponseDto {
@@ -13,6 +13,9 @@ export class PatientMedicalAppointmentResponseDto {
 
   @ApiProperty({ format: 'uuid', nullable: true })
   healthCenterId!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  healthCenterName?: string | null;
 
   @ApiProperty()
   specialty!: string;
@@ -52,6 +55,7 @@ export class PatientMedicalAppointmentResponseDto {
       patientId: appointment.patientId,
       followUpId: appointment.followUpId,
       healthCenterId: appointment.healthCenterId,
+      healthCenterName: appointment.healthCenter?.name ?? null,
       specialty: appointment.specialty,
       appointmentDate: appointment.appointmentDate,
       nextAppointmentDate: appointment.nextAppointmentDate,

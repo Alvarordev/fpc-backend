@@ -10,12 +10,14 @@ import { ReminderStatus } from '../database/entities/reminder-status.enum';
 import { Reminder } from '../database/entities/reminder.entity';
 import { Agent } from '../database/entities/agent.entity';
 import { FollowUp } from '../database/entities/follow-up.entity';
+import { Patient } from '../patients/entities/patient.entity';
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
 import { PatientAccessService } from '../patient-access/patient-access.service';
 import {
   CreateReminderDto,
   CompleteReminderDto,
+  ListRemindersDto,
   UpdateReminderDto,
 } from './reminders.dto';
 @Injectable()
@@ -26,13 +28,15 @@ export class RemindersService {
     @InjectRepository(Agent) private readonly agents: Repository<Agent>,
     @InjectRepository(FollowUp)
     private readonly followUps: Repository<FollowUp>,
+    @InjectRepository(Patient)
+    private readonly patients: Repository<Patient>,
     private readonly access: PatientAccessService,
   ) {}
   async create(input: CreateReminderDto, user: User) {
-    const assignedAgentId = await this.resolveAgentId(
-      input.assignedAgentId,
-      user,
-    );
+    const [assignedAgentId] = await Promise.all([
+      this.resolveAgentId(input.assignedAgentId, user),
+      this.assertCreateReferences(input),
+    ]);
     return this.repository.save(
       this.repository.create({
         ...input,
@@ -90,10 +94,28 @@ export class RemindersService {
     );
     return this.repository.save(item);
   }
-  async findAll(user: User) {
+  async findAll(filters: ListRemindersDto, user: User) {
     const query = this.repository.createQueryBuilder('reminder');
     await this.access.scopeQuery(query, 'reminder.subject_patient_id', user);
+    if (filters.patientId)
+      query.andWhere('reminder.subject_patient_id = :patientId', {
+        patientId: filters.patientId,
+      });
     return query.getMany();
+  }
+  private async assertCreateReferences(input: CreateReminderDto) {
+    if (!(await this.patients.existsBy({ id: input.subjectPatientId })))
+      throw new NotFoundException('Patient not found');
+    if (
+      input.createdFromFollowUpId &&
+      !(await this.followUps.existsBy({
+        id: input.createdFromFollowUpId,
+        subjectPatientId: input.subjectPatientId,
+      }))
+    )
+      throw new BadRequestException(
+        'Source follow-up must belong to the reminder patient',
+      );
   }
   private async assertWriteScope(item: Reminder, user: User) {
     const agentId = await this.agentIdFor(user);

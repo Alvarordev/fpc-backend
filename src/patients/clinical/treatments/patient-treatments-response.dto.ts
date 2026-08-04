@@ -1,5 +1,20 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { CancerStage } from '../../entities/patient-diagnosis.entity';
 import { PatientTreatment } from '../../entities/patient-treatment.entity';
+
+export class PatientDiagnosisSummaryDto {
+  @ApiProperty({ format: 'uuid' })
+  id!: string;
+
+  @ApiProperty()
+  diagnosis!: string;
+
+  @ApiProperty({ enum: CancerStage, nullable: true })
+  cancerStage!: CancerStage | null;
+
+  @ApiProperty({ format: 'date', nullable: true })
+  diagnosisDate!: string | null;
+}
 
 export class PatientTreatmentResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -22,6 +37,12 @@ export class PatientTreatmentResponseDto {
 
   @ApiProperty({ format: 'uuid', nullable: true })
   healthCenterId!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  healthCenterName?: string | null;
+
+  @ApiPropertyOptional({ type: PatientDiagnosisSummaryDto, nullable: true })
+  diagnosisSummary?: PatientDiagnosisSummaryDto | null;
 
   @ApiProperty({ format: 'date', nullable: true })
   startDate!: string | null;
@@ -53,6 +74,15 @@ export class PatientTreatmentResponseDto {
       treatmentType: treatment.treatmentType,
       treatmentFrequency: treatment.treatmentFrequency,
       healthCenterId: treatment.healthCenterId,
+      healthCenterName: treatment.healthCenter?.name ?? null,
+      diagnosisSummary: treatment.diagnosis
+        ? {
+            id: treatment.diagnosis.id,
+            diagnosis: treatment.diagnosis.diagnosis,
+            cancerStage: treatment.diagnosis.cancerStage,
+            diagnosisDate: treatment.diagnosis.diagnosisDate,
+          }
+        : null,
       startDate: treatment.startDate,
       endDate: treatment.endDate,
       isCurrent: treatment.isCurrent,

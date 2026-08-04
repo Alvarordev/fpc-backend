@@ -25,6 +25,7 @@ import { PatientStatus } from './patient-status.enum';
 @Index('IDX_patients_dni', ['dni'])
 @Index('IDX_patients_role', ['role'])
 @Index('IDX_patients_status', ['status'])
+@Index('IDX_patients_created_at_id', ['createdAt', 'id'])
 export class Patient {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' })
   id!: string;

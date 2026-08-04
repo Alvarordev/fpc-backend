@@ -3093,7 +3093,17 @@
       },
       "get": {
         "operationId": "RemindersController_all",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -4786,6 +4796,31 @@
           },
           "referredToSocialWorker": {
             "type": "boolean"
+          },
+          "evidenceOfDomesticViolence": {
+            "type": "boolean"
+          },
+          "usesWoodStove": {
+            "type": "boolean"
+          },
+          "isWorking": {
+            "type": "boolean"
+          },
+          "receivesFinancialSupport": {
+            "type": "boolean"
+          },
+          "hasConadisCard": {
+            "type": "boolean"
+          },
+          "knowsAboutFissal": {
+            "type": "boolean"
+          },
+          "programDropoutReason": {
+            "type": "string"
+          },
+          "programDropoutDate": {
+            "type": "string",
+            "format": "date"
           }
         }
       },
@@ -5990,6 +6025,10 @@
           "isPrimaryInformant": {
             "type": "boolean"
           },
+          "companionDisplayName": {
+            "type": "string",
+            "nullable": true
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -6006,7 +6045,223 @@
           "companionId",
           "patientId",
           "isPrimaryInformant",
+          "companionDisplayName",
           "createdAt"
+        ]
+      },
+      "CurrentDiagnosisResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "cancerStage": {
+            "type": "string",
+            "nullable": true
+          },
+          "diagnosisDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "healthCenterName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "diagnosis",
+          "cancerStage",
+          "diagnosisDate",
+          "healthCenterId",
+          "healthCenterName"
+        ]
+      },
+      "LatestFollowUpResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "purpose",
+          "occurredAt",
+          "scheduledAt",
+          "completedAt"
+        ]
+      },
+      "PatientListItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "dni": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryPhone": {
+            "type": "string"
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "role": {
+            "enum": [
+              "UNKNOWN",
+              "PATIENT",
+              "COMPANION"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "UNENROLLED",
+              "ENROLLED"
+            ],
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "deactivationReason": {
+            "nullable": true,
+            "enum": [
+              "DECEASED",
+              "WITHDREW_CONSENT",
+              "LOST_CONTACT",
+              "TRANSFERRED_OUT",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "deactivationReasonDetail": {
+            "type": "string",
+            "nullable": true
+          },
+          "deactivatedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "deceasedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currentDiagnosis": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrentDiagnosisResponseDto"
+              }
+            ]
+          },
+          "currentDepartment": {
+            "type": "string",
+            "nullable": true
+          },
+          "latestFollowUp": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LatestFollowUpResponseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "email",
+          "dni",
+          "birthDate",
+          "gender",
+          "primaryPhone",
+          "secondaryPhone",
+          "hasWhatsapp",
+          "role",
+          "status",
+          "isActive",
+          "deactivationReason",
+          "deactivationReasonDetail",
+          "deactivatedAt",
+          "deceasedAt",
+          "createdAt",
+          "updatedAt",
+          "currentDiagnosis",
+          "currentDepartment",
+          "latestFollowUp"
         ]
       },
       "PatientListResponseDto": {
@@ -6015,7 +6270,7 @@
           "data": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/PatientResponseDto"
+              "$ref": "#/components/schemas/PatientListItemResponseDto"
             }
           },
           "total": {
@@ -6179,6 +6434,43 @@
           "requiresTranslation": {
             "type": "boolean"
           },
+          "referredToSocialWorker": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "evidenceOfDomesticViolence": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "usesWoodStove": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "isWorking": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "receivesFinancialSupport": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "hasConadisCard": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "knowsAboutFissal": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "programDropoutReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "programDropoutDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -6204,8 +6496,541 @@
           "educationLevel",
           "nativeLanguage",
           "requiresTranslation",
+          "referredToSocialWorker",
+          "evidenceOfDomesticViolence",
+          "usesWoodStove",
+          "isWorking",
+          "receivesFinancialSupport",
+          "hasConadisCard",
+          "knowsAboutFissal",
+          "programDropoutReason",
+          "programDropoutDate",
           "createdAt",
           "updatedAt"
+        ]
+      },
+      "PatientDiagnosisResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "cancerStage": {
+            "nullable": true,
+            "enum": [
+              "STAGE_1",
+              "STAGE_2",
+              "STAGE_3",
+              "STAGE_4",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "diagnosisDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "healthCenterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "diagnosisSpecialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "symptomLeadingToCheckup": {
+            "type": "string",
+            "nullable": true
+          },
+          "waitTimeForDiagnosis": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasMedicalReport": {
+            "type": "boolean"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "diagnosis",
+          "cancerStage",
+          "diagnosisDate",
+          "healthCenterId",
+          "diagnosisSpecialty",
+          "symptomLeadingToCheckup",
+          "waitTimeForDiagnosis",
+          "hasMedicalReport",
+          "isCurrent",
+          "changeReason",
+          "createdAt"
+        ]
+      },
+      "PatientDiagnosisSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "cancerStage": {
+            "nullable": true,
+            "enum": [
+              "STAGE_1",
+              "STAGE_2",
+              "STAGE_3",
+              "STAGE_4",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "diagnosisDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          }
+        },
+        "required": [
+          "id",
+          "diagnosis",
+          "cancerStage",
+          "diagnosisDate"
+        ]
+      },
+      "PatientTreatmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosisId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "treatmentType": {
+            "type": "string"
+          },
+          "treatmentFrequency": {
+            "type": "string",
+            "nullable": true
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "healthCenterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "diagnosisSummary": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PatientDiagnosisSummaryDto"
+              }
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "notReceivingReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "treatmentSituation": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "diagnosisId",
+          "treatmentType",
+          "treatmentFrequency",
+          "healthCenterId",
+          "startDate",
+          "endDate",
+          "isCurrent",
+          "changeReason",
+          "notReceivingReason",
+          "treatmentSituation",
+          "createdAt"
+        ]
+      },
+      "PatientInsuranceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "insuranceType": {
+            "enum": [
+              "SIS",
+              "ESSALUD",
+              "EPS",
+              "FUERZAS_ARMADAS",
+              "SALUDPOL",
+              "NONE"
+            ],
+            "type": "string"
+          },
+          "epsProvider": {
+            "nullable": true,
+            "enum": [
+              "RIMAC",
+              "PACIFICO",
+              "MAPFRE",
+              "SANITAS",
+              "LA_POSITIVA",
+              "ONCOSALUD",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "insuranceType",
+          "epsProvider",
+          "isCurrent",
+          "changeReason",
+          "startDate",
+          "endDate",
+          "createdAt"
+        ]
+      },
+      "PatientMedicalAppointmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "healthCenterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "specialty": {
+            "type": "string"
+          },
+          "appointmentDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "nextAppointmentDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          },
+          "referredTo": {
+            "type": "string",
+            "nullable": true
+          },
+          "difficulties": {
+            "type": "string",
+            "nullable": true
+          },
+          "isFirstConsultation": {
+            "type": "boolean"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "healthCenterId",
+          "specialty",
+          "appointmentDate",
+          "nextAppointmentDate",
+          "hasReferralSheet",
+          "referredTo",
+          "difficulties",
+          "isFirstConsultation",
+          "isCurrent",
+          "changeReason",
+          "createdAt"
+        ]
+      },
+      "PatientSisAffiliationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "canAffiliate": {
+            "type": "boolean"
+          },
+          "expectedDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "cantAffiliateReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "affiliatedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "comments": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "canAffiliate",
+          "expectedDate",
+          "cantAffiliateReason",
+          "affiliatedAt",
+          "comments",
+          "createdAt"
+        ]
+      },
+      "PatientSymptomReportResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "discomfortSeverity": {
+            "type": "string",
+            "nullable": true
+          },
+          "discomfortDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasDiscomfort": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "signsAndSymptoms": {
+            "type": "string",
+            "nullable": true
+          },
+          "indicationsReceived": {
+            "type": "string",
+            "nullable": true
+          },
+          "symptomDuration": {
+            "type": "string",
+            "nullable": true
+          },
+          "symptomFrequency": {
+            "type": "string",
+            "nullable": true
+          },
+          "isPainPresent": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "painIntensity": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 10
+          },
+          "painLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "painDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasSoughtMedicalConsultation": {
+            "type": "boolean"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "enrollmentId",
+          "discomfortSeverity",
+          "discomfortDescription",
+          "hasDiscomfort",
+          "signsAndSymptoms",
+          "indicationsReceived",
+          "symptomDuration",
+          "symptomFrequency",
+          "isPainPresent",
+          "painIntensity",
+          "painLocation",
+          "painDescription",
+          "hasSoughtMedicalConsultation",
+          "healthCenterId",
+          "specialty",
+          "createdAt"
         ]
       },
       "PatientDetailsWithSummaryResponseDto": {
@@ -6309,6 +7134,48 @@
           "summary": {
             "type": "string",
             "nullable": true
+          },
+          "diagnoses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientDiagnosisResponseDto"
+            }
+          },
+          "treatments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientTreatmentResponseDto"
+            }
+          },
+          "insurance": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientInsuranceResponseDto"
+            }
+          },
+          "medicalAppointments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientMedicalAppointmentResponseDto"
+            }
+          },
+          "sisAffiliations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientSisAffiliationResponseDto"
+            }
+          },
+          "symptomReports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientSymptomReportResponseDto"
+            }
+          },
+          "companions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanionPatientResponseDto"
+            }
           }
         },
         "required": [
@@ -6331,7 +7198,14 @@
           "createdAt",
           "updatedAt",
           "details",
-          "summary"
+          "summary",
+          "diagnoses",
+          "treatments",
+          "insurance",
+          "medicalAppointments",
+          "sisAffiliations",
+          "symptomReports",
+          "companions"
         ]
       },
       "UpdatePatientDto": {
@@ -6443,89 +7317,6 @@
           "diagnosis"
         ]
       },
-      "PatientDiagnosisResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "patientId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "followUpId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "diagnosis": {
-            "type": "string"
-          },
-          "cancerStage": {
-            "nullable": true,
-            "enum": [
-              "STAGE_1",
-              "STAGE_2",
-              "STAGE_3",
-              "STAGE_4",
-              "UNKNOWN"
-            ],
-            "type": "string"
-          },
-          "diagnosisDate": {
-            "type": "string",
-            "nullable": true,
-            "format": "date"
-          },
-          "healthCenterId": {
-            "type": "string",
-            "nullable": true,
-            "format": "uuid"
-          },
-          "diagnosisSpecialty": {
-            "type": "string",
-            "nullable": true
-          },
-          "symptomLeadingToCheckup": {
-            "type": "string",
-            "nullable": true
-          },
-          "waitTimeForDiagnosis": {
-            "type": "string",
-            "nullable": true
-          },
-          "hasMedicalReport": {
-            "type": "boolean"
-          },
-          "isCurrent": {
-            "type": "boolean"
-          },
-          "changeReason": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "patientId",
-          "followUpId",
-          "diagnosis",
-          "cancerStage",
-          "diagnosisDate",
-          "healthCenterId",
-          "diagnosisSpecialty",
-          "symptomLeadingToCheckup",
-          "waitTimeForDiagnosis",
-          "hasMedicalReport",
-          "isCurrent",
-          "changeReason",
-          "createdAt"
-        ]
-      },
       "CreatePatientInsuranceDto": {
         "type": "object",
         "properties": {
@@ -6571,80 +7362,6 @@
           "insuranceType"
         ]
       },
-      "PatientInsuranceResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "patientId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "followUpId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "insuranceType": {
-            "enum": [
-              "SIS",
-              "ESSALUD",
-              "EPS",
-              "FUERZAS_ARMADAS",
-              "SALUDPOL",
-              "NONE"
-            ],
-            "type": "string"
-          },
-          "epsProvider": {
-            "nullable": true,
-            "enum": [
-              "RIMAC",
-              "PACIFICO",
-              "MAPFRE",
-              "SANITAS",
-              "LA_POSITIVA",
-              "ONCOSALUD",
-              "OTHER"
-            ],
-            "type": "string"
-          },
-          "isCurrent": {
-            "type": "boolean"
-          },
-          "changeReason": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "nullable": true,
-            "format": "date"
-          },
-          "endDate": {
-            "type": "string",
-            "nullable": true,
-            "format": "date"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "patientId",
-          "followUpId",
-          "insuranceType",
-          "epsProvider",
-          "isCurrent",
-          "changeReason",
-          "startDate",
-          "endDate",
-          "createdAt"
-        ]
-      },
       "CreatePatientMedicalAppointmentDto": {
         "type": "object",
         "properties": {
@@ -6686,82 +7403,6 @@
           "specialty"
         ]
       },
-      "PatientMedicalAppointmentResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "patientId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "followUpId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "healthCenterId": {
-            "type": "string",
-            "nullable": true,
-            "format": "uuid"
-          },
-          "specialty": {
-            "type": "string"
-          },
-          "appointmentDate": {
-            "type": "string",
-            "nullable": true,
-            "format": "date"
-          },
-          "nextAppointmentDate": {
-            "type": "string",
-            "nullable": true,
-            "format": "date"
-          },
-          "hasReferralSheet": {
-            "type": "boolean"
-          },
-          "referredTo": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulties": {
-            "type": "string",
-            "nullable": true
-          },
-          "isFirstConsultation": {
-            "type": "boolean"
-          },
-          "isCurrent": {
-            "type": "boolean"
-          },
-          "changeReason": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "patientId",
-          "followUpId",
-          "healthCenterId",
-          "specialty",
-          "appointmentDate",
-          "nextAppointmentDate",
-          "hasReferralSheet",
-          "referredTo",
-          "difficulties",
-          "isFirstConsultation",
-          "isCurrent",
-          "changeReason",
-          "createdAt"
-        ]
-      },
       "CreatePatientSisAffiliationDto": {
         "type": "object",
         "properties": {
@@ -6788,59 +7429,6 @@
         "required": [
           "followUpId",
           "canAffiliate"
-        ]
-      },
-      "PatientSisAffiliationResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "patientId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "followUpId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "canAffiliate": {
-            "type": "boolean"
-          },
-          "expectedDate": {
-            "type": "string",
-            "nullable": true,
-            "format": "date"
-          },
-          "cantAffiliateReason": {
-            "type": "string",
-            "nullable": true
-          },
-          "affiliatedAt": {
-            "type": "string",
-            "nullable": true,
-            "format": "date-time"
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "patientId",
-          "followUpId",
-          "canAffiliate",
-          "expectedDate",
-          "cantAffiliateReason",
-          "affiliatedAt",
-          "comments",
-          "createdAt"
         ]
       },
       "CreatePatientTreatmentDto": {
@@ -6884,84 +7472,6 @@
           "followUpId",
           "diagnosisId",
           "treatmentType"
-        ]
-      },
-      "PatientTreatmentResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "patientId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "followUpId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "diagnosisId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "treatmentType": {
-            "type": "string"
-          },
-          "treatmentFrequency": {
-            "type": "string",
-            "nullable": true
-          },
-          "healthCenterId": {
-            "type": "string",
-            "nullable": true,
-            "format": "uuid"
-          },
-          "startDate": {
-            "type": "string",
-            "nullable": true,
-            "format": "date"
-          },
-          "endDate": {
-            "type": "string",
-            "nullable": true,
-            "format": "date"
-          },
-          "isCurrent": {
-            "type": "boolean"
-          },
-          "changeReason": {
-            "type": "string",
-            "nullable": true
-          },
-          "notReceivingReason": {
-            "type": "string",
-            "nullable": true
-          },
-          "treatmentSituation": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "patientId",
-          "followUpId",
-          "diagnosisId",
-          "treatmentType",
-          "treatmentFrequency",
-          "healthCenterId",
-          "startDate",
-          "endDate",
-          "isCurrent",
-          "changeReason",
-          "notReceivingReason",
-          "treatmentSituation",
-          "createdAt"
         ]
       },
       "CreatePatientSymptomReportDto": {
@@ -7028,96 +7538,6 @@
         },
         "required": [
           "followUpId"
-        ]
-      },
-      "PatientSymptomReportResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "patientId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "followUpId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "enrollmentId": {
-            "type": "string",
-            "nullable": true,
-            "format": "uuid"
-          },
-          "discomfortSeverity": {
-            "type": "string",
-            "nullable": true
-          },
-          "discomfortDescription": {
-            "type": "string",
-            "nullable": true
-          },
-          "symptomDuration": {
-            "type": "string",
-            "nullable": true
-          },
-          "symptomFrequency": {
-            "type": "string",
-            "nullable": true
-          },
-          "isPainPresent": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "painIntensity": {
-            "type": "number",
-            "nullable": true,
-            "minimum": 0,
-            "maximum": 10
-          },
-          "painLocation": {
-            "type": "string",
-            "nullable": true
-          },
-          "painDescription": {
-            "type": "string",
-            "nullable": true
-          },
-          "hasSoughtMedicalConsultation": {
-            "type": "boolean"
-          },
-          "healthCenterId": {
-            "type": "string",
-            "nullable": true,
-            "format": "uuid"
-          },
-          "specialty": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "patientId",
-          "followUpId",
-          "enrollmentId",
-          "discomfortSeverity",
-          "discomfortDescription",
-          "symptomDuration",
-          "symptomFrequency",
-          "isPainPresent",
-          "painIntensity",
-          "painLocation",
-          "painDescription",
-          "hasSoughtMedicalConsultation",
-          "healthCenterId",
-          "specialty",
-          "createdAt"
         ]
       },
       "CreatePsychooncologyAppointmentDto": {

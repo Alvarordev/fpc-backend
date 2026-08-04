@@ -1,5 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PatientSummaryStatus } from '../../database/entities/patient-summary.entity';
+import { FollowUp } from '../../database/entities/follow-up.entity';
+import { PatientDiagnosis } from '../entities/patient-diagnosis.entity';
+import { PatientInsurance } from '../entities/patient-insurance.entity';
+import { PatientMedicalAppointment } from '../entities/patient-medical-appointment.entity';
+import { PatientSisAffiliation } from '../entities/patient-sis-affiliation.entity';
+import { PatientSymptomReport } from '../entities/patient-symptom-report.entity';
+import { PatientTreatment } from '../entities/patient-treatment.entity';
+import { PatientDiagnosisResponseDto } from '../clinical/diagnoses/patient-diagnoses-response.dto';
+import { PatientInsuranceResponseDto } from '../clinical/insurance/patient-insurance-response.dto';
+import { PatientMedicalAppointmentResponseDto } from '../clinical/medical-appointments/patient-medical-appointments-response.dto';
+import { PatientSisAffiliationResponseDto } from '../clinical/sis-affiliation/patient-sis-affiliation-response.dto';
+import { PatientTreatmentResponseDto } from '../clinical/treatments/patient-treatments-response.dto';
+import { PatientSymptomReportResponseDto } from '../symptom-reports/patient-symptom-reports-response.dto';
 import { CompanionPatient } from '../entities/companion-patient.entity';
 import { DeactivationReason } from '../entities/deactivation-reason.enum';
 import { EducationLevel } from '../entities/education-level.enum';
@@ -54,6 +67,33 @@ export class PatientDetailsResponseDto {
   @ApiProperty()
   requiresTranslation!: boolean;
 
+  @ApiProperty({ nullable: true })
+  referredToSocialWorker!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  evidenceOfDomesticViolence!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  usesWoodStove!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  isWorking!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  receivesFinancialSupport!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  hasConadisCard!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  knowsAboutFissal!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  programDropoutReason!: string | null;
+
+  @ApiProperty({ format: 'date', nullable: true })
+  programDropoutDate!: string | null;
+
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
 
@@ -77,6 +117,15 @@ export class PatientDetailsResponseDto {
       educationLevel: details.educationLevel,
       nativeLanguage: details.nativeLanguage,
       requiresTranslation: details.requiresTranslation,
+      referredToSocialWorker: details.referredToSocialWorker,
+      evidenceOfDomesticViolence: details.evidenceOfDomesticViolence,
+      usesWoodStove: details.usesWoodStove,
+      isWorking: details.isWorking,
+      receivesFinancialSupport: details.receivesFinancialSupport,
+      hasConadisCard: details.hasConadisCard,
+      knowsAboutFissal: details.knowsAboutFissal,
+      programDropoutReason: details.programDropoutReason,
+      programDropoutDate: details.programDropoutDate,
       createdAt: details.createdAt.toISOString(),
       updatedAt: details.updatedAt.toISOString(),
     };
@@ -169,8 +218,38 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
   @ApiProperty({ nullable: true })
   summary!: string | null;
 
+  @ApiProperty({ type: PatientDiagnosisResponseDto, isArray: true })
+  diagnoses!: PatientDiagnosisResponseDto[];
+
+  @ApiProperty({ type: PatientTreatmentResponseDto, isArray: true })
+  treatments!: PatientTreatmentResponseDto[];
+
+  @ApiProperty({ type: PatientInsuranceResponseDto, isArray: true })
+  insurance!: PatientInsuranceResponseDto[];
+
+  @ApiProperty({ type: PatientMedicalAppointmentResponseDto, isArray: true })
+  medicalAppointments!: PatientMedicalAppointmentResponseDto[];
+
+  @ApiProperty({ type: PatientSisAffiliationResponseDto, isArray: true })
+  sisAffiliations!: PatientSisAffiliationResponseDto[];
+
+  @ApiProperty({ type: PatientSymptomReportResponseDto, isArray: true })
+  symptomReports!: PatientSymptomReportResponseDto[];
+
+  @ApiProperty({ type: () => CompanionPatientResponseDto, isArray: true })
+  companions!: CompanionPatientResponseDto[];
+
   static from(
-    patient: Patient & { summary: string | null },
+    patient: Patient & {
+      summary: string | null;
+      diagnoses: PatientDiagnosis[];
+      treatments: PatientTreatment[];
+      insurance: PatientInsurance[];
+      medicalAppointments: PatientMedicalAppointment[];
+      sisAffiliations: PatientSisAffiliation[];
+      symptomReports: PatientSymptomReport[];
+      companions: CompanionPatient[];
+    },
   ): PatientDetailsWithSummaryResponseDto {
     return {
       ...PatientResponseDto.from(patient),
@@ -178,23 +257,142 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
         ? PatientDetailsResponseDto.from(patient.details)
         : null,
       summary: patient.summary,
+      diagnoses: patient.diagnoses.map(PatientDiagnosisResponseDto.from),
+      treatments: patient.treatments.map(PatientTreatmentResponseDto.from),
+      insurance: patient.insurance.map(PatientInsuranceResponseDto.from),
+      medicalAppointments: patient.medicalAppointments.map(
+        PatientMedicalAppointmentResponseDto.from,
+      ),
+      sisAffiliations: patient.sisAffiliations.map(
+        PatientSisAffiliationResponseDto.from,
+      ),
+      symptomReports: patient.symptomReports.map(
+        PatientSymptomReportResponseDto.from,
+      ),
+      companions: patient.companions.map(CompanionPatientResponseDto.from),
+    };
+  }
+}
+
+export class CurrentDiagnosisResponseDto {
+  @ApiProperty({ format: 'uuid' })
+  id!: string;
+
+  @ApiProperty()
+  diagnosis!: string;
+
+  @ApiProperty({ nullable: true })
+  cancerStage!: string | null;
+
+  @ApiProperty({ format: 'date', nullable: true })
+  diagnosisDate!: string | null;
+
+  @ApiProperty({ format: 'uuid', nullable: true })
+  healthCenterId!: string | null;
+
+  @ApiProperty({ nullable: true })
+  healthCenterName!: string | null;
+
+  static from(diagnosis: PatientDiagnosis): CurrentDiagnosisResponseDto {
+    return {
+      id: diagnosis.id,
+      diagnosis: diagnosis.diagnosis,
+      cancerStage: diagnosis.cancerStage,
+      diagnosisDate: diagnosis.diagnosisDate,
+      healthCenterId: diagnosis.healthCenterId,
+      healthCenterName: diagnosis.healthCenter?.name ?? null,
+    };
+  }
+}
+
+export class LatestFollowUpResponseDto {
+  @ApiProperty({ format: 'uuid' })
+  id!: string;
+
+  @ApiProperty()
+  type!: string;
+
+  @ApiProperty()
+  status!: string;
+
+  @ApiProperty()
+  purpose!: string;
+
+  @ApiProperty({ format: 'date-time' })
+  occurredAt!: string;
+
+  @ApiProperty({ format: 'date-time', nullable: true })
+  scheduledAt!: string | null;
+
+  @ApiProperty({ format: 'date-time', nullable: true })
+  completedAt!: string | null;
+
+  static from(followUp: FollowUp): LatestFollowUpResponseDto {
+    const occurredAt =
+      followUp.completedAt ?? followUp.scheduledAt ?? followUp.createdAt;
+    return {
+      id: followUp.id,
+      type: followUp.type,
+      status: followUp.status,
+      purpose: followUp.purpose,
+      occurredAt: occurredAt.toISOString(),
+      scheduledAt: followUp.scheduledAt?.toISOString() ?? null,
+      completedAt: followUp.completedAt?.toISOString() ?? null,
+    };
+  }
+}
+
+export class PatientListItemResponseDto extends PatientResponseDto {
+  @ApiProperty({ type: CurrentDiagnosisResponseDto, nullable: true })
+  currentDiagnosis!: CurrentDiagnosisResponseDto | null;
+
+  @ApiProperty({ nullable: true })
+  currentDepartment!: string | null;
+
+  @ApiProperty({ type: LatestFollowUpResponseDto, nullable: true })
+  latestFollowUp!: LatestFollowUpResponseDto | null;
+
+  static from(
+    patient: Patient & {
+      currentDiagnosis: PatientDiagnosis | null;
+      currentDepartment: string | null;
+      latestFollowUp: FollowUp | null;
+    },
+  ): PatientListItemResponseDto {
+    return {
+      ...PatientResponseDto.from(patient),
+      currentDiagnosis: patient.currentDiagnosis
+        ? CurrentDiagnosisResponseDto.from(patient.currentDiagnosis)
+        : null,
+      currentDepartment: patient.currentDepartment,
+      latestFollowUp: patient.latestFollowUp
+        ? LatestFollowUpResponseDto.from(patient.latestFollowUp)
+        : null,
     };
   }
 }
 
 export class PatientListResponseDto {
-  @ApiProperty({ type: PatientResponseDto, isArray: true })
-  data!: PatientResponseDto[];
+  @ApiProperty({ type: PatientListItemResponseDto, isArray: true })
+  data!: PatientListItemResponseDto[];
 
   @ApiProperty({ minimum: 0 })
   total!: number;
 
   static from(result: {
-    data: Patient[];
+    data: Array<
+      Patient & {
+        currentDiagnosis: PatientDiagnosis | null;
+        currentDepartment: string | null;
+        latestFollowUp: FollowUp | null;
+      }
+    >;
     total: number;
   }): PatientListResponseDto {
     return {
-      data: result.data.map((patient) => PatientResponseDto.from(patient)),
+      data: result.data.map((patient) =>
+        PatientListItemResponseDto.from(patient),
+      ),
       total: result.total,
     };
   }
@@ -213,6 +411,9 @@ export class CompanionPatientResponseDto {
   @ApiProperty()
   isPrimaryInformant!: boolean;
 
+  @ApiProperty({ nullable: true })
+  companionDisplayName!: string | null;
+
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
 
@@ -228,6 +429,7 @@ export class CompanionPatientResponseDto {
       companionId: link.companionId,
       patientId: link.patientId,
       isPrimaryInformant: link.isPrimaryInformant,
+      companionDisplayName: link.companion?.fullName ?? null,
       createdAt: link.createdAt.toISOString(),
       ...(link.companion
         ? { companion: PatientResponseDto.from(link.companion) }

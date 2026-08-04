@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   CancerStage,
   PatientDiagnosis,
@@ -25,6 +25,9 @@ export class PatientDiagnosisResponseDto {
 
   @ApiProperty({ format: 'uuid', nullable: true })
   healthCenterId!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  healthCenterName?: string | null;
 
   @ApiProperty({ nullable: true })
   diagnosisSpecialty!: string | null;
@@ -56,6 +59,7 @@ export class PatientDiagnosisResponseDto {
       cancerStage: diagnosis.cancerStage,
       diagnosisDate: diagnosis.diagnosisDate,
       healthCenterId: diagnosis.healthCenterId,
+      healthCenterName: diagnosis.healthCenter?.name ?? null,
       diagnosisSpecialty: diagnosis.diagnosisSpecialty,
       symptomLeadingToCheckup: diagnosis.symptomLeadingToCheckup,
       waitTimeForDiagnosis: diagnosis.waitTimeForDiagnosis,

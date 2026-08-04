@@ -21,6 +21,15 @@ export class PatientSymptomReportResponseDto {
   discomfortDescription!: string | null;
 
   @ApiProperty({ nullable: true })
+  hasDiscomfort!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  signsAndSymptoms!: string | null;
+
+  @ApiProperty({ nullable: true })
+  indicationsReceived!: string | null;
+
+  @ApiProperty({ nullable: true })
   symptomDuration!: string | null;
 
   @ApiProperty({ nullable: true })
@@ -58,6 +67,9 @@ export class PatientSymptomReportResponseDto {
       enrollmentId: report.enrollmentId,
       discomfortSeverity: report.discomfortSeverity,
       discomfortDescription: report.discomfortDescription,
+      hasDiscomfort: report.hasDiscomfort,
+      signsAndSymptoms: report.signsAndSymptoms,
+      indicationsReceived: report.indicationsReceived,
       symptomDuration: report.symptomDuration,
       symptomFrequency: report.symptomFrequency,
       isPainPresent: report.isPainPresent,

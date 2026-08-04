@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -18,6 +26,7 @@ import { Reminder } from '../database/entities/reminder.entity';
 import {
   CreateReminderDto,
   CompleteReminderDto,
+  ListRemindersDto,
   UpdateReminderDto,
 } from './reminders.dto';
 import { ReminderResponseDto } from './reminder-response.dto';
@@ -55,9 +64,9 @@ export class RemindersController {
   @ApiBadRequestResponse({
     description: 'The authenticated user has no agent profile',
   })
-  all(@CurrentUser() user: User) {
+  all(@Query() filters: ListRemindersDto, @CurrentUser() user: User) {
     return this.service
-      .findAll(user)
+      .findAll(filters, user)
       .then((items) => items.map(this.toResponse));
   }
   @Patch(':id')
