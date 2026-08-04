@@ -23,6 +23,7 @@ import { WebsocketsModule } from './websockets/websockets.module';
 import { PatientSummariesModule } from './patient-summaries/patient-summaries.module';
 import { CallCenterModule } from './call-center/call-center.module';
 import { VolunteerCalendarModule } from './volunteer-calendar/volunteer-calendar.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { VolunteerCalendarModule } from './volunteer-calendar/volunteer-calendar
     WebsocketsModule,
     PatientSummariesModule,
     CallCenterModule,
+    DashboardModule,
   ],
 })
 export class AppModule {}

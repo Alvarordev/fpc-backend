@@ -237,6 +237,93 @@
         ]
       }
     },
+    "/dashboard": {
+      "get": {
+        "operationId": "DashboardController_getDashboard",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "month",
+              "type": "string",
+              "enum": [
+                "month",
+                "year"
+              ]
+            }
+          },
+          {
+            "name": "year",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 2000,
+              "maximum": 2100,
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Required when period is month. Month number is one-based.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 12,
+              "example": 8,
+              "type": "number"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "Dashboard calendar timezone. Only America/Lima is supported.",
+            "schema": {
+              "default": "America/Lima",
+              "example": "America/Lima",
+              "type": "string",
+              "enum": [
+                "America/Lima"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The period, year, month, or timezone is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get aggregated dashboard analytics for a Lima calendar month or year",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
     "/agents": {
       "post": {
         "operationId": "AgentsController_create",
@@ -4144,6 +4231,237 @@
           "agents",
           "scheduledFollowUps",
           "pendingReminders"
+        ]
+      },
+      "DashboardMetaDto": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "enum": [
+              "month",
+              "year"
+            ],
+            "type": "string"
+          },
+          "year": {
+            "type": "number"
+          },
+          "month": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 12
+          },
+          "timezone": {
+            "type": "string",
+            "example": "America/Lima"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "period",
+          "year",
+          "month",
+          "timezone",
+          "startsAt",
+          "endsAt"
+        ]
+      },
+      "DashboardSummaryDto": {
+        "type": "object",
+        "properties": {
+          "enrollmentEvents": {
+            "type": "number",
+            "description": "Enrollment records created in the selected period."
+          },
+          "cohortPatients": {
+            "type": "number",
+            "description": "Distinct patients with an enrollment created in the selected period."
+          },
+          "activePatients": {
+            "type": "number"
+          },
+          "inactivePatients": {
+            "type": "number"
+          },
+          "deceasedPatients": {
+            "type": "number",
+            "description": "Patients marked deceased by date or deactivation reason."
+          },
+          "dropoutPatients": {
+            "type": "number",
+            "description": "Inactive cohort patients who are not deceased."
+          },
+          "sessions": {
+            "type": "number",
+            "description": "Psycho-oncology appointments scheduled in the selected period, regardless of status."
+          },
+          "completedSessions": {
+            "type": "number"
+          },
+          "completionRate": {
+            "type": "number",
+            "description": "Completed sessions divided by all scheduled sessions, from 0 to 100."
+          }
+        },
+        "required": [
+          "enrollmentEvents",
+          "cohortPatients",
+          "activePatients",
+          "inactivePatients",
+          "deceasedPatients",
+          "dropoutPatients",
+          "sessions",
+          "completedSessions",
+          "completionRate"
+        ]
+      },
+      "DashboardDistributionItemDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "example": "LIMA"
+          },
+          "count": {
+            "type": "number",
+            "example": 42
+          }
+        },
+        "required": [
+          "label",
+          "count"
+        ]
+      },
+      "DashboardDistributionsDto": {
+        "type": "object",
+        "properties": {
+          "gender": {
+            "description": "Top six values; remaining values are combined as Otros.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardDistributionItemDto"
+            }
+          },
+          "diagnoses": {
+            "description": "Current diagnosis for cohort patients. Top six values; remaining values are combined as Otros.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardDistributionItemDto"
+            }
+          },
+          "treatments": {
+            "description": "Current treatment for cohort patients. Top six values; remaining values are combined as Otros.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardDistributionItemDto"
+            }
+          },
+          "cancerStages": {
+            "description": "Current cancer stage for cohort patients. Top six values; remaining values are combined as Otros.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardDistributionItemDto"
+            }
+          }
+        },
+        "required": [
+          "gender",
+          "diagnoses",
+          "treatments",
+          "cancerStages"
+        ]
+      },
+      "DashboardTrendPointDto": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "example": "2026-08-01",
+            "description": "A Lima calendar day for month periods, or YYYY-MM for year periods."
+          },
+          "enrollmentEvents": {
+            "type": "number"
+          },
+          "sessions": {
+            "type": "number"
+          },
+          "completedSessions": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "period",
+          "enrollmentEvents",
+          "sessions",
+          "completedSessions"
+        ]
+      },
+      "DashboardTableItemDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Instituto Nacional de Enfermedades Neoplasicas"
+          },
+          "count": {
+            "type": "number",
+            "example": 30
+          }
+        },
+        "required": [
+          "name",
+          "count"
+        ]
+      },
+      "DashboardResponseDto": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/DashboardMetaDto"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/DashboardSummaryDto"
+          },
+          "distributions": {
+            "$ref": "#/components/schemas/DashboardDistributionsDto"
+          },
+          "trend": {
+            "description": "A zero-filled enrollment and session series for the selected period.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardTrendPointDto"
+            }
+          },
+          "hospitals": {
+            "description": "Up to eight hospitals using current medical appointment, treatment, then diagnosis precedence.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardTableItemDto"
+            }
+          },
+          "regions": {
+            "description": "Up to eight regions using hospital department, then current and birth department precedence.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardTableItemDto"
+            }
+          }
+        },
+        "required": [
+          "meta",
+          "summary",
+          "distributions",
+          "trend",
+          "hospitals",
+          "regions"
         ]
       },
       "CreateAgentDto": {

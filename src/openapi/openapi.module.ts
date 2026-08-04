@@ -6,6 +6,8 @@ import { AlertsController } from '../alerts/alerts.controller';
 import { AlertsService } from '../alerts/alerts.service';
 import { CallCenterController } from '../call-center/call-center.controller';
 import { CallCenterService } from '../call-center/call-center.service';
+import { DashboardController } from '../dashboard/dashboard.controller';
+import { DashboardService } from '../dashboard/dashboard.service';
 import { AuthController } from '../auth/auth.controller';
 import { AuthService } from '../auth/auth.service';
 import { EnrollmentsController } from '../enrollments/enrollments.controller';
@@ -52,6 +54,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
   controllers: [
     AlertsController,
     CallCenterController,
+    DashboardController,
     AgentsController,
     AuthController,
     EnrollmentsController,
@@ -76,6 +79,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     { provide: AgentsService, useValue: {} },
     { provide: AlertsService, useValue: {} },
     { provide: CallCenterService, useValue: {} },
+    { provide: DashboardService, useValue: {} },
     { provide: AuthService, useValue: {} },
     { provide: EnrollmentsService, useValue: {} },
     { provide: FollowUpsService, useValue: {} },
