@@ -38,4 +38,13 @@ const DOMAIN_TABLES = [
 export async function resetDomainTables(manager: EntityManager): Promise<void> {
   const tables = DOMAIN_TABLES.map((table) => `"${table}"`).join(', ');
   await manager.query(`TRUNCATE TABLE ${tables} RESTART IDENTITY CASCADE`);
+  // patient_summary_rate_limits is infrastructure state, not demo data: the
+  // 'gemini' row is a singleton bucket the app expects to always exist
+  // (see PatientSummaryRateLimiterService.tryAcquire, which uses
+  // getOneOrFail). The initial migration inserts it once at table creation;
+  // restore it here too since this truncate would otherwise leave every
+  // patient-summary request 500ing until someone reinserts it by hand.
+  await manager.query(
+    `INSERT INTO "patient_summary_rate_limits" ("key", "window_started_at") VALUES ('gemini', now())`,
+  );
 }

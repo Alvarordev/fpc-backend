@@ -109,7 +109,11 @@ describe('Patient summaries (e2e)', () => {
 
   afterAll(async () => app.close());
 
-  it('returns an on-demand summary without consuming the worker rate limit', async () => {
+  it('generates and stores an on-demand summary, consuming the shared Gemini rate limit budget', async () => {
+    // There is no background worker anymore (dropped in dd198c6) — on-demand
+    // generation is the only caller of the Gemini provider, so it must go
+    // through the shared PatientSummaryRateLimiterService budget itself;
+    // that's the only thing protecting the Gemini API quota now.
     const patient = await createPatient(dataSource, 'success');
     gemini.generate.mockResolvedValue({
       text: 'Resumen generado bajo demanda',
@@ -129,7 +133,7 @@ describe('Patient summaries (e2e)', () => {
         source: 'ON_DEMAND',
       });
 
-    expect(acquire).not.toHaveBeenCalled();
+    expect(acquire).toHaveBeenCalledTimes(1);
     await expect(
       dataSource.getRepository(PatientSummary).findOneByOrFail({
         patientId: patient.id,

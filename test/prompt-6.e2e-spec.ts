@@ -287,7 +287,7 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
       });
   });
 
-  it('allows only agents to create and resolve alerts', async () => {
+  it('restricts alert creation to agents but allows admins or agents to resolve', async () => {
     const body = {
       healthCenterId: healthCenter.id,
       subjectPatientId: patient.id,
@@ -313,18 +313,21 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
       subjectPatientId: patient.id,
       status: 'COMPLETED',
     });
+    // Admins resolve on behalf of the org (resolvedByUserId), agents resolve
+    // as themselves (resolvedById) — see AlertsService.resolve().
     await request(server)
       .patch(`/alerts/${alert.id}/resolve`)
       .set('Authorization', `Bearer ${adminToken}`)
-      .expect(403);
-    await request(server)
-      .patch(`/alerts/${alert.id}/resolve`)
-      .set('Authorization', `Bearer ${agentToken}`)
       .expect(200)
       .expect(({ body: resolved }: { body: Alert }) => {
         expect(resolved.status).toBe('RESOLVED');
-        expect(resolved.resolvedById).toBeTruthy();
+        expect(resolved.resolvedByUserId).toBeTruthy();
+        expect(resolved.resolvedById).toBeNull();
       });
+    await request(server)
+      .patch(`/alerts/${alert.id}/resolve`)
+      .set('Authorization', `Bearer ${agentToken}`)
+      .expect(409); // already resolved by the admin above
   });
 
   it('rejects overlapping availability and preserves a no-answer slot', async () => {
