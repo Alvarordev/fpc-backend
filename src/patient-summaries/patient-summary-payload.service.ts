@@ -154,6 +154,9 @@ export class PatientSummaryPayloadService {
       'Redacta un resumen clinico y operativo conciso en espanol.',
       'Usa exclusivamente los datos provistos, no inventes hechos ni recomendaciones medicas.',
       'Incluye diagnostico, tratamiento, sintomas, barreras y proximos seguimientos si constan.',
+      'Responde en texto plano, en parrafos corridos.',
+      'No uses markdown: nada de asteriscos, negritas, encabezados ni listas con vinetas.',
+      'No agregues frases introductorias ni de cierre (por ejemplo "Aqui presento..." o "En resumen..."); empieza directamente con el contenido del resumen.',
       'Datos estructurados:',
       JSON.stringify(payload),
     ].join('\n\n');
