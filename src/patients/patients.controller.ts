@@ -174,7 +174,11 @@ export class PatientsController {
 
   @Get(':id/summary')
   @Roles(...PATIENT_READ_ROLES)
-  @ApiOperation({ summary: 'Generate or retrieve a patient summary' })
+  @ApiOperation({
+    summary: 'Get a patient summary',
+    description:
+      'Returns the stored summary if one is already ready; otherwise generates it. Does not call the provider again once a summary is ready.',
+  })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: PatientSummaryResponseDto })
   @ApiUnauthorizedResponse()
@@ -186,6 +190,26 @@ export class PatientsController {
   ): Promise<PatientSummaryResponseDto> {
     await this.patientsService.assertCanRead(id, user);
     return PatientSummaryResponseDto.from(await this.summaries.get(id));
+  }
+
+  @Post(':id/summary/refresh')
+  @Roles(...PATIENT_READ_ROLES)
+  @ApiOperation({
+    summary: 'Regenerate a patient summary',
+    description:
+      'Always calls the provider again, even if a ready summary already exists.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: PatientSummaryResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Patient not found' })
+  async refreshSummary(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ): Promise<PatientSummaryResponseDto> {
+    await this.patientsService.assertCanRead(id, user);
+    return PatientSummaryResponseDto.from(await this.summaries.refresh(id));
   }
 
   @Get(':id/timeline')

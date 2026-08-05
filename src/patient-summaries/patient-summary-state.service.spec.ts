@@ -6,24 +6,24 @@ import {
 import { PatientSummaryStateService } from './patient-summary-state.service';
 
 describe('PatientSummaryStateService', () => {
-  it('only completes a summary that is still claimed for processing', async () => {
-    const update = jest.fn().mockResolvedValue({ affected: 1 });
+  it('upserts a ready summary keyed by patient', async () => {
+    const upsert = jest.fn().mockResolvedValue(undefined);
     const service = new PatientSummaryStateService({
-      update,
+      upsert,
     } as unknown as Repository<PatientSummary>);
 
-    await service.markReady('summary-id', {
+    await service.storeReady('patient-id', {
       text: 'Summary',
       model: 'gemini-2.0-flash',
     });
 
-    expect(update).toHaveBeenCalledWith(
-      { id: 'summary-id', status: PatientSummaryStatus.PROCESSING },
+    expect(upsert).toHaveBeenCalledWith(
       expect.objectContaining({
+        patientId: 'patient-id',
         status: PatientSummaryStatus.READY,
         summary: 'Summary',
-        processingStartedAt: null,
       }),
+      ['patientId'],
     );
   });
 });

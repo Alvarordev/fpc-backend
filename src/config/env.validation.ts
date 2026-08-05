@@ -26,18 +26,4 @@ export const envValidationSchema = Joi.object({
     .integer()
     .min(1)
     .default(60),
-  PATIENT_SUMMARY_BATCH_SIZE: Joi.number()
-    .integer()
-    .min(1)
-    .max(100)
-    .default(10),
-  PATIENT_SUMMARY_PROCESSING_TIMEOUT_SECONDS: Joi.number()
-    .integer()
-    .min(60)
-    .default(300),
-  PATIENT_SUMMARY_MAX_ATTEMPTS: Joi.number()
-    .integer()
-    .min(1)
-    .max(20)
-    .default(3),
 });

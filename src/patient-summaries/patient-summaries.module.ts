@@ -17,9 +17,7 @@ import { PatientSummaryInvalidationListener } from './patient-summary-invalidati
 import { PatientSummaryInvalidationService } from './patient-summary-invalidation.service';
 import { PatientSummaryRateLimiterService } from './patient-summary-rate-limiter.service';
 import { PatientSummaryOnDemandService } from './patient-summary-on-demand.service';
-import { PatientSummaryScheduler } from './patient-summary.scheduler';
 import { PatientSummaryStateService } from './patient-summary-state.service';
-import { PatientSummaryWorkerService } from './patient-summary-worker.service';
 
 @Module({
   imports: [
@@ -45,8 +43,6 @@ import { PatientSummaryWorkerService } from './patient-summary-worker.service';
     PatientSummaryOnDemandService,
     PatientSummaryRateLimiterService,
     PatientSummaryStateService,
-    PatientSummaryWorkerService,
-    PatientSummaryScheduler,
   ],
   exports: [PatientSummaryInvalidationService, PatientSummaryOnDemandService],
 })

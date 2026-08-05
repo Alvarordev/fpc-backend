@@ -1767,6 +1767,7 @@
     },
     "/patients/{id}/summary": {
       "get": {
+        "description": "Returns the stored summary if one is already ready; otherwise generates it. Does not call the provider again once a summary is ready.",
         "operationId": "PatientsController_summary",
         "parameters": [
           {
@@ -1805,7 +1806,54 @@
             "bearer": []
           }
         ],
-        "summary": "Generate or retrieve a patient summary",
+        "summary": "Get a patient summary",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}/summary/refresh": {
+      "post": {
+        "description": "Always calls the provider again, even if a ready summary already exists.",
+        "operationId": "PatientsController_refreshSummary",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSummaryResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Regenerate a patient summary",
         "tags": [
           "Patients"
         ]
