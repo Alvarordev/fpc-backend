@@ -24,6 +24,8 @@ import { PatientSummariesModule } from './patient-summaries/patient-summaries.mo
 import { CallCenterModule } from './call-center/call-center.module';
 import { VolunteerCalendarModule } from './volunteer-calendar/volunteer-calendar.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { MedicalAppointmentsModule } from './medical-appointments/medical-appointments.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -66,6 +68,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     }),
     UsersModule,
     AuthModule,
+    WebhooksModule,
     PatientsModule,
     AgentsModule,
     VolunteersModule,
@@ -76,6 +79,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     RemindersModule,
     EnrollmentsModule,
     PsychooncologyAppointmentsModule,
+    MedicalAppointmentsModule,
     AlertsModule,
     HealthModule,
     WebsocketsModule,

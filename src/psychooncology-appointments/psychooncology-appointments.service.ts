@@ -51,7 +51,9 @@ export class PsychooncologyAppointmentsService {
       .orderBy('appointment.scheduled_at', 'ASC');
     const volunteerId = await this.access.volunteerIdFor(user);
     if (volunteerId) {
-      query.andWhere('appointment.volunteer_id = :volunteerId', { volunteerId });
+      query.andWhere('appointment.volunteer_id = :volunteerId', {
+        volunteerId,
+      });
     } else if (queryInput.volunteerId) {
       query.andWhere('appointment.volunteer_id = :volunteerId', {
         volunteerId: queryInput.volunteerId,

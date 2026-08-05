@@ -44,6 +44,34 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Demo data
+
+`npm run seed:demo` fills the database with a realistic mock dataset: 15
+patients (plus companions), 20 health centers across 12 Peruvian departments,
+3 agents, 3 volunteers, 2 foundation users, and their follow-ups, enrollments,
+clinical history, psychooncology appointments, reminders and alerts.
+
+> **It deletes everything first.** The seed truncates every domain table before
+> inserting, so only the mock dataset survives — that is the point: it clears
+> out the generic rows the e2e suites leave behind.
+
+```bash
+# Requires the database to be up and migrated
+$ npm run migration:run
+$ npm run seed:demo
+```
+
+Credentials: the admin is whatever `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`
+hold; every other seeded account uses `*@fpc.demo` with the password
+`Demo1234!`. The `@fpc.demo` domain is deliberately outside the prefixes the
+e2e suites clean up, so running the tests will not wipe the demo dataset.
+
+The data is random-looking but reproducible: the generator is seeded from
+`SEED_DEMO_SEED` (default `20260805`), and dates are anchored to midnight UTC of
+the run day, so two runs on the same day produce an identical dataset. Set
+`SEED_DEMO_NOW` to pin the reference date. The seed refuses to run with
+`NODE_ENV=production` unless `SEED_DEMO_FORCE=true`.
+
 ## Run tests
 
 ```bash

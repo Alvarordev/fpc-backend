@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MakePsychooncologyAppointmentFollowUpOptional1784866000000
-  implements MigrationInterface
-{
+export class MakePsychooncologyAppointmentFollowUpOptional1784866000000 implements MigrationInterface {
   name = 'MakePsychooncologyAppointmentFollowUpOptional1784866000000';
 
   async up(queryRunner: QueryRunner): Promise<void> {

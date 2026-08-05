@@ -1,5 +1,8 @@
 import { ConfigService } from '@nestjs/config';
-import { GeminiSummaryClient, sanitizeSummaryText } from './gemini-summary.client';
+import {
+  GeminiSummaryClient,
+  sanitizeSummaryText,
+} from './gemini-summary.client';
 import { PatientSummaryErrorCode } from './patient-summary-error';
 
 describe('GeminiSummaryClient', () => {
@@ -33,7 +36,8 @@ describe('sanitizeSummaryText', () => {
   });
 
   it('leaves plain prose untouched', () => {
-    const raw = 'Paciente de 26 años con leucemia en estadio 3, en quimioterapia mensual.';
+    const raw =
+      'Paciente de 26 años con leucemia en estadio 3, en quimioterapia mensual.';
 
     expect(sanitizeSummaryText(raw)).toBe(raw);
   });

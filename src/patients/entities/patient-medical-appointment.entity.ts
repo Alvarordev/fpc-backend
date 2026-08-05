@@ -37,6 +37,8 @@ export class PatientMedicalAppointment {
   @Column({ type: 'varchar', length: 255 }) specialty!: string;
   @Column({ name: 'appointment_date', type: 'date', nullable: true })
   appointmentDate!: string | null;
+  @Column({ name: 'appointment_time', type: 'time', nullable: true })
+  appointmentTime!: string | null;
   @Column({ name: 'next_appointment_date', type: 'date', nullable: true })
   nextAppointmentDate!: string | null;
   @Column({ name: 'has_referral_sheet', type: 'boolean', default: false })

@@ -23,6 +23,9 @@ export class PatientMedicalAppointmentResponseDto {
   @ApiProperty({ format: 'date', nullable: true })
   appointmentDate!: string | null;
 
+  @ApiProperty({ nullable: true, description: 'HH:mm or HH:mm:ss' })
+  appointmentTime!: string | null;
+
   @ApiProperty({ format: 'date', nullable: true })
   nextAppointmentDate!: string | null;
 
@@ -58,6 +61,7 @@ export class PatientMedicalAppointmentResponseDto {
       healthCenterName: appointment.healthCenter?.name ?? null,
       specialty: appointment.specialty,
       appointmentDate: appointment.appointmentDate,
+      appointmentTime: appointment.appointmentTime,
       nextAppointmentDate: appointment.nextAppointmentDate,
       hasReferralSheet: appointment.hasReferralSheet,
       referredTo: appointment.referredTo,

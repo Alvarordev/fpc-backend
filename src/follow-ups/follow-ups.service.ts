@@ -7,7 +7,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Agent } from '../database/entities/agent.entity';
-import { FollowUpStatus } from '../database/entities/follow-up.enums';
+import {
+  FollowUpPurpose,
+  FollowUpStatus,
+  FollowUpType,
+} from '../database/entities/follow-up.enums';
 import { FollowUp } from '../database/entities/follow-up.entity';
 import { Patient } from '../patients/entities/patient.entity';
 import { Reminder } from '../database/entities/reminder.entity';
@@ -34,6 +38,39 @@ export class FollowUpsService {
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly access: PatientAccessService,
   ) {}
+  // Reuses the patient's most recent follow-up, or creates a minimal
+  // IN_PERSON/COMPLETED one, matching fpc-back's standalone-appointment
+  // behaviour. Unlike AlertsService.createFollowUp (which always creates a
+  // new one), this always tries to reuse first.
+  async resolveOrCreateForPatient(
+    patientId: string,
+    agentId: string,
+    manager?: EntityManager,
+  ): Promise<string> {
+    const followUps = manager?.getRepository(FollowUp) ?? this.followUps;
+    const existing = await followUps.findOne({
+      where: { subjectPatientId: patientId },
+      order: { createdAt: 'DESC' },
+    });
+    if (existing) return existing.id;
+
+    const created = await followUps.save(
+      followUps.create({
+        subjectPatientId: patientId,
+        interlocutorId: patientId,
+        agentId,
+        type: FollowUpType.IN_PERSON,
+        status: FollowUpStatus.COMPLETED,
+        purpose: FollowUpPurpose.FOLLOW_UP,
+        scheduledAt: null,
+        completedAt: new Date(),
+        notes: 'Cita registrada desde panel web',
+        nextFollowUpId: null,
+      }),
+    );
+    return created.id;
+  }
+
   inferStatus(
     input: Pick<CreateFollowUpDto, 'scheduledAt' | 'completedAt'>,
   ): FollowUpStatus {
@@ -96,7 +133,9 @@ export class FollowUpsService {
     if (user.role === 'AGENT') {
       const agent = await this.agents.findOne({ where: { userId: user.id } });
       if (!agent)
-        throw new BadRequestException('Authenticated user has no agent profile');
+        throw new BadRequestException(
+          'Authenticated user has no agent profile',
+        );
       query.andWhere('follow_up.agent_id = :agentId', { agentId: agent.id });
     } else if (queryInput.agentId) {
       query.andWhere('follow_up.agent_id = :agentId', {

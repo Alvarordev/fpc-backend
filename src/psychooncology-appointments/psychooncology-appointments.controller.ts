@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -59,10 +67,12 @@ export class PsychooncologyAppointmentsController {
     description: 'Availability slot is reserved or volunteer is inactive',
   })
   @ApiForbiddenResponse({
-    description: 'Volunteers can only schedule appointments from their own availability',
+    description:
+      'Volunteers can only schedule appointments from their own availability',
   })
   @ApiNotFoundResponse({
-    description: 'Patient, follow-up, availability slot, or volunteer not found',
+    description:
+      'Patient, follow-up, availability slot, or volunteer not found',
   })
   create(
     @Body() dto: CreatePsychooncologyAppointmentDto,

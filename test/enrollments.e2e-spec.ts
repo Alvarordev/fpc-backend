@@ -354,10 +354,20 @@ describe('Enrollment wizard (e2e)', () => {
         where: { agentId: agent.id },
       }),
     ).resolves.toBe(0);
-    await expect(dataSource.getRepository(Enrollment).count()).resolves.toBe(0);
-    await expect(
-      dataSource.getRepository(PatientInsurance).count(),
-    ).resolves.toBe(0);
+    // Scoped to this agent, like the assertions above: the database also holds
+    // the demo dataset (`npm run seed:demo`) and rows from the other suites.
+    const countForAgent = async (table: string): Promise<number> => {
+      const [{ count }] = (await dataSource.query(
+        `SELECT COUNT(*)::int AS count FROM "${table}" t
+           JOIN follow_ups f ON f.id = t.follow_up_id
+          WHERE f.agent_id = $1`,
+        [agent.id],
+      )) as { count: number }[];
+      return count;
+    };
+
+    await expect(countForAgent('enrollments')).resolves.toBe(0);
+    await expect(countForAgent('patient_insurance')).resolves.toBe(0);
   });
 });
 

@@ -216,7 +216,10 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
         isAdditionalSession: true,
       })
       .expect(201);
-    expect(second.body).toMatchObject({ sessionNumber: 2, followUpId: followUp.id });
+    expect(second.body).toMatchObject({
+      sessionNumber: 2,
+      followUpId: followUp.id,
+    });
   });
 
   it('limits volunteers to their own availability and grants access after scheduling', async () => {

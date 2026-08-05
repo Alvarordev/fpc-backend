@@ -145,7 +145,7 @@ export class PatientTimelineService {
     return {
       ...common,
       kind: PatientTimelineEventKind.PSYCHOONCOLOGY_APPOINTMENT,
-      followUpId: row.follow_up_id as string,
+      followUpId: row.follow_up_id,
       modality: row.modality,
       sessionNumber: row.session_number,
     } as PsychooncologyAppointmentTimelineEventDto;

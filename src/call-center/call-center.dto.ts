@@ -16,7 +16,8 @@ export class CallCenterFollowUpDto {
   @ApiProperty({ format: 'uuid' }) agentId!: string;
   @ApiProperty({ enum: FollowUpType }) type!: FollowUpType;
   @ApiProperty({ enum: FollowUpPurpose }) purpose!: FollowUpPurpose;
-  @ApiProperty({ format: 'date-time', nullable: true }) scheduledAt!: Date | null;
+  @ApiProperty({ format: 'date-time', nullable: true })
+  scheduledAt!: Date | null;
 }
 
 export class CallCenterReminderDto {

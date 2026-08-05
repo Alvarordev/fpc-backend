@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -68,10 +76,7 @@ export class FollowUpsController {
   @ApiBadRequestResponse({
     description: 'The authenticated agent has no profile',
   })
-  findAll(
-    @Query() query: FindFollowUpsQueryDto,
-    @CurrentUser() user: User,
-  ) {
+  findAll(@Query() query: FindFollowUpsQueryDto, @CurrentUser() user: User) {
     return this.service
       .findAllForUser(query, user)
       .then((items) => items.map(this.toFollowUp));

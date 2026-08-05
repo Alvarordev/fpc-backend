@@ -15,13 +15,26 @@ export class EnrollmentFamilyTalkInterest {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'enrollment_id', type: 'uuid' }) enrollmentId!: string;
   @ManyToOne(() => Enrollment, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'enrollment_id' }) enrollment!: Enrollment;
-  @Column({ name: 'talk_name', type: 'varchar', length: 255 }) talkName!: string;
+  @JoinColumn({ name: 'enrollment_id' })
+  enrollment!: Enrollment;
+  @Column({ name: 'talk_name', type: 'varchar', length: 255 })
+  talkName!: string;
   @Column({ name: 'family_member_name', type: 'varchar', length: 255 })
   familyMemberName!: string;
-  @Column({ name: 'family_member_phone', type: 'varchar', length: 50, nullable: true })
+  @Column({
+    name: 'family_member_phone',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   familyMemberPhone!: string | null;
-  @Column({ name: 'family_member_email', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'family_member_email',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   familyMemberEmail!: string | null;
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' }) createdAt!: Date;
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt!: Date;
 }

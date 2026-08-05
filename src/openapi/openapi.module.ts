@@ -4,6 +4,7 @@ import { AgentsController } from '../agents/agents.controller';
 import { AgentsService } from '../agents/agents.service';
 import { AlertsController } from '../alerts/alerts.controller';
 import { AlertsService } from '../alerts/alerts.service';
+import { AlertSummaryService } from '../alerts/alert-summary.service';
 import { CallCenterController } from '../call-center/call-center.controller';
 import { CallCenterService } from '../call-center/call-center.service';
 import { DashboardController } from '../dashboard/dashboard.controller';
@@ -17,6 +18,8 @@ import { FollowUpsService } from '../follow-ups/follow-ups.service';
 import { HealthCentersController } from '../health-centers/health-centers.controller';
 import { HealthCentersService } from '../health-centers/health-centers.service';
 import { HealthController } from '../health/health.controller';
+import { MedicalAppointmentsController } from '../medical-appointments/medical-appointments.controller';
+import { MedicalAppointmentsService } from '../medical-appointments/medical-appointments.service';
 import { PatientSummaryOnDemandService } from '../patient-summaries/patient-summary-on-demand.service';
 import { PatientDiagnosesController } from '../patients/clinical/diagnoses/patient-diagnoses.controller';
 import { PatientDiagnosesService } from '../patients/clinical/diagnoses/patient-diagnoses.service';
@@ -61,6 +64,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     FollowUpsController,
     HealthCentersController,
     HealthController,
+    MedicalAppointmentsController,
     PatientsController,
     PatientDiagnosesController,
     PatientInsuranceController,
@@ -78,6 +82,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
   providers: [
     { provide: AgentsService, useValue: {} },
     { provide: AlertsService, useValue: {} },
+    { provide: AlertSummaryService, useValue: {} },
     { provide: CallCenterService, useValue: {} },
     { provide: DashboardService, useValue: {} },
     { provide: AuthService, useValue: {} },
@@ -85,6 +90,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     { provide: FollowUpsService, useValue: {} },
     { provide: HealthCentersService, useValue: {} },
     { provide: HealthCheckService, useValue: {} },
+    { provide: MedicalAppointmentsService, useValue: {} },
     { provide: UsersService, useValue: {} },
     { provide: PatientsService, useValue: {} },
     { provide: PatientTimelineService, useValue: {} },

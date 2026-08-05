@@ -29,6 +29,8 @@ import { PatientsService } from '../patients/patients.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CreateEnrollmentDto } from './enrollments.dto';
 import { User } from '../database/entities/user.entity';
+import { N8nTransactionalDispatchService } from '../webhooks/transactional-dispatch.service';
+import { buildRegistroEnvelope } from '../webhooks/n8n-webhook.payloads';
 
 @Injectable()
 export class EnrollmentsService {
@@ -45,6 +47,7 @@ export class EnrollmentsService {
     private readonly sisAffiliations: PatientSisAffiliationService,
     private readonly symptomReports: PatientSymptomReportsService,
     private readonly invalidations: PatientSummaryInvalidationService,
+    private readonly webhooks: N8nTransactionalDispatchService,
   ) {}
 
   async create(input: CreateEnrollmentDto, userId: string, userRole: string) {
@@ -233,6 +236,21 @@ export class EnrollmentsService {
         );
 
       await this.invalidations.markDirty(patient.id, manager);
+      // Cita webhooks for medicalAppointments are already dispatched by
+      // this.appointments.create() above; only Registro needs firing here.
+      await this.webhooks.enqueue(
+        buildRegistroEnvelope({
+          fullName: patient.fullName,
+          dni: patient.dni ?? '',
+          phone: patient.primaryPhone,
+          email: patient.email,
+          diagnosis: diagnosis?.diagnosis ?? 'En evaluación',
+          // patient.role was just set to PATIENT above (the companion, if
+          // any, is enrolled separately and never gets its own Registro).
+          condition: 'paciente',
+        }),
+        manager,
+      );
       return { ...enrollment, patient, companion, followUp };
     });
   }

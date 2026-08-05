@@ -1,20 +1,34 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { Agent } from '../database/entities/agent.entity';
 import { Alert } from '../database/entities/alert.entity';
+import { AlertEvent } from '../database/entities/alert-event.entity';
 import { HealthCenter } from '../database/entities/health-center.entity';
 import { FollowUp } from '../database/entities/follow-up.entity';
 import { Patient } from '../patients/entities/patient.entity';
 import { AlertsController } from './alerts.controller';
 import { AlertsService } from './alerts.service';
+import { AlertEventsService } from './alert-events.service';
+import { AlertSummaryService } from './alert-summary.service';
 import { PatientAccessModule } from '../patient-access/patient-access.module';
+import { WebhooksModule } from '../webhooks/webhooks.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Alert, Agent, HealthCenter, FollowUp, Patient]),
+    TypeOrmModule.forFeature([
+      Alert,
+      AlertEvent,
+      Agent,
+      HealthCenter,
+      FollowUp,
+      Patient,
+    ]),
     PatientAccessModule,
+    ThrottlerModule,
+    WebhooksModule,
   ],
   controllers: [AlertsController],
-  providers: [AlertsService],
+  providers: [AlertsService, AlertEventsService, AlertSummaryService],
 })
 export class AlertsModule {}

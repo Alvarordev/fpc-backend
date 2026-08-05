@@ -11,6 +11,7 @@ import { PatientMedicalAppointmentsService } from '../clinical/medical-appointme
 import { PatientTreatmentsService } from '../clinical/treatments/patient-treatments.service';
 import { PatientsService } from '../patients.service';
 import { PatientSummaryInvalidationService } from '../../patient-summaries/patient-summary-invalidation.service';
+import { N8nTransactionalDispatchService } from '../../webhooks/transactional-dispatch.service';
 
 describe('clinical history services', () => {
   const patients = {
@@ -24,8 +25,19 @@ describe('clinical history services', () => {
   const followUps = {
     existsBy: jest.fn(),
   } as unknown as Repository<FollowUp>;
+  const webhooks = {
+    enqueue: jest.fn(),
+  } as unknown as N8nTransactionalDispatchService;
 
-  beforeEach(() => jest.resetAllMocks());
+  beforeEach(() => {
+    jest.resetAllMocks();
+    (patients.assertPatientRole as jest.Mock).mockResolvedValue({
+      fullName: 'Paciente de Prueba',
+      dni: '12345678',
+      primaryPhone: '999999999',
+      email: null,
+    });
+  });
 
   it('versions insurance by patient', async () => {
     (followUps.existsBy as jest.Mock).mockResolvedValue(true);
@@ -58,12 +70,20 @@ describe('clinical history services', () => {
 
   it('versions appointments independently by specialty', async () => {
     (followUps.existsBy as jest.Mock).mockResolvedValue(true);
+    replaceCurrent.mockResolvedValue({
+      id: 'appointment-id',
+      difficulties: null,
+      appointmentDate: null,
+      appointmentTime: null,
+      specialty: 'ONCOLOGY',
+    });
     const service = new PatientMedicalAppointmentsService(
       {} as Repository<PatientMedicalAppointment>,
       followUps,
       patients,
       versioning,
       invalidations,
+      webhooks,
     );
 
     await service.create('patient-id', {

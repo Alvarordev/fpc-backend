@@ -29,6 +29,8 @@ import { UpsertPatientDetailsDto } from './dto/upsert-patient-details.dto';
 import { LinkCompanionDto } from './dto/link-companion.dto';
 import { User } from '../database/entities/user.entity';
 import { PatientAccessService } from '../patient-access/patient-access.service';
+import { N8nTransactionalDispatchService } from '../webhooks/transactional-dispatch.service';
+import { buildRegistroEnvelope } from '../webhooks/n8n-webhook.payloads';
 
 @Injectable()
 export class PatientsService {
@@ -58,6 +60,7 @@ export class PatientsService {
     private readonly dataSource: DataSource,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly access: PatientAccessService,
+    private readonly webhooks: N8nTransactionalDispatchService,
   ) {}
 
   assertCanRead(patientId: string, user: User): Promise<void> {
@@ -95,6 +98,22 @@ export class PatientsService {
       manager?.getRepository(Patient) ?? this.patientsRepository;
     const patient = await repository.save(repository.create({ ...input }));
     await this.invalidations.markDirty(patient.id, manager);
+    // Only fire here when called directly (no manager): the enrollment
+    // flow creates its own patient and dispatches its own Registro with
+    // the real diagnosis, so firing here too would send a duplicate.
+    if (!manager) {
+      await this.webhooks.enqueue(
+        buildRegistroEnvelope({
+          fullName: patient.fullName,
+          dni: patient.dni ?? '',
+          phone: patient.primaryPhone,
+          email: patient.email,
+          diagnosis: 'En evaluación',
+          condition:
+            patient.role === PatientRole.COMPANION ? 'acompañante' : 'paciente',
+        }),
+      );
+    }
     return patient;
   }
 

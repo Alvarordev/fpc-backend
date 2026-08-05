@@ -78,6 +78,53 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "name": "severity",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "HIGH",
+                "MEDIUM",
+                "LOW"
+              ]
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "GENERAL",
+                "MEDICATION_SHORTAGE",
+                "APPOINTMENT_DELAY",
+                "INSURANCE_COVERAGE",
+                "TRANSPORT",
+                "ADMINISTRATIVE",
+                "PSYCHOSOCIAL",
+                "OTHER"
+              ]
+            }
+          },
+          {
+            "name": "underReview",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "ticketNumber",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -104,6 +151,49 @@
           }
         ],
         "summary": "List alerts",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/ticket/{ticketNumber}": {
+      "get": {
+        "description": "Unauthenticated on purpose so the WhatsApp bot can resolve a ticket for the patient who reported it. Returns patient name, DNI, and phone number without requiring a session — do not link this from anywhere a bystander could reach.",
+        "operationId": "AlertsController_findByTicket",
+        "parameters": [
+          {
+            "name": "ticketNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertTicketLookupResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Alert not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Look up an alert by ticket number (WhatsApp bot tracking)",
         "tags": [
           "alerts"
         ]
@@ -147,6 +237,101 @@
           }
         ],
         "summary": "Get an alert",
+        "tags": [
+          "alerts"
+        ]
+      },
+      "patch": {
+        "description": "Patch semantics: omitted fields are left unchanged. Explicit null is only accepted for derivedTo and derivationNotes. Use POST /alerts/:id/resolve to resolve an alert — setting status to RESOLVED here is rejected.",
+        "operationId": "AlertsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAlertDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A non-nullable field was set to null, or status was set to RESOLVED"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator, agent, or foundation role required"
+          },
+          "404": {
+            "description": "Alert, health center, or follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an alert",
+        "tags": [
+          "alerts"
+        ]
+      },
+      "delete": {
+        "operationId": "AlertsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          },
+          "404": {
+            "description": "Alert not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an alert",
         "tags": [
           "alerts"
         ]
@@ -199,6 +384,154 @@
           }
         ],
         "summary": "Resolve an alert",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/{id}/events": {
+      "get": {
+        "operationId": "AlertsController_findEvents",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertEventResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Alert not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List an alert timeline events",
+        "tags": [
+          "alerts"
+        ]
+      },
+      "post": {
+        "description": "The event type is always COMMENT; it cannot be set.",
+        "operationId": "AlertsController_addEvent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAlertEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertEventResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator, agent, or foundation role required"
+          },
+          "404": {
+            "description": "Alert not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a comment event to an alert timeline",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/{id}/ai-summary": {
+      "post": {
+        "description": "Deterministic Spanish template, not a model call. Re-running overwrites the stored summary and appends another AI_SUMMARY_GENERATED timeline event.",
+        "operationId": "AlertsController_aiSummary",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or agent role required"
+          },
+          "404": {
+            "description": "Alert not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generate an executive summary for an alert",
         "tags": [
           "alerts"
         ]
@@ -1417,6 +1750,223 @@
         "summary": "Check application and database health",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/medical-appointments": {
+      "post": {
+        "description": "Reuses the patient's most recent follow-up if one exists, otherwise creates a minimal one.",
+        "operationId": "MedicalAppointmentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMedicalAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MedicalAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload, or the authenticated user has no agent profile"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a standalone medical appointment",
+        "tags": [
+          "Medical appointments"
+        ]
+      },
+      "get": {
+        "description": "Returns only current (non-superseded) appointments by default. Volunteers only see appointments for patients they are assigned to.",
+        "operationId": "MedicalAppointmentsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "specialty",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthCenterId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeHistory",
+            "required": false,
+            "in": "query",
+            "description": "Include superseded (non-current) versions. Default false.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MedicalAppointmentListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List medical appointments across all patients",
+        "tags": [
+          "Medical appointments"
+        ]
+      }
+    },
+    "/medical-appointments/{id}": {
+      "patch": {
+        "description": "Creates a new current version and marks the previous one as superseded; the returned id differs from the path id. specialty cannot be changed — create a new appointment instead. changeReason is required.",
+        "operationId": "MedicalAppointmentsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMedicalAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MedicalAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Medical appointment not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a medical appointment",
+        "tags": [
+          "Medical appointments"
         ]
       }
     },
@@ -4030,6 +4580,27 @@
       "CreateAlertDto": {
         "type": "object",
         "properties": {
+          "severity": {
+            "enum": [
+              "HIGH",
+              "MEDIUM",
+              "LOW"
+            ],
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "GENERAL",
+              "MEDICATION_SHORTAGE",
+              "APPOINTMENT_DELAY",
+              "INSURANCE_COVERAGE",
+              "TRANSPORT",
+              "ADMINISTRATIVE",
+              "PSYCHOSOCIAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
           "healthCenterId": {
             "type": "string",
             "format": "uuid"
@@ -4080,6 +4651,11 @@
             "type": "string",
             "format": "uuid"
           },
+          "ticketNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "Auto-generated on create, e.g. ALT-2026-1001. Null only for legacy rows that predate ticketing."
+          },
           "healthCenterId": {
             "type": "string",
             "format": "uuid"
@@ -4098,6 +4674,20 @@
           "createdByName": {
             "type": "string"
           },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientFullName": {
+            "type": "string"
+          },
+          "patientDni": {
+            "type": "string",
+            "nullable": true
+          },
+          "patientPhone": {
+            "type": "string"
+          },
           "title": {
             "type": "string"
           },
@@ -4110,6 +4700,42 @@
               "RESOLVED"
             ],
             "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "HIGH",
+              "MEDIUM",
+              "LOW"
+            ],
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "GENERAL",
+              "MEDICATION_SHORTAGE",
+              "APPOINTMENT_DELAY",
+              "INSURANCE_COVERAGE",
+              "TRANSPORT",
+              "ADMINISTRATIVE",
+              "PSYCHOSOCIAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "underReview": {
+            "type": "boolean"
+          },
+          "derivedTo": {
+            "type": "string",
+            "nullable": true
+          },
+          "derivationNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "aiSummary": {
+            "type": "string",
+            "nullable": true
           },
           "resolvedAt": {
             "format": "date-time",
@@ -4141,20 +4767,187 @@
         },
         "required": [
           "id",
+          "ticketNumber",
           "healthCenterId",
           "healthCenterName",
           "followUpId",
           "createdById",
           "createdByName",
+          "patientId",
+          "patientFullName",
+          "patientDni",
+          "patientPhone",
           "title",
           "description",
           "status",
+          "severity",
+          "category",
+          "underReview",
+          "derivedTo",
+          "derivationNotes",
+          "aiSummary",
           "resolvedAt",
           "resolvedById",
           "resolvedByUserId",
           "resolvedByName",
           "createdAt",
           "updatedAt"
+        ]
+      },
+      "AlertEventResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "alertId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "agentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "eventType": {
+            "enum": [
+              "CREATED",
+              "STATUS_CHANGED",
+              "DERIVED",
+              "COMMENT",
+              "AI_SUMMARY_GENERATED",
+              "RESOLVED"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "alertId",
+          "agentId",
+          "agentName",
+          "eventType",
+          "title",
+          "description",
+          "createdAt"
+        ]
+      },
+      "AlertTicketLookupResponseDto": {
+        "type": "object",
+        "properties": {
+          "alert": {
+            "$ref": "#/components/schemas/AlertResponseDto"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlertEventResponseDto"
+            }
+          },
+          "totalTimelineEvents": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "alert",
+          "events",
+          "totalTimelineEvents"
+        ]
+      },
+      "UpdateAlertDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "status": {
+            "nullable": true,
+            "enum": [
+              "ACTIVE",
+              "RESOLVED"
+            ],
+            "type": "string"
+          },
+          "underReview": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "derivedTo": {
+            "type": "string",
+            "nullable": true
+          },
+          "derivationNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "severity": {
+            "nullable": true,
+            "enum": [
+              "HIGH",
+              "MEDIUM",
+              "LOW"
+            ],
+            "type": "string"
+          },
+          "category": {
+            "nullable": true,
+            "enum": [
+              "GENERAL",
+              "MEDICATION_SHORTAGE",
+              "APPOINTMENT_DELAY",
+              "INSURANCE_COVERAGE",
+              "TRANSPORT",
+              "ADMINISTRATIVE",
+              "PSYCHOSOCIAL",
+              "OTHER"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "CreateAlertEventDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
         ]
       },
       "CallCenterAgentDto": {
@@ -5024,6 +5817,9 @@
           "appointmentDate": {
             "type": "string"
           },
+          "appointmentTime": {
+            "type": "string"
+          },
           "nextAppointmentDate": {
             "type": "string"
           },
@@ -5765,6 +6561,197 @@
             "type": "boolean"
           }
         }
+      },
+      "CreateMedicalAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string"
+          },
+          "appointmentDate": {
+            "type": "string"
+          },
+          "appointmentTime": {
+            "type": "string"
+          },
+          "nextAppointmentDate": {
+            "type": "string"
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          },
+          "referredTo": {
+            "type": "string"
+          },
+          "difficulties": {
+            "type": "string"
+          },
+          "isFirstConsultation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "patientId",
+          "specialty"
+        ]
+      },
+      "MedicalAppointmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientFullName": {
+            "type": "string"
+          },
+          "patientDni": {
+            "type": "string",
+            "nullable": true
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "healthCenterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "specialty": {
+            "type": "string"
+          },
+          "appointmentDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "appointmentTime": {
+            "type": "string",
+            "nullable": true,
+            "description": "HH:mm or HH:mm:ss"
+          },
+          "nextAppointmentDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          },
+          "referredTo": {
+            "type": "string",
+            "nullable": true
+          },
+          "difficulties": {
+            "type": "string",
+            "nullable": true
+          },
+          "isFirstConsultation": {
+            "type": "boolean"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "patientFullName",
+          "patientDni",
+          "followUpId",
+          "healthCenterId",
+          "healthCenterName",
+          "specialty",
+          "appointmentDate",
+          "appointmentTime",
+          "nextAppointmentDate",
+          "hasReferralSheet",
+          "referredTo",
+          "difficulties",
+          "isFirstConsultation",
+          "isCurrent",
+          "changeReason",
+          "createdAt"
+        ]
+      },
+      "MedicalAppointmentListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MedicalAppointmentResponseDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "total"
+        ]
+      },
+      "UpdateMedicalAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appointmentDate": {
+            "type": "string"
+          },
+          "appointmentTime": {
+            "type": "string"
+          },
+          "nextAppointmentDate": {
+            "type": "string"
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          },
+          "referredTo": {
+            "type": "string"
+          },
+          "difficulties": {
+            "type": "string"
+          },
+          "isFirstConsultation": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "changeReason"
+        ]
       },
       "FollowUpTimelineEventDto": {
         "type": "object",
@@ -6875,6 +7862,11 @@
             "nullable": true,
             "format": "date"
           },
+          "appointmentTime": {
+            "type": "string",
+            "nullable": true,
+            "description": "HH:mm or HH:mm:ss"
+          },
           "nextAppointmentDate": {
             "type": "string",
             "nullable": true,
@@ -6913,6 +7905,7 @@
           "healthCenterId",
           "specialty",
           "appointmentDate",
+          "appointmentTime",
           "nextAppointmentDate",
           "hasReferralSheet",
           "referredTo",
@@ -7425,6 +8418,9 @@
             "type": "string"
           },
           "appointmentDate": {
+            "type": "string"
+          },
+          "appointmentTime": {
             "type": "string"
           },
           "nextAppointmentDate": {
