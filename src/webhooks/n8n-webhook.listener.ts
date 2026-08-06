@@ -11,7 +11,7 @@ export class N8nWebhookListener {
   constructor(private readonly service: N8nWebhookService) {}
 
   @OnEvent(N8N_WEBHOOK_EVENT)
-  async handle(event: N8nWebhookDispatchEvent): Promise<void> {
-    await this.service.dispatch(event.envelope);
+  handle(event: N8nWebhookDispatchEvent): void {
+    this.service.dispatch(event.envelope);
   }
 }

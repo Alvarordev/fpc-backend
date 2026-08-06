@@ -14,8 +14,12 @@ export class N8nWebhookService {
   }
 
   // Fire-and-forget by design (matches fpc-back's N8nWebhookService): no
-  // retries, no outbox, failures are logged and dropped. Never throws.
-  async dispatch(envelope: N8nWebhookEnvelope): Promise<void> {
+  // retries, no outbox, failures are logged and dropped, never throws.
+  // Deliberately NOT async/awaited by callers: TypeORM awaits whatever
+  // afterTransactionCommit returns (see Broadcaster.js), so awaiting the
+  // fetch here would block the caller's HTTP response for up to
+  // N8N_WEBHOOK_TIMEOUT_MS on every write that dispatches a webhook.
+  dispatch(envelope: N8nWebhookEnvelope): void {
     if (!this.url) {
       this.logger.debug({
         event: envelope.var,
@@ -23,7 +27,10 @@ export class N8nWebhookService {
       });
       return;
     }
+    void this.send(envelope);
+  }
 
+  private async send(envelope: N8nWebhookEnvelope): Promise<void> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
     try {

@@ -99,6 +99,29 @@ $ npm run openapi:check
 
 The OpenAPI GitHub Actions workflow runs the check for pull requests and pushes to `main`.
 
+## n8n webhook notifications
+
+`src/webhooks` dispatches business-event notifications to an n8n workflow: alert created/resolved/
+derived, a medical appointment created, or a patient registered. Each is a fire-and-forget `POST` of
+`{ "var": "<EventName>", "query": { ... } }`, dispatched only after the triggering database
+transaction commits (never on rollback). Failures are logged and swallowed — there is no retry, no
+outbox, and the caller's HTTP response is never blocked or failed because of n8n.
+
+Configure it with:
+
+```bash
+N8N_WEBHOOK_URL=https://your-n8n-instance/webhook/notificacion
+N8N_WEBHOOK_TIMEOUT_MS=5000
+```
+
+Leaving `N8N_WEBHOOK_URL` unset or empty disables the integration entirely — every dispatch becomes
+a no-op logged at `debug`. There is no default URL; a blank value is required to keep dev/test
+environments from ever notifying a real n8n instance by accident.
+
+To verify locally, point `N8N_WEBHOOK_URL` at a capture endpoint (e.g. https://webhook.site), then
+create an alert or register a patient and confirm the payload arrives with the expected `var` and
+Spanish `query` keys (`nombre`, `DNI`, `celular`, ...).
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.

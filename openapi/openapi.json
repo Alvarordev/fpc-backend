@@ -242,7 +242,7 @@
         ]
       },
       "patch": {
-        "description": "Patch semantics: omitted fields are left unchanged. Explicit null is only accepted for derivedTo and derivationNotes. Use POST /alerts/:id/resolve to resolve an alert — setting status to RESOLVED here is rejected.",
+        "description": "Patch semantics: omitted fields are left unchanged. Explicit null is only accepted for derivedTo and derivationNotes. Use PATCH /alerts/:id/resolve to resolve an alert — setting status to RESOLVED here is rejected.",
         "operationId": "AlertsController_update",
         "parameters": [
           {

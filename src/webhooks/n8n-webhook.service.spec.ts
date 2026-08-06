@@ -10,6 +10,13 @@ function buildConfig(url: string, timeoutMs = 5000) {
   } as unknown as ConfigService;
 }
 
+// dispatch() is deliberately fire-and-forget (void, not awaited by
+// callers), so tests that need to observe the async fetch outcome must
+// flush the microtask queue after calling it.
+function flushMicrotasks(): Promise<void> {
+  return new Promise((resolve) => setImmediate(resolve));
+}
+
 const envelope: N8nWebhookEnvelope = {
   var: 'Alerta',
   query: { nombre: 'Ana' },
@@ -20,16 +27,16 @@ describe('N8nWebhookService', () => {
     jest.restoreAllMocks();
   });
 
-  it('does not call fetch when N8N_WEBHOOK_URL is blank', async () => {
+  it('does not call fetch when N8N_WEBHOOK_URL is blank', () => {
     const fetchSpy = jest.spyOn(globalThis, 'fetch');
     const service = new N8nWebhookService(buildConfig(''));
 
-    await service.dispatch(envelope);
+    service.dispatch(envelope);
 
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('POSTs the envelope as JSON to the configured URL', async () => {
+  it('POSTs the envelope as JSON to the configured URL', () => {
     const fetchSpy = jest
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response(null, { status: 200 }));
@@ -37,7 +44,9 @@ describe('N8nWebhookService', () => {
       buildConfig('https://n8n.example.test/webhook/notificacion'),
     );
 
-    await service.dispatch(envelope);
+    // fetch() is invoked synchronously inside the async send() body, before
+    // its first await, so it's already been called once dispatch() returns.
+    service.dispatch(envelope);
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     const [url, options] = fetchSpy.mock.calls[0] as [string, RequestInit];
@@ -49,14 +58,18 @@ describe('N8nWebhookService', () => {
     expect(JSON.parse(options.body as string)).toEqual(envelope);
   });
 
-  it('logs a warning and does not throw when fetch rejects', async () => {
+  it('does not block the caller and logs a warning when fetch rejects', async () => {
     jest.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('boom'));
     const warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
     const service = new N8nWebhookService(
       buildConfig('https://n8n.example.test/webhook/notificacion'),
     );
 
-    await expect(service.dispatch(envelope)).resolves.toBeUndefined();
+    const result = service.dispatch(envelope);
+
+    expect(result).toBeUndefined();
+    expect(warnSpy).not.toHaveBeenCalled(); // hasn't settled yet — call was not awaited
+    await flushMicrotasks();
     expect(warnSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -69,11 +82,13 @@ describe('N8nWebhookService', () => {
       buildConfig('https://n8n.example.test/webhook/notificacion'),
     );
 
-    await expect(service.dispatch(envelope)).resolves.toBeUndefined();
+    service.dispatch(envelope);
+    await flushMicrotasks();
+
     expect(warnSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('passes an AbortSignal that aborts after the configured timeout', async () => {
+  it('passes an AbortSignal that aborts after the configured timeout', () => {
     jest.useFakeTimers();
     let capturedSignal: AbortSignal | undefined;
     jest.spyOn(globalThis, 'fetch').mockImplementation((_url, options) => {
@@ -86,8 +101,7 @@ describe('N8nWebhookService', () => {
       buildConfig('https://n8n.example.test/webhook/notificacion', 1000),
     );
 
-    void service.dispatch(envelope);
-    await Promise.resolve();
+    service.dispatch(envelope);
     expect(capturedSignal?.aborted).toBe(false);
 
     jest.advanceTimersByTime(1000);

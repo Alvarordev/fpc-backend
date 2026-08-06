@@ -10,6 +10,7 @@ import { Agent } from '../src/database/entities/agent.entity';
 import { HealthCenter } from '../src/database/entities/health-center.entity';
 import { Patient } from '../src/patients/entities/patient.entity';
 import { PatientRole } from '../src/patients/entities/patient-role.enum';
+import { PatientStatus } from '../src/patients/entities/patient-status.enum';
 import { UserRole } from '../src/database/entities/user-role.enum';
 import { UsersService } from '../src/users/users.service';
 import { N8nWebhookService } from '../src/webhooks/n8n-webhook.service';
@@ -76,6 +77,7 @@ describe('n8n webhook dispatch (e2e)', () => {
       dni: '55555555',
       email: 'hook-patient@example.test',
       role: PatientRole.PATIENT,
+      status: PatientStatus.ENROLLED,
     });
     healthCenter = await dataSource.getRepository(HealthCenter).save({
       name: 'Hook Center',
@@ -236,9 +238,32 @@ describe('n8n webhook dispatch (e2e)', () => {
     expect(citaEnvelopes[0].query.hora).toBe('14:30');
   });
 
+  it('dispatches a Registro envelope with condicion "acompañante" when a companion is created', async () => {
+    await request(server)
+      .post(`/patients/${assignedPatient.id}/companions`)
+      .set('Authorization', `Bearer ${agentToken}`)
+      .send({
+        fullName: 'Hook Companion',
+        primaryPhone: '7',
+        email: 'hook-companion@example.test',
+      })
+      .expect(201);
+
+    const registroEnvelopes = dispatched.filter((e) => e.var === 'Registro');
+    expect(registroEnvelopes).toHaveLength(1);
+    expect(registroEnvelopes[0].query).toMatchObject({
+      nombre: 'Hook Companion',
+      condicion: 'acompañante',
+    });
+  });
+
   async function clearData(ds: DataSource, prefix: string) {
     await ds.query(
       'DELETE FROM alert_events WHERE alert_id IN (SELECT id FROM alerts WHERE created_by_id IN (SELECT id FROM agents WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1)))',
+      [prefix],
+    );
+    await ds.query(
+      'DELETE FROM companion_patient WHERE patient_id IN (SELECT id FROM patients WHERE email LIKE $1) OR companion_id IN (SELECT id FROM patients WHERE email LIKE $1)',
       [prefix],
     );
     await ds.query(

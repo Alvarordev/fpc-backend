@@ -408,7 +408,7 @@ describe('Alert triage fields (e2e)', () => {
     const summarized = await request(server)
       .post(`/alerts/${alert.id}/ai-summary`)
       .set('Authorization', `Bearer ${agentToken}`)
-      .expect(201);
+      .expect(200);
     const updated = summarized.body as AlertResponseDto;
     expect(updated.aiSummary).toMatch(/^📋 RESUMEN EJECUTIVO IA:/);
     expect(updated.aiSummary).toContain('2 avance(s)');

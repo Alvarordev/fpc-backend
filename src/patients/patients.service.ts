@@ -109,8 +109,10 @@ export class PatientsService {
           phone: patient.primaryPhone,
           email: patient.email,
           diagnosis: 'En evaluación',
-          condition:
-            patient.role === PatientRole.COMPANION ? 'acompañante' : 'paciente',
+          // CreatePatientDto has no `role` field — every patient created
+          // through this path is `paciente`. Companions are always created
+          // through createCompanion() below, which sends its own Registro.
+          condition: 'paciente',
         }),
       );
     }
@@ -130,8 +132,29 @@ export class PatientsService {
     );
     if (manager)
       return this.createCompanionWithManager(patientId, input, manager);
+    // Only fire here when called directly (no manager): the enrollment
+    // flow creates its own patient + companion within its own transaction
+    // and dispatches a single Registro for the enrolled patient, so this
+    // avoids sending a second one for the companion mid-enrollment —
+    // fpc-back never notified n8n about companions created that way either.
     return this.dataSource.transaction(async (manager) => {
-      return this.createCompanionWithManager(patientId, input, manager);
+      const companion = await this.createCompanionWithManager(
+        patientId,
+        input,
+        manager,
+      );
+      await this.webhooks.enqueue(
+        buildRegistroEnvelope({
+          fullName: companion.fullName,
+          dni: companion.dni ?? '',
+          phone: companion.primaryPhone,
+          email: companion.email,
+          diagnosis: 'En evaluación',
+          condition: 'acompañante',
+        }),
+        manager,
+      );
+      return companion;
     });
   }
 

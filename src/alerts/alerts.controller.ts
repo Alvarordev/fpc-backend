@@ -126,7 +126,7 @@ export class AlertsController {
   @ApiOperation({
     summary: 'Update an alert',
     description:
-      'Patch semantics: omitted fields are left unchanged. Explicit null is only accepted for derivedTo and derivationNotes. Use POST /alerts/:id/resolve to resolve an alert — setting status to RESOLVED here is rejected.',
+      'Patch semantics: omitted fields are left unchanged. Explicit null is only accepted for derivedTo and derivationNotes. Use PATCH /alerts/:id/resolve to resolve an alert — setting status to RESOLVED here is rejected.',
   })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AlertResponseDto })
@@ -211,6 +211,7 @@ export class AlertsController {
 
   @Post(':id/ai-summary')
   @Roles(UserRole.ADMIN, UserRole.AGENT)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Generate an executive summary for an alert',
     description:

@@ -327,7 +327,7 @@ describe('AlertsService', () => {
 
       await expect(
         service.update('alert-1', { status: AlertStatus.RESOLVED }, adminUser),
-      ).rejects.toThrow('Use POST /alerts/:id/resolve to resolve an alert');
+      ).rejects.toThrow('Use PATCH /alerts/:id/resolve to resolve an alert');
     });
 
     it('emits a DERIVED event when derivedTo becomes non-null', async () => {

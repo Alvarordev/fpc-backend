@@ -280,7 +280,7 @@ export class AlertsService {
     this.assertNoInvalidNulls(input);
     if (input.status === AlertStatus.RESOLVED)
       throw new BadRequestException(
-        'Use POST /alerts/:id/resolve to resolve an alert',
+        'Use PATCH /alerts/:id/resolve to resolve an alert',
       );
 
     const alertId = await this.dataSource.transaction(async (manager) => {
