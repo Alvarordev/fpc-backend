@@ -13,7 +13,7 @@ import {
   createdEventDescription,
   createdEventTitle,
   resolvedEventDescription,
-} from '../../../alerts/alert-events.service';
+} from '../../../modules/alerts/alert-events.service';
 
 /** Three hand-written cases — alerts are rare and specific by design. */
 const ALERT_CASES = [

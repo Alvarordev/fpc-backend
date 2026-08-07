@@ -24,7 +24,7 @@ import { PatientSymptomReport } from '../src/database/entities/patient-symptom-r
 import { PatientTreatment } from '../src/database/entities/patient-treatment.entity';
 import { Patient } from '../src/database/entities/patient.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
-import { UsersService } from '../src/users/users.service';
+import { UsersService } from '../src/modules/users/users.service';
 
 describe('Enrollment wizard (e2e)', () => {
   const emailPrefix = 'p7-%@example.test';

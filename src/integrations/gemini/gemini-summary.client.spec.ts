@@ -3,7 +3,7 @@ import {
   GeminiSummaryClient,
   sanitizeSummaryText,
 } from './gemini-summary.client';
-import { PatientSummaryErrorCode } from '../../patient-summaries/patient-summary-error';
+import { PatientSummaryErrorCode } from '../../modules/patient-summaries/patient-summary-error';
 
 describe('GeminiSummaryClient', () => {
   it('fails through the normalized configuration pipeline when no key is set', async () => {

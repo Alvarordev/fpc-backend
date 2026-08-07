@@ -18,7 +18,7 @@ import {
   VolunteerAvailability,
 } from '../src/database/entities/volunteer-availability.entity';
 import { Volunteer } from '../src/database/entities/volunteer.entity';
-import { UsersService } from '../src/users/users.service';
+import { UsersService } from '../src/modules/users/users.service';
 
 describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
   const emailPrefix = 'p6-%@example.test';

@@ -7,14 +7,14 @@ import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { Agent } from '../src/database/entities/agent.entity';
-import { AlertEventResponseDto } from '../src/alerts/alert-event-response.dto';
+import { AlertEventResponseDto } from '../src/modules/alerts/alert-event-response.dto';
 import { AlertEventType } from '../src/database/entities/alert-event.entity';
-import { AlertResponseDto } from '../src/alerts/alert-response.dto';
+import { AlertResponseDto } from '../src/modules/alerts/alert-response.dto';
 import { HealthCenter } from '../src/database/entities/health-center.entity';
 import { Patient } from '../src/database/entities/patient.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
 import { Volunteer } from '../src/database/entities/volunteer.entity';
-import { UsersService } from '../src/users/users.service';
+import { UsersService } from '../src/modules/users/users.service';
 
 describe('Alert triage fields (e2e)', () => {
   const emailPrefix = 'alerts-%@example.test';

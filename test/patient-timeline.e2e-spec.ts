@@ -27,7 +27,7 @@ import {
 } from '../src/database/entities/volunteer-availability.entity';
 import { Volunteer } from '../src/database/entities/volunteer.entity';
 import { Patient } from '../src/database/entities/patient.entity';
-import { UsersService } from '../src/users/users.service';
+import { UsersService } from '../src/modules/users/users.service';
 
 describe('Patient timeline (e2e)', () => {
   const emailPrefix = 'timeline-%@example.test';

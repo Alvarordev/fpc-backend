@@ -5,7 +5,7 @@ import {
   PatientSummaryError,
   PatientSummaryErrorCode,
   normalizePatientSummaryError,
-} from '../../patient-summaries/patient-summary-error';
+} from '../../modules/patient-summaries/patient-summary-error';
 
 @Injectable()
 export class GeminiSummaryClient {
