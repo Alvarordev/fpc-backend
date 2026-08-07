@@ -29,8 +29,8 @@ import { UpsertPatientDetailsDto } from './dto/upsert-patient-details.dto';
 import { LinkCompanionDto } from './dto/link-companion.dto';
 import { User } from '../database/entities/user.entity';
 import { PatientAccessService } from '../patient-access/patient-access.service';
-import { N8nTransactionalDispatchService } from '../webhooks/transactional-dispatch.service';
-import { buildRegistroEnvelope } from '../webhooks/n8n-webhook.payloads';
+import { N8nTransactionalDispatchService } from '../integrations/n8n/transactional-dispatch.service';
+import { buildRegistroEnvelope } from '../integrations/n8n/n8n-webhook.payloads';
 
 @Injectable()
 export class PatientsService {

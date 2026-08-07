@@ -12,7 +12,7 @@ import {
   PatientSummaryStatus,
 } from '../src/database/entities/patient-summary.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
-import { GeminiSummaryClient } from '../src/patient-summaries/gemini-summary.client';
+import { GeminiSummaryClient } from '../src/integrations/gemini/gemini-summary.client';
 import {
   PATIENT_DATA_CHANGED,
   PatientDataChangedEvent,

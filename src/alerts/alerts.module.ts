@@ -12,7 +12,7 @@ import { AlertsService } from './alerts.service';
 import { AlertEventsService } from './alert-events.service';
 import { AlertSummaryService } from './alert-summary.service';
 import { PatientAccessModule } from '../patient-access/patient-access.module';
-import { WebhooksModule } from '../webhooks/webhooks.module';
+import { N8nModule } from '../integrations/n8n/n8n.module';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { WebhooksModule } from '../webhooks/webhooks.module';
     ]),
     PatientAccessModule,
     ThrottlerModule,
-    WebhooksModule,
+    N8nModule,
   ],
   controllers: [AlertsController],
   providers: [AlertsService, AlertEventsService, AlertSummaryService],

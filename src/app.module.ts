@@ -25,7 +25,7 @@ import { CallCenterModule } from './call-center/call-center.module';
 import { VolunteerCalendarModule } from './volunteer-calendar/volunteer-calendar.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { MedicalAppointmentsModule } from './medical-appointments/medical-appointments.module';
-import { WebhooksModule } from './webhooks/webhooks.module';
+import { N8nModule } from './integrations/n8n/n8n.module';
 
 @Module({
   imports: [
@@ -68,7 +68,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     }),
     UsersModule,
     AuthModule,
-    WebhooksModule,
+    N8nModule,
     PatientsModule,
     AgentsModule,
     VolunteersModule,

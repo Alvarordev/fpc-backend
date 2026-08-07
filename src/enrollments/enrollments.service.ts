@@ -29,8 +29,8 @@ import { PatientsService } from '../patients/patients.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CreateEnrollmentDto } from './enrollments.dto';
 import { User } from '../database/entities/user.entity';
-import { N8nTransactionalDispatchService } from '../webhooks/transactional-dispatch.service';
-import { buildRegistroEnvelope } from '../webhooks/n8n-webhook.payloads';
+import { N8nTransactionalDispatchService } from '../integrations/n8n/transactional-dispatch.service';
+import { buildRegistroEnvelope } from '../integrations/n8n/n8n-webhook.payloads';
 
 @Injectable()
 export class EnrollmentsService {

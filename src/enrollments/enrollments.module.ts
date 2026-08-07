@@ -5,7 +5,7 @@ import { EnrollmentFamilyTalkInterest } from '../database/entities/enrollment-fa
 import { FollowUpsModule } from '../follow-ups/follow-ups.module';
 import { PatientsModule } from '../patients/patients.module';
 import { PatientSummariesModule } from '../patient-summaries/patient-summaries.module';
-import { WebhooksModule } from '../webhooks/webhooks.module';
+import { N8nModule } from '../integrations/n8n/n8n.module';
 import { EnrollmentsController } from './enrollments.controller';
 import { EnrollmentsService } from './enrollments.service';
 
@@ -15,7 +15,7 @@ import { EnrollmentsService } from './enrollments.service';
     PatientsModule,
     PatientSummariesModule,
     FollowUpsModule,
-    WebhooksModule,
+    N8nModule,
   ],
   controllers: [EnrollmentsController],
   providers: [EnrollmentsService],

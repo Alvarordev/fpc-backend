@@ -7,7 +7,7 @@ import { FollowUpsService } from '../follow-ups/follow-ups.service';
 import { HistoryVersioningService } from '../patients/history-versioning/history-versioning.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { PatientAccessService } from '../patient-access/patient-access.service';
-import { N8nTransactionalDispatchService } from '../webhooks/transactional-dispatch.service';
+import { N8nTransactionalDispatchService } from '../integrations/n8n/transactional-dispatch.service';
 import { User } from '../database/entities/user.entity';
 import { UserRole } from '../database/entities/user-role.enum';
 import {

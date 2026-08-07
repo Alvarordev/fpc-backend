@@ -38,12 +38,12 @@ import {
   resolvedEventDescription,
   statusChangedEventDescription,
 } from './alert-events.service';
-import { N8nTransactionalDispatchService } from '../webhooks/transactional-dispatch.service';
+import { N8nTransactionalDispatchService } from '../integrations/n8n/transactional-dispatch.service';
 import {
   buildAlertaDerivarEnvelope,
   buildAlertaEnvelope,
   buildAlertaResueltaEnvelope,
-} from '../webhooks/n8n-webhook.payloads';
+} from '../integrations/n8n/n8n-webhook.payloads';
 
 const NON_NULLABLE_UPDATE_FIELDS = [
   'title',

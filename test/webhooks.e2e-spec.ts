@@ -13,8 +13,8 @@ import { PatientRole } from '../src/database/entities/patient-role.enum';
 import { PatientStatus } from '../src/database/entities/patient-status.enum';
 import { UserRole } from '../src/database/entities/user-role.enum';
 import { UsersService } from '../src/users/users.service';
-import { N8nWebhookService } from '../src/webhooks/n8n-webhook.service';
-import { N8nWebhookEnvelope } from '../src/webhooks/n8n-webhook.events';
+import { N8nWebhookService } from '../src/integrations/n8n/n8n-webhook.service';
+import { N8nWebhookEnvelope } from '../src/integrations/n8n/n8n-webhook.events';
 import { AlertResponseDto } from '../src/alerts/alert-response.dto';
 
 describe('n8n webhook dispatch (e2e)', () => {

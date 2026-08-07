@@ -5,7 +5,7 @@ import { FollowUp } from '../database/entities/follow-up.entity';
 import { PatientSummary } from '../database/entities/patient-summary.entity';
 import { PatientSummariesModule } from '../patient-summaries/patient-summaries.module';
 import { PatientAccessModule } from '../patient-access/patient-access.module';
-import { WebhooksModule } from '../webhooks/webhooks.module';
+import { N8nModule } from '../integrations/n8n/n8n.module';
 import { PatientDiagnosesController } from './clinical/diagnoses/patient-diagnoses.controller';
 import { PatientDiagnosesService } from './clinical/diagnoses/patient-diagnoses.service';
 import { PatientInsuranceController } from './clinical/insurance/patient-insurance.controller';
@@ -50,7 +50,7 @@ import { PatientTimelineService } from './patient-timeline.service';
     ]),
     PatientSummariesModule,
     PatientAccessModule,
-    WebhooksModule,
+    N8nModule,
   ],
   controllers: [
     PatientsController,

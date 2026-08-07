@@ -11,4 +11,4 @@ import { N8nWebhookListener } from './n8n-webhook.listener';
   ],
   exports: [N8nWebhookService, N8nTransactionalDispatchService],
 })
-export class WebhooksModule {}
+export class N8nModule {}

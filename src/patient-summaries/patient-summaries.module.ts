@@ -11,7 +11,7 @@ import { PatientSisAffiliation } from '../database/entities/patient-sis-affiliat
 import { PatientSymptomReport } from '../database/entities/patient-symptom-report.entity';
 import { PatientTreatment } from '../database/entities/patient-treatment.entity';
 import { Patient } from '../database/entities/patient.entity';
-import { GeminiSummaryClient } from './gemini-summary.client';
+import { GeminiSummaryClient } from '../integrations/gemini/gemini-summary.client';
 import { PatientSummaryPayloadService } from './patient-summary-payload.service';
 import { PatientSummaryInvalidationListener } from './patient-summary-invalidation.listener';
 import { PatientSummaryInvalidationService } from './patient-summary-invalidation.service';

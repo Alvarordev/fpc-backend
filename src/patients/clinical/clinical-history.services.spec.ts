@@ -11,7 +11,7 @@ import { PatientMedicalAppointmentsService } from './medical-appointments/patien
 import { PatientTreatmentsService } from './treatments/patient-treatments.service';
 import { PatientsService } from '../patients.service';
 import { PatientSummaryInvalidationService } from '../../patient-summaries/patient-summary-invalidation.service';
-import { N8nTransactionalDispatchService } from '../../webhooks/transactional-dispatch.service';
+import { N8nTransactionalDispatchService } from '../../integrations/n8n/transactional-dispatch.service';
 
 describe('clinical history services', () => {
   const patients = {

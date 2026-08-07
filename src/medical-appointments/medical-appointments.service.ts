@@ -19,8 +19,8 @@ import {
   FindMedicalAppointmentsDto,
   UpdateMedicalAppointmentDto,
 } from './medical-appointments.dto';
-import { N8nTransactionalDispatchService } from '../webhooks/transactional-dispatch.service';
-import { buildCitaEnvelope } from '../webhooks/n8n-webhook.payloads';
+import { N8nTransactionalDispatchService } from '../integrations/n8n/transactional-dispatch.service';
+import { buildCitaEnvelope } from '../integrations/n8n/n8n-webhook.payloads';
 
 @Injectable()
 export class MedicalAppointmentsService {

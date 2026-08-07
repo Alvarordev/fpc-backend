@@ -9,8 +9,8 @@ import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
 import { CreatePatientMedicalAppointmentDto } from './patient-medical-appointments.dto';
 import { User } from '../../../database/entities/user.entity';
-import { N8nTransactionalDispatchService } from '../../../webhooks/transactional-dispatch.service';
-import { buildCitaEnvelope } from '../../../webhooks/n8n-webhook.payloads';
+import { N8nTransactionalDispatchService } from '../../../integrations/n8n/transactional-dispatch.service';
+import { buildCitaEnvelope } from '../../../integrations/n8n/n8n-webhook.payloads';
 @Injectable()
 export class PatientMedicalAppointmentsService {
   constructor(
