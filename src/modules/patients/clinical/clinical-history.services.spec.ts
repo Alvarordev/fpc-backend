@@ -2,7 +2,10 @@ import { ConflictException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { FollowUp } from '../../../database/entities/follow-up.entity';
 import { PatientDiagnosis } from '../../../database/entities/patient-diagnosis.entity';
-import { PatientInsurance } from '../../../database/entities/patient-insurance.entity';
+import {
+  InsuranceType,
+  PatientInsurance,
+} from '../../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../../database/entities/patient-medical-appointment.entity';
 import { PatientTreatment } from '../../../database/entities/patient-treatment.entity';
 import { HistoryVersioningService } from '../history-versioning/history-versioning.service';
@@ -54,7 +57,7 @@ describe('clinical history services', () => {
 
     await service.create('patient-id', {
       followUpId: 'followUp-id',
-      insuranceType: 'SIS',
+      insuranceType: InsuranceType.SIS,
     });
 
     expect(replaceCurrent).toHaveBeenCalledWith(

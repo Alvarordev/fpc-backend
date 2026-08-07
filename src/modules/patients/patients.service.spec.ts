@@ -1,6 +1,4 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
-import { PatientDetails } from '../../database/entities/patient-details.entity';
 import { PatientRole } from '../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../database/entities/patient-status.enum';
 import { Patient } from '../../database/entities/patient.entity';
@@ -17,10 +15,14 @@ describe('PatientsService.assertPatientRole', () => {
 
   beforeEach(() => {
     findOne = jest.fn();
-    service = new PatientsService(
-      { findOne } as unknown as Repository<Patient>,
-      {} as Repository<PatientDetails>,
-    );
+    // assertPatientRole only reads the patients repository. The other 14
+    // constructor dependencies are never reached, so they are stubbed
+    // wholesale rather than imported one by one just to be discarded.
+    const dependencies = [
+      { findOne },
+      ...Array.from({ length: 14 }, () => ({})),
+    ] as unknown as ConstructorParameters<typeof PatientsService>;
+    service = new PatientsService(...dependencies);
   });
 
   it('returns a patient with the expected role and status', async () => {

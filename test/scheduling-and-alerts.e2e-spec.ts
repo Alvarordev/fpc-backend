@@ -10,6 +10,11 @@ import { Agent } from '../src/database/entities/agent.entity';
 import { Alert } from '../src/database/entities/alert.entity';
 import { HealthCenter } from '../src/database/entities/health-center.entity';
 import { FollowUp } from '../src/database/entities/follow-up.entity';
+import {
+  FollowUpPurpose,
+  FollowUpStatus,
+  FollowUpType,
+} from '../src/database/entities/follow-up.enums';
 import { Patient } from '../src/database/entities/patient.entity';
 import { PsychooncologyAppointment } from '../src/database/entities/psychooncology-appointment.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
@@ -182,18 +187,21 @@ describe('Availability, psycho-oncology appointments, and alerts (e2e)', () => {
     expect(firstAppointment.sessionNumber).toBe(1);
     expect(firstAppointment.followUpId).toBeNull();
 
-    const followUp = await dataSource.getRepository(FollowUp).save({
-      subjectPatientId: patient.id,
-      interlocutorId: patient.id,
-      agentId: agent.id,
-      purpose: 'PSYCHOONCOLOGY_REFERRAL',
-      type: 'CALL',
-      status: 'SCHEDULED',
-      scheduledAt: null,
-      completedAt: null,
-      notes: null,
-      nextFollowUpId: null,
-    });
+    const followUps = dataSource.getRepository(FollowUp);
+    const followUp = await followUps.save(
+      followUps.create({
+        subjectPatientId: patient.id,
+        interlocutorId: patient.id,
+        agentId: agent.id,
+        purpose: FollowUpPurpose.PSYCHOONCOLOGY_REFERRAL,
+        type: FollowUpType.CALL,
+        status: FollowUpStatus.SCHEDULED,
+        scheduledAt: null,
+        completedAt: null,
+        notes: null,
+        nextFollowUpId: null,
+      }),
+    );
 
     await request(server)
       .patch(`/psychooncology-appointments/${firstAppointment.id}/cancel`)
