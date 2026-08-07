@@ -14,11 +14,9 @@ import { PatientSummaryInvalidationService } from '../../../patient-summaries/pa
 import { PatientAccessService } from '../../access/patient-access.service';
 import { FollowUpsService } from '../../../follow-ups/follow-ups.service';
 import { User } from '../../../../database/entities/user.entity';
-import {
-  CreateMedicalAppointmentDto,
-  FindMedicalAppointmentsDto,
-  UpdateMedicalAppointmentDto,
-} from './medical-appointments.dto';
+import { CreateMedicalAppointmentDto } from './dto/create-medical-appointment.dto';
+import { FindMedicalAppointmentsDto } from './dto/list-medical-appointments.dto';
+import { UpdateMedicalAppointmentDto } from './dto/update-medical-appointment.dto';
 import { N8nTransactionalDispatchService } from '../../../../integrations/n8n/transactional-dispatch.service';
 import { citaEnvelopeFor } from './cita-envelope';
 

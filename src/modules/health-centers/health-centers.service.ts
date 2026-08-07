@@ -2,10 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HealthCenter } from '../../database/entities/health-center.entity';
-import {
-  CreateHealthCenterDto,
-  UpdateHealthCenterDto,
-} from './health-centers.dto';
+import { CreateHealthCenterDto } from './dto/create-health-center.dto';
+import { UpdateHealthCenterDto } from './dto/update-health-center.dto';
 @Injectable()
 export class HealthCentersService {
   constructor(

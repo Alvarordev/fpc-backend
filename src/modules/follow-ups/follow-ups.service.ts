@@ -16,12 +16,10 @@ import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Patient } from '../../database/entities/patient.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
 import { ReminderStatus } from '../../database/entities/reminder-status.enum';
-import {
-  CreateFollowUpDto,
-  FindFollowUpsQueryDto,
-  UpdateFollowUpDto,
-} from './follow-ups.dto';
-import { CreateReminderDto } from '../reminders/reminders.dto';
+import { CreateFollowUpDto } from './dto/create-follow-up.dto';
+import { FindFollowUpsQueryDto } from './dto/list-follow-ups.dto';
+import { UpdateFollowUpDto } from './dto/update-follow-up.dto';
+import { CreateReminderDto } from '../reminders/dto/create-reminder.dto';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { PatientAccessService } from '../patients/access/patient-access.service';
 import { User } from '../../database/entities/user.entity';

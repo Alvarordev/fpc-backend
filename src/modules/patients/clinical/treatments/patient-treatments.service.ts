@@ -12,7 +12,7 @@ import { PatientTreatment } from '../../../../database/entities/patient-treatmen
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
-import { CreatePatientTreatmentDto } from './patient-treatments.dto';
+import { CreatePatientTreatmentDto } from './dto/create-patient-treatment.dto';
 import { User } from '../../../../database/entities/user.entity';
 @Injectable()
 export class PatientTreatmentsService {

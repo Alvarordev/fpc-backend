@@ -7,7 +7,7 @@ import { PatientRole } from '../../../../database/entities/patient-role.enum';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
-import { CreatePatientMedicalAppointmentDto } from './patient-medical-appointments.dto';
+import { CreatePatientMedicalAppointmentDto } from './dto/create-patient-medical-appointment.dto';
 import { User } from '../../../../database/entities/user.entity';
 import { N8nTransactionalDispatchService } from '../../../../integrations/n8n/transactional-dispatch.service';
 import { citaEnvelopeFor } from './cita-envelope';

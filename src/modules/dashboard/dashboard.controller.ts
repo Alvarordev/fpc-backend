@@ -10,7 +10,8 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { UserRole } from '../../database/entities/user-role.enum';
-import { DashboardQueryDto, DashboardResponseDto } from './dashboard.dto';
+import { DashboardQueryDto } from './dto/dashboard-query.dto';
+import { DashboardResponseDto } from './dto/dashboard-response.dto';
 import { DashboardService } from './dashboard.service';
 
 @Controller('dashboard')

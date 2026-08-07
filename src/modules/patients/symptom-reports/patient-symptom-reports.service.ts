@@ -7,7 +7,7 @@ import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { PatientSymptomReport } from '../../../database/entities/patient-symptom-report.entity';
 import { PatientsService } from '../patients.service';
 import { PatientSummaryInvalidationService } from '../../patient-summaries/patient-summary-invalidation.service';
-import { CreatePatientSymptomReportDto } from './patient-symptom-reports.dto';
+import { CreatePatientSymptomReportDto } from './dto/create-patient-symptom-report.dto';
 import { User } from '../../../database/entities/user.entity';
 
 @Injectable()

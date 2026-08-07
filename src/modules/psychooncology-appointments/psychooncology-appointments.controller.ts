@@ -27,12 +27,10 @@ import { UserRole } from '../../database/entities/user-role.enum';
 import { User } from '../../database/entities/user.entity';
 import { AppointmentStatus } from '../../database/entities/psychooncology-appointment.entity';
 import { PsychooncologyAppointment } from '../../database/entities/psychooncology-appointment.entity';
-import {
-  CreatePsychooncologyAppointmentDto,
-  FindPsychooncologyAppointmentsQueryDto,
-  UpdatePsychooncologyAppointmentDto,
-} from './psychooncology-appointments.dto';
-import { PsychooncologyAppointmentResponseDto } from './psychooncology-appointment-response.dto';
+import { CreatePsychooncologyAppointmentDto } from './dto/create-psychooncology-appointment.dto';
+import { FindPsychooncologyAppointmentsQueryDto } from './dto/list-psychooncology-appointments.dto';
+import { UpdatePsychooncologyAppointmentDto } from './dto/update-psychooncology-appointment.dto';
+import { PsychooncologyAppointmentResponseDto } from './dto/psychooncology-appointment-response.dto';
 import { PsychooncologyAppointmentsService } from './psychooncology-appointments.service';
 
 const READ = [

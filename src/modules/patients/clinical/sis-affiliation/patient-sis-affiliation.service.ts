@@ -6,7 +6,7 @@ import { PatientRole } from '../../../../database/entities/patient-role.enum';
 import { PatientSisAffiliation } from '../../../../database/entities/patient-sis-affiliation.entity';
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
-import { CreatePatientSisAffiliationDto } from './patient-sis-affiliation.dto';
+import { CreatePatientSisAffiliationDto } from './dto/create-patient-sis-affiliation.dto';
 import { User } from '../../../../database/entities/user.entity';
 @Injectable()
 export class PatientSisAffiliationService {

@@ -14,7 +14,7 @@ import { User } from '../../database/entities/user.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { PatientAccessService } from '../patients/access/patient-access.service';
 import { AlertEventsService } from './alert-events.service';
-import { CreateAlertDto } from './alerts.dto';
+import { CreateAlertDto } from './dto/create-alert.dto';
 import { N8nTransactionalDispatchService } from '../../integrations/n8n/transactional-dispatch.service';
 
 function patientRelationRepo() {

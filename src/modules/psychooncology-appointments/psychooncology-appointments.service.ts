@@ -21,11 +21,9 @@ import {
 } from '../../database/entities/volunteer-availability.entity';
 import { Volunteer } from '../../database/entities/volunteer.entity';
 import { PatientAccessService } from '../patients/access/patient-access.service';
-import {
-  CreatePsychooncologyAppointmentDto,
-  FindPsychooncologyAppointmentsQueryDto,
-  UpdatePsychooncologyAppointmentDto,
-} from './psychooncology-appointments.dto';
+import { CreatePsychooncologyAppointmentDto } from './dto/create-psychooncology-appointment.dto';
+import { FindPsychooncologyAppointmentsQueryDto } from './dto/list-psychooncology-appointments.dto';
+import { UpdatePsychooncologyAppointmentDto } from './dto/update-psychooncology-appointment.dto';
 
 @Injectable()
 export class PsychooncologyAppointmentsService {

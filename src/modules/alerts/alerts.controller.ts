@@ -33,17 +33,15 @@ import { UserRole } from '../../database/entities/user-role.enum';
 import { User } from '../../database/entities/user.entity';
 import { Alert } from '../../database/entities/alert.entity';
 import { AlertEvent } from '../../database/entities/alert-event.entity';
-import { AlertResponseDto } from './alert-response.dto';
+import { AlertResponseDto } from './dto/alert-response.dto';
 import {
   AlertEventResponseDto,
   AlertTicketLookupResponseDto,
-} from './alert-event-response.dto';
-import {
-  CreateAlertDto,
-  CreateAlertEventDto,
-  FindAlertsDto,
-  UpdateAlertDto,
-} from './alerts.dto';
+} from './dto/alert-event-response.dto';
+import { CreateAlertDto } from './dto/create-alert.dto';
+import { CreateAlertEventDto } from './dto/create-alert-event.dto';
+import { FindAlertsDto } from './dto/list-alerts.dto';
+import { UpdateAlertDto } from './dto/update-alert.dto';
 import { AlertsService } from './alerts.service';
 import { AlertSummaryService } from './alert-summary.service';
 

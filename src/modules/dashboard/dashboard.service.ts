@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { DashboardPeriod, DashboardQueryDto } from './dto/dashboard-query.dto';
 import {
   DashboardDistributionItemDto,
-  DashboardPeriod,
-  DashboardQueryDto,
   DashboardResponseDto,
   DashboardTableItemDto,
   DashboardTrendPointDto,
-} from './dashboard.dto';
+} from './dto/dashboard-response.dto';
 
 const TIMEZONE = 'America/Lima';
 const OTHER_LABEL = 'Otros';

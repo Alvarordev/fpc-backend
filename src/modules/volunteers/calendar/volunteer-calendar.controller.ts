@@ -10,10 +10,8 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from '../../../shared/decorators/roles.decorator';
 import { UserRole } from '../../../database/entities/user-role.enum';
-import {
-  VolunteerCalendarQueryDto,
-  VolunteerCalendarResponseDto,
-} from './volunteer-calendar.dto';
+import { VolunteerCalendarQueryDto } from './dto/volunteer-calendar-query.dto';
+import { VolunteerCalendarResponseDto } from './dto/volunteer-calendar-response.dto';
 import { VolunteerCalendarService } from './volunteer-calendar.service';
 
 @Controller('volunteer-calendar')

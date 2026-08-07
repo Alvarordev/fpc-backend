@@ -17,8 +17,8 @@ import { Roles } from '../../shared/decorators/roles.decorator';
 import { User } from '../../database/entities/user.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { Enrollment } from '../../database/entities/enrollment.entity';
-import { CreateEnrollmentDto } from './enrollments.dto';
-import { EnrollmentResponseDto } from './enrollment-response.dto';
+import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
+import { EnrollmentResponseDto } from './dto/enrollment-response.dto';
 import { EnrollmentsService } from './enrollments.service';
 
 const READ = [

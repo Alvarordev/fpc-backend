@@ -14,8 +14,8 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from '../../../../shared/decorators/roles.decorator';
 import { UserRole } from '../../../../database/entities/user-role.enum';
-import { CreatePatientTreatmentDto } from './patient-treatments.dto';
-import { PatientTreatmentResponseDto } from './patient-treatments-response.dto';
+import { CreatePatientTreatmentDto } from './dto/create-patient-treatment.dto';
+import { PatientTreatmentResponseDto } from './dto/patient-treatment-response.dto';
 import { PatientTreatmentsService } from './patient-treatments.service';
 import { CurrentUser } from '../../../../shared/decorators/current-user.decorator';
 import { User } from '../../../../database/entities/user.entity';

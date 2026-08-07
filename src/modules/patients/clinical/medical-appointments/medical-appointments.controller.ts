@@ -26,12 +26,10 @@ import { User } from '../../../../database/entities/user.entity';
 import {
   MedicalAppointmentListResponseDto,
   MedicalAppointmentResponseDto,
-} from './medical-appointments-response.dto';
-import {
-  CreateMedicalAppointmentDto,
-  FindMedicalAppointmentsDto,
-  UpdateMedicalAppointmentDto,
-} from './medical-appointments.dto';
+} from './dto/medical-appointment-response.dto';
+import { CreateMedicalAppointmentDto } from './dto/create-medical-appointment.dto';
+import { FindMedicalAppointmentsDto } from './dto/list-medical-appointments.dto';
+import { UpdateMedicalAppointmentDto } from './dto/update-medical-appointment.dto';
 import { MedicalAppointmentsService } from './medical-appointments.service';
 
 const READ = [

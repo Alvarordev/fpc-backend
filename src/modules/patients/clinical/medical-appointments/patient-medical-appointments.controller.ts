@@ -13,8 +13,8 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from '../../../../shared/decorators/roles.decorator';
 import { UserRole } from '../../../../database/entities/user-role.enum';
-import { CreatePatientMedicalAppointmentDto } from './patient-medical-appointments.dto';
-import { PatientMedicalAppointmentResponseDto } from './patient-medical-appointments-response.dto';
+import { CreatePatientMedicalAppointmentDto } from './dto/create-patient-medical-appointment.dto';
+import { PatientMedicalAppointmentResponseDto } from './dto/patient-medical-appointment-response.dto';
 import { PatientMedicalAppointmentsService } from './patient-medical-appointments.service';
 import { CurrentUser } from '../../../../shared/decorators/current-user.decorator';
 import { User } from '../../../../database/entities/user.entity';

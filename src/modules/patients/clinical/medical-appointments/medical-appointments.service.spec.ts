@@ -10,10 +10,8 @@ import { PatientAccessService } from '../../access/patient-access.service';
 import { N8nTransactionalDispatchService } from '../../../../integrations/n8n/transactional-dispatch.service';
 import { User } from '../../../../database/entities/user.entity';
 import { UserRole } from '../../../../database/entities/user-role.enum';
-import {
-  FindMedicalAppointmentsDto,
-  UpdateMedicalAppointmentDto,
-} from './medical-appointments.dto';
+import { FindMedicalAppointmentsDto } from './dto/list-medical-appointments.dto';
+import { UpdateMedicalAppointmentDto } from './dto/update-medical-appointment.dto';
 
 describe('MedicalAppointmentsService', () => {
   const adminUser = { id: 'user-1', role: UserRole.ADMIN } as User;

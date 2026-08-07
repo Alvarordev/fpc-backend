@@ -22,11 +22,9 @@ import {
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { HealthCenter } from '../../database/entities/health-center.entity';
-import {
-  CreateHealthCenterDto,
-  UpdateHealthCenterDto,
-} from './health-centers.dto';
-import { HealthCenterResponseDto } from './health-center-response.dto';
+import { CreateHealthCenterDto } from './dto/create-health-center.dto';
+import { UpdateHealthCenterDto } from './dto/update-health-center.dto';
+import { HealthCenterResponseDto } from './dto/health-center-response.dto';
 import { HealthCentersService } from './health-centers.service';
 const WRITE = [UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT];
 @Controller('health-centers')

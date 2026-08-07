@@ -7,7 +7,7 @@ import { PatientRole } from '../../../../database/entities/patient-role.enum';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
-import { CreatePatientDiagnosisDto } from './patient-diagnoses.dto';
+import { CreatePatientDiagnosisDto } from './dto/create-patient-diagnosis.dto';
 import { User } from '../../../../database/entities/user.entity';
 @Injectable()
 export class PatientDiagnosesService {

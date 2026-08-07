@@ -10,7 +10,7 @@ import { Volunteer } from '../../../database/entities/volunteer.entity';
 import {
   VolunteerCalendarResponseDto,
   VolunteerCalendarVolunteerDto,
-} from './volunteer-calendar.dto';
+} from './dto/volunteer-calendar-response.dto';
 
 @Injectable()
 export class VolunteerCalendarService {

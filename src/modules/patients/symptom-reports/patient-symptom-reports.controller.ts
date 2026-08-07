@@ -13,8 +13,8 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from '../../../shared/decorators/roles.decorator';
 import { UserRole } from '../../../database/entities/user-role.enum';
-import { CreatePatientSymptomReportDto } from './patient-symptom-reports.dto';
-import { PatientSymptomReportResponseDto } from './patient-symptom-reports-response.dto';
+import { CreatePatientSymptomReportDto } from './dto/create-patient-symptom-report.dto';
+import { PatientSymptomReportResponseDto } from './dto/patient-symptom-report-response.dto';
 import { PatientSymptomReportsService } from './patient-symptom-reports.service';
 import { CurrentUser } from '../../../shared/decorators/current-user.decorator';
 import { User } from '../../../database/entities/user.entity';

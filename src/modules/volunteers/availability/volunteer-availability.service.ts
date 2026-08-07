@@ -14,7 +14,7 @@ import {
   VolunteerAvailability,
 } from '../../../database/entities/volunteer-availability.entity';
 import { Volunteer } from '../../../database/entities/volunteer.entity';
-import { CreateVolunteerAvailabilityDto } from './volunteer-availability.dto';
+import { CreateVolunteerAvailabilityDto } from './dto/create-volunteer-availability.dto';
 
 @Injectable()
 export class VolunteerAvailabilityService {

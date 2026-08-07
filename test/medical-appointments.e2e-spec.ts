@@ -13,7 +13,7 @@ import { PatientRole } from '../src/database/entities/patient-role.enum';
 import { UserRole } from '../src/database/entities/user-role.enum';
 import { Volunteer } from '../src/database/entities/volunteer.entity';
 import { UsersService } from '../src/modules/users/users.service';
-import { MedicalAppointmentResponseDto } from '../src/modules/patients/clinical/medical-appointments/medical-appointments-response.dto';
+import { MedicalAppointmentResponseDto } from '../src/modules/patients/clinical/medical-appointments/dto/medical-appointment-response.dto';
 
 describe('Global medical appointments (e2e)', () => {
   const emailPrefix = 'medappt-%@example.test';

@@ -7,7 +7,7 @@ import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
 import { ReminderStatus } from '../../database/entities/reminder-status.enum';
 import { Patient } from '../../database/entities/patient.entity';
-import { CallCenterWorkloadResponseDto } from './call-center.dto';
+import { CallCenterWorkloadResponseDto } from './dto/call-center-response.dto';
 
 @Injectable()
 export class CallCenterService {

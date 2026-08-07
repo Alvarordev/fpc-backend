@@ -17,8 +17,8 @@ import { Roles } from '../../../shared/decorators/roles.decorator';
 import { UserRole } from '../../../database/entities/user-role.enum';
 import { User } from '../../../database/entities/user.entity';
 import { VolunteerAvailability } from '../../../database/entities/volunteer-availability.entity';
-import { CreateVolunteerAvailabilityDto } from './volunteer-availability.dto';
-import { VolunteerAvailabilityResponseDto } from './volunteer-availability-response.dto';
+import { CreateVolunteerAvailabilityDto } from './dto/create-volunteer-availability.dto';
+import { VolunteerAvailabilityResponseDto } from './dto/volunteer-availability-response.dto';
 import { VolunteerAvailabilityService } from './volunteer-availability.service';
 
 const ACCESS = [

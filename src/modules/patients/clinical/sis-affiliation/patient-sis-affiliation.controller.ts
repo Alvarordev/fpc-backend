@@ -13,8 +13,8 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from '../../../../shared/decorators/roles.decorator';
 import { UserRole } from '../../../../database/entities/user-role.enum';
-import { CreatePatientSisAffiliationDto } from './patient-sis-affiliation.dto';
-import { PatientSisAffiliationResponseDto } from './patient-sis-affiliation-response.dto';
+import { CreatePatientSisAffiliationDto } from './dto/create-patient-sis-affiliation.dto';
+import { PatientSisAffiliationResponseDto } from './dto/patient-sis-affiliation-response.dto';
 import { PatientSisAffiliationService } from './patient-sis-affiliation.service';
 import { CurrentUser } from '../../../../shared/decorators/current-user.decorator';
 import { User } from '../../../../database/entities/user.entity';

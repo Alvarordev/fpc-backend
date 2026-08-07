@@ -14,12 +14,10 @@ import { Patient } from '../../database/entities/patient.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { User } from '../../database/entities/user.entity';
 import { PatientAccessService } from '../patients/access/patient-access.service';
-import {
-  CreateReminderDto,
-  CompleteReminderDto,
-  ListRemindersDto,
-  UpdateReminderDto,
-} from './reminders.dto';
+import { CompleteReminderDto } from './dto/complete-reminder.dto';
+import { CreateReminderDto } from './dto/create-reminder.dto';
+import { ListRemindersDto } from './dto/list-reminders.dto';
+import { UpdateReminderDto } from './dto/update-reminder.dto';
 @Injectable()
 export class RemindersService {
   constructor(

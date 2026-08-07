@@ -25,14 +25,12 @@ import { Roles } from '../../shared/decorators/roles.decorator';
 import { User } from '../../database/entities/user.entity';
 import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
-import { CreateReminderDto } from '../reminders/reminders.dto';
-import { ReminderResponseDto } from '../reminders/reminder-response.dto';
-import {
-  CreateFollowUpDto,
-  FindFollowUpsQueryDto,
-  UpdateFollowUpDto,
-} from './follow-ups.dto';
-import { FollowUpResponseDto } from './follow-up-response.dto';
+import { CreateReminderDto } from '../reminders/dto/create-reminder.dto';
+import { ReminderResponseDto } from '../reminders/dto/reminder-response.dto';
+import { CreateFollowUpDto } from './dto/create-follow-up.dto';
+import { FindFollowUpsQueryDto } from './dto/list-follow-ups.dto';
+import { UpdateFollowUpDto } from './dto/update-follow-up.dto';
+import { FollowUpResponseDto } from './dto/follow-up-response.dto';
 import { FollowUpsService } from './follow-ups.service';
 import { UserRole } from '../../database/entities/user-role.enum';
 const READ = [

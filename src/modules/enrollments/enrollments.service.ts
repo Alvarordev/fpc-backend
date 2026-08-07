@@ -27,7 +27,7 @@ import { PatientTreatmentsService } from '../patients/clinical/treatments/patien
 import { PatientSymptomReportsService } from '../patients/symptom-reports/patient-symptom-reports.service';
 import { PatientsService } from '../patients/patients.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
-import { CreateEnrollmentDto } from './enrollments.dto';
+import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { User } from '../../database/entities/user.entity';
 import { N8nTransactionalDispatchService } from '../../integrations/n8n/transactional-dispatch.service';
 import { buildRegistroEnvelope } from '../../integrations/n8n/n8n-webhook.payloads';

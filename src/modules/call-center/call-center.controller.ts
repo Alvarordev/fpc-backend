@@ -9,7 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { UserRole } from '../../database/entities/user-role.enum';
-import { CallCenterWorkloadResponseDto } from './call-center.dto';
+import { CallCenterWorkloadResponseDto } from './dto/call-center-response.dto';
 import { CallCenterService } from './call-center.service';
 
 @Controller('call-center')

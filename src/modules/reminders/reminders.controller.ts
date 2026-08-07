@@ -23,13 +23,11 @@ import { Roles } from '../../shared/decorators/roles.decorator';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { User } from '../../database/entities/user.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
-import {
-  CreateReminderDto,
-  CompleteReminderDto,
-  ListRemindersDto,
-  UpdateReminderDto,
-} from './reminders.dto';
-import { ReminderResponseDto } from './reminder-response.dto';
+import { CompleteReminderDto } from './dto/complete-reminder.dto';
+import { CreateReminderDto } from './dto/create-reminder.dto';
+import { ListRemindersDto } from './dto/list-reminders.dto';
+import { UpdateReminderDto } from './dto/update-reminder.dto';
+import { ReminderResponseDto } from './dto/reminder-response.dto';
 import { RemindersService } from './reminders.service';
 import { UserRole } from '../../database/entities/user-role.enum';
 const READ = [

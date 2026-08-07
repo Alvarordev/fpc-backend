@@ -7,7 +7,7 @@ import { PatientInsurance } from '../../../../database/entities/patient-insuranc
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
-import { CreatePatientInsuranceDto } from './patient-insurance.dto';
+import { CreatePatientInsuranceDto } from './dto/create-patient-insurance.dto';
 import { User } from '../../../../database/entities/user.entity';
 
 @Injectable()
