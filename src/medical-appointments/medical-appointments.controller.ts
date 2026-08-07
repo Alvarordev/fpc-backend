@@ -19,8 +19,8 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../shared/decorators/current-user.decorator';
+import { Roles } from '../shared/decorators/roles.decorator';
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
 import {

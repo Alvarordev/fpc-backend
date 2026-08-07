@@ -20,8 +20,8 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../shared/decorators/current-user.decorator';
+import { Roles } from '../shared/decorators/roles.decorator';
 import { User } from '../database/entities/user.entity';
 import { FollowUp } from '../database/entities/follow-up.entity';
 import { Reminder } from '../database/entities/reminder.entity';

@@ -26,9 +26,9 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Public } from '../auth/decorators/public.decorator';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../shared/decorators/current-user.decorator';
+import { Public } from '../shared/decorators/public.decorator';
+import { Roles } from '../shared/decorators/roles.decorator';
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
 import { Alert } from '../database/entities/alert.entity';

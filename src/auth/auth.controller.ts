@@ -19,8 +19,8 @@ import {
 } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
-import { CurrentUser } from './decorators/current-user.decorator';
-import { Public } from './decorators/public.decorator';
+import { CurrentUser } from '../shared/decorators/current-user.decorator';
+import { Public } from '../shared/decorators/public.decorator';
 import { AuthService } from './auth.service';
 import type { AuthenticatedUser } from './auth.service';
 import { LoginDto } from './dto/login.dto';

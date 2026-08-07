@@ -11,12 +11,12 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Roles } from '../../auth/decorators/roles.decorator';
+import { Roles } from '../../shared/decorators/roles.decorator';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CreatePatientSymptomReportDto } from './patient-symptom-reports.dto';
 import { PatientSymptomReportResponseDto } from './patient-symptom-reports-response.dto';
 import { PatientSymptomReportsService } from './patient-symptom-reports.service';
-import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { User } from '../../database/entities/user.entity';
 
 const READ = [

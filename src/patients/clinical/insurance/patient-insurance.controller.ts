@@ -11,12 +11,12 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Roles } from '../../../auth/decorators/roles.decorator';
+import { Roles } from '../../../shared/decorators/roles.decorator';
 import { UserRole } from '../../../database/entities/user-role.enum';
 import { CreatePatientInsuranceDto } from './patient-insurance.dto';
 import { PatientInsuranceResponseDto } from './patient-insurance-response.dto';
 import { PatientInsuranceService } from './patient-insurance.service';
-import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
+import { CurrentUser } from '../../../shared/decorators/current-user.decorator';
 import { User } from '../../../database/entities/user.entity';
 const READ = [
   UserRole.ADMIN,

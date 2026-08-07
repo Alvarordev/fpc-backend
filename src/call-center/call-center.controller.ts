@@ -7,7 +7,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles } from '../shared/decorators/roles.decorator';
 import { UserRole } from '../database/entities/user-role.enum';
 import { CallCenterWorkloadResponseDto } from './call-center.dto';
 import { CallCenterService } from './call-center.service';

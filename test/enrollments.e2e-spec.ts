@@ -357,12 +357,12 @@ describe('Enrollment wizard (e2e)', () => {
     // Scoped to this agent, like the assertions above: the database also holds
     // the demo dataset (`npm run seed:demo`) and rows from the other suites.
     const countForAgent = async (table: string): Promise<number> => {
-      const [{ count }] = (await dataSource.query(
+      const [{ count }] = await dataSource.query(
         `SELECT COUNT(*)::int AS count FROM "${table}" t
            JOIN follow_ups f ON f.id = t.follow_up_id
           WHERE f.agent_id = $1`,
         [agent.id],
-      )) as { count: number }[];
+      );
       return count;
     };
 
