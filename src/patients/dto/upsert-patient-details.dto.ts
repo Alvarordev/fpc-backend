@@ -7,7 +7,7 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { EducationLevel } from '../entities/education-level.enum';
+import { EducationLevel } from '../../database/entities/education-level.enum';
 
 export class UpsertPatientDetailsDto {
   @ApiPropertyOptional()

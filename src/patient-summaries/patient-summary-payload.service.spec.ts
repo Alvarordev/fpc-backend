@@ -1,13 +1,13 @@
 import { Repository } from 'typeorm';
 import { Enrollment } from '../database/entities/enrollment.entity';
 import { FollowUp } from '../database/entities/follow-up.entity';
-import { PatientDiagnosis } from '../patients/entities/patient-diagnosis.entity';
-import { PatientInsurance } from '../patients/entities/patient-insurance.entity';
-import { PatientMedicalAppointment } from '../patients/entities/patient-medical-appointment.entity';
-import { PatientSisAffiliation } from '../patients/entities/patient-sis-affiliation.entity';
-import { PatientSymptomReport } from '../patients/entities/patient-symptom-report.entity';
-import { PatientTreatment } from '../patients/entities/patient-treatment.entity';
-import { Patient } from '../patients/entities/patient.entity';
+import { PatientDiagnosis } from '../database/entities/patient-diagnosis.entity';
+import { PatientInsurance } from '../database/entities/patient-insurance.entity';
+import { PatientMedicalAppointment } from '../database/entities/patient-medical-appointment.entity';
+import { PatientSisAffiliation } from '../database/entities/patient-sis-affiliation.entity';
+import { PatientSymptomReport } from '../database/entities/patient-symptom-report.entity';
+import { PatientTreatment } from '../database/entities/patient-treatment.entity';
+import { Patient } from '../database/entities/patient.entity';
 import { PatientSummaryPayloadService } from './patient-summary-payload.service';
 
 describe('PatientSummaryPayloadService', () => {

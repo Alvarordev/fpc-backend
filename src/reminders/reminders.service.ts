@@ -10,7 +10,7 @@ import { ReminderStatus } from '../database/entities/reminder-status.enum';
 import { Reminder } from '../database/entities/reminder.entity';
 import { Agent } from '../database/entities/agent.entity';
 import { FollowUp } from '../database/entities/follow-up.entity';
-import { Patient } from '../patients/entities/patient.entity';
+import { Patient } from '../database/entities/patient.entity';
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
 import { PatientAccessService } from '../patient-access/patient-access.service';

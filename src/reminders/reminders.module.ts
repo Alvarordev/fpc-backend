@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Reminder } from '../database/entities/reminder.entity';
 import { Agent } from '../database/entities/agent.entity';
 import { FollowUp } from '../database/entities/follow-up.entity';
-import { Patient } from '../patients/entities/patient.entity';
+import { Patient } from '../database/entities/patient.entity';
 import { RemindersController } from './reminders.controller';
 import { RemindersService } from './reminders.service';
 import { PatientAccessModule } from '../patient-access/patient-access.module';

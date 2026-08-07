@@ -1,10 +1,10 @@
 import { ConflictException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { FollowUp } from '../../database/entities/follow-up.entity';
-import { PatientDiagnosis } from '../entities/patient-diagnosis.entity';
-import { PatientInsurance } from '../entities/patient-insurance.entity';
-import { PatientMedicalAppointment } from '../entities/patient-medical-appointment.entity';
-import { PatientTreatment } from '../entities/patient-treatment.entity';
+import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
+import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
+import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
+import { PatientTreatment } from '../../database/entities/patient-treatment.entity';
 import { HistoryVersioningService } from '../history-versioning/history-versioning.service';
 import { PatientInsuranceService } from './insurance/patient-insurance.service';
 import { PatientMedicalAppointmentsService } from './medical-appointments/patient-medical-appointments.service';

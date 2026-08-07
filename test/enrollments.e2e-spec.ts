@@ -14,15 +14,15 @@ import {
   FollowUpStatus,
   FollowUpType,
 } from '../src/database/entities/follow-up.enums';
-import { CompanionPatient } from '../src/patients/entities/companion-patient.entity';
-import { PatientDiagnosis } from '../src/patients/entities/patient-diagnosis.entity';
-import { PatientInsurance } from '../src/patients/entities/patient-insurance.entity';
-import { PatientRole } from '../src/patients/entities/patient-role.enum';
-import { PatientSisAffiliation } from '../src/patients/entities/patient-sis-affiliation.entity';
-import { PatientStatus } from '../src/patients/entities/patient-status.enum';
-import { PatientSymptomReport } from '../src/patients/entities/patient-symptom-report.entity';
-import { PatientTreatment } from '../src/patients/entities/patient-treatment.entity';
-import { Patient } from '../src/patients/entities/patient.entity';
+import { CompanionPatient } from '../src/database/entities/companion-patient.entity';
+import { PatientDiagnosis } from '../src/database/entities/patient-diagnosis.entity';
+import { PatientInsurance } from '../src/database/entities/patient-insurance.entity';
+import { PatientRole } from '../src/database/entities/patient-role.enum';
+import { PatientSisAffiliation } from '../src/database/entities/patient-sis-affiliation.entity';
+import { PatientStatus } from '../src/database/entities/patient-status.enum';
+import { PatientSymptomReport } from '../src/database/entities/patient-symptom-report.entity';
+import { PatientTreatment } from '../src/database/entities/patient-treatment.entity';
+import { Patient } from '../src/database/entities/patient.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
 import { UsersService } from '../src/users/users.service';
 

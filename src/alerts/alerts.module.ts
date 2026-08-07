@@ -6,7 +6,7 @@ import { Alert } from '../database/entities/alert.entity';
 import { AlertEvent } from '../database/entities/alert-event.entity';
 import { HealthCenter } from '../database/entities/health-center.entity';
 import { FollowUp } from '../database/entities/follow-up.entity';
-import { Patient } from '../patients/entities/patient.entity';
+import { Patient } from '../database/entities/patient.entity';
 import { AlertsController } from './alerts.controller';
 import { AlertsService } from './alerts.service';
 import { AlertEventsService } from './alert-events.service';

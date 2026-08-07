@@ -8,7 +8,7 @@ import {
 import {
   EpsProvider,
   InsuranceType,
-} from '../../entities/patient-insurance.entity';
+} from '../../../database/entities/patient-insurance.entity';
 
 export class CreatePatientInsuranceDto {
   @IsUUID() followUpId!: string;

@@ -7,7 +7,7 @@ import {
   ManyToOne,
   PrimaryColumn,
 } from 'typeorm';
-import { FollowUp } from '../../database/entities/follow-up.entity';
+import { FollowUp } from './follow-up.entity';
 import { Patient } from './patient.entity';
 
 @Entity('patient_sis_affiliation')

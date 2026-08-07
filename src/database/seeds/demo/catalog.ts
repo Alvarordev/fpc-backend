@@ -1,5 +1,5 @@
-import { EducationLevel } from '../../../patients/entities/education-level.enum';
-import { CancerStage } from '../../../patients/entities/patient-diagnosis.entity';
+import { EducationLevel } from '../../entities/education-level.enum';
+import { CancerStage } from '../../entities/patient-diagnosis.entity';
 import type { PeruDepartment } from '../../entities/health-center.entity';
 
 /**

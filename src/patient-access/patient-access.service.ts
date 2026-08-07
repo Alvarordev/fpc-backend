@@ -10,7 +10,7 @@ import { PsychooncologyAppointment } from '../database/entities/psychooncology-a
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
 import { Volunteer } from '../database/entities/volunteer.entity';
-import { Patient } from '../patients/entities/patient.entity';
+import { Patient } from '../database/entities/patient.entity';
 
 @Injectable()
 export class PatientAccessService {

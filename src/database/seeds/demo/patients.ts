@@ -1,9 +1,9 @@
-import { CompanionPatient } from '../../../patients/entities/companion-patient.entity';
-import { DeactivationReason } from '../../../patients/entities/deactivation-reason.enum';
-import { PatientDetails } from '../../../patients/entities/patient-details.entity';
-import { PatientRole } from '../../../patients/entities/patient-role.enum';
-import { PatientStatus } from '../../../patients/entities/patient-status.enum';
-import { Patient } from '../../../patients/entities/patient.entity';
+import { CompanionPatient } from '../../entities/companion-patient.entity';
+import { DeactivationReason } from '../../entities/deactivation-reason.enum';
+import { PatientDetails } from '../../entities/patient-details.entity';
+import { PatientRole } from '../../entities/patient-role.enum';
+import { PatientStatus } from '../../entities/patient-status.enum';
+import { Patient } from '../../entities/patient.entity';
 import type { HealthCenter } from '../../entities/health-center.entity';
 import {
   DISTRICTS,

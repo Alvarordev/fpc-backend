@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CancerStage } from '../../entities/patient-diagnosis.entity';
-import { PatientTreatment } from '../../entities/patient-treatment.entity';
+import { CancerStage } from '../../../database/entities/patient-diagnosis.entity';
+import { PatientTreatment } from '../../../database/entities/patient-treatment.entity';
 
 export class PatientDiagnosisSummaryDto {
   @ApiProperty({ format: 'uuid' })

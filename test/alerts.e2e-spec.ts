@@ -11,7 +11,7 @@ import { AlertEventResponseDto } from '../src/alerts/alert-event-response.dto';
 import { AlertEventType } from '../src/database/entities/alert-event.entity';
 import { AlertResponseDto } from '../src/alerts/alert-response.dto';
 import { HealthCenter } from '../src/database/entities/health-center.entity';
-import { Patient } from '../src/patients/entities/patient.entity';
+import { Patient } from '../src/database/entities/patient.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
 import { Volunteer } from '../src/database/entities/volunteer.entity';
 import { UsersService } from '../src/users/users.service';

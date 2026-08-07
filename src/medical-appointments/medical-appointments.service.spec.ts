@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import { MedicalAppointmentsService } from './medical-appointments.service';
-import { PatientMedicalAppointment } from '../patients/entities/patient-medical-appointment.entity';
+import { PatientMedicalAppointment } from '../database/entities/patient-medical-appointment.entity';
 import { Agent } from '../database/entities/agent.entity';
 import { PatientsService } from '../patients/patients.service';
 import { FollowUpsService } from '../follow-ups/follow-ups.service';

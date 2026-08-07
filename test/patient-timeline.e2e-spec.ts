@@ -26,7 +26,7 @@ import {
   VolunteerAvailability,
 } from '../src/database/entities/volunteer-availability.entity';
 import { Volunteer } from '../src/database/entities/volunteer.entity';
-import { Patient } from '../src/patients/entities/patient.entity';
+import { Patient } from '../src/database/entities/patient.entity';
 import { UsersService } from '../src/users/users.service';
 
 describe('Patient timeline (e2e)', () => {

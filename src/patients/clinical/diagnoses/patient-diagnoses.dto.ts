@@ -6,7 +6,7 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator';
-import { CancerStage } from '../../entities/patient-diagnosis.entity';
+import { CancerStage } from '../../../database/entities/patient-diagnosis.entity';
 export class CreatePatientDiagnosisDto {
   @IsUUID() followUpId!: string;
   @IsString() diagnosis!: string;

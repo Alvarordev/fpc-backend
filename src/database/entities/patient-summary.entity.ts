@@ -9,7 +9,7 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Patient } from '../../patients/entities/patient.entity';
+import { Patient } from './patient.entity';
 
 export enum PatientSummaryStatus {
   PENDING = 'PENDING',

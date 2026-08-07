@@ -5,7 +5,7 @@ import {
   PatientSummary,
   PatientSummaryStatus,
 } from '../database/entities/patient-summary.entity';
-import { Patient } from '../patients/entities/patient.entity';
+import { Patient } from '../database/entities/patient.entity';
 import { GeminiSummaryClient } from './gemini-summary.client';
 import { normalizePatientSummaryError } from './patient-summary-error';
 import { PatientSummaryPayloadService } from './patient-summary-payload.service';

@@ -13,7 +13,7 @@ import {
   FollowUpType,
 } from '../database/entities/follow-up.enums';
 import { FollowUp } from '../database/entities/follow-up.entity';
-import { Patient } from '../patients/entities/patient.entity';
+import { Patient } from '../database/entities/patient.entity';
 import { Reminder } from '../database/entities/reminder.entity';
 import { ReminderStatus } from '../database/entities/reminder-status.enum';
 import {

@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   CancerStage,
   PatientDiagnosis,
-} from '../../entities/patient-diagnosis.entity';
+} from '../../../database/entities/patient-diagnosis.entity';
 
 export class PatientDiagnosisResponseDto {
   @ApiProperty({ format: 'uuid' })

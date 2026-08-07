@@ -12,7 +12,7 @@ import {
   PsychooncologyAppointment,
 } from '../database/entities/psychooncology-appointment.entity';
 import { FollowUp } from '../database/entities/follow-up.entity';
-import { Patient } from '../patients/entities/patient.entity';
+import { Patient } from '../database/entities/patient.entity';
 import { UserRole } from '../database/entities/user-role.enum';
 import { User } from '../database/entities/user.entity';
 import {

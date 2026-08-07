@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { Agent } from './agent.entity';
 import { FollowUp } from './follow-up.entity';
-import { Patient } from '../../patients/entities/patient.entity';
+import { Patient } from './patient.entity';
 import { ReminderStatus } from './reminder-status.enum';
 @Entity('reminders')
 @Check(`"status" IN ('PENDING','DONE','DISMISSED')`)

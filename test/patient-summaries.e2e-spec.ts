@@ -18,9 +18,9 @@ import {
   PatientDataChangedEvent,
 } from '../src/patient-summaries/patient-data-changed.event';
 import { PatientSummaryRateLimiterService } from '../src/patient-summaries/patient-summary-rate-limiter.service';
-import { PatientRole } from '../src/patients/entities/patient-role.enum';
-import { PatientStatus } from '../src/patients/entities/patient-status.enum';
-import { Patient } from '../src/patients/entities/patient.entity';
+import { PatientRole } from '../src/database/entities/patient-role.enum';
+import { PatientStatus } from '../src/database/entities/patient-status.enum';
+import { Patient } from '../src/database/entities/patient.entity';
 import { Agent } from '../src/database/entities/agent.entity';
 import { PatientsService } from '../src/patients/patients.service';
 import { UsersService } from '../src/users/users.service';

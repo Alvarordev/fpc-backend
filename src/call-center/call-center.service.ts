@@ -6,7 +6,7 @@ import { FollowUpStatus } from '../database/entities/follow-up.enums';
 import { FollowUp } from '../database/entities/follow-up.entity';
 import { Reminder } from '../database/entities/reminder.entity';
 import { ReminderStatus } from '../database/entities/reminder-status.enum';
-import { Patient } from '../patients/entities/patient.entity';
+import { Patient } from '../database/entities/patient.entity';
 import { CallCenterWorkloadResponseDto } from './call-center.dto';
 
 @Injectable()

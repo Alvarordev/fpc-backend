@@ -1,14 +1,14 @@
 import type { Enrollment } from '../../entities/enrollment.entity';
-import { PatientDiagnosis } from '../../../patients/entities/patient-diagnosis.entity';
+import { PatientDiagnosis } from '../../entities/patient-diagnosis.entity';
 import {
   EpsProvider,
   InsuranceType,
   PatientInsurance,
-} from '../../../patients/entities/patient-insurance.entity';
-import { PatientMedicalAppointment } from '../../../patients/entities/patient-medical-appointment.entity';
-import { PatientSisAffiliation } from '../../../patients/entities/patient-sis-affiliation.entity';
-import { PatientSymptomReport } from '../../../patients/entities/patient-symptom-report.entity';
-import { PatientTreatment } from '../../../patients/entities/patient-treatment.entity';
+} from '../../entities/patient-insurance.entity';
+import { PatientMedicalAppointment } from '../../entities/patient-medical-appointment.entity';
+import { PatientSisAffiliation } from '../../entities/patient-sis-affiliation.entity';
+import { PatientSymptomReport } from '../../entities/patient-symptom-report.entity';
+import { PatientTreatment } from '../../entities/patient-treatment.entity';
 import type { FollowUp } from '../../entities/follow-up.entity';
 import {
   CANCER_STAGES,

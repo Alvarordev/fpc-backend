@@ -1,25 +1,25 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PatientSummaryStatus } from '../../database/entities/patient-summary.entity';
 import { FollowUp } from '../../database/entities/follow-up.entity';
-import { PatientDiagnosis } from '../entities/patient-diagnosis.entity';
-import { PatientInsurance } from '../entities/patient-insurance.entity';
-import { PatientMedicalAppointment } from '../entities/patient-medical-appointment.entity';
-import { PatientSisAffiliation } from '../entities/patient-sis-affiliation.entity';
-import { PatientSymptomReport } from '../entities/patient-symptom-report.entity';
-import { PatientTreatment } from '../entities/patient-treatment.entity';
+import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
+import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
+import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
+import { PatientSisAffiliation } from '../../database/entities/patient-sis-affiliation.entity';
+import { PatientSymptomReport } from '../../database/entities/patient-symptom-report.entity';
+import { PatientTreatment } from '../../database/entities/patient-treatment.entity';
 import { PatientDiagnosisResponseDto } from '../clinical/diagnoses/patient-diagnoses-response.dto';
 import { PatientInsuranceResponseDto } from '../clinical/insurance/patient-insurance-response.dto';
 import { PatientMedicalAppointmentResponseDto } from '../clinical/medical-appointments/patient-medical-appointments-response.dto';
 import { PatientSisAffiliationResponseDto } from '../clinical/sis-affiliation/patient-sis-affiliation-response.dto';
 import { PatientTreatmentResponseDto } from '../clinical/treatments/patient-treatments-response.dto';
 import { PatientSymptomReportResponseDto } from '../symptom-reports/patient-symptom-reports-response.dto';
-import { CompanionPatient } from '../entities/companion-patient.entity';
-import { DeactivationReason } from '../entities/deactivation-reason.enum';
-import { EducationLevel } from '../entities/education-level.enum';
-import { PatientDetails } from '../entities/patient-details.entity';
-import { PatientRole } from '../entities/patient-role.enum';
-import { PatientStatus } from '../entities/patient-status.enum';
-import { Patient } from '../entities/patient.entity';
+import { CompanionPatient } from '../../database/entities/companion-patient.entity';
+import { DeactivationReason } from '../../database/entities/deactivation-reason.enum';
+import { EducationLevel } from '../../database/entities/education-level.enum';
+import { PatientDetails } from '../../database/entities/patient-details.entity';
+import { PatientRole } from '../../database/entities/patient-role.enum';
+import { PatientStatus } from '../../database/entities/patient-status.enum';
+import { Patient } from '../../database/entities/patient.entity';
 
 export class PatientDetailsResponseDto {
   @ApiProperty({ format: 'uuid' })

@@ -10,7 +10,7 @@ import { Agent } from '../src/database/entities/agent.entity';
 import { Alert } from '../src/database/entities/alert.entity';
 import { HealthCenter } from '../src/database/entities/health-center.entity';
 import { FollowUp } from '../src/database/entities/follow-up.entity';
-import { Patient } from '../src/patients/entities/patient.entity';
+import { Patient } from '../src/database/entities/patient.entity';
 import { PsychooncologyAppointment } from '../src/database/entities/psychooncology-appointment.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
 import {

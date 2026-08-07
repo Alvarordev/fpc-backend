@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PatientSisAffiliation } from '../../entities/patient-sis-affiliation.entity';
+import { PatientSisAffiliation } from '../../../database/entities/patient-sis-affiliation.entity';
 
 export class PatientSisAffiliationResponseDto {
   @ApiProperty({ format: 'uuid' })

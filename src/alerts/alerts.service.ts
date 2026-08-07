@@ -23,7 +23,7 @@ import {
 } from '../database/entities/follow-up.enums';
 import { FollowUp } from '../database/entities/follow-up.entity';
 import { UserRole } from '../database/entities/user-role.enum';
-import { Patient } from '../patients/entities/patient.entity';
+import { Patient } from '../database/entities/patient.entity';
 import { User } from '../database/entities/user.entity';
 import { CreateAlertDto, FindAlertsDto, UpdateAlertDto } from './alerts.dto';
 import { PatientAccessService } from '../patient-access/patient-access.service';

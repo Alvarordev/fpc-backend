@@ -16,7 +16,7 @@ import {
   FollowUpStatus,
   FollowUpType,
 } from './follow-up.enums';
-import { Patient } from '../../patients/entities/patient.entity';
+import { Patient } from './patient.entity';
 
 @Entity('follow_ups')
 @Check(

@@ -6,9 +6,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { FollowUp } from '../../../database/entities/follow-up.entity';
-import { PatientDiagnosis } from '../../entities/patient-diagnosis.entity';
-import { PatientRole } from '../../entities/patient-role.enum';
-import { PatientTreatment } from '../../entities/patient-treatment.entity';
+import { PatientDiagnosis } from '../../../database/entities/patient-diagnosis.entity';
+import { PatientRole } from '../../../database/entities/patient-role.enum';
+import { PatientTreatment } from '../../../database/entities/patient-treatment.entity';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';

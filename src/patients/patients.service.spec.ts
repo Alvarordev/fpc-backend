@@ -1,9 +1,9 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { PatientDetails } from './entities/patient-details.entity';
-import { PatientRole } from './entities/patient-role.enum';
-import { PatientStatus } from './entities/patient-status.enum';
-import { Patient } from './entities/patient.entity';
+import { PatientDetails } from '../database/entities/patient-details.entity';
+import { PatientRole } from '../database/entities/patient-role.enum';
+import { PatientStatus } from '../database/entities/patient-status.enum';
+import { Patient } from '../database/entities/patient.entity';
 import { PatientsService } from './patients.service';
 
 describe('PatientsService.assertPatientRole', () => {

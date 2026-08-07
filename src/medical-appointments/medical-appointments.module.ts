@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Agent } from '../database/entities/agent.entity';
-import { PatientMedicalAppointment } from '../patients/entities/patient-medical-appointment.entity';
+import { PatientMedicalAppointment } from '../database/entities/patient-medical-appointment.entity';
 import { PatientsModule } from '../patients/patients.module';
 import { FollowUpsModule } from '../follow-ups/follow-ups.module';
 import { PatientSummariesModule } from '../patient-summaries/patient-summaries.module';

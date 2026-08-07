@@ -3,7 +3,7 @@ import {
   EpsProvider,
   InsuranceType,
   PatientInsurance,
-} from '../../entities/patient-insurance.entity';
+} from '../../../database/entities/patient-insurance.entity';
 
 export class PatientInsuranceResponseDto {
   @ApiProperty({ format: 'uuid' })

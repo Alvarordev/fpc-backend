@@ -7,8 +7,8 @@ import {
   ManyToOne,
   PrimaryColumn,
 } from 'typeorm';
-import { HealthCenter } from '../../database/entities/health-center.entity';
-import { FollowUp } from '../../database/entities/follow-up.entity';
+import { HealthCenter } from './health-center.entity';
+import { FollowUp } from './follow-up.entity';
 import { Patient } from './patient.entity';
 
 @Entity('patient_medical_appointments')
