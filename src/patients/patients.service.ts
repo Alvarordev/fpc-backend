@@ -190,6 +190,7 @@ export class PatientsService {
         companionId: input.existingCompanionId,
         patientId,
         isPrimaryInformant: input.isPrimaryInformant ?? false,
+        relationship: input.relationship ?? null,
       }),
     );
   }
@@ -442,10 +443,11 @@ export class PatientsService {
     input: CreateCompanionDto,
     manager: EntityManager,
   ): Promise<Patient> {
+    const { isPrimaryInformant, relationship, ...patientFields } = input;
     const patients = manager.getRepository(Patient);
     const companion = await patients.save(
       patients.create({
-        ...input,
+        ...patientFields,
         role: PatientRole.COMPANION,
         status: PatientStatus.UNENROLLED,
       }),
@@ -455,7 +457,8 @@ export class PatientsService {
       links.create({
         companionId: companion.id,
         patientId,
-        isPrimaryInformant: input.isPrimaryInformant ?? false,
+        isPrimaryInformant: isPrimaryInformant ?? false,
+        relationship: relationship ?? null,
       }),
     );
     return companion;

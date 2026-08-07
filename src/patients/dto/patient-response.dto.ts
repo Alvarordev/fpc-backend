@@ -412,6 +412,9 @@ export class CompanionPatientResponseDto {
   isPrimaryInformant!: boolean;
 
   @ApiProperty({ nullable: true })
+  relationship!: string | null;
+
+  @ApiProperty({ nullable: true })
   companionDisplayName!: string | null;
 
   @ApiProperty({ format: 'date-time' })
@@ -429,6 +432,7 @@ export class CompanionPatientResponseDto {
       companionId: link.companionId,
       patientId: link.patientId,
       isPrimaryInformant: link.isPrimaryInformant,
+      relationship: link.relationship ?? null,
       companionDisplayName: link.companion?.fullName ?? null,
       createdAt: link.createdAt.toISOString(),
       ...(link.companion

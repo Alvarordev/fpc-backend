@@ -5565,6 +5565,10 @@
           },
           "isPrimaryInformant": {
             "type": "boolean"
+          },
+          "relationship": {
+            "type": "string",
+            "maxLength": 50
           }
         },
         "required": [
@@ -7036,6 +7040,10 @@
           },
           "isPrimaryInformant": {
             "type": "boolean"
+          },
+          "relationship": {
+            "type": "string",
+            "maxLength": 50
           }
         },
         "required": [
@@ -7060,6 +7068,10 @@
           "isPrimaryInformant": {
             "type": "boolean"
           },
+          "relationship": {
+            "type": "string",
+            "nullable": true
+          },
           "companionDisplayName": {
             "type": "string",
             "nullable": true
@@ -7080,6 +7092,7 @@
           "companionId",
           "patientId",
           "isPrimaryInformant",
+          "relationship",
           "companionDisplayName",
           "createdAt"
         ]

@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 import { CreatePatientDto } from './create-patient.dto';
 
 export class CreateCompanionDto extends CreatePatientDto {
@@ -7,4 +7,10 @@ export class CreateCompanionDto extends CreatePatientDto {
   @IsOptional()
   @IsBoolean()
   isPrimaryInformant?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  relationship?: string;
 }
