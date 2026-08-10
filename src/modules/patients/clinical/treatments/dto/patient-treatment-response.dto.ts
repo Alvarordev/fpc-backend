@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CancerStage } from '../../../../../database/entities/patient-diagnosis.entity';
 import { PatientTreatment } from '../../../../../database/entities/patient-treatment.entity';
+import { TreatmentSituation } from '../../../../../database/entities/treatment-situation.enum';
+import { DurationResponseDto } from '../../../../../shared/duration/duration-response.dto';
 
 export class PatientDiagnosisSummaryDto {
   @ApiProperty({ format: 'uuid' })
@@ -29,11 +31,14 @@ export class PatientTreatmentResponseDto {
   @ApiProperty({ format: 'uuid' })
   diagnosisId!: string;
 
+  @ApiProperty({ format: 'uuid' })
+  seriesId!: string;
+
   @ApiProperty()
   treatmentType!: string;
 
-  @ApiProperty({ nullable: true })
-  treatmentFrequency!: string | null;
+  @ApiProperty({ type: DurationResponseDto, nullable: true })
+  treatmentFrequency!: DurationResponseDto | null;
 
   @ApiProperty({ format: 'uuid', nullable: true })
   healthCenterId!: string | null;
@@ -59,8 +64,14 @@ export class PatientTreatmentResponseDto {
   @ApiProperty({ nullable: true })
   notReceivingReason!: string | null;
 
+  @ApiProperty({ enum: TreatmentSituation, nullable: true })
+  treatmentSituation!: TreatmentSituation | null;
+
   @ApiProperty({ nullable: true })
-  treatmentSituation!: string | null;
+  hasLatestPrescription!: boolean | null;
+
+  @ApiProperty({ format: 'date', nullable: true })
+  latestPrescriptionDate!: string | null;
 
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
@@ -71,8 +82,11 @@ export class PatientTreatmentResponseDto {
       patientId: treatment.patientId,
       followUpId: treatment.followUpId,
       diagnosisId: treatment.diagnosisId,
+      seriesId: treatment.seriesId,
       treatmentType: treatment.treatmentType,
-      treatmentFrequency: treatment.treatmentFrequency,
+      treatmentFrequency: DurationResponseDto.from(
+        treatment.treatmentFrequency,
+      ),
       healthCenterId: treatment.healthCenterId,
       healthCenterName: treatment.healthCenter?.name ?? null,
       diagnosisSummary: treatment.diagnosis
@@ -89,6 +103,8 @@ export class PatientTreatmentResponseDto {
       changeReason: treatment.changeReason,
       notReceivingReason: treatment.notReceivingReason,
       treatmentSituation: treatment.treatmentSituation,
+      hasLatestPrescription: treatment.hasLatestPrescription,
+      latestPrescriptionDate: treatment.latestPrescriptionDate,
       createdAt: treatment.createdAt.toISOString(),
     };
   }

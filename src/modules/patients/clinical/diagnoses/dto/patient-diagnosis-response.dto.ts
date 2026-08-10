@@ -3,6 +3,8 @@ import {
   CancerStage,
   PatientDiagnosis,
 } from '../../../../../database/entities/patient-diagnosis.entity';
+import { WaitTimeSource } from '../../../../../database/entities/wait-time-source.enum';
+import { DurationResponseDto } from '../../../../../shared/duration/duration-response.dto';
 
 export class PatientDiagnosisResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -23,6 +25,9 @@ export class PatientDiagnosisResponseDto {
   @ApiProperty({ format: 'date', nullable: true })
   diagnosisDate!: string | null;
 
+  @ApiProperty({ format: 'date', nullable: true })
+  firstSymptomsDate!: string | null;
+
   @ApiProperty({ format: 'uuid', nullable: true })
   healthCenterId!: string | null;
 
@@ -35,8 +40,11 @@ export class PatientDiagnosisResponseDto {
   @ApiProperty({ nullable: true })
   symptomLeadingToCheckup!: string | null;
 
-  @ApiProperty({ nullable: true })
-  waitTimeForDiagnosis!: string | null;
+  @ApiProperty({ enum: WaitTimeSource, nullable: true })
+  waitTimeSource!: WaitTimeSource | null;
+
+  @ApiProperty({ type: DurationResponseDto, nullable: true })
+  waitTimeForDiagnosis!: DurationResponseDto | null;
 
   @ApiProperty()
   hasMedicalReport!: boolean;
@@ -58,11 +66,15 @@ export class PatientDiagnosisResponseDto {
       diagnosis: diagnosis.diagnosis,
       cancerStage: diagnosis.cancerStage,
       diagnosisDate: diagnosis.diagnosisDate,
+      firstSymptomsDate: diagnosis.firstSymptomsDate,
       healthCenterId: diagnosis.healthCenterId,
       healthCenterName: diagnosis.healthCenter?.name ?? null,
       diagnosisSpecialty: diagnosis.diagnosisSpecialty,
       symptomLeadingToCheckup: diagnosis.symptomLeadingToCheckup,
-      waitTimeForDiagnosis: diagnosis.waitTimeForDiagnosis,
+      waitTimeSource: diagnosis.waitTimeSource,
+      waitTimeForDiagnosis: DurationResponseDto.from(
+        diagnosis.waitTimeForDiagnosis,
+      ),
       hasMedicalReport: diagnosis.hasMedicalReport,
       isCurrent: diagnosis.isCurrent,
       changeReason: diagnosis.changeReason,

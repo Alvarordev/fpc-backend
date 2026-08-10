@@ -26,6 +26,8 @@ import { PatientSisAffiliationService } from '../patients/clinical/sis-affiliati
 import { PatientTreatmentsService } from '../patients/clinical/treatments/patient-treatments.service';
 import { PatientSymptomReportsService } from '../patients/symptom-reports/patient-symptom-reports.service';
 import { PatientsService } from '../patients/patients.service';
+import { PatientAddressesService } from '../patients/addresses/patient-addresses.service';
+import { PatientReferralsService } from '../patients/referrals/patient-referrals.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { User } from '../../database/entities/user.entity';
@@ -46,6 +48,8 @@ export class EnrollmentsService {
     private readonly appointments: PatientMedicalAppointmentsService,
     private readonly sisAffiliations: PatientSisAffiliationService,
     private readonly symptomReports: PatientSymptomReportsService,
+    private readonly addresses: PatientAddressesService,
+    private readonly referrals: PatientReferralsService,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly webhooks: N8nTransactionalDispatchService,
   ) {}
@@ -62,10 +66,12 @@ export class EnrollmentsService {
         insurance,
         sisAffiliation,
         diagnosis,
-        treatment,
+        treatments,
         medicalAppointments,
         symptomReport,
         familyPreventionTalkInterests,
+        addresses,
+        referrals,
         ...metadata
       } = input;
       if (Boolean(patientId) === Boolean(patientInput))
@@ -199,22 +205,22 @@ export class EnrollmentsService {
             { ...diagnosis, followUpId: followUp.id },
             manager,
           )
-        : treatment
+        : treatments?.length
           ? await manager.getRepository(PatientDiagnosis).findOne({
               where: { patientId: patient.id, isCurrent: true },
             })
           : null;
-      if (treatment && !treatmentDiagnosis)
+      if (treatments?.length && !treatmentDiagnosis)
         throw new BadRequestException(
           'Enrollment treatment requires a current diagnosis',
         );
-      if (treatment && treatmentDiagnosis)
+      for (const treatment of treatments ?? [])
         await this.treatments.create(
           patient.id,
           {
             ...treatment,
             followUpId: followUp.id,
-            diagnosisId: treatmentDiagnosis.id,
+            diagnosisId: treatmentDiagnosis!.id,
           },
           manager,
         );
@@ -232,6 +238,18 @@ export class EnrollmentsService {
             followUpId: followUp.id,
             enrollmentId: enrollment.id,
           },
+          manager,
+        );
+      for (const address of addresses ?? [])
+        await this.addresses.create(
+          patient.id,
+          { ...address, followUpId: followUp.id },
+          manager,
+        );
+      for (const referral of referrals ?? [])
+        await this.referrals.create(
+          patient.id,
+          { ...referral, followUpId: followUp.id },
           manager,
         );
 

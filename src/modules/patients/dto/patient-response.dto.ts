@@ -20,6 +20,7 @@ import { PatientDetails } from '../../../database/entities/patient-details.entit
 import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../../database/entities/patient-status.enum';
 import { Patient } from '../../../database/entities/patient.entity';
+import { DurationResponseDto } from '../../../shared/duration/duration-response.dto';
 
 export class PatientDetailsResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -31,20 +32,11 @@ export class PatientDetailsResponseDto {
   @ApiProperty({ nullable: true })
   birthDepartment!: string | null;
 
-  @ApiProperty({ nullable: true })
-  currentAddress!: string | null;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  primaryHealthCenterId!: string | null;
 
-  @ApiProperty({ nullable: true })
-  currentDistrict!: string | null;
-
-  @ApiProperty({ nullable: true })
-  currentDepartment!: string | null;
-
-  @ApiProperty({ nullable: true })
-  dniMatchesAddress!: boolean | null;
-
-  @ApiProperty({ nullable: true })
-  travelTimeToHospital!: string | null;
+  @ApiProperty({ type: DurationResponseDto, nullable: true })
+  travelTimeToHospital!: DurationResponseDto | null;
 
   @ApiProperty({ nullable: true })
   emergencyContactName!: string | null;
@@ -105,11 +97,10 @@ export class PatientDetailsResponseDto {
       id: details.id,
       patientId: details.patientId,
       birthDepartment: details.birthDepartment,
-      currentAddress: details.currentAddress,
-      currentDistrict: details.currentDistrict,
-      currentDepartment: details.currentDepartment,
-      dniMatchesAddress: details.dniMatchesAddress,
-      travelTimeToHospital: details.travelTimeToHospital,
+      primaryHealthCenterId: details.primaryHealthCenterId,
+      travelTimeToHospital: DurationResponseDto.from(
+        details.travelTimeToHospital,
+      ),
       emergencyContactName: details.emergencyContactName,
       emergencyContactPhone: details.emergencyContactPhone,
       zoneType: details.zoneType,

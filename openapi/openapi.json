@@ -3264,6 +3264,573 @@
         ]
       }
     },
+    "/patients/{patientId}/treatments/{treatmentId}/medications": {
+      "post": {
+        "operationId": "TreatmentMedicationsController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "treatmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTreatmentMedicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TreatmentMedicationResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Treatment not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a medication to a treatment",
+        "tags": [
+          "Treatment medications"
+        ]
+      },
+      "get": {
+        "operationId": "TreatmentMedicationsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "treatmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TreatmentMedicationResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List medications for a treatment",
+        "tags": [
+          "Treatment medications"
+        ]
+      }
+    },
+    "/patients/{patientId}/treatments/{treatmentId}/medications/{medicationId}": {
+      "patch": {
+        "operationId": "TreatmentMedicationsController_update",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "treatmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "medicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTreatmentMedicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TreatmentMedicationResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Medication not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a treatment medication",
+        "tags": [
+          "Treatment medications"
+        ]
+      },
+      "delete": {
+        "operationId": "TreatmentMedicationsController_deactivate",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "treatmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "medicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Medication not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Deactivate a treatment medication",
+        "tags": [
+          "Treatment medications"
+        ]
+      }
+    },
+    "/patients/{patientId}/addresses": {
+      "post": {
+        "operationId": "PatientAddressesController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientAddressDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientAddressResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a patient address",
+        "tags": [
+          "Patient addresses"
+        ]
+      },
+      "get": {
+        "operationId": "PatientAddressesController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientAddressResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List a patient addresses",
+        "tags": [
+          "Patient addresses"
+        ]
+      }
+    },
+    "/patients/{patientId}/addresses/{addressId}": {
+      "patch": {
+        "operationId": "PatientAddressesController_update",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "addressId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePatientAddressDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientAddressResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Address not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a patient address",
+        "tags": [
+          "Patient addresses"
+        ]
+      },
+      "delete": {
+        "operationId": "PatientAddressesController_deactivate",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "addressId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Address not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Deactivate a patient address",
+        "tags": [
+          "Patient addresses"
+        ]
+      }
+    },
+    "/patients/{patientId}/referrals": {
+      "post": {
+        "operationId": "PatientReferralsController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientReferralDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientReferralResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or health center not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a patient referral between health centers",
+        "tags": [
+          "Patient referrals"
+        ]
+      },
+      "get": {
+        "operationId": "PatientReferralsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientReferralResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List a patient referral history",
+        "tags": [
+          "Patient referrals"
+        ]
+      }
+    },
     "/patients/{patientId}/symptom-reports": {
       "post": {
         "operationId": "PatientSymptomReportsController_create",
@@ -5292,14 +5859,21 @@
             }
           },
           "hospitals": {
-            "description": "Up to eight hospitals using current medical appointment, treatment, then diagnosis precedence.",
+            "description": "Up to eight hospitals using primary health center, then current medical appointment, treatment, and diagnosis precedence.",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DashboardTableItemDto"
             }
           },
           "regions": {
-            "description": "Up to eight regions using hospital department, then current and birth department precedence.",
+            "description": "Up to eight regions using primary health center department, then primary address, then birth department precedence.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardTableItemDto"
+            }
+          },
+          "referrals": {
+            "description": "Up to eight hospital referral pairs (origin → destination).",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DashboardTableItemDto"
@@ -5312,7 +5886,8 @@
           "distributions",
           "trend",
           "hospitals",
-          "regions"
+          "regions",
+          "referrals"
         ]
       },
       "CreateAgentDto": {
@@ -5576,6 +6151,38 @@
           "primaryPhone"
         ]
       },
+      "DurationDto": {
+        "type": "object",
+        "properties": {
+          "valueMin": {
+            "type": "number",
+            "minimum": 0
+          },
+          "valueMax": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unit": {
+            "enum": [
+              "MINUTE",
+              "HOUR",
+              "DAY",
+              "WEEK",
+              "MONTH",
+              "YEAR"
+            ],
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "valueMin",
+          "unit"
+        ]
+      },
       "UpsertPatientDetailsDto": {
         "type": "object",
         "properties": {
@@ -5583,23 +6190,12 @@
             "type": "string",
             "maxLength": 255
           },
-          "currentAddress": {
-            "type": "string"
-          },
-          "currentDistrict": {
+          "primaryHealthCenterId": {
             "type": "string",
-            "maxLength": 255
-          },
-          "currentDepartment": {
-            "type": "string",
-            "maxLength": 255
-          },
-          "dniMatchesAddress": {
-            "type": "boolean"
+            "format": "uuid"
           },
           "travelTimeToHospital": {
-            "type": "string",
-            "maxLength": 100
+            "$ref": "#/components/schemas/DurationDto"
           },
           "emergencyContactName": {
             "type": "string",
@@ -5751,6 +6347,9 @@
           "diagnosisDate": {
             "type": "string"
           },
+          "firstSymptomsDate": {
+            "type": "string"
+          },
           "healthCenterId": {
             "type": "string",
             "format": "uuid"
@@ -5762,7 +6361,7 @@
             "type": "string"
           },
           "waitTimeForDiagnosis": {
-            "type": "string"
+            "$ref": "#/components/schemas/DurationDto"
           },
           "hasMedicalReport": {
             "type": "boolean"
@@ -5775,14 +6374,76 @@
           "diagnosis"
         ]
       },
+      "CreateTreatmentMedicationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "doseAmount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "doseUnit": {
+            "enum": [
+              "MG",
+              "G",
+              "ML",
+              "UI",
+              "TABLET",
+              "DROP",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "doseDescription": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "route": {
+            "enum": [
+              "ORAL",
+              "IV",
+              "IM",
+              "SUBCUTANEOUS",
+              "TOPICAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
       "EnrollmentTreatmentDto": {
         "type": "object",
         "properties": {
+          "seriesId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "treatmentType": {
             "type": "string"
           },
           "treatmentFrequency": {
-            "type": "string"
+            "$ref": "#/components/schemas/DurationDto"
           },
           "healthCenterId": {
             "type": "string",
@@ -5801,7 +6462,25 @@
             "type": "string"
           },
           "treatmentSituation": {
+            "enum": [
+              "EN_CURSO",
+              "PENDIENTE_DE_INICIO",
+              "INTERRUMPIDO",
+              "FINALIZADO"
+            ],
             "type": "string"
+          },
+          "hasLatestPrescription": {
+            "type": "boolean"
+          },
+          "latestPrescriptionDate": {
+            "type": "string"
+          },
+          "medications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateTreatmentMedicationDto"
+            }
           }
         },
         "required": [
@@ -5847,6 +6526,106 @@
           "specialty"
         ]
       },
+      "EnrollmentAddressDto": {
+        "type": "object",
+        "properties": {
+          "department": {
+            "enum": [
+              "AMAZONAS",
+              "ANCASH",
+              "APURIMAC",
+              "AREQUIPA",
+              "AYACUCHO",
+              "CAJAMARCA",
+              "CALLAO",
+              "CUSCO",
+              "HUANCAVELICA",
+              "HUANUCO",
+              "ICA",
+              "JUNIN",
+              "LA_LIBERTAD",
+              "LAMBAYEQUE",
+              "LIMA",
+              "LORETO",
+              "MADRE_DE_DIOS",
+              "MOQUEGUA",
+              "PASCO",
+              "PIURA",
+              "PUNO",
+              "SAN_MARTIN",
+              "TACNA",
+              "TUMBES",
+              "UCAYALI"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "PERMANENT",
+              "TEMPORARY"
+            ],
+            "type": "string"
+          },
+          "isPrimary": {
+            "type": "boolean"
+          },
+          "address": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "province": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "reference": {
+            "type": "string"
+          },
+          "dniMatchesAddress": {
+            "type": "boolean"
+          },
+          "validFrom": {
+            "type": "string"
+          },
+          "validTo": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "EnrollmentReferralDto": {
+        "type": "object",
+        "properties": {
+          "fromHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "reason": {
+            "type": "string"
+          },
+          "referralDate": {
+            "type": "string"
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "toHealthCenterId"
+        ]
+      },
       "EnrollmentSymptomReportDto": {
         "type": "object",
         "properties": {
@@ -5867,12 +6646,10 @@
             "type": "string"
           },
           "symptomDuration": {
-            "type": "string",
-            "maxLength": 50
+            "$ref": "#/components/schemas/DurationDto"
           },
           "symptomFrequency": {
-            "type": "string",
-            "maxLength": 50
+            "$ref": "#/components/schemas/DurationDto"
           },
           "isPainPresent": {
             "type": "boolean"
@@ -5966,13 +6743,28 @@
           "diagnosis": {
             "$ref": "#/components/schemas/EnrollmentDiagnosisDto"
           },
-          "treatment": {
-            "$ref": "#/components/schemas/EnrollmentTreatmentDto"
+          "treatments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentTreatmentDto"
+            }
           },
           "medicalAppointments": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EnrollmentMedicalAppointmentDto"
+            }
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentAddressDto"
+            }
+          },
+          "referrals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentReferralDto"
             }
           },
           "symptomReport": {
@@ -7386,11 +8178,15 @@
                 },
                 {
                   "$ref": "#/components/schemas/PsychooncologyAppointmentTimelineEventDto"
+                },
+                {
+                  "$ref": "#/components/schemas/ReferralTimelineEventDto"
                 }
               ],
               "discriminator": {
                 "propertyName": "kind",
                 "mapping": {
+                  "REFERRAL": "#/components/schemas/ReferralTimelineEventDto",
                   "FOLLOW_UP": "#/components/schemas/FollowUpTimelineEventDto",
                   "REMINDER": "#/components/schemas/ReminderTimelineEventDto",
                   "PSYCHOONCOLOGY_APPOINTMENT": "#/components/schemas/PsychooncologyAppointmentTimelineEventDto"
@@ -7408,6 +8204,39 @@
           "total"
         ]
       },
+      "DurationResponseDto": {
+        "type": "object",
+        "properties": {
+          "valueMin": {
+            "type": "number"
+          },
+          "valueMax": {
+            "type": "number",
+            "nullable": true
+          },
+          "unit": {
+            "enum": [
+              "MINUTE",
+              "HOUR",
+              "DAY",
+              "WEEK",
+              "MONTH",
+              "YEAR"
+            ],
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "valueMin",
+          "valueMax",
+          "unit",
+          "label"
+        ]
+      },
       "PatientDetailsResponseDto": {
         "type": "object",
         "properties": {
@@ -7423,25 +8252,19 @@
             "type": "string",
             "nullable": true
           },
-          "currentAddress": {
+          "primaryHealthCenterId": {
             "type": "string",
-            "nullable": true
-          },
-          "currentDistrict": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentDepartment": {
-            "type": "string",
-            "nullable": true
-          },
-          "dniMatchesAddress": {
-            "type": "boolean",
-            "nullable": true
+            "nullable": true,
+            "format": "uuid"
           },
           "travelTimeToHospital": {
-            "type": "string",
-            "nullable": true
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationResponseDto"
+              }
+            ]
           },
           "emergencyContactName": {
             "type": "string",
@@ -7532,10 +8355,7 @@
           "id",
           "patientId",
           "birthDepartment",
-          "currentAddress",
-          "currentDistrict",
-          "currentDepartment",
-          "dniMatchesAddress",
+          "primaryHealthCenterId",
           "travelTimeToHospital",
           "emergencyContactName",
           "emergencyContactPhone",
@@ -7591,6 +8411,11 @@
             "nullable": true,
             "format": "date"
           },
+          "firstSymptomsDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
           "healthCenterId": {
             "type": "string",
             "nullable": true,
@@ -7608,9 +8433,22 @@
             "type": "string",
             "nullable": true
           },
+          "waitTimeSource": {
+            "nullable": true,
+            "enum": [
+              "COMPUTED",
+              "REPORTED"
+            ],
+            "type": "string"
+          },
           "waitTimeForDiagnosis": {
-            "type": "string",
-            "nullable": true
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationResponseDto"
+              }
+            ]
           },
           "hasMedicalReport": {
             "type": "boolean"
@@ -7634,9 +8472,11 @@
           "diagnosis",
           "cancerStage",
           "diagnosisDate",
+          "firstSymptomsDate",
           "healthCenterId",
           "diagnosisSpecialty",
           "symptomLeadingToCheckup",
+          "waitTimeSource",
           "waitTimeForDiagnosis",
           "hasMedicalReport",
           "isCurrent",
@@ -7697,12 +8537,21 @@
             "type": "string",
             "format": "uuid"
           },
+          "seriesId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "treatmentType": {
             "type": "string"
           },
           "treatmentFrequency": {
-            "type": "string",
-            "nullable": true
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationResponseDto"
+              }
+            ]
           },
           "healthCenterId": {
             "type": "string",
@@ -7744,8 +8593,23 @@
             "nullable": true
           },
           "treatmentSituation": {
-            "type": "string",
+            "nullable": true,
+            "enum": [
+              "EN_CURSO",
+              "PENDIENTE_DE_INICIO",
+              "INTERRUMPIDO",
+              "FINALIZADO"
+            ],
+            "type": "string"
+          },
+          "hasLatestPrescription": {
+            "type": "boolean",
             "nullable": true
+          },
+          "latestPrescriptionDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
           },
           "createdAt": {
             "type": "string",
@@ -7757,6 +8621,7 @@
           "patientId",
           "followUpId",
           "diagnosisId",
+          "seriesId",
           "treatmentType",
           "treatmentFrequency",
           "healthCenterId",
@@ -7766,6 +8631,8 @@
           "changeReason",
           "notReceivingReason",
           "treatmentSituation",
+          "hasLatestPrescription",
+          "latestPrescriptionDate",
           "createdAt"
         ]
       },
@@ -8023,12 +8890,22 @@
             "nullable": true
           },
           "symptomDuration": {
-            "type": "string",
-            "nullable": true
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationResponseDto"
+              }
+            ]
           },
           "symptomFrequency": {
-            "type": "string",
-            "nullable": true
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationResponseDto"
+              }
+            ]
           },
           "isPainPresent": {
             "type": "boolean",
@@ -8346,6 +9223,9 @@
           "diagnosisDate": {
             "type": "string"
           },
+          "firstSymptomsDate": {
+            "type": "string"
+          },
           "healthCenterId": {
             "type": "string",
             "format": "uuid"
@@ -8357,7 +9237,7 @@
             "type": "string"
           },
           "waitTimeForDiagnosis": {
-            "type": "string"
+            "$ref": "#/components/schemas/DurationDto"
           },
           "hasMedicalReport": {
             "type": "boolean"
@@ -8499,11 +9379,15 @@
             "type": "string",
             "format": "uuid"
           },
+          "seriesId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "treatmentType": {
             "type": "string"
           },
           "treatmentFrequency": {
-            "type": "string"
+            "$ref": "#/components/schemas/DurationDto"
           },
           "healthCenterId": {
             "type": "string",
@@ -8522,13 +9406,522 @@
             "type": "string"
           },
           "treatmentSituation": {
+            "type": "string",
+            "enum": [
+              "EN_CURSO",
+              "PENDIENTE_DE_INICIO",
+              "INTERRUMPIDO",
+              "FINALIZADO"
+            ]
+          },
+          "hasLatestPrescription": {
+            "type": "boolean"
+          },
+          "latestPrescriptionDate": {
             "type": "string"
+          },
+          "medications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateTreatmentMedicationDto"
+            }
           }
         },
         "required": [
           "followUpId",
           "diagnosisId",
           "treatmentType"
+        ]
+      },
+      "TreatmentMedicationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "treatmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "doseAmount": {
+            "type": "number",
+            "nullable": true
+          },
+          "doseUnit": {
+            "nullable": true,
+            "enum": [
+              "MG",
+              "G",
+              "ML",
+              "UI",
+              "TABLET",
+              "DROP",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "doseDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "route": {
+            "nullable": true,
+            "enum": [
+              "ORAL",
+              "IV",
+              "IM",
+              "SUBCUTANEOUS",
+              "TOPICAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "frequency": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationResponseDto"
+              }
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "treatmentId",
+          "patientId",
+          "name",
+          "doseAmount",
+          "doseUnit",
+          "doseDescription",
+          "route",
+          "frequency",
+          "startDate",
+          "endDate",
+          "isActive",
+          "notes",
+          "createdAt"
+        ]
+      },
+      "UpdateTreatmentMedicationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "doseAmount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "doseUnit": {
+            "enum": [
+              "MG",
+              "G",
+              "ML",
+              "UI",
+              "TABLET",
+              "DROP",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "doseDescription": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "route": {
+            "enum": [
+              "ORAL",
+              "IV",
+              "IM",
+              "SUBCUTANEOUS",
+              "TOPICAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "CreatePatientAddressDto": {
+        "type": "object",
+        "properties": {
+          "department": {
+            "enum": [
+              "AMAZONAS",
+              "ANCASH",
+              "APURIMAC",
+              "AREQUIPA",
+              "AYACUCHO",
+              "CAJAMARCA",
+              "CALLAO",
+              "CUSCO",
+              "HUANCAVELICA",
+              "HUANUCO",
+              "ICA",
+              "JUNIN",
+              "LA_LIBERTAD",
+              "LAMBAYEQUE",
+              "LIMA",
+              "LORETO",
+              "MADRE_DE_DIOS",
+              "MOQUEGUA",
+              "PASCO",
+              "PIURA",
+              "PUNO",
+              "SAN_MARTIN",
+              "TACNA",
+              "TUMBES",
+              "UCAYALI"
+            ],
+            "type": "string"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PERMANENT",
+              "TEMPORARY"
+            ]
+          },
+          "isPrimary": {
+            "type": "boolean"
+          },
+          "address": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "province": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "reference": {
+            "type": "string"
+          },
+          "dniMatchesAddress": {
+            "type": "boolean"
+          },
+          "validFrom": {
+            "type": "string"
+          },
+          "validTo": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "PatientAddressResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "PERMANENT",
+              "TEMPORARY"
+            ],
+            "type": "string"
+          },
+          "isPrimary": {
+            "type": "boolean"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "province": {
+            "type": "string",
+            "nullable": true
+          },
+          "department": {
+            "type": "string",
+            "nullable": true
+          },
+          "reference": {
+            "type": "string",
+            "nullable": true
+          },
+          "dniMatchesAddress": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "validFrom": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "validTo": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "type",
+          "isPrimary",
+          "address",
+          "district",
+          "province",
+          "department",
+          "reference",
+          "dniMatchesAddress",
+          "validFrom",
+          "validTo",
+          "isActive",
+          "createdAt"
+        ]
+      },
+      "UpdatePatientAddressDto": {
+        "type": "object",
+        "properties": {
+          "department": {
+            "enum": [
+              "AMAZONAS",
+              "ANCASH",
+              "APURIMAC",
+              "AREQUIPA",
+              "AYACUCHO",
+              "CAJAMARCA",
+              "CALLAO",
+              "CUSCO",
+              "HUANCAVELICA",
+              "HUANUCO",
+              "ICA",
+              "JUNIN",
+              "LA_LIBERTAD",
+              "LAMBAYEQUE",
+              "LIMA",
+              "LORETO",
+              "MADRE_DE_DIOS",
+              "MOQUEGUA",
+              "PASCO",
+              "PIURA",
+              "PUNO",
+              "SAN_MARTIN",
+              "TACNA",
+              "TUMBES",
+              "UCAYALI"
+            ],
+            "type": "string"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "PERMANENT",
+              "TEMPORARY"
+            ],
+            "type": "string"
+          },
+          "isPrimary": {
+            "type": "boolean"
+          },
+          "address": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "province": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "reference": {
+            "type": "string"
+          },
+          "dniMatchesAddress": {
+            "type": "boolean"
+          },
+          "validFrom": {
+            "type": "string"
+          },
+          "validTo": {
+            "type": "string"
+          }
+        }
+      },
+      "CreatePatientReferralDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "reason": {
+            "type": "string"
+          },
+          "referralDate": {
+            "type": "string"
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "toHealthCenterId"
+        ]
+      },
+      "PatientReferralResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "fromHealthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "fromHealthCenterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "toHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toHealthCenterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "specialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "referralDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "fromHealthCenterId",
+          "toHealthCenterId",
+          "specialty",
+          "reason",
+          "referralDate",
+          "isActive",
+          "hasReferralSheet",
+          "createdAt"
         ]
       },
       "CreatePatientSymptomReportDto": {
@@ -8559,12 +9952,10 @@
             "type": "string"
           },
           "symptomDuration": {
-            "type": "string",
-            "maxLength": 50
+            "$ref": "#/components/schemas/DurationDto"
           },
           "symptomFrequency": {
-            "type": "string",
-            "maxLength": 50
+            "$ref": "#/components/schemas/DurationDto"
           },
           "isPainPresent": {
             "type": "boolean"

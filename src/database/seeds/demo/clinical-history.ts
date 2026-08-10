@@ -1,5 +1,7 @@
 import type { Enrollment } from '../../entities/enrollment.entity';
 import { PatientDiagnosis } from '../../entities/patient-diagnosis.entity';
+import { WaitTimeSource } from '../../entities/wait-time-source.enum';
+import { DurationUnit } from '../../entities/duration-unit.enum';
 import {
   EpsProvider,
   InsuranceType,
@@ -9,6 +11,12 @@ import { PatientMedicalAppointment } from '../../entities/patient-medical-appoin
 import { PatientSisAffiliation } from '../../entities/patient-sis-affiliation.entity';
 import { PatientSymptomReport } from '../../entities/patient-symptom-report.entity';
 import { PatientTreatment } from '../../entities/patient-treatment.entity';
+import { TreatmentSituation } from '../../entities/treatment-situation.enum';
+import { TreatmentMedication } from '../../entities/treatment-medication.entity';
+import { DoseUnit } from '../../entities/dose-unit.enum';
+import { MedicationRoute } from '../../entities/medication-route.enum';
+import { PatientReferral } from '../../entities/patient-referral.entity';
+import type { HealthCenter } from '../../entities/health-center.entity';
 import type { FollowUp } from '../../entities/follow-up.entity';
 import {
   CANCER_STAGES,
@@ -17,23 +25,118 @@ import {
   PAIN_LOCATIONS,
   SIS_BLOCKERS,
   SYMPTOM_DESCRIPTIONS,
-  TREATMENT_FREQUENCIES,
-  TREATMENT_SITUATIONS,
 } from './catalog';
 import type { DemoContext } from './context';
 import type { PatientFollowUps } from './follow-ups';
 import { addDays, toDateOnly } from './rng';
+import { normalizeDuration } from '../../../shared/duration/duration.util';
+
+const WAIT_TIME_LABELS = [
+  { valueMin: 20, unit: DurationUnit.DAY, label: 'Menos de 1 mes' },
+  {
+    valueMin: 1,
+    valueMax: 3,
+    unit: DurationUnit.MONTH,
+    label: 'Entre 1 y 3 meses',
+  },
+  { valueMin: 6, unit: DurationUnit.MONTH, label: 'Más de 6 meses' },
+] as const;
+
+const TREATMENT_FREQUENCY_DURATIONS = [
+  { valueMin: 21, unit: DurationUnit.DAY, label: 'Cada 21 días' },
+  { valueMin: 1, unit: DurationUnit.WEEK, label: 'Semanal' },
+  { valueMin: 14, unit: DurationUnit.DAY, label: 'Cada 14 días' },
+  { valueMin: 5, unit: DurationUnit.WEEK, label: 'Diario por 5 semanas' },
+  { valueMin: 1, unit: DurationUnit.MONTH, label: 'Mensual' },
+] as const;
+
+const SYMPTOM_DURATIONS = [
+  { valueMin: 5, unit: DurationUnit.DAY, label: 'Menos de 1 semana' },
+  { valueMin: 1, valueMax: 2, unit: DurationUnit.WEEK, label: '1 a 2 semanas' },
+  { valueMin: 1, unit: DurationUnit.MONTH, label: 'Más de un mes' },
+] as const;
+
+const SYMPTOM_FREQUENCIES = [
+  { valueMin: 1, unit: DurationUnit.DAY, label: 'Diaria' },
+  { valueMin: 2, unit: DurationUnit.DAY, label: 'Intermitente' },
+  { valueMin: 1, unit: DurationUnit.WEEK, label: 'Solo tras el tratamiento' },
+] as const;
+
+interface MedicationSeed {
+  name: string;
+  doseAmount: number;
+  doseUnit: DoseUnit;
+  route: MedicationRoute;
+}
+
+/**
+ * Matched by substring against the treatment type, since the catalog uses
+ * varied phrasing ("Quimioterapia neoadyuvante", "Quimiorradioterapia", …).
+ */
+const MEDICATIONS_BY_TREATMENT_KEYWORD: ReadonlyArray<
+  [keyword: string, medications: MedicationSeed[]]
+> = [
+  [
+    'quimio',
+    [
+      {
+        name: 'Doxorrubicina',
+        doseAmount: 60,
+        doseUnit: DoseUnit.MG,
+        route: MedicationRoute.IV,
+      },
+      {
+        name: 'Ciclofosfamida',
+        doseAmount: 600,
+        doseUnit: DoseUnit.MG,
+        route: MedicationRoute.IV,
+      },
+    ],
+  ],
+  [
+    'radioterapia',
+    [
+      {
+        name: 'Dexametasona',
+        doseAmount: 4,
+        doseUnit: DoseUnit.MG,
+        route: MedicationRoute.ORAL,
+      },
+    ],
+  ],
+  [
+    'hormonoterapia',
+    [
+      {
+        name: 'Tamoxifeno',
+        doseAmount: 20,
+        doseUnit: DoseUnit.MG,
+        route: MedicationRoute.ORAL,
+      },
+    ],
+  ],
+];
+
+function medicationsFor(treatmentType: string): MedicationSeed[] {
+  const normalized = treatmentType.toLowerCase();
+  const match = MEDICATIONS_BY_TREATMENT_KEYWORD.find(([keyword]) =>
+    normalized.includes(keyword),
+  );
+  return match?.[1] ?? [];
+}
 
 /**
  * Clinical history is versioned: every table keeps one `is_current` row per
- * patient (per diagnosis for treatments, per specialty for appointments) plus
- * any number of superseded rows carrying a `change_reason`. Partial unique
- * indexes enforce that, so this step must never emit two current rows.
+ * patient (per treatment series for treatments, per specialty for
+ * appointments) plus any number of superseded rows carrying a
+ * `change_reason`. Partial unique indexes enforce that, so this step must
+ * never emit two current rows for the same key.
  */
 export async function seedClinicalHistory(
   ctx: DemoContext,
   histories: PatientFollowUps[],
   enrollmentsByPatient: Map<string, Enrollment>,
+  healthCenters: HealthCenter[],
 ): Promise<void> {
   const { manager, rng, now } = ctx;
 
@@ -42,11 +145,38 @@ export async function seedClinicalHistory(
   const diagnosisRows: PatientDiagnosis[] = [];
   const currentDiagnosisIndex = new Map<string, number>();
 
-  enrolled.forEach((history) => {
+  enrolled.forEach((history, index) => {
     const { patient, healthCenter } = history.demoPatient;
     const seed = rng.pick(DIAGNOSES);
-    const diagnosedAt = addDays(now, -rng.int(120, 900));
     const followUpId = anchorFollowUp(ctx, history).id;
+
+    // A minority saw a doctor long before being formally diagnosed — for
+    // these we compute the wait instead of relying on a self-reported range.
+    const usesComputedWait = index % 3 === 0;
+    const diagnosedAt = addDays(now, -rng.int(120, 900));
+    const firstSymptomsAt = usesComputedWait
+      ? addDays(diagnosedAt, -rng.int(10, 200))
+      : null;
+
+    const buildWaitTime = () => {
+      if (firstSymptomsAt) {
+        const days = Math.round(
+          (diagnosedAt.getTime() - firstSymptomsAt.getTime()) /
+            (1000 * 60 * 60 * 24),
+        );
+        return {
+          waitTimeForDiagnosis: normalizeDuration({
+            valueMin: days,
+            unit: DurationUnit.DAY,
+          }),
+          waitTimeSource: WaitTimeSource.COMPUTED,
+        };
+      }
+      return {
+        waitTimeForDiagnosis: normalizeDuration(rng.pick(WAIT_TIME_LABELS)),
+        waitTimeSource: WaitTimeSource.REPORTED,
+      };
+    };
 
     // A minority were re-staged after further imaging; keep the superseded row.
     if (rng.bool(0.25)) {
@@ -57,14 +187,17 @@ export async function seedClinicalHistory(
           diagnosis: seed.diagnosis,
           cancerStage: rng.pick(CANCER_STAGES),
           diagnosisDate: toDateOnly(diagnosedAt),
+          // Restaging does not change when the patient first felt symptoms, so
+          // the superseded row carries the same date. Leaving it null here
+          // would pair a COMPUTED wait with no date to compute it from — a
+          // state PatientDiagnosesService.create() can never produce.
+          firstSymptomsDate: firstSymptomsAt
+            ? toDateOnly(firstSymptomsAt)
+            : null,
           healthCenterId: healthCenter.id,
           diagnosisSpecialty: seed.specialty,
           symptomLeadingToCheckup: seed.symptom,
-          waitTimeForDiagnosis: rng.pick([
-            'Menos de 1 mes',
-            'Entre 1 y 3 meses',
-            'Más de 6 meses',
-          ]),
+          ...buildWaitTime(),
           hasMedicalReport: rng.bool(0.6),
           isCurrent: false,
           changeReason: 'Reestadificación tras nuevos estudios de imagen.',
@@ -80,14 +213,11 @@ export async function seedClinicalHistory(
         diagnosis: seed.diagnosis,
         cancerStage: rng.pick(CANCER_STAGES),
         diagnosisDate: toDateOnly(diagnosedAt),
+        firstSymptomsDate: firstSymptomsAt ? toDateOnly(firstSymptomsAt) : null,
         healthCenterId: healthCenter.id,
         diagnosisSpecialty: seed.specialty,
         symptomLeadingToCheckup: seed.symptom,
-        waitTimeForDiagnosis: rng.pick([
-          'Menos de 1 mes',
-          'Entre 1 y 3 meses',
-          'Más de 6 meses',
-        ]),
+        ...buildWaitTime(),
         hasMedicalReport: rng.bool(0.7),
         isCurrent: true,
         changeReason: null,
@@ -101,6 +231,7 @@ export async function seedClinicalHistory(
   await seedTreatments(ctx, enrolled, diagnoses, currentDiagnosisIndex);
   await seedMedicalAppointments(ctx, enrolled);
   await seedSymptomReports(ctx, enrolled, enrollmentsByPatient);
+  await seedReferrals(ctx, enrolled, healthCenters);
 }
 
 /** Clinical rows must hang off a real follow-up; prefer a completed one. */
@@ -215,11 +346,15 @@ async function seedTreatments(
 ): Promise<void> {
   const { manager, rng, now } = ctx;
   const rows: PatientTreatment[] = [];
+  const currentTreatmentsByPatient = new Map<
+    string,
+    Array<{ treatment: PatientTreatment; diagnosisId: string }>
+  >();
 
-  for (const history of enrolled) {
+  enrolled.forEach((history, patientIndex) => {
     const { patient, healthCenter } = history.demoPatient;
     const index = currentDiagnosisIndex.get(patient.id);
-    if (index === undefined) continue;
+    if (index === undefined) return;
 
     const diagnosis = diagnoses[index];
     const seed = DIAGNOSES.find(
@@ -229,15 +364,25 @@ async function seedTreatments(
     const followUpId = anchorFollowUp(ctx, history).id;
     const startedAt = addDays(now, -rng.int(60, 400));
 
-    // A finished earlier line of treatment, superseded by the current one.
+    const patientCurrentTreatments: Array<{
+      treatment: PatientTreatment;
+      diagnosisId: string;
+    }> = [];
+
+    // A finished earlier line of treatment, superseded by the current one —
+    // same series, reused seriesId, only the newest row is current.
+    const firstSeriesId = crypto.randomUUID();
     if (options.length > 1 && rng.bool(0.4)) {
       rows.push(
         manager.create(PatientTreatment, {
           patientId: patient.id,
           followUpId,
           diagnosisId: diagnosis.id,
+          seriesId: firstSeriesId,
           treatmentType: options[0],
-          treatmentFrequency: rng.pick(TREATMENT_FREQUENCIES),
+          treatmentFrequency: normalizeDuration(
+            rng.pick(TREATMENT_FREQUENCY_DURATIONS),
+          ),
           healthCenterId: healthCenter.id,
           startDate: toDateOnly(startedAt),
           endDate: toDateOnly(addDays(startedAt, rng.int(40, 120))),
@@ -245,35 +390,125 @@ async function seedTreatments(
           changeReason:
             'Se completó el esquema y se avanzó a la siguiente fase.',
           notReceivingReason: null,
-          treatmentSituation: 'FINALIZADO',
+          treatmentSituation: TreatmentSituation.FINALIZADO,
+          hasLatestPrescription: null,
+          latestPrescriptionDate: null,
         }),
       );
     }
 
     const isReceiving = rng.bool(0.85);
-    rows.push(
-      manager.create(PatientTreatment, {
-        patientId: patient.id,
-        followUpId,
-        diagnosisId: diagnosis.id,
-        treatmentType: rng.pick(options),
-        treatmentFrequency: isReceiving
-          ? rng.pick(TREATMENT_FREQUENCIES)
+    const currentTreatmentType = rng.pick(options);
+    const currentTreatment = manager.create(PatientTreatment, {
+      patientId: patient.id,
+      followUpId,
+      diagnosisId: diagnosis.id,
+      seriesId: firstSeriesId,
+      treatmentType: currentTreatmentType,
+      treatmentFrequency: isReceiving
+        ? normalizeDuration(rng.pick(TREATMENT_FREQUENCY_DURATIONS))
+        : normalizeDuration(null),
+      healthCenterId: healthCenter.id,
+      startDate: toDateOnly(addDays(now, -rng.int(15, 120))),
+      endDate: null,
+      isCurrent: true,
+      changeReason: null,
+      notReceivingReason: isReceiving
+        ? null
+        : 'En espera de la aprobación del expediente FISSAL.',
+      treatmentSituation: isReceiving
+        ? rng.pick([
+            TreatmentSituation.EN_CURSO,
+            TreatmentSituation.INTERRUMPIDO,
+          ])
+        : TreatmentSituation.PENDIENTE_DE_INICIO,
+      hasLatestPrescription: isReceiving ? rng.maybeBool(0.7) : null,
+      latestPrescriptionDate:
+        isReceiving && rng.bool(0.6)
+          ? toDateOnly(addDays(now, -rng.int(5, 40)))
           : null,
-        healthCenterId: healthCenter.id,
-        startDate: toDateOnly(addDays(now, -rng.int(15, 120))),
-        endDate: null,
-        isCurrent: true,
-        changeReason: null,
-        notReceivingReason: isReceiving
-          ? null
-          : 'En espera de la aprobación del expediente FISSAL.',
-        treatmentSituation: isReceiving
-          ? rng.pick(TREATMENT_SITUATIONS.slice(0, 2))
-          : 'PENDIENTE_DE_INICIO',
-      }),
-    );
-  }
+    });
+    rows.push(currentTreatment);
+    patientCurrentTreatments.push({
+      treatment: currentTreatment,
+      diagnosisId: diagnosis.id,
+    });
+
+    // A subset of patients run two concurrent treatment lines at once —
+    // e.g. chemo plus radiotherapy — each with its own seriesId.
+    if (isReceiving && options.length > 1 && patientIndex % 5 === 0) {
+      const otherOptions = options.filter(
+        (option) => option !== currentTreatmentType,
+      );
+      if (otherOptions.length > 0) {
+        const concurrentTreatment = manager.create(PatientTreatment, {
+          patientId: patient.id,
+          followUpId,
+          diagnosisId: diagnosis.id,
+          seriesId: crypto.randomUUID(),
+          treatmentType: rng.pick(otherOptions),
+          treatmentFrequency: normalizeDuration(
+            rng.pick(TREATMENT_FREQUENCY_DURATIONS),
+          ),
+          healthCenterId: healthCenter.id,
+          startDate: toDateOnly(addDays(now, -rng.int(10, 90))),
+          endDate: null,
+          isCurrent: true,
+          changeReason: null,
+          notReceivingReason: null,
+          treatmentSituation: TreatmentSituation.EN_CURSO,
+          hasLatestPrescription: rng.maybeBool(0.7),
+          latestPrescriptionDate: rng.bool(0.6)
+            ? toDateOnly(addDays(now, -rng.int(5, 40)))
+            : null,
+        });
+        rows.push(concurrentTreatment);
+        patientCurrentTreatments.push({
+          treatment: concurrentTreatment,
+          diagnosisId: diagnosis.id,
+        });
+      }
+    }
+
+    currentTreatmentsByPatient.set(patient.id, patientCurrentTreatments);
+  });
+
+  const saved = await manager.save(rows);
+  await seedMedications(ctx, saved);
+}
+
+async function seedMedications(
+  { manager, rng }: DemoContext,
+  treatments: PatientTreatment[],
+): Promise<void> {
+  const rows: TreatmentMedication[] = [];
+
+  treatments
+    .filter((treatment) => treatment.isCurrent)
+    .forEach((treatment) => {
+      const catalog = medicationsFor(treatment.treatmentType);
+      if (!catalog.length) return;
+
+      catalog.forEach((medication) => {
+        rows.push(
+          manager.create(TreatmentMedication, {
+            treatmentId: treatment.id,
+            patientId: treatment.patientId,
+            name: medication.name,
+            doseAmount: String(medication.doseAmount),
+            doseUnit: medication.doseUnit,
+            route: medication.route,
+            frequency: normalizeDuration(
+              rng.pick(TREATMENT_FREQUENCY_DURATIONS),
+            ),
+            startDate: treatment.startDate,
+            endDate: treatment.endDate,
+            isActive: true,
+            notes: null,
+          }),
+        );
+      });
+    });
 
   await manager.save(rows);
 }
@@ -359,11 +594,11 @@ async function seedSymptomReports(
             ? 'Se reforzaron las indicaciones del oncólogo tratante.'
             : null,
           symptomDuration: hasDiscomfort
-            ? rng.pick(['Menos de 1 semana', '1 a 2 semanas', 'Más de un mes'])
-            : null,
+            ? normalizeDuration(rng.pick(SYMPTOM_DURATIONS))
+            : normalizeDuration(null),
           symptomFrequency: hasDiscomfort
-            ? rng.pick(['Diaria', 'Intermitente', 'Solo tras el tratamiento'])
-            : null,
+            ? normalizeDuration(rng.pick(SYMPTOM_FREQUENCIES))
+            : normalizeDuration(null),
           isPainPresent,
           painIntensity: isPainPresent ? rng.int(2, 9) : null,
           painLocation: isPainPresent ? rng.pick(PAIN_LOCATIONS) : null,
@@ -380,6 +615,50 @@ async function seedSymptomReports(
       );
     }
   }
+
+  await manager.save(rows);
+}
+
+/**
+ * A subset of patients enrolled at one hospital end up treated at another —
+ * derived to a referral hub while keeping their original hospital as the
+ * enrollment's primary one.
+ */
+async function seedReferrals(
+  ctx: DemoContext,
+  enrolled: PatientFollowUps[],
+  healthCenters: HealthCenter[],
+): Promise<void> {
+  const { manager, rng, now } = ctx;
+  const rows: PatientReferral[] = [];
+
+  enrolled.forEach((history, index) => {
+    if (index % 4 !== 0) return;
+
+    const { patient, healthCenter } = history.demoPatient;
+    const alternatives = healthCenters.filter(
+      (center) => center.isActive && center.id !== healthCenter.id,
+    );
+    if (alternatives.length === 0) return;
+
+    const destination = rng.pick(alternatives);
+    const followUpId = anchorFollowUp(ctx, history).id;
+
+    rows.push(
+      manager.create(PatientReferral, {
+        patientId: patient.id,
+        followUpId,
+        fromHealthCenterId: healthCenter.id,
+        toHealthCenterId: destination.id,
+        specialty: rng.pick(MEDICAL_SPECIALTIES),
+        reason:
+          'Se derivó para continuar el tratamiento en un centro con mayor disponibilidad.',
+        referralDate: toDateOnly(addDays(now, -rng.int(10, 200))),
+        isActive: true,
+        hasReferralSheet: rng.bool(0.6),
+      }),
+    );
+  });
 
   await manager.save(rows);
 }

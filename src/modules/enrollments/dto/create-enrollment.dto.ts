@@ -25,6 +25,8 @@ import { CreatePatientSymptomReportDto } from '../../patients/symptom-reports/dt
 import { CreateCompanionDto } from '../../patients/dto/create-companion.dto';
 import { CreatePatientDto } from '../../patients/dto/create-patient.dto';
 import { UpsertPatientDetailsDto } from '../../patients/dto/upsert-patient-details.dto';
+import { CreatePatientAddressDto } from '../../patients/addresses/dto/create-patient-address.dto';
+import { CreatePatientReferralDto } from '../../patients/referrals/dto/create-patient-referral.dto';
 
 export class EnrollmentFollowUpDto {
   @IsIn(Object.values(FollowUpType)) type!: FollowUpType;
@@ -65,6 +67,12 @@ export class EnrollmentSymptomReportDto extends OmitType(
   CreatePatientSymptomReportDto,
   ['followUpId', 'enrollmentId'] as const,
 ) {}
+export class EnrollmentAddressDto extends OmitType(CreatePatientAddressDto, [
+  'followUpId',
+] as const) {}
+export class EnrollmentReferralDto extends OmitType(CreatePatientReferralDto, [
+  'followUpId',
+] as const) {}
 
 export class CreateEnrollmentDto {
   @IsOptional() @IsUUID() patientId?: string;
@@ -98,14 +106,25 @@ export class CreateEnrollmentDto {
   @Type(() => EnrollmentDiagnosisDto)
   diagnosis?: EnrollmentDiagnosisDto;
   @IsOptional()
-  @ValidateNested()
+  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => EnrollmentTreatmentDto)
-  treatment?: EnrollmentTreatmentDto;
+  treatments?: EnrollmentTreatmentDto[];
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => EnrollmentMedicalAppointmentDto)
   medicalAppointments?: EnrollmentMedicalAppointmentDto[];
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EnrollmentAddressDto)
+  addresses?: EnrollmentAddressDto[];
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EnrollmentReferralDto)
+  referrals?: EnrollmentReferralDto[];
   @IsOptional()
   @ValidateNested()
   @Type(() => EnrollmentSymptomReportDto)

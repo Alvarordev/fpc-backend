@@ -5,9 +5,13 @@ import {
   IsIn,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { EducationLevel } from '../../../database/entities/education-level.enum';
+import { DurationDto } from '../../../shared/duration/duration.dto';
 
 export class UpsertPatientDetailsDto {
   @ApiPropertyOptional()
@@ -18,31 +22,14 @@ export class UpsertPatientDetailsDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  currentAddress?: string;
+  @IsUUID()
+  primaryHealthCenterId?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: DurationDto })
   @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  currentDistrict?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  currentDepartment?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  dniMatchesAddress?: boolean;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  travelTimeToHospital?: string;
+  @ValidateNested()
+  @Type(() => DurationDto)
+  travelTimeToHospital?: DurationDto;
 
   @ApiPropertyOptional()
   @IsOptional()

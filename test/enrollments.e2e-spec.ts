@@ -21,6 +21,7 @@ import { PatientRole } from '../src/database/entities/patient-role.enum';
 import { PatientSisAffiliation } from '../src/database/entities/patient-sis-affiliation.entity';
 import { PatientStatus } from '../src/database/entities/patient-status.enum';
 import { PatientSymptomReport } from '../src/database/entities/patient-symptom-report.entity';
+import { PatientAddress } from '../src/database/entities/patient-address.entity';
 import { PatientTreatment } from '../src/database/entities/patient-treatment.entity';
 import { Patient } from '../src/database/entities/patient.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
@@ -91,11 +92,26 @@ describe('Enrollment wizard (e2e)', () => {
         },
         affiliationType: 'FAMILY_FRIEND',
         followUp: { type: 'IN_PERSON', notes: 'Enrollment completed' },
-        details: { currentDepartment: 'LIMA', requiresTranslation: true },
+        details: { birthDepartment: 'LIMA', requiresTranslation: true },
+        addresses: [
+          {
+            type: 'PERMANENT',
+            isPrimary: true,
+            address: 'Av. Siempre Viva 123',
+            district: 'Comas',
+            department: 'LIMA',
+          },
+          {
+            type: 'TEMPORARY',
+            address: 'Jr. Provisional 456',
+            district: 'Ate',
+            department: 'LIMA',
+          },
+        ],
         insurance: { insuranceType: 'NONE' },
         sisAffiliation: { canAffiliate: true, comments: 'Start process' },
         diagnosis: { diagnosis: 'Breast cancer', cancerStage: 'STAGE_2' },
-        treatment: { treatmentType: 'Chemotherapy' },
+        treatments: [{ treatmentType: 'Chemotherapy' }],
         medicalAppointments: [{ specialty: 'ONCOLOGY' }],
         symptomReport: { isPainPresent: true, painIntensity: 7 },
         currentlyReceivingTreatment: true,
@@ -159,6 +175,27 @@ describe('Enrollment wizard (e2e)', () => {
       followUpId: followUp.id,
       painIntensity: 7,
     });
+
+    const addresses = await dataSource.getRepository(PatientAddress).find({
+      where: { patientId: patient.id },
+      order: { type: 'ASC' },
+    });
+    expect(addresses).toHaveLength(2);
+    expect(addresses).toEqual([
+      expect.objectContaining({
+        type: 'PERMANENT',
+        isPrimary: true,
+        district: 'Comas',
+        department: 'LIMA',
+        followUpId: followUp.id,
+      }),
+      expect.objectContaining({
+        type: 'TEMPORARY',
+        isPrimary: false,
+        district: 'Ate',
+        followUpId: followUp.id,
+      }),
+    ]);
   });
 
   it('links an existing companion to a second patient as primary informant', async () => {
@@ -301,7 +338,7 @@ describe('Enrollment wizard (e2e)', () => {
         patientId: patient.id,
         affiliationType: 'SELF',
         followUp: { type: 'CALL' },
-        treatment: { treatmentType: 'Existing diagnosis treatment' },
+        treatments: [{ treatmentType: 'Existing diagnosis treatment' }],
       })
       .expect(201);
 
@@ -322,7 +359,7 @@ describe('Enrollment wizard (e2e)', () => {
         },
         affiliationType: 'SELF',
         followUp: { type: 'CALL' },
-        treatment: { treatmentType: 'Missing diagnosis treatment' },
+        treatments: [{ treatmentType: 'Missing diagnosis treatment' }],
       })
       .expect(400);
   });
@@ -340,7 +377,7 @@ describe('Enrollment wizard (e2e)', () => {
         affiliationType: 'SELF',
         followUp: { type: 'CALL' },
         insurance: { insuranceType: 'NONE' },
-        treatment: { treatmentType: 'This has no diagnosis' },
+        treatments: [{ treatmentType: 'This has no diagnosis' }],
       })
       .expect(400);
 
@@ -402,6 +439,16 @@ async function clearPromptSevenData(
   );
   await dataSource.query(
     `DELETE FROM patient_medical_appointments WHERE patient_id IN ${patientIds}`,
+    [emailPrefix],
+  );
+  // Both reference follow_ups without ON DELETE CASCADE, so they must go
+  // before the follow_ups delete below.
+  await dataSource.query(
+    `DELETE FROM patient_addresses WHERE patient_id IN ${patientIds}`,
+    [emailPrefix],
+  );
+  await dataSource.query(
+    `DELETE FROM patient_referrals WHERE patient_id IN ${patientIds}`,
     [emailPrefix],
   );
   await dataSource.query(

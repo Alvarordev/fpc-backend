@@ -10,6 +10,8 @@ import { PatientSisAffiliation } from '../../database/entities/patient-sis-affil
 import { PatientSymptomReport } from '../../database/entities/patient-symptom-report.entity';
 import { PatientTreatment } from '../../database/entities/patient-treatment.entity';
 import { Patient } from '../../database/entities/patient.entity';
+import { PatientAddress } from '../../database/entities/patient-address.entity';
+import { HealthCenter } from '../../database/entities/health-center.entity';
 
 @Injectable()
 export class PatientSummaryPayloadService {
@@ -31,6 +33,10 @@ export class PatientSummaryPayloadService {
     private readonly enrollments: Repository<Enrollment>,
     @InjectRepository(FollowUp)
     private readonly followUps: Repository<FollowUp>,
+    @InjectRepository(PatientAddress)
+    private readonly addresses: Repository<PatientAddress>,
+    @InjectRepository(HealthCenter)
+    private readonly healthCenters: Repository<HealthCenter>,
   ) {}
 
   async buildPrompt(patientId: string): Promise<string> {
@@ -49,6 +55,8 @@ export class PatientSummaryPayloadService {
       symptoms,
       enrollment,
       followUps,
+      primaryAddress,
+      primaryHealthCenter,
     ] = await Promise.all([
       this.diagnoses.find({ where: { patientId, isCurrent: true } }),
       this.insurance.find({ where: { patientId, isCurrent: true } }),
@@ -74,6 +82,14 @@ export class PatientSummaryPayloadService {
         order: { createdAt: 'DESC' },
         take: 10,
       }),
+      this.addresses.findOne({
+        where: { patientId, isPrimary: true, isActive: true },
+      }),
+      patient.details?.primaryHealthCenterId
+        ? this.healthCenters.findOneBy({
+            id: patient.details.primaryHealthCenterId,
+          })
+        : null,
     ]);
 
     // Deliberately exclude direct identifiers and contact information from the provider payload.
@@ -86,10 +102,12 @@ export class PatientSummaryPayloadService {
         gender: patient.gender,
         location: patient.details
           ? {
-              district: patient.details.currentDistrict,
-              department: patient.details.currentDepartment,
-              travelTimeToHospital: patient.details.travelTimeToHospital,
+              district: primaryAddress?.district ?? null,
+              department: primaryAddress?.department ?? null,
+              travelTimeToHospital:
+                patient.details.travelTimeToHospital?.label ?? null,
               requiresTranslation: patient.details.requiresTranslation,
+              primaryHospital: primaryHealthCenter?.name ?? null,
             }
           : null,
       },
@@ -113,10 +131,11 @@ export class PatientSummaryPayloadService {
       insurance: insurance.map((item) => ({ type: item.insuranceType })),
       treatments: treatments.map((item) => ({
         type: item.treatmentType,
-        frequency: item.treatmentFrequency,
+        frequency: item.treatmentFrequency?.label ?? null,
         situation: item.treatmentSituation,
         startDate: item.startDate,
         endDate: item.endDate,
+        hasLatestPrescription: item.hasLatestPrescription,
       })),
       appointments: appointments.map((item) => ({
         specialty: item.specialty,
@@ -132,8 +151,8 @@ export class PatientSummaryPayloadService {
       symptomReports: symptoms.map((item) => ({
         severity: item.discomfortSeverity,
         description: item.discomfortDescription,
-        duration: item.symptomDuration,
-        frequency: item.symptomFrequency,
+        duration: item.symptomDuration?.label ?? null,
+        frequency: item.symptomFrequency?.label ?? null,
         painPresent: item.isPainPresent,
         painIntensity: item.painIntensity,
         painLocation: item.painLocation,

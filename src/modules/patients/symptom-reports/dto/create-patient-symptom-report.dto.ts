@@ -7,7 +7,10 @@ import {
   Max,
   MaxLength,
   Min,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { DurationDto } from '../../../../shared/duration/duration.dto';
 
 export class CreatePatientSymptomReportDto {
   @IsUUID() followUpId!: string;
@@ -17,8 +20,14 @@ export class CreatePatientSymptomReportDto {
   @IsOptional() @IsBoolean() hasDiscomfort?: boolean;
   @IsOptional() @IsString() signsAndSymptoms?: string;
   @IsOptional() @IsString() indicationsReceived?: string;
-  @IsOptional() @IsString() @MaxLength(50) symptomDuration?: string;
-  @IsOptional() @IsString() @MaxLength(50) symptomFrequency?: string;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DurationDto)
+  symptomDuration?: DurationDto;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DurationDto)
+  symptomFrequency?: DurationDto;
   @IsOptional() @IsBoolean() isPainPresent?: boolean;
   @IsOptional() @IsInt() @Min(0) @Max(10) painIntensity?: number;
   @IsOptional() @IsString() @MaxLength(255) painLocation?: string;

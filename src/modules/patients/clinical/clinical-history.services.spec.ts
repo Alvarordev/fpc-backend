@@ -12,9 +12,11 @@ import { HistoryVersioningService } from '../history-versioning/history-versioni
 import { PatientInsuranceService } from './insurance/patient-insurance.service';
 import { PatientMedicalAppointmentsService } from './medical-appointments/patient-medical-appointments.service';
 import { PatientTreatmentsService } from './treatments/patient-treatments.service';
+import { TreatmentMedicationsService } from './treatments/medications/treatment-medications.service';
 import { PatientsService } from '../patients.service';
 import { PatientSummaryInvalidationService } from '../../patient-summaries/patient-summary-invalidation.service';
 import { N8nTransactionalDispatchService } from '../../../integrations/n8n/transactional-dispatch.service';
+import { DataSource, EntityManager } from 'typeorm';
 
 describe('clinical history services', () => {
   const patients = {
@@ -109,6 +111,19 @@ describe('clinical history services', () => {
       findOne: jest.fn().mockResolvedValue({ patientId: 'other-patient' }),
     } as unknown as Repository<PatientDiagnosis>;
     (followUps.existsBy as jest.Mock).mockResolvedValue(true);
+    const manager = {
+      getRepository: jest.fn((entity: unknown) => {
+        if (entity === PatientDiagnosis) return diagnoses;
+        if (entity === FollowUp) return followUps;
+        return {} as Repository<PatientTreatment>;
+      }),
+    } as unknown as EntityManager;
+    const dataSource = {
+      transaction: jest.fn((cb: (manager: EntityManager) => unknown) =>
+        cb(manager),
+      ),
+    } as unknown as DataSource;
+    const medications = {} as unknown as TreatmentMedicationsService;
     const service = new PatientTreatmentsService(
       {} as Repository<PatientTreatment>,
       diagnoses,
@@ -116,6 +131,8 @@ describe('clinical history services', () => {
       patients,
       versioning,
       invalidations,
+      medications,
+      dataSource,
     );
 
     await expect(

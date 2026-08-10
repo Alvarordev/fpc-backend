@@ -11,6 +11,8 @@ import { PatientSisAffiliation } from '../../database/entities/patient-sis-affil
 import { PatientSymptomReport } from '../../database/entities/patient-symptom-report.entity';
 import { PatientTreatment } from '../../database/entities/patient-treatment.entity';
 import { Patient } from '../../database/entities/patient.entity';
+import { PatientAddress } from '../../database/entities/patient-address.entity';
+import { HealthCenter } from '../../database/entities/health-center.entity';
 import { GeminiSummaryClient } from '../../integrations/gemini/gemini-summary.client';
 import { PatientSummaryPayloadService } from './patient-summary-payload.service';
 import { PatientSummaryInvalidationListener } from './patient-summary-invalidation.listener';
@@ -33,6 +35,8 @@ import { PatientSummaryStateService } from './patient-summary-state.service';
       PatientSymptomReport,
       Enrollment,
       FollowUp,
+      PatientAddress,
+      HealthCenter,
     ]),
   ],
   providers: [

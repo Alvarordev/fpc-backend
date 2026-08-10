@@ -8,6 +8,8 @@ import { PatientSisAffiliation } from '../../database/entities/patient-sis-affil
 import { PatientSymptomReport } from '../../database/entities/patient-symptom-report.entity';
 import { PatientTreatment } from '../../database/entities/patient-treatment.entity';
 import { Patient } from '../../database/entities/patient.entity';
+import { PatientAddress } from '../../database/entities/patient-address.entity';
+import { HealthCenter } from '../../database/entities/health-center.entity';
 import { PatientSummaryPayloadService } from './patient-summary-payload.service';
 
 describe('PatientSummaryPayloadService', () => {
@@ -23,14 +25,16 @@ describe('PatientSummaryPayloadService', () => {
       status: 'ENROLLED',
       isActive: true,
       details: {
-        currentDistrict: 'Lima',
-        currentDepartment: 'Lima',
-        travelTimeToHospital: '30m',
+        travelTimeToHospital: { label: '30m' },
         requiresTranslation: false,
-        currentAddress: 'Secret address',
+        primaryHealthCenterId: null,
       },
     } as unknown as Patient;
     const find = jest.fn().mockResolvedValue([]);
+    const findOneAddress = jest.fn().mockResolvedValue({
+      district: 'Lima',
+      department: 'LIMA',
+    });
     const service = new PatientSummaryPayloadService(
       {
         findOne: jest.fn().mockResolvedValue(patient),
@@ -43,6 +47,10 @@ describe('PatientSummaryPayloadService', () => {
       { find } as unknown as Repository<PatientSymptomReport>,
       { find } as unknown as Repository<Enrollment>,
       { find } as unknown as Repository<FollowUp>,
+      { findOne: findOneAddress } as unknown as Repository<PatientAddress>,
+      {
+        findOneBy: jest.fn().mockResolvedValue(null),
+      } as unknown as Repository<HealthCenter>,
     );
 
     const prompt = await service.buildPrompt('patient-id');

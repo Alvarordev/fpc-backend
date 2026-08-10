@@ -34,6 +34,9 @@ const REPORTED_TABLES = [
   'patient_medical_appointments',
   'patient_sis_affiliation',
   'patient_symptom_reports',
+  'patient_addresses',
+  'treatment_medications',
+  'patient_referrals',
   'volunteer_availability',
   'psychooncology_appointments',
   'reminders',
@@ -90,7 +93,7 @@ async function seedDemo(): Promise<void> {
       const histories = await seedFollowUps(ctx, patients, users.agents);
       const enrollments = await seedEnrollments(ctx, histories);
 
-      await seedClinicalHistory(ctx, histories, enrollments);
+      await seedClinicalHistory(ctx, histories, enrollments, healthCenters);
       await seedPsychooncology(ctx, histories, users.volunteers);
       await seedReminders(ctx, histories, users.agents);
       await seedAlerts(ctx, histories, users.agents);

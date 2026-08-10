@@ -284,7 +284,7 @@ describe('Patient summaries (e2e)', () => {
         },
         affiliationType: 'SELF',
         followUp: { type: 'CALL', agentId: assignedAgentId },
-        treatment: { treatmentType: 'Requires a diagnosis' },
+        treatments: [{ treatmentType: 'Requires a diagnosis' }],
       })
       .expect(400);
 
@@ -299,7 +299,7 @@ describe('Patient summaries (e2e)', () => {
     await dataSource.transaction(async (manager) => {
       await patients.upsertDetails(
         patient.id,
-        { currentDepartment: 'LIMA' },
+        { birthDepartment: 'LIMA' },
         manager,
       );
       await expect(

@@ -9,6 +9,7 @@ import { PatientsService } from '../patients.service';
 import { PatientSummaryInvalidationService } from '../../patient-summaries/patient-summary-invalidation.service';
 import { CreatePatientSymptomReportDto } from './dto/create-patient-symptom-report.dto';
 import { User } from '../../../database/entities/user.entity';
+import { normalizeDuration } from '../../../shared/duration/duration.util';
 
 @Injectable()
 export class PatientSymptomReportsService {
@@ -51,7 +52,12 @@ export class PatientSymptomReportsService {
     const repository =
       manager?.getRepository(PatientSymptomReport) ?? this.repository;
     const symptom = await repository.save(
-      repository.create({ ...input, patientId }),
+      repository.create({
+        ...input,
+        patientId,
+        symptomDuration: normalizeDuration(input.symptomDuration),
+        symptomFrequency: normalizeDuration(input.symptomFrequency),
+      }),
     );
     await this.invalidations.markDirty(patientId, manager);
     return symptom;

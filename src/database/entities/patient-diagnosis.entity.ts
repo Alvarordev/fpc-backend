@@ -11,6 +11,8 @@ import {
 import { HealthCenter } from './health-center.entity';
 import { FollowUp } from './follow-up.entity';
 import { Patient } from './patient.entity';
+import { Duration } from './embedded/duration.embedded';
+import { WaitTimeSource } from './wait-time-source.enum';
 
 export enum CancerStage {
   STAGE_1 = 'STAGE_1',
@@ -23,6 +25,9 @@ export enum CancerStage {
 @Entity('patient_diagnoses')
 @Check(
   `"cancer_stage" IS NULL OR "cancer_stage" IN ('STAGE_1','STAGE_2','STAGE_3','STAGE_4','UNKNOWN')`,
+)
+@Check(
+  `"wait_time_source" IS NULL OR "wait_time_source" IN ('COMPUTED','REPORTED')`,
 )
 @Index('UQ_patient_diagnoses_current', ['patientId'], {
   unique: true,
@@ -60,13 +65,17 @@ export class PatientDiagnosis {
   diagnosisSpecialty!: string | null;
   @Column({ name: 'symptom_leading_to_checkup', type: 'text', nullable: true })
   symptomLeadingToCheckup!: string | null;
+  @Column({ name: 'first_symptoms_date', type: 'date', nullable: true })
+  firstSymptomsDate!: string | null;
   @Column({
-    name: 'wait_time_for_diagnosis',
+    name: 'wait_time_source',
     type: 'varchar',
-    length: 100,
+    length: 10,
     nullable: true,
   })
-  waitTimeForDiagnosis!: string | null;
+  waitTimeSource!: WaitTimeSource | null;
+  @Column(() => Duration, { prefix: 'wait_time_for_diagnosis' })
+  waitTimeForDiagnosis!: Duration;
   @Column({ name: 'has_medical_report', type: 'boolean', default: false })
   hasMedicalReport!: boolean;
   @Column({ name: 'is_current', type: 'boolean' }) isCurrent!: boolean;

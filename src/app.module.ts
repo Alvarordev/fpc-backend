@@ -26,6 +26,7 @@ import { VolunteerCalendarModule } from './modules/volunteers/calendar/volunteer
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MedicalAppointmentsModule } from './modules/patients/clinical/medical-appointments/medical-appointments.module';
 import { N8nModule } from './integrations/n8n/n8n.module';
+import { EmbeddedUnderscoreNamingStrategy } from './database/embedded-underscore-naming.strategy';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { N8nModule } from './integrations/n8n/n8n.module';
         url: configService.getOrThrow<string>('DATABASE_URL'),
         autoLoadEntities: true,
         synchronize: false,
+        namingStrategy: new EmbeddedUnderscoreNamingStrategy(),
       }),
     }),
     UsersModule,

@@ -113,14 +113,20 @@ export class DashboardResponseDto {
     type: DashboardTableItemDto,
     isArray: true,
     description:
-      'Up to eight hospitals using current medical appointment, treatment, then diagnosis precedence.',
+      'Up to eight hospitals using primary health center, then current medical appointment, treatment, and diagnosis precedence.',
   })
   hospitals!: DashboardTableItemDto[];
   @ApiProperty({
     type: DashboardTableItemDto,
     isArray: true,
     description:
-      'Up to eight regions using hospital department, then current and birth department precedence.',
+      'Up to eight regions using primary health center department, then primary address, then birth department precedence.',
   })
   regions!: DashboardTableItemDto[];
+  @ApiProperty({
+    type: DashboardTableItemDto,
+    isArray: true,
+    description: 'Up to eight hospital referral pairs (origin → destination).',
+  })
+  referrals!: DashboardTableItemDto[];
 }

@@ -44,7 +44,7 @@ interface TrendRow {
 }
 
 interface TableRow {
-  category: 'hospitals' | 'regions';
+  category: 'hospitals' | 'regions' | 'referrals';
   name: string;
   count: string | number;
 }
@@ -101,6 +101,7 @@ export class DashboardService {
       trend: trendRows.map((row) => this.toTrendPoint(row)),
       hospitals: this.toTables(tableRows, 'hospitals'),
       regions: this.toTables(tableRows, 'regions'),
+      referrals: this.toTables(tableRows, 'referrals'),
     };
   }
 
@@ -293,19 +294,25 @@ export class DashboardService {
         FROM patient_diagnoses
         WHERE is_current = true
       ), current_treatments AS (
-        SELECT treatment.patient_id, treatment.diagnosis_id, treatment.health_center_id
+        SELECT DISTINCT ON (treatment.patient_id) treatment.patient_id, treatment.diagnosis_id, treatment.health_center_id
         FROM patient_treatments treatment
         WHERE treatment.is_current = true
+        ORDER BY treatment.patient_id, treatment.created_at DESC, treatment.id DESC
       ), latest_current_appointments AS (
         SELECT DISTINCT ON (patient_id) patient_id, health_center_id
         FROM patient_medical_appointments
         WHERE is_current = true
         ORDER BY patient_id, appointment_date DESC NULLS LAST, created_at DESC, id DESC
+      ), primary_addresses AS (
+        SELECT DISTINCT ON (patient_id) patient_id, department
+        FROM patient_addresses
+        WHERE is_primary = true AND is_active = true
       ), patient_context AS (
         SELECT
           patient.id,
-          COALESCE(appointment.health_center_id, treatment.health_center_id, diagnosis.health_center_id) AS health_center_id,
-          details.current_department,
+          details.primary_health_center_id,
+          COALESCE(appointment.health_center_id, treatment.health_center_id, diagnosis.health_center_id) AS fallback_health_center_id,
+          address.department AS current_department,
           details.birth_department
         FROM cohort
         JOIN patients patient ON patient.id = cohort.patient_id
@@ -313,16 +320,26 @@ export class DashboardService {
         LEFT JOIN current_diagnoses diagnosis ON diagnosis.patient_id = patient.id
         LEFT JOIN current_treatments treatment ON treatment.diagnosis_id = diagnosis.id
         LEFT JOIN latest_current_appointments appointment ON appointment.patient_id = patient.id
+        LEFT JOIN primary_addresses address ON address.patient_id = patient.id
       )
       SELECT category, name, COUNT(*) AS count
       FROM (
-        SELECT 'hospitals' AS category, COALESCE(health_center.name, '${UNKNOWN_LABEL}') AS name
+        SELECT 'hospitals' AS category, COALESCE(primary_health_center.name, fallback_health_center.name, '${UNKNOWN_LABEL}') AS name
         FROM patient_context
-        LEFT JOIN health_centers health_center ON health_center.id = patient_context.health_center_id
+        LEFT JOIN health_centers primary_health_center ON primary_health_center.id = patient_context.primary_health_center_id
+        LEFT JOIN health_centers fallback_health_center ON fallback_health_center.id = patient_context.fallback_health_center_id
         UNION ALL
-        SELECT 'regions', COALESCE(health_center.department, NULLIF(BTRIM(patient_context.current_department), ''), NULLIF(BTRIM(patient_context.birth_department), ''), '${UNKNOWN_LABEL}')
+        SELECT 'regions', COALESCE(primary_health_center.department, fallback_health_center.department, NULLIF(BTRIM(patient_context.current_department), ''), NULLIF(BTRIM(patient_context.birth_department), ''), '${UNKNOWN_LABEL}')
         FROM patient_context
-        LEFT JOIN health_centers health_center ON health_center.id = patient_context.health_center_id
+        LEFT JOIN health_centers primary_health_center ON primary_health_center.id = patient_context.primary_health_center_id
+        LEFT JOIN health_centers fallback_health_center ON fallback_health_center.id = patient_context.fallback_health_center_id
+        UNION ALL
+        SELECT 'referrals', COALESCE(from_center.name, '${UNKNOWN_LABEL}') || ' → ' || COALESCE(to_center.name, '${UNKNOWN_LABEL}')
+        FROM patient_referrals referral
+        JOIN cohort ON cohort.patient_id = referral.patient_id
+        LEFT JOIN health_centers from_center ON from_center.id = referral.from_health_center_id
+        LEFT JOIN health_centers to_center ON to_center.id = referral.to_health_center_id
+        WHERE referral.is_active = true
       ) values
       GROUP BY category, name
       ORDER BY category, count DESC, name ASC

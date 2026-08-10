@@ -12,6 +12,7 @@ import { Enrollment } from './enrollment.entity';
 import { HealthCenter } from './health-center.entity';
 import { FollowUp } from './follow-up.entity';
 import { Patient } from './patient.entity';
+import { Duration } from './embedded/duration.embedded';
 
 @Entity('patient_symptom_reports')
 @Check('"pain_intensity" IS NULL OR "pain_intensity" BETWEEN 0 AND 10')
@@ -49,20 +50,10 @@ export class PatientSymptomReport {
   signsAndSymptoms!: string | null;
   @Column({ name: 'indications_received', type: 'text', nullable: true })
   indicationsReceived!: string | null;
-  @Column({
-    name: 'symptom_duration',
-    type: 'varchar',
-    length: 50,
-    nullable: true,
-  })
-  symptomDuration!: string | null;
-  @Column({
-    name: 'symptom_frequency',
-    type: 'varchar',
-    length: 50,
-    nullable: true,
-  })
-  symptomFrequency!: string | null;
+  @Column(() => Duration, { prefix: 'symptom_duration' })
+  symptomDuration!: Duration;
+  @Column(() => Duration, { prefix: 'symptom_frequency' })
+  symptomFrequency!: Duration;
   @Column({ name: 'is_pain_present', type: 'boolean', nullable: true })
   isPainPresent!: boolean | null;
   @Column({ name: 'pain_intensity', type: 'smallint', nullable: true })

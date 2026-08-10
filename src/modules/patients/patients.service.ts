@@ -31,6 +31,8 @@ import { User } from '../../database/entities/user.entity';
 import { PatientAccessService } from './access/patient-access.service';
 import { N8nTransactionalDispatchService } from '../../integrations/n8n/transactional-dispatch.service';
 import { buildRegistroEnvelope } from '../../integrations/n8n/n8n-webhook.payloads';
+import { PatientAddress } from '../../database/entities/patient-address.entity';
+import { normalizeDuration } from '../../shared/duration/duration.util';
 
 @Injectable()
 export class PatientsService {
@@ -57,6 +59,8 @@ export class PatientsService {
     private readonly symptomReportsRepository: Repository<PatientSymptomReport>,
     @InjectRepository(FollowUp)
     private readonly followUpsRepository: Repository<FollowUp>,
+    @InjectRepository(PatientAddress)
+    private readonly addressesRepository: Repository<PatientAddress>,
     private readonly dataSource: DataSource,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly access: PatientAccessService,
@@ -254,30 +258,36 @@ export class PatientsService {
     if (!data.length) return { data: [], total };
 
     const patientIds = data.map((patient) => patient.id);
-    const [details, currentDiagnoses, latestFollowUps] = await Promise.all([
-      this.detailsRepository.find({ where: { patientId: In(patientIds) } }),
-      this.diagnosesRepository
-        .createQueryBuilder('diagnosis')
-        .leftJoinAndSelect('diagnosis.healthCenter', 'healthCenter')
-        .where('diagnosis.patient_id IN (:...patientIds)', { patientIds })
-        .andWhere('diagnosis.is_current = true')
-        .getMany(),
-      this.followUpsRepository
-        .createQueryBuilder('followUp')
-        .distinctOn(['followUp.subject_patient_id'])
-        .where('followUp.subject_patient_id IN (:...patientIds)', {
-          patientIds,
-        })
-        .orderBy('followUp.subject_patient_id', 'ASC')
-        .addOrderBy(
-          'COALESCE(followUp.completed_at, followUp.scheduled_at, followUp.created_at)',
-          'DESC',
-        )
-        .addOrderBy('followUp.id', 'DESC')
-        .getMany(),
-    ]);
+    const [primaryAddresses, currentDiagnoses, latestFollowUps] =
+      await Promise.all([
+        this.addressesRepository.find({
+          where: { patientId: In(patientIds), isPrimary: true, isActive: true },
+        }),
+        this.diagnosesRepository
+          .createQueryBuilder('diagnosis')
+          .leftJoinAndSelect('diagnosis.healthCenter', 'healthCenter')
+          .where('diagnosis.patient_id IN (:...patientIds)', { patientIds })
+          .andWhere('diagnosis.is_current = true')
+          .getMany(),
+        this.followUpsRepository
+          .createQueryBuilder('followUp')
+          .distinctOn(['followUp.subject_patient_id'])
+          .where('followUp.subject_patient_id IN (:...patientIds)', {
+            patientIds,
+          })
+          .orderBy('followUp.subject_patient_id', 'ASC')
+          .addOrderBy(
+            'COALESCE(followUp.completed_at, followUp.scheduled_at, followUp.created_at)',
+            'DESC',
+          )
+          .addOrderBy('followUp.id', 'DESC')
+          .getMany(),
+      ]);
     const departments = new Map(
-      details.map((details) => [details.patientId, details.currentDepartment]),
+      primaryAddresses.map((address) => [
+        address.patientId,
+        address.department,
+      ]),
     );
     const diagnoses = new Map(
       currentDiagnoses.map((diagnosis) => [diagnosis.patientId, diagnosis]),
@@ -429,10 +439,15 @@ export class PatientsService {
     const details = await repository.findOne({
       where: { patientId: id },
     });
+    const { travelTimeToHospital, ...rest } = input;
+    const normalized = {
+      ...rest,
+      travelTimeToHospital: normalizeDuration(travelTimeToHospital),
+    };
     const saved = await repository.save(
       details
-        ? Object.assign(details, input)
-        : repository.create({ ...input, patientId: id }),
+        ? Object.assign(details, normalized)
+        : repository.create({ ...normalized, patientId: id }),
     );
     await this.invalidations.markDirty(id, manager);
     return saved;

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PatientSymptomReport } from '../../../../database/entities/patient-symptom-report.entity';
+import { DurationResponseDto } from '../../../../shared/duration/duration-response.dto';
 
 export class PatientSymptomReportResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -29,11 +30,11 @@ export class PatientSymptomReportResponseDto {
   @ApiProperty({ nullable: true })
   indicationsReceived!: string | null;
 
-  @ApiProperty({ nullable: true })
-  symptomDuration!: string | null;
+  @ApiProperty({ type: DurationResponseDto, nullable: true })
+  symptomDuration!: DurationResponseDto | null;
 
-  @ApiProperty({ nullable: true })
-  symptomFrequency!: string | null;
+  @ApiProperty({ type: DurationResponseDto, nullable: true })
+  symptomFrequency!: DurationResponseDto | null;
 
   @ApiProperty({ nullable: true })
   isPainPresent!: boolean | null;
@@ -70,8 +71,8 @@ export class PatientSymptomReportResponseDto {
       hasDiscomfort: report.hasDiscomfort,
       signsAndSymptoms: report.signsAndSymptoms,
       indicationsReceived: report.indicationsReceived,
-      symptomDuration: report.symptomDuration,
-      symptomFrequency: report.symptomFrequency,
+      symptomDuration: DurationResponseDto.from(report.symptomDuration),
+      symptomFrequency: DurationResponseDto.from(report.symptomFrequency),
       isPainPresent: report.isPainPresent,
       painIntensity: report.painIntensity,
       painLocation: report.painLocation,

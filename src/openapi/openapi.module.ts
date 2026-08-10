@@ -31,6 +31,12 @@ import { PatientSisAffiliationController } from '../modules/patients/clinical/si
 import { PatientSisAffiliationService } from '../modules/patients/clinical/sis-affiliation/patient-sis-affiliation.service';
 import { PatientTreatmentsController } from '../modules/patients/clinical/treatments/patient-treatments.controller';
 import { PatientTreatmentsService } from '../modules/patients/clinical/treatments/patient-treatments.service';
+import { TreatmentMedicationsController } from '../modules/patients/clinical/treatments/medications/treatment-medications.controller';
+import { TreatmentMedicationsService } from '../modules/patients/clinical/treatments/medications/treatment-medications.service';
+import { PatientAddressesController } from '../modules/patients/addresses/patient-addresses.controller';
+import { PatientAddressesService } from '../modules/patients/addresses/patient-addresses.service';
+import { PatientReferralsController } from '../modules/patients/referrals/patient-referrals.controller';
+import { PatientReferralsService } from '../modules/patients/referrals/patient-referrals.service';
 import { PatientsController } from '../modules/patients/patients.controller';
 import { PatientsService } from '../modules/patients/patients.service';
 import { PatientTimelineService } from '../modules/patients/patient-timeline.service';
@@ -71,6 +77,9 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     PatientMedicalAppointmentsController,
     PatientSisAffiliationController,
     PatientTreatmentsController,
+    TreatmentMedicationsController,
+    PatientAddressesController,
+    PatientReferralsController,
     PatientSymptomReportsController,
     PsychooncologyAppointmentsController,
     RemindersController,
@@ -100,6 +109,9 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     { provide: PatientSisAffiliationService, useValue: {} },
     { provide: PatientSymptomReportsService, useValue: {} },
     { provide: PatientTreatmentsService, useValue: {} },
+    { provide: TreatmentMedicationsService, useValue: {} },
+    { provide: PatientAddressesService, useValue: {} },
+    { provide: PatientReferralsService, useValue: {} },
     { provide: PatientSummaryOnDemandService, useValue: {} },
     { provide: PsychooncologyAppointmentsService, useValue: {} },
     { provide: RemindersService, useValue: {} },

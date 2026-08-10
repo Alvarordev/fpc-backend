@@ -4,12 +4,15 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { EducationLevel } from './education-level.enum';
 import { Patient } from './patient.entity';
+import { Duration } from './embedded/duration.embedded';
+import { HealthCenter } from './health-center.entity';
 
 @Entity('patient_details')
 @Check(
@@ -36,35 +39,15 @@ export class PatientDetails {
   })
   birthDepartment!: string | null;
 
-  @Column({ name: 'current_address', type: 'text', nullable: true })
-  currentAddress!: string | null;
+  @Column(() => Duration, { prefix: 'travel_time_to_hospital' })
+  travelTimeToHospital!: Duration;
 
-  @Column({
-    name: 'current_district',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
-  currentDistrict!: string | null;
+  @Column({ name: 'primary_health_center_id', type: 'uuid', nullable: true })
+  primaryHealthCenterId!: string | null;
 
-  @Column({
-    name: 'current_department',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
-  currentDepartment!: string | null;
-
-  @Column({ name: 'dni_matches_address', type: 'boolean', nullable: true })
-  dniMatchesAddress!: boolean | null;
-
-  @Column({
-    name: 'travel_time_to_hospital',
-    type: 'varchar',
-    length: 100,
-    nullable: true,
-  })
-  travelTimeToHospital!: string | null;
+  @ManyToOne(() => HealthCenter)
+  @JoinColumn({ name: 'primary_health_center_id' })
+  primaryHealthCenter!: HealthCenter | null;
 
   @Column({
     name: 'emergency_contact_name',
