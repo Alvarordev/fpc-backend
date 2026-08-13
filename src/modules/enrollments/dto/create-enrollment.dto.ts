@@ -5,13 +5,10 @@ import {
   IsBoolean,
   IsDateString,
   IsIn,
-  IsInt,
   IsOptional,
   IsString,
   IsUUID,
-  Max,
   MaxLength,
-  Min,
   ValidateNested,
 } from 'class-validator';
 import { AffiliationType } from '../../../database/entities/enrollment.entity';
@@ -139,7 +136,6 @@ export class CreateEnrollmentDto {
   @IsOptional() @IsBoolean() hasMobilityIssues?: boolean;
   @IsOptional() @IsBoolean() isOncologicalPatient?: boolean;
   @IsOptional() @IsBoolean() surveyAccepted?: boolean;
-  @IsOptional() @IsInt() @Min(1) @Max(5) followUpQualityRating?: number;
   @IsOptional() @IsString() caseComments?: string;
   @IsOptional() @IsDateString() callStartedAt?: string;
   @IsOptional() @IsDateString() callEndedAt?: string;

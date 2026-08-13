@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Enrollment } from '../../database/entities/enrollment.entity';
 import { EnrollmentFamilyTalkInterest } from '../../database/entities/enrollment-family-talk-interest.entity';
+import { Agent } from '../../database/entities/agent.entity';
 import { FollowUpsModule } from '../follow-ups/follow-ups.module';
 import { PatientsModule } from '../patients/patients.module';
 import { PatientSummariesModule } from '../patient-summaries/patient-summaries.module';
@@ -11,7 +12,7 @@ import { EnrollmentsService } from './enrollments.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Enrollment, EnrollmentFamilyTalkInterest]),
+    TypeOrmModule.forFeature([Enrollment, EnrollmentFamilyTalkInterest, Agent]),
     PatientsModule,
     PatientSummariesModule,
     FollowUpsModule,

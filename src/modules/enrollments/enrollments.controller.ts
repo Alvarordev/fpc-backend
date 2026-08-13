@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -19,6 +19,7 @@ import { UserRole } from '../../database/entities/user-role.enum';
 import { Enrollment } from '../../database/entities/enrollment.entity';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { EnrollmentResponseDto } from './dto/enrollment-response.dto';
+import { UpdateEnrollmentSurveyDto } from './dto/update-enrollment-survey.dto';
 import { EnrollmentsService } from './enrollments.service';
 
 const READ = [
@@ -50,6 +51,28 @@ export class EnrollmentsController {
   })
   create(@Body() dto: CreateEnrollmentDto, @CurrentUser() user: User) {
     return this.service.create(dto, user.id, user.role).then(this.toResponse);
+  }
+
+  @Patch(':id/survey')
+  @Roles(...WRITE)
+  @ApiOperation({ summary: 'Record an enrollment satisfaction rating' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: EnrollmentResponseDto })
+  @ApiBadRequestResponse({
+    description: 'The rating must be an integer from 1 to 5',
+  })
+  @ApiForbiddenResponse({
+    description: 'Agents can only update their own enrollment',
+  })
+  @ApiNotFoundResponse({ description: 'Enrollment not found' })
+  updateSurvey(
+    @Param('id') id: string,
+    @Body() dto: UpdateEnrollmentSurveyDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.service
+      .updateSurvey(id, dto, user.id, user.role)
+      .then(this.toResponse);
   }
 
   @Get('patient/:patientId')

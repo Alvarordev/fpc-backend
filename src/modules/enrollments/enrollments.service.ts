@@ -1,11 +1,13 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+import { Agent } from '../../database/entities/agent.entity';
 import {
   AffiliationType,
   Enrollment,
@@ -30,6 +32,7 @@ import { PatientAddressesService } from '../patients/addresses/patient-addresses
 import { PatientReferralsService } from '../patients/referrals/patient-referrals.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
+import { UpdateEnrollmentSurveyDto } from './dto/update-enrollment-survey.dto';
 import { User } from '../../database/entities/user.entity';
 import { N8nTransactionalDispatchService } from '../../integrations/n8n/transactional-dispatch.service';
 import { buildRegistroEnvelope } from '../../integrations/n8n/n8n-webhook.payloads';
@@ -39,6 +42,8 @@ export class EnrollmentsService {
   constructor(
     @InjectRepository(Enrollment)
     private readonly enrollments: Repository<Enrollment>,
+    @InjectRepository(Agent)
+    private readonly agents: Repository<Agent>,
     private readonly dataSource: DataSource,
     private readonly patients: PatientsService,
     private readonly followUps: FollowUpsService,
@@ -279,5 +284,35 @@ export class EnrollmentsService {
       where: { patientId },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async updateSurvey(
+    id: string,
+    input: UpdateEnrollmentSurveyDto,
+    userId: string,
+    userRole: string,
+  ) {
+    const enrollment = await this.enrollments.findOne({
+      where: { id },
+      relations: { followUp: true },
+    });
+    if (!enrollment) throw new NotFoundException('Enrollment not found');
+
+    if (userRole === 'AGENT') {
+      const agent = await this.agents.findOne({ where: { userId } });
+      if (!agent)
+        throw new BadRequestException(
+          'Authenticated user has no agent profile',
+        );
+      if (enrollment.followUp.agentId !== agent.id)
+        throw new ForbiddenException(
+          'Agents can only update their own enrollment',
+        );
+    }
+
+    enrollment.followUpQualityRating = input.followUpQualityRating;
+    const updated = await this.enrollments.save(enrollment);
+    await this.invalidations.markDirty(updated.patientId);
+    return updated;
   }
 }

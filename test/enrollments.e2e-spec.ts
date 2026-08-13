@@ -118,7 +118,6 @@ describe('Enrollment wizard (e2e)', () => {
         consentToContact: true,
         consentToShareData: false,
         isOncologicalPatient: true,
-        followUpQualityRating: 5,
       })
       .expect(201);
 
@@ -196,6 +195,116 @@ describe('Enrollment wizard (e2e)', () => {
         followUpId: followUp.id,
       }),
     ]);
+  });
+
+  it('records and updates the enrollment rating after enrollment', async () => {
+    const enrollmentResponse = await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'Post Enrollment Rating Patient',
+          primaryPhone: '14',
+          email: 'p7-rating@example.test',
+        },
+        affiliationType: 'SELF',
+        followUp: { type: 'CALL' },
+      })
+      .expect(201);
+    const enrollment = enrollmentResponse.body as Enrollment;
+
+    await request(server)
+      .patch(`/enrollments/${enrollment.id}/survey`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ followUpQualityRating: 5 })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body as Enrollment).toMatchObject({
+          id: enrollment.id,
+          followUpQualityRating: 5,
+        });
+      });
+
+    await request(server)
+      .patch(`/enrollments/${enrollment.id}/survey`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ followUpQualityRating: 3 })
+      .expect(200)
+      .expect(({ body }) => {
+        expect((body as Enrollment).followUpQualityRating).toBe(3);
+      });
+
+    await expect(
+      dataSource
+        .getRepository(Enrollment)
+        .findOneByOrFail({ id: enrollment.id }),
+    ).resolves.toMatchObject({ followUpQualityRating: 3 });
+  });
+
+  it('rejects an enrollment rating outside the allowed range', async () => {
+    const enrollmentResponse = await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'Invalid Rating Patient',
+          primaryPhone: '15',
+          email: 'p7-invalid-rating@example.test',
+        },
+        affiliationType: 'SELF',
+        followUp: { type: 'CALL' },
+      })
+      .expect(201);
+    const enrollment = enrollmentResponse.body as Enrollment;
+
+    await request(server)
+      .patch(`/enrollments/${enrollment.id}/survey`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ followUpQualityRating: 6 })
+      .expect(400);
+
+    await request(server)
+      .patch('/enrollments/00000000-0000-0000-0000-000000000000/survey')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ followUpQualityRating: 5 })
+      .expect(404);
+  });
+
+  it('prevents an agent from changing another agent enrollment', async () => {
+    const otherAgentUser = await users.create({
+      email: 'p7-other-agent@example.test',
+      password: 'password123',
+      role: UserRole.AGENT,
+    });
+    await dataSource.getRepository(Agent).save({
+      userId: otherAgentUser.id,
+      fullName: 'Other Enrollment Agent',
+      phone: '16',
+    });
+    const otherToken = await jwt.signAsync({
+      sub: otherAgentUser.id,
+      role: otherAgentUser.role,
+    });
+    const enrollmentResponse = await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'Cross Agent Rating Patient',
+          primaryPhone: '17',
+          email: 'p7-cross-agent-rating@example.test',
+        },
+        affiliationType: 'SELF',
+        followUp: { type: 'CALL' },
+      })
+      .expect(201);
+    const enrollment = enrollmentResponse.body as Enrollment;
+
+    await request(server)
+      .patch(`/enrollments/${enrollment.id}/survey`)
+      .set('Authorization', `Bearer ${otherToken}`)
+      .send({ followUpQualityRating: 4 })
+      .expect(403);
   });
 
   it('links an existing companion to a second patient as primary informant', async () => {

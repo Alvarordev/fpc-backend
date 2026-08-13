@@ -1009,6 +1009,65 @@
         ]
       }
     },
+    "/enrollments/{id}/survey": {
+      "patch": {
+        "operationId": "EnrollmentsController_updateSurvey",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEnrollmentSurveyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The rating must be an integer from 1 to 5"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only update their own enrollment"
+          },
+          "404": {
+            "description": "Enrollment not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record an enrollment satisfaction rating",
+        "tags": [
+          "enrollments"
+        ]
+      }
+    },
     "/enrollments/patient/{patientId}": {
       "get": {
         "operationId": "EnrollmentsController_findAll",
@@ -6802,11 +6861,6 @@
           "surveyAccepted": {
             "type": "boolean"
           },
-          "followUpQualityRating": {
-            "type": "number",
-            "minimum": 1,
-            "maximum": 5
-          },
           "caseComments": {
             "type": "string"
           },
@@ -6939,6 +6993,19 @@
           "callEndedAt",
           "followUpQualityRating",
           "createdAt"
+        ]
+      },
+      "UpdateEnrollmentSurveyDto": {
+        "type": "object",
+        "properties": {
+          "followUpQualityRating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "followUpQualityRating"
         ]
       },
       "CreateFollowUpDto": {
