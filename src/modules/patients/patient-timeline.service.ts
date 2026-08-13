@@ -10,13 +10,14 @@ import {
   PatientTimelineResponseDto,
   PsychooncologyAppointmentTimelineEventDto,
   ReminderTimelineEventDto,
+  SocialNoteTimelineEventDto,
 } from './dto/patient-timeline.dto';
 
 type TimelineRow = {
   id: string;
   kind: PatientTimelineEventKind;
   occurred_at: Date | string;
-  status: string;
+  status: string | null;
   follow_up_id: string | null;
   type: string | null;
   purpose: string | null;
@@ -24,6 +25,9 @@ type TimelineRow = {
   description: string | null;
   modality: string | null;
   session_number: number | null;
+  social_note_type: string | null;
+  social_note: string | null;
+  author_id: string | null;
 };
 
 @Injectable()
@@ -77,7 +81,10 @@ export class PatientTimelineService {
         follow_up.notes,
         NULL::text AS description,
         NULL::varchar AS modality,
-        NULL::int AS session_number
+        NULL::int AS session_number,
+        NULL::varchar AS social_note_type,
+        NULL::text AS social_note,
+        NULL::uuid AS author_id
       FROM follow_ups follow_up
       WHERE follow_up.subject_patient_id = $1
 
@@ -94,7 +101,10 @@ export class PatientTimelineService {
         NULL::text AS notes,
         reminder.description,
         NULL::varchar AS modality,
-        NULL::int AS session_number
+        NULL::int AS session_number,
+        NULL::varchar AS social_note_type,
+        NULL::text AS social_note,
+        NULL::uuid AS author_id
       FROM reminders reminder
       WHERE reminder.subject_patient_id = $1
 
@@ -111,14 +121,48 @@ export class PatientTimelineService {
         NULL::text AS notes,
         NULL::text AS description,
         appointment.modality,
-        appointment.session_number
+        appointment.session_number,
+        NULL::varchar AS social_note_type,
+        NULL::text AS social_note,
+        NULL::uuid AS author_id
       FROM psychooncology_appointments appointment
       WHERE appointment.patient_id = $1
+
+      UNION ALL
+
+      SELECT
+        social_note.id,
+        'SOCIAL_NOTE'::text AS kind,
+        social_note.created_at AS occurred_at,
+        NULL::varchar AS status,
+        social_note.follow_up_id,
+        NULL::varchar AS type,
+        NULL::varchar AS purpose,
+        NULL::text AS notes,
+        NULL::text AS description,
+        NULL::varchar AS modality,
+        NULL::int AS session_number,
+        social_note.type AS social_note_type,
+        social_note.note AS social_note,
+        social_note.author_id
+      FROM patient_social_notes social_note
+      WHERE social_note.patient_id = $1
 
     `;
   }
 
   private toEvent(row: TimelineRow): PatientTimelineEventDto {
+    if (row.kind === PatientTimelineEventKind.SOCIAL_NOTE)
+      return {
+        id: row.id,
+        kind: row.kind,
+        occurredAt: new Date(row.occurred_at).toISOString(),
+        followUpId: row.follow_up_id!,
+        type: row.social_note_type!,
+        note: row.social_note!,
+        authorId: row.author_id!,
+      } as SocialNoteTimelineEventDto;
+
     const common = {
       id: row.id,
       occurredAt: new Date(row.occurred_at).toISOString(),

@@ -3890,6 +3890,112 @@
         ]
       }
     },
+    "/patients/{patientId}/social-notes": {
+      "post": {
+        "operationId": "PatientSocialNotesController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientSocialNoteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSocialNoteResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a patient social note",
+        "tags": [
+          "Patient social notes"
+        ]
+      },
+      "get": {
+        "operationId": "PatientSocialNotesController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientSocialNoteResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patient social notes",
+        "tags": [
+          "Patient social notes"
+        ]
+      }
+    },
     "/psychooncology-appointments": {
       "post": {
         "operationId": "PsychooncologyAppointmentsController_create",
@@ -7648,6 +7754,53 @@
           "sessionNumber"
         ]
       },
+      "SocialNoteTimelineEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "SOCIAL_NOTE"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "SOCIAL_WORKER",
+              "CONADIS",
+              "FISSAL"
+            ],
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "occurredAt",
+          "followUpId",
+          "type",
+          "note",
+          "authorId"
+        ]
+      },
       "PatientResponseDto": {
         "type": "object",
         "properties": {
@@ -8114,6 +8267,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/PsychooncologyAppointmentTimelineEventDto"
+                },
+                {
+                  "$ref": "#/components/schemas/SocialNoteTimelineEventDto"
                 }
               ],
               "discriminator": {
@@ -8121,7 +8277,8 @@
                 "mapping": {
                   "FOLLOW_UP": "#/components/schemas/FollowUpTimelineEventDto",
                   "REMINDER": "#/components/schemas/ReminderTimelineEventDto",
-                  "PSYCHOONCOLOGY_APPOINTMENT": "#/components/schemas/PsychooncologyAppointmentTimelineEventDto"
+                  "PSYCHOONCOLOGY_APPOINTMENT": "#/components/schemas/PsychooncologyAppointmentTimelineEventDto",
+                  "SOCIAL_NOTE": "#/components/schemas/SocialNoteTimelineEventDto"
                 }
               }
             }
@@ -9839,6 +9996,76 @@
         },
         "required": [
           "followUpId"
+        ]
+      },
+      "CreatePatientSocialNoteDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SOCIAL_WORKER",
+              "CONADIS",
+              "FISSAL"
+            ]
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "followUpId",
+          "type",
+          "note"
+        ]
+      },
+      "PatientSocialNoteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "SOCIAL_WORKER",
+              "CONADIS",
+              "FISSAL"
+            ],
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "type",
+          "note",
+          "authorId",
+          "createdAt"
         ]
       },
       "CreatePsychooncologyAppointmentDto": {

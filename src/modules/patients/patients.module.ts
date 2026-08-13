@@ -38,6 +38,9 @@ import { PatientsService } from './patients.service';
 import { PatientSymptomReportsController } from './symptom-reports/patient-symptom-reports.controller';
 import { PatientSymptomReportsService } from './symptom-reports/patient-symptom-reports.service';
 import { PatientTimelineService } from './patient-timeline.service';
+import { PatientSocialNote } from '../../database/entities/patient-social-note.entity';
+import { PatientSocialNotesController } from './social-notes/patient-social-notes.controller';
+import { PatientSocialNotesService } from './social-notes/patient-social-notes.service';
 
 @Module({
   imports: [
@@ -57,6 +60,7 @@ import { PatientTimelineService } from './patient-timeline.service';
       FollowUp,
       Enrollment,
       PatientSummary,
+      PatientSocialNote,
     ]),
     PatientSummariesModule,
     PatientAccessModule,
@@ -72,6 +76,7 @@ import { PatientTimelineService } from './patient-timeline.service';
     PatientSymptomReportsController,
     PatientAddressesController,
     TreatmentMedicationsController,
+    PatientSocialNotesController,
   ],
   providers: [
     PatientsService,
@@ -85,6 +90,7 @@ import { PatientTimelineService } from './patient-timeline.service';
     PatientTimelineService,
     PatientAddressesService,
     TreatmentMedicationsService,
+    PatientSocialNotesService,
   ],
   exports: [
     PatientsService,
@@ -97,6 +103,7 @@ import { PatientTimelineService } from './patient-timeline.service';
     PatientSymptomReportsService,
     PatientAddressesService,
     TreatmentMedicationsService,
+    PatientSocialNotesService,
   ],
 })
 export class PatientsModule {}

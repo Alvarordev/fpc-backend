@@ -15,11 +15,13 @@ import {
   AppointmentModality,
   AppointmentStatus,
 } from '../../../database/entities/psychooncology-appointment.entity';
+import { SocialNoteType } from '../../../database/entities/patient-social-note.entity';
 
 export enum PatientTimelineEventKind {
   FOLLOW_UP = 'FOLLOW_UP',
   REMINDER = 'REMINDER',
   PSYCHOONCOLOGY_APPOINTMENT = 'PSYCHOONCOLOGY_APPOINTMENT',
+  SOCIAL_NOTE = 'SOCIAL_NOTE',
 }
 
 export class PatientTimelineQueryDto {
@@ -73,10 +75,22 @@ export class PsychooncologyAppointmentTimelineEventDto {
   @ApiProperty({ minimum: 1 }) sessionNumber!: number;
 }
 
+export class SocialNoteTimelineEventDto {
+  @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiProperty({ enum: [PatientTimelineEventKind.SOCIAL_NOTE] })
+  kind!: PatientTimelineEventKind.SOCIAL_NOTE;
+  @ApiProperty({ format: 'date-time' }) occurredAt!: string;
+  @ApiProperty({ format: 'uuid' }) followUpId!: string;
+  @ApiProperty({ enum: SocialNoteType }) type!: SocialNoteType;
+  @ApiProperty() note!: string;
+  @ApiProperty({ format: 'uuid' }) authorId!: string;
+}
+
 export type PatientTimelineEventDto =
   | FollowUpTimelineEventDto
   | ReminderTimelineEventDto
-  | PsychooncologyAppointmentTimelineEventDto;
+  | PsychooncologyAppointmentTimelineEventDto
+  | SocialNoteTimelineEventDto;
 
 export class PatientTimelineResponseDto {
   @ApiProperty({
@@ -86,6 +100,7 @@ export class PatientTimelineResponseDto {
         { $ref: getSchemaPath(FollowUpTimelineEventDto) },
         { $ref: getSchemaPath(ReminderTimelineEventDto) },
         { $ref: getSchemaPath(PsychooncologyAppointmentTimelineEventDto) },
+        { $ref: getSchemaPath(SocialNoteTimelineEventDto) },
       ],
       discriminator: {
         propertyName: 'kind',
@@ -95,6 +110,7 @@ export class PatientTimelineResponseDto {
           PSYCHOONCOLOGY_APPOINTMENT: getSchemaPath(
             PsychooncologyAppointmentTimelineEventDto,
           ),
+          SOCIAL_NOTE: getSchemaPath(SocialNoteTimelineEventDto),
         },
       },
     },

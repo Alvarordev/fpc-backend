@@ -50,6 +50,7 @@ import {
   PatientTimelineResponseDto,
   PsychooncologyAppointmentTimelineEventDto,
   ReminderTimelineEventDto,
+  SocialNoteTimelineEventDto,
 } from './dto/patient-timeline.dto';
 
 const PATIENT_READ_ROLES = [
@@ -71,6 +72,7 @@ const PATIENT_WRITE_ROLES = [
   FollowUpTimelineEventDto,
   ReminderTimelineEventDto,
   PsychooncologyAppointmentTimelineEventDto,
+  SocialNoteTimelineEventDto,
 )
 export class PatientsController {
   constructor(
