@@ -19,6 +19,9 @@ import { TreatmentSituation } from './treatment-situation.enum';
 @Check(
   `"treatment_situation" IS NULL OR "treatment_situation" IN ('EN_CURSO','PENDIENTE_DE_INICIO','INTERRUMPIDO','FINALIZADO')`,
 )
+@Check(
+  '"is_referred" = false AND "source_health_center_id" IS NULL OR "is_referred" = true AND "source_health_center_id" IS NOT NULL AND "receiving_health_center_id" IS NOT NULL AND "source_health_center_id" <> "receiving_health_center_id"',
+)
 @Index('UQ_patient_treatments_current', ['seriesId'], {
   unique: true,
   where: '"is_current" = true',
@@ -26,7 +29,8 @@ import { TreatmentSituation } from './treatment-situation.enum';
 @Index('IDX_patient_treatments_patient_id', ['patientId'])
 @Index('IDX_patient_treatments_follow_up_id', ['followUpId'])
 @Index('IDX_patient_treatments_diagnosis_id', ['diagnosisId'])
-@Index('IDX_patient_treatments_health_center_id', ['healthCenterId'])
+@Index('IDX_patient_treatments_source_health_center_id', ['sourceHealthCenterId'])
+@Index('IDX_patient_treatments_receiving_health_center_id', ['receivingHealthCenterId'])
 @Index('IDX_patient_treatments_series_id', ['seriesId'])
 export class PatientTreatment {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
@@ -47,11 +51,18 @@ export class PatientTreatment {
   treatmentType!: string;
   @Column(() => Duration, { prefix: 'treatment_frequency' })
   treatmentFrequency!: Duration;
-  @Column({ name: 'health_center_id', type: 'uuid', nullable: true })
-  healthCenterId!: string | null;
+  @Column({ name: 'is_referred', type: 'boolean', default: false })
+  isReferred!: boolean;
+  @Column({ name: 'source_health_center_id', type: 'uuid', nullable: true })
+  sourceHealthCenterId!: string | null;
   @ManyToOne(() => HealthCenter)
-  @JoinColumn({ name: 'health_center_id' })
-  healthCenter!: HealthCenter | null;
+  @JoinColumn({ name: 'source_health_center_id' })
+  sourceHealthCenter!: HealthCenter | null;
+  @Column({ name: 'receiving_health_center_id', type: 'uuid', nullable: true })
+  receivingHealthCenterId!: string | null;
+  @ManyToOne(() => HealthCenter)
+  @JoinColumn({ name: 'receiving_health_center_id' })
+  receivingHealthCenter!: HealthCenter | null;
   @Column({ name: 'start_date', type: 'date', nullable: true }) startDate!:
     string | null;
   @Column({ name: 'end_date', type: 'date', nullable: true }) endDate!:

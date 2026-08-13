@@ -36,7 +36,6 @@ const REPORTED_TABLES = [
   'patient_symptom_reports',
   'patient_addresses',
   'treatment_medications',
-  'patient_referrals',
   'volunteer_availability',
   'psychooncology_appointments',
   'reminders',

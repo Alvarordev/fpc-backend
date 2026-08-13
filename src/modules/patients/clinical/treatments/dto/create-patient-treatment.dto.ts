@@ -21,7 +21,9 @@ export class CreatePatientTreatmentDto {
   @ValidateNested()
   @Type(() => DurationDto)
   treatmentFrequency?: DurationDto;
-  @IsOptional() @IsUUID() healthCenterId?: string;
+  @IsOptional() @IsBoolean() isReferred?: boolean;
+  @IsOptional() @IsUUID() sourceHealthCenterId?: string;
+  @IsOptional() @IsUUID() receivingHealthCenterId?: string;
   @IsOptional() @IsDateString() startDate?: string;
   @IsOptional() @IsDateString() endDate?: string;
   @IsOptional() @IsString() changeReason?: string;

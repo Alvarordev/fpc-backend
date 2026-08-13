@@ -9,13 +9,15 @@ import { FollowUp } from '../../../../database/entities/follow-up.entity';
 import { PatientDiagnosis } from '../../../../database/entities/patient-diagnosis.entity';
 import { PatientRole } from '../../../../database/entities/patient-role.enum';
 import { WaitTimeSource } from '../../../../database/entities/wait-time-source.enum';
-import { DurationUnit } from '../../../../database/entities/duration-unit.enum';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
 import { CreatePatientDiagnosisDto } from './dto/create-patient-diagnosis.dto';
 import { User } from '../../../../database/entities/user.entity';
-import { normalizeDuration } from '../../../../shared/duration/duration.util';
+import {
+  durationFromElapsedDays,
+  normalizeDuration,
+} from '../../../../shared/duration/duration.util';
 @Injectable()
 export class PatientDiagnosesService {
   constructor(
@@ -59,11 +61,13 @@ export class PatientDiagnosesService {
         throw new BadRequestException(
           'firstSymptomsDate must not be after diagnosisDate',
         );
-      const days = Math.round(
-        (diagnosed.getTime() - first.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      waitTime = normalizeDuration({ valueMin: days, unit: DurationUnit.DAY });
-      waitTimeSource = WaitTimeSource.COMPUTED;
+      if (!waitTimeForDiagnosis) {
+        const days = Math.round(
+          (diagnosed.getTime() - first.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        waitTime = normalizeDuration(durationFromElapsedDays(days));
+        waitTimeSource = WaitTimeSource.COMPUTED;
+      }
     }
 
     const values = {

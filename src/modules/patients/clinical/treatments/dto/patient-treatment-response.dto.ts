@@ -40,11 +40,20 @@ export class PatientTreatmentResponseDto {
   @ApiProperty({ type: DurationResponseDto, nullable: true })
   treatmentFrequency!: DurationResponseDto | null;
 
+  @ApiProperty()
+  isReferred!: boolean;
+
   @ApiProperty({ format: 'uuid', nullable: true })
-  healthCenterId!: string | null;
+  sourceHealthCenterId!: string | null;
 
   @ApiPropertyOptional({ nullable: true })
-  healthCenterName?: string | null;
+  sourceHealthCenterName?: string | null;
+
+  @ApiProperty({ format: 'uuid', nullable: true })
+  receivingHealthCenterId!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  receivingHealthCenterName?: string | null;
 
   @ApiPropertyOptional({ type: PatientDiagnosisSummaryDto, nullable: true })
   diagnosisSummary?: PatientDiagnosisSummaryDto | null;
@@ -87,8 +96,11 @@ export class PatientTreatmentResponseDto {
       treatmentFrequency: DurationResponseDto.from(
         treatment.treatmentFrequency,
       ),
-      healthCenterId: treatment.healthCenterId,
-      healthCenterName: treatment.healthCenter?.name ?? null,
+      isReferred: treatment.isReferred,
+      sourceHealthCenterId: treatment.sourceHealthCenterId,
+      sourceHealthCenterName: treatment.sourceHealthCenter?.name ?? null,
+      receivingHealthCenterId: treatment.receivingHealthCenterId,
+      receivingHealthCenterName: treatment.receivingHealthCenter?.name ?? null,
       diagnosisSummary: treatment.diagnosis
         ? {
             id: treatment.diagnosis.id,

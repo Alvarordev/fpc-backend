@@ -15,7 +15,6 @@ import { TreatmentSituation } from '../../entities/treatment-situation.enum';
 import { TreatmentMedication } from '../../entities/treatment-medication.entity';
 import { DoseUnit } from '../../entities/dose-unit.enum';
 import { MedicationRoute } from '../../entities/medication-route.enum';
-import { PatientReferral } from '../../entities/patient-referral.entity';
 import type { HealthCenter } from '../../entities/health-center.entity';
 import type { FollowUp } from '../../entities/follow-up.entity';
 import {
@@ -228,10 +227,15 @@ export async function seedClinicalHistory(
   const diagnoses = await manager.save(diagnosisRows);
 
   await seedInsurance(ctx, enrolled);
-  await seedTreatments(ctx, enrolled, diagnoses, currentDiagnosisIndex);
+  await seedTreatments(
+    ctx,
+    enrolled,
+    diagnoses,
+    currentDiagnosisIndex,
+    healthCenters,
+  );
   await seedMedicalAppointments(ctx, enrolled);
   await seedSymptomReports(ctx, enrolled, enrollmentsByPatient);
-  await seedReferrals(ctx, enrolled, healthCenters);
 }
 
 /** Clinical rows must hang off a real follow-up; prefer a completed one. */
@@ -343,13 +347,10 @@ async function seedTreatments(
   enrolled: PatientFollowUps[],
   diagnoses: PatientDiagnosis[],
   currentDiagnosisIndex: Map<string, number>,
+  healthCenters: HealthCenter[],
 ): Promise<void> {
   const { manager, rng, now } = ctx;
   const rows: PatientTreatment[] = [];
-  const currentTreatmentsByPatient = new Map<
-    string,
-    Array<{ treatment: PatientTreatment; diagnosisId: string }>
-  >();
 
   enrolled.forEach((history, patientIndex) => {
     const { patient, healthCenter } = history.demoPatient;
@@ -363,11 +364,18 @@ async function seedTreatments(
     const options = seed?.treatments ?? ['Quimioterapia'];
     const followUpId = anchorFollowUp(ctx, history).id;
     const startedAt = addDays(now, -rng.int(60, 400));
-
-    const patientCurrentTreatments: Array<{
-      treatment: PatientTreatment;
-      diagnosisId: string;
-    }> = [];
+    const alternatives = healthCenters.filter(
+      (center) => center.isActive && center.id !== healthCenter.id,
+    );
+    const referralDestination =
+      patientIndex % 4 === 0 && alternatives.length > 0
+        ? rng.pick(alternatives)
+        : null;
+    const treatmentHospitals = {
+      isReferred: Boolean(referralDestination),
+      sourceHealthCenterId: referralDestination ? healthCenter.id : null,
+      receivingHealthCenterId: referralDestination?.id ?? healthCenter.id,
+    };
 
     // A finished earlier line of treatment, superseded by the current one —
     // same series, reused seriesId, only the newest row is current.
@@ -383,7 +391,7 @@ async function seedTreatments(
           treatmentFrequency: normalizeDuration(
             rng.pick(TREATMENT_FREQUENCY_DURATIONS),
           ),
-          healthCenterId: healthCenter.id,
+          ...treatmentHospitals,
           startDate: toDateOnly(startedAt),
           endDate: toDateOnly(addDays(startedAt, rng.int(40, 120))),
           isCurrent: false,
@@ -408,7 +416,7 @@ async function seedTreatments(
       treatmentFrequency: isReceiving
         ? normalizeDuration(rng.pick(TREATMENT_FREQUENCY_DURATIONS))
         : normalizeDuration(null),
-      healthCenterId: healthCenter.id,
+      ...treatmentHospitals,
       startDate: toDateOnly(addDays(now, -rng.int(15, 120))),
       endDate: null,
       isCurrent: true,
@@ -429,10 +437,6 @@ async function seedTreatments(
           : null,
     });
     rows.push(currentTreatment);
-    patientCurrentTreatments.push({
-      treatment: currentTreatment,
-      diagnosisId: diagnosis.id,
-    });
 
     // A subset of patients run two concurrent treatment lines at once —
     // e.g. chemo plus radiotherapy — each with its own seriesId.
@@ -450,7 +454,7 @@ async function seedTreatments(
           treatmentFrequency: normalizeDuration(
             rng.pick(TREATMENT_FREQUENCY_DURATIONS),
           ),
-          healthCenterId: healthCenter.id,
+           ...treatmentHospitals,
           startDate: toDateOnly(addDays(now, -rng.int(10, 90))),
           endDate: null,
           isCurrent: true,
@@ -463,14 +467,8 @@ async function seedTreatments(
             : null,
         });
         rows.push(concurrentTreatment);
-        patientCurrentTreatments.push({
-          treatment: concurrentTreatment,
-          diagnosisId: diagnosis.id,
-        });
       }
     }
-
-    currentTreatmentsByPatient.set(patient.id, patientCurrentTreatments);
   });
 
   const saved = await manager.save(rows);
@@ -615,50 +613,6 @@ async function seedSymptomReports(
       );
     }
   }
-
-  await manager.save(rows);
-}
-
-/**
- * A subset of patients enrolled at one hospital end up treated at another —
- * derived to a referral hub while keeping their original hospital as the
- * enrollment's primary one.
- */
-async function seedReferrals(
-  ctx: DemoContext,
-  enrolled: PatientFollowUps[],
-  healthCenters: HealthCenter[],
-): Promise<void> {
-  const { manager, rng, now } = ctx;
-  const rows: PatientReferral[] = [];
-
-  enrolled.forEach((history, index) => {
-    if (index % 4 !== 0) return;
-
-    const { patient, healthCenter } = history.demoPatient;
-    const alternatives = healthCenters.filter(
-      (center) => center.isActive && center.id !== healthCenter.id,
-    );
-    if (alternatives.length === 0) return;
-
-    const destination = rng.pick(alternatives);
-    const followUpId = anchorFollowUp(ctx, history).id;
-
-    rows.push(
-      manager.create(PatientReferral, {
-        patientId: patient.id,
-        followUpId,
-        fromHealthCenterId: healthCenter.id,
-        toHealthCenterId: destination.id,
-        specialty: rng.pick(MEDICAL_SPECIALTIES),
-        reason:
-          'Se derivó para continuar el tratamiento en un centro con mayor disponibilidad.',
-        referralDate: toDateOnly(addDays(now, -rng.int(10, 200))),
-        isActive: true,
-        hasReferralSheet: rng.bool(0.6),
-      }),
-    );
-  });
 
   await manager.save(rows);
 }

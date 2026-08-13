@@ -67,9 +67,13 @@ export class HealthCentersService {
         FROM patient_diagnoses diagnosis
         WHERE diagnosis.health_center_id = health_center.id
         UNION
+         SELECT treatment.patient_id
+        FROM patient_treatments treatment
+        WHERE treatment.receiving_health_center_id = health_center.id
+        UNION
         SELECT treatment.patient_id
         FROM patient_treatments treatment
-        WHERE treatment.health_center_id = health_center.id
+        WHERE treatment.source_health_center_id = health_center.id
         UNION
         SELECT appointment.patient_id
         FROM patient_medical_appointments appointment

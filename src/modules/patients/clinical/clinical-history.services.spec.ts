@@ -13,6 +13,9 @@ import { PatientInsuranceService } from './insurance/patient-insurance.service';
 import { PatientMedicalAppointmentsService } from './medical-appointments/patient-medical-appointments.service';
 import { PatientTreatmentsService } from './treatments/patient-treatments.service';
 import { TreatmentMedicationsService } from './treatments/medications/treatment-medications.service';
+import { PatientDiagnosesService } from './diagnoses/patient-diagnoses.service';
+import { DurationUnit } from '../../../database/entities/duration-unit.enum';
+import { WaitTimeSource } from '../../../database/entities/wait-time-source.enum';
 import { PatientsService } from '../patients.service';
 import { PatientSummaryInvalidationService } from '../../patient-summaries/patient-summary-invalidation.service';
 import { N8nTransactionalDispatchService } from '../../../integrations/n8n/transactional-dispatch.service';
@@ -104,6 +107,79 @@ describe('clinical history services', () => {
         specialty: 'ONCOLOGY',
       }),
     );
+  });
+
+  it('computes long diagnosis waits using months', async () => {
+    (followUps.existsBy as jest.Mock).mockResolvedValue(true);
+    replaceCurrent.mockResolvedValue({ id: 'diagnosis-id' });
+    const service = new PatientDiagnosesService(
+      {} as Repository<PatientDiagnosis>,
+      followUps,
+      patients,
+      versioning,
+      invalidations,
+    );
+
+    await service.create('patient-id', {
+      followUpId: 'followUp-id',
+      diagnosis: 'Breast cancer',
+      firstSymptomsDate: '2026-01-01',
+      diagnosisDate: '2026-03-02',
+    });
+
+    const calls = replaceCurrent.mock.calls as unknown as Array<
+      [
+        unknown,
+        unknown,
+        {
+          waitTimeSource: WaitTimeSource;
+          waitTimeForDiagnosis: { valueMin: string; unit: string };
+        },
+      ]
+    >;
+    const values = calls[0][2];
+    expect(values.waitTimeSource).toBe(WaitTimeSource.COMPUTED);
+    expect(values.waitTimeForDiagnosis).toMatchObject({
+      valueMin: '2',
+      unit: 'MONTH',
+    });
+  });
+
+  it('keeps a reported diagnosis wait when dates are also provided', async () => {
+    (followUps.existsBy as jest.Mock).mockResolvedValue(true);
+    replaceCurrent.mockResolvedValue({ id: 'diagnosis-id' });
+    const service = new PatientDiagnosesService(
+      {} as Repository<PatientDiagnosis>,
+      followUps,
+      patients,
+      versioning,
+      invalidations,
+    );
+
+    await service.create('patient-id', {
+      followUpId: 'followUp-id',
+      diagnosis: 'Breast cancer',
+      firstSymptomsDate: '2026-01-01',
+      diagnosisDate: '2026-03-02',
+      waitTimeForDiagnosis: { valueMin: 1.5, unit: DurationUnit.MONTH },
+    });
+
+    const calls = replaceCurrent.mock.calls as unknown as Array<
+      [
+        unknown,
+        unknown,
+        {
+          waitTimeSource: WaitTimeSource;
+          waitTimeForDiagnosis: { valueMin: string; unit: string };
+        },
+      ]
+    >;
+    const values = calls[0][2];
+    expect(values.waitTimeSource).toBe(WaitTimeSource.REPORTED);
+    expect(values.waitTimeForDiagnosis).toMatchObject({
+      valueMin: '1.5',
+      unit: 'MONTH',
+    });
   });
 
   it('rejects treatments that reference another patient diagnosis', async () => {

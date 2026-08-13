@@ -32,6 +32,7 @@ import { PatientAccessService } from './access/patient-access.service';
 import { N8nTransactionalDispatchService } from '../../integrations/n8n/transactional-dispatch.service';
 import { buildRegistroEnvelope } from '../../integrations/n8n/n8n-webhook.payloads';
 import { PatientAddress } from '../../database/entities/patient-address.entity';
+import { HealthCenter } from '../../database/entities/health-center.entity';
 import { normalizeDuration } from '../../shared/duration/duration.util';
 
 @Injectable()
@@ -346,7 +347,7 @@ export class PatientsService {
     ] = await Promise.all([
       this.patientsRepository.findOne({
         where: { id },
-        relations: { details: true },
+        relations: { details: { primaryHealthCenter: true } },
       }),
       this.summaries.findOneBy({ patientId: id }),
       this.diagnosesRepository.find({
@@ -356,7 +357,11 @@ export class PatientsService {
       }),
       this.treatmentsRepository.find({
         where: { patientId: id },
-        relations: { healthCenter: true, diagnosis: true },
+        relations: {
+          sourceHealthCenter: true,
+          receivingHealthCenter: true,
+          diagnosis: true,
+        },
         order: { createdAt: 'DESC' },
       }),
       this.insuranceRepository.find({
@@ -436,6 +441,16 @@ export class PatientsService {
     await this.assertPatientRole(id, PatientRole.PATIENT, undefined, manager);
     const repository =
       manager?.getRepository(PatientDetails) ?? this.detailsRepository;
+    const healthCenters =
+      manager?.getRepository(HealthCenter) ??
+      this.dataSource.getRepository(HealthCenter);
+    if (input.primaryHealthCenterId) {
+      const healthCenter = await healthCenters.findOne({
+        where: { id: input.primaryHealthCenterId, isActive: true },
+      });
+      if (!healthCenter)
+        throw new NotFoundException('Primary health center not found or inactive');
+    }
     const details = await repository.findOne({
       where: { patientId: id },
     });
@@ -449,6 +464,10 @@ export class PatientsService {
         ? Object.assign(details, normalized)
         : repository.create({ ...normalized, patientId: id }),
     );
+    if (saved.primaryHealthCenterId)
+      saved.primaryHealthCenter = await healthCenters.findOne({
+        where: { id: saved.primaryHealthCenterId },
+      });
     await this.invalidations.markDirty(id, manager);
     return saved;
   }

@@ -3787,109 +3787,6 @@
         ]
       }
     },
-    "/patients/{patientId}/referrals": {
-      "post": {
-        "operationId": "PatientReferralsController_create",
-        "parameters": [
-          {
-            "name": "patientId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePatientReferralDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PatientReferralResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request payload"
-          },
-          "401": {
-            "description": ""
-          },
-          "403": {
-            "description": ""
-          },
-          "404": {
-            "description": "Patient or health center not found"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Record a patient referral between health centers",
-        "tags": [
-          "Patient referrals"
-        ]
-      },
-      "get": {
-        "operationId": "PatientReferralsController_findAll",
-        "parameters": [
-          {
-            "name": "patientId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PatientReferralResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": ""
-          },
-          "403": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List a patient referral history",
-        "tags": [
-          "Patient referrals"
-        ]
-      }
-    },
     "/patients/{patientId}/symptom-reports": {
       "post": {
         "operationId": "PatientSymptomReportsController_create",
@@ -5932,7 +5829,7 @@
             }
           },
           "referrals": {
-            "description": "Up to eight hospital referral pairs (origin → destination).",
+            "description": "Up to eight treatment referral pairs (origin → destination).",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DashboardTableItemDto"
@@ -6504,7 +6401,14 @@
           "treatmentFrequency": {
             "$ref": "#/components/schemas/DurationDto"
           },
-          "healthCenterId": {
+          "isReferred": {
+            "type": "boolean"
+          },
+          "sourceHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receivingHealthCenterId": {
             "type": "string",
             "format": "uuid"
           },
@@ -6656,35 +6560,6 @@
           "type"
         ]
       },
-      "EnrollmentReferralDto": {
-        "type": "object",
-        "properties": {
-          "fromHealthCenterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "toHealthCenterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "specialty": {
-            "type": "string",
-            "maxLength": 255
-          },
-          "reason": {
-            "type": "string"
-          },
-          "referralDate": {
-            "type": "string"
-          },
-          "hasReferralSheet": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "toHealthCenterId"
-        ]
-      },
       "EnrollmentSymptomReportDto": {
         "type": "object",
         "properties": {
@@ -6818,12 +6693,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EnrollmentAddressDto"
-            }
-          },
-          "referrals": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EnrollmentReferralDto"
             }
           },
           "symptomReport": {
@@ -8245,15 +8114,11 @@
                 },
                 {
                   "$ref": "#/components/schemas/PsychooncologyAppointmentTimelineEventDto"
-                },
-                {
-                  "$ref": "#/components/schemas/ReferralTimelineEventDto"
                 }
               ],
               "discriminator": {
                 "propertyName": "kind",
                 "mapping": {
-                  "REFERRAL": "#/components/schemas/ReferralTimelineEventDto",
                   "FOLLOW_UP": "#/components/schemas/FollowUpTimelineEventDto",
                   "REMINDER": "#/components/schemas/ReminderTimelineEventDto",
                   "PSYCHOONCOLOGY_APPOINTMENT": "#/components/schemas/PsychooncologyAppointmentTimelineEventDto"
@@ -8323,6 +8188,10 @@
             "type": "string",
             "nullable": true,
             "format": "uuid"
+          },
+          "primaryHealthCenterName": {
+            "type": "string",
+            "nullable": true
           },
           "travelTimeToHospital": {
             "nullable": true,
@@ -8620,12 +8489,24 @@
               }
             ]
           },
-          "healthCenterId": {
+          "isReferred": {
+            "type": "boolean"
+          },
+          "sourceHealthCenterId": {
             "type": "string",
             "nullable": true,
             "format": "uuid"
           },
-          "healthCenterName": {
+          "sourceHealthCenterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "receivingHealthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "receivingHealthCenterName": {
             "type": "string",
             "nullable": true
           },
@@ -8691,7 +8572,9 @@
           "seriesId",
           "treatmentType",
           "treatmentFrequency",
-          "healthCenterId",
+          "isReferred",
+          "sourceHealthCenterId",
+          "receivingHealthCenterId",
           "startDate",
           "endDate",
           "isCurrent",
@@ -9456,7 +9339,14 @@
           "treatmentFrequency": {
             "$ref": "#/components/schemas/DurationDto"
           },
-          "healthCenterId": {
+          "isReferred": {
+            "type": "boolean"
+          },
+          "sourceHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receivingHealthCenterId": {
             "type": "string",
             "format": "uuid"
           },
@@ -9886,110 +9776,6 @@
             "type": "string"
           }
         }
-      },
-      "CreatePatientReferralDto": {
-        "type": "object",
-        "properties": {
-          "followUpId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "fromHealthCenterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "toHealthCenterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "specialty": {
-            "type": "string",
-            "maxLength": 255
-          },
-          "reason": {
-            "type": "string"
-          },
-          "referralDate": {
-            "type": "string"
-          },
-          "hasReferralSheet": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "toHealthCenterId"
-        ]
-      },
-      "PatientReferralResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "patientId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "followUpId": {
-            "type": "string",
-            "nullable": true,
-            "format": "uuid"
-          },
-          "fromHealthCenterId": {
-            "type": "string",
-            "nullable": true,
-            "format": "uuid"
-          },
-          "fromHealthCenterName": {
-            "type": "string",
-            "nullable": true
-          },
-          "toHealthCenterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "toHealthCenterName": {
-            "type": "string",
-            "nullable": true
-          },
-          "specialty": {
-            "type": "string",
-            "nullable": true
-          },
-          "reason": {
-            "type": "string",
-            "nullable": true
-          },
-          "referralDate": {
-            "type": "string",
-            "nullable": true,
-            "format": "date"
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "hasReferralSheet": {
-            "type": "boolean"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "patientId",
-          "followUpId",
-          "fromHealthCenterId",
-          "toHealthCenterId",
-          "specialty",
-          "reason",
-          "referralDate",
-          "isActive",
-          "hasReferralSheet",
-          "createdAt"
-        ]
       },
       "CreatePatientSymptomReportDto": {
         "type": "object",

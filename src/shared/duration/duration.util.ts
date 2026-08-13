@@ -77,3 +77,19 @@ export function normalizeDuration(
   duration.canonicalMinutesMax = Math.round(valueMax * minutesPerUnit);
   return duration;
 }
+
+export function durationFromElapsedDays(days: number): DurationDto {
+  if (!Number.isFinite(days) || days < 0)
+    throw new BadRequestException('Elapsed days must be a non-negative number');
+
+  if (days < 60) return { valueMin: days, unit: DurationUnit.DAY };
+  if (days < 730)
+    return {
+      valueMin: Math.round((days / 30) * 100) / 100,
+      unit: DurationUnit.MONTH,
+    };
+  return {
+    valueMin: Math.round((days / 365) * 100) / 100,
+    unit: DurationUnit.YEAR,
+  };
+}

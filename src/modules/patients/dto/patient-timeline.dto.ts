@@ -20,7 +20,6 @@ export enum PatientTimelineEventKind {
   FOLLOW_UP = 'FOLLOW_UP',
   REMINDER = 'REMINDER',
   PSYCHOONCOLOGY_APPOINTMENT = 'PSYCHOONCOLOGY_APPOINTMENT',
-  REFERRAL = 'REFERRAL',
 }
 
 export class PatientTimelineQueryDto {
@@ -74,23 +73,10 @@ export class PsychooncologyAppointmentTimelineEventDto {
   @ApiProperty({ minimum: 1 }) sessionNumber!: number;
 }
 
-export class ReferralTimelineEventDto {
-  @ApiProperty({ format: 'uuid' }) id!: string;
-  @ApiProperty({ enum: [PatientTimelineEventKind.REFERRAL] })
-  kind!: PatientTimelineEventKind.REFERRAL;
-  @ApiProperty({ format: 'date-time' }) occurredAt!: string;
-  @ApiProperty() status!: string;
-  @ApiProperty({ format: 'uuid', nullable: true, type: String })
-  followUpId!: string | null;
-  @ApiProperty({ nullable: true, type: String }) description!: string | null;
-  @ApiProperty({ nullable: true, type: String }) notes!: string | null;
-}
-
 export type PatientTimelineEventDto =
   | FollowUpTimelineEventDto
   | ReminderTimelineEventDto
-  | PsychooncologyAppointmentTimelineEventDto
-  | ReferralTimelineEventDto;
+  | PsychooncologyAppointmentTimelineEventDto;
 
 export class PatientTimelineResponseDto {
   @ApiProperty({
@@ -100,12 +86,10 @@ export class PatientTimelineResponseDto {
         { $ref: getSchemaPath(FollowUpTimelineEventDto) },
         { $ref: getSchemaPath(ReminderTimelineEventDto) },
         { $ref: getSchemaPath(PsychooncologyAppointmentTimelineEventDto) },
-        { $ref: getSchemaPath(ReferralTimelineEventDto) },
       ],
       discriminator: {
         propertyName: 'kind',
         mapping: {
-          REFERRAL: getSchemaPath(ReferralTimelineEventDto),
           FOLLOW_UP: getSchemaPath(FollowUpTimelineEventDto),
           REMINDER: getSchemaPath(ReminderTimelineEventDto),
           PSYCHOONCOLOGY_APPOINTMENT: getSchemaPath(

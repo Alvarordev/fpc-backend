@@ -29,7 +29,6 @@ import { PatientTreatmentsService } from '../patients/clinical/treatments/patien
 import { PatientSymptomReportsService } from '../patients/symptom-reports/patient-symptom-reports.service';
 import { PatientsService } from '../patients/patients.service';
 import { PatientAddressesService } from '../patients/addresses/patient-addresses.service';
-import { PatientReferralsService } from '../patients/referrals/patient-referrals.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { UpdateEnrollmentSurveyDto } from './dto/update-enrollment-survey.dto';
@@ -54,7 +53,6 @@ export class EnrollmentsService {
     private readonly sisAffiliations: PatientSisAffiliationService,
     private readonly symptomReports: PatientSymptomReportsService,
     private readonly addresses: PatientAddressesService,
-    private readonly referrals: PatientReferralsService,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly webhooks: N8nTransactionalDispatchService,
   ) {}
@@ -76,7 +74,6 @@ export class EnrollmentsService {
         symptomReport,
         familyPreventionTalkInterests,
         addresses,
-        referrals,
         ...metadata
       } = input;
       if (Boolean(patientId) === Boolean(patientInput))
@@ -249,12 +246,6 @@ export class EnrollmentsService {
         await this.addresses.create(
           patient.id,
           { ...address, followUpId: followUp.id },
-          manager,
-        );
-      for (const referral of referrals ?? [])
-        await this.referrals.create(
-          patient.id,
-          { ...referral, followUpId: followUp.id },
           manager,
         );
 

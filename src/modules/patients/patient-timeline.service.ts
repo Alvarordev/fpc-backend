@@ -9,7 +9,6 @@ import {
   PatientTimelineQueryDto,
   PatientTimelineResponseDto,
   PsychooncologyAppointmentTimelineEventDto,
-  ReferralTimelineEventDto,
   ReminderTimelineEventDto,
 } from './dto/patient-timeline.dto';
 
@@ -116,24 +115,6 @@ export class PatientTimelineService {
       FROM psychooncology_appointments appointment
       WHERE appointment.patient_id = $1
 
-      UNION ALL
-
-      SELECT
-        referral.id,
-        'REFERRAL'::text AS kind,
-        COALESCE(referral.referral_date::timestamptz, referral.created_at) AS occurred_at,
-        (CASE WHEN referral.is_active THEN 'ACTIVE' ELSE 'INACTIVE' END) AS status,
-        referral.follow_up_id,
-        NULL::varchar AS type,
-        NULL::varchar AS purpose,
-        referral.reason AS notes,
-        COALESCE(from_center.name, 'Sin informacion') || ' -> ' || to_center.name AS description,
-        NULL::varchar AS modality,
-        NULL::int AS session_number
-      FROM patient_referrals referral
-      LEFT JOIN health_centers from_center ON from_center.id = referral.from_health_center_id
-      JOIN health_centers to_center ON to_center.id = referral.to_health_center_id
-      WHERE referral.patient_id = $1
     `;
   }
 
@@ -171,11 +152,6 @@ export class PatientTimelineService {
         sessionNumber: row.session_number,
       } as PsychooncologyAppointmentTimelineEventDto;
 
-    return {
-      ...common,
-      kind: PatientTimelineEventKind.REFERRAL,
-      description: row.description,
-      notes: row.notes,
-    } satisfies ReferralTimelineEventDto;
+    throw new Error(`Unsupported patient timeline event kind: ${row.kind}`);
   }
 }

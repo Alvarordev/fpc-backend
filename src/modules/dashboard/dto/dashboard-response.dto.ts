@@ -126,7 +126,7 @@ export class DashboardResponseDto {
   @ApiProperty({
     type: DashboardTableItemDto,
     isArray: true,
-    description: 'Up to eight hospital referral pairs (origin → destination).',
+    description: 'Up to eight treatment referral pairs (origin → destination).',
   })
   referrals!: DashboardTableItemDto[];
 }

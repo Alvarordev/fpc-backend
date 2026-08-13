@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { FollowUp } from '../../../../database/entities/follow-up.entity';
 import { PatientDiagnosis } from '../../../../database/entities/patient-diagnosis.entity';
 import { PatientRole } from '../../../../database/entities/patient-role.enum';
@@ -17,6 +17,7 @@ import { CreatePatientTreatmentDto } from './dto/create-patient-treatment.dto';
 import { User } from '../../../../database/entities/user.entity';
 import { normalizeDuration } from '../../../../shared/duration/duration.util';
 import { TreatmentMedicationsService } from './medications/treatment-medications.service';
+import { HealthCenter } from '../../../../database/entities/health-center.entity';
 
 @Injectable()
 export class PatientTreatmentsService {
@@ -77,11 +78,54 @@ export class PatientTreatmentsService {
         seriesId = crypto.randomUUID();
       }
 
+      const isReferred = input.isReferred ?? previousTreatment?.isReferred ?? false;
+      const sourceHealthCenterId =
+        input.sourceHealthCenterId !== undefined
+          ? input.sourceHealthCenterId
+          : input.isReferred === false
+            ? null
+            : (previousTreatment?.sourceHealthCenterId ?? null);
+      const receivingHealthCenterId =
+        input.receivingHealthCenterId !== undefined
+          ? input.receivingHealthCenterId
+          : (previousTreatment?.receivingHealthCenterId ?? null);
+
+      if (isReferred && (!sourceHealthCenterId || !receivingHealthCenterId))
+        throw new BadRequestException(
+          'Referred treatments require source and receiving health centers',
+        );
+      if (
+        isReferred &&
+        sourceHealthCenterId === receivingHealthCenterId
+      )
+        throw new BadRequestException(
+          'Source and receiving health centers must be different',
+        );
+      if (!isReferred && sourceHealthCenterId)
+        throw new BadRequestException(
+          'A non-referred treatment cannot have a source health center',
+        );
+
+      const healthCenterIds = [
+        sourceHealthCenterId,
+        receivingHealthCenterId,
+      ].filter((id): id is string => Boolean(id));
+      if (healthCenterIds.length) {
+        const activeHealthCenters = await entityManager
+          .getRepository(HealthCenter)
+          .find({ where: { id: In(healthCenterIds), isActive: true } });
+        if (activeHealthCenters.length !== new Set(healthCenterIds).size)
+          throw new NotFoundException('Health center not found or inactive');
+      }
+
       const { medications: medicationInputs, ...rest } = input;
       const values = {
         ...rest,
         patientId,
         seriesId,
+        isReferred,
+        sourceHealthCenterId: isReferred ? sourceHealthCenterId : null,
+        receivingHealthCenterId,
         treatmentFrequency: normalizeDuration(input.treatmentFrequency),
       };
       const treatment = await this.versioning.replaceCurrent(
@@ -122,6 +166,11 @@ export class PatientTreatmentsService {
     await this.patients.assertCanRead(patientId, user);
     return this.repository.find({
       where: { patientId },
+      relations: {
+        sourceHealthCenter: true,
+        receivingHealthCenter: true,
+        diagnosis: true,
+      },
       order: { createdAt: 'DESC' },
     });
   }

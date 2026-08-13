@@ -19,7 +19,6 @@ const DOMAIN_TABLES = [
   'patient_treatments',
   'patient_medical_appointments',
   'patient_insurance',
-  'patient_referrals',
   'patient_diagnoses',
   'companion_patient',
   'patient_addresses',

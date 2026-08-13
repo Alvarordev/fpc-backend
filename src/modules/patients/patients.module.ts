@@ -20,11 +20,8 @@ import { PatientAddressesController } from './addresses/patient-addresses.contro
 import { PatientAddressesService } from './addresses/patient-addresses.service';
 import { TreatmentMedicationsController } from './clinical/treatments/medications/treatment-medications.controller';
 import { TreatmentMedicationsService } from './clinical/treatments/medications/treatment-medications.service';
-import { PatientReferralsController } from './referrals/patient-referrals.controller';
-import { PatientReferralsService } from './referrals/patient-referrals.service';
 import { CompanionPatient } from '../../database/entities/companion-patient.entity';
 import { PatientAddress } from '../../database/entities/patient-address.entity';
-import { PatientReferral } from '../../database/entities/patient-referral.entity';
 import { TreatmentMedication } from '../../database/entities/treatment-medication.entity';
 import { HealthCenter } from '../../database/entities/health-center.entity';
 import { PatientDetails } from '../../database/entities/patient-details.entity';
@@ -56,7 +53,6 @@ import { PatientTimelineService } from './patient-timeline.service';
       PatientTreatment,
       PatientSymptomReport,
       TreatmentMedication,
-      PatientReferral,
       HealthCenter,
       FollowUp,
       Enrollment,
@@ -76,7 +72,6 @@ import { PatientTimelineService } from './patient-timeline.service';
     PatientSymptomReportsController,
     PatientAddressesController,
     TreatmentMedicationsController,
-    PatientReferralsController,
   ],
   providers: [
     PatientsService,
@@ -90,7 +85,6 @@ import { PatientTimelineService } from './patient-timeline.service';
     PatientTimelineService,
     PatientAddressesService,
     TreatmentMedicationsService,
-    PatientReferralsService,
   ],
   exports: [
     PatientsService,
@@ -103,7 +97,6 @@ import { PatientTimelineService } from './patient-timeline.service';
     PatientSymptomReportsService,
     PatientAddressesService,
     TreatmentMedicationsService,
-    PatientReferralsService,
   ],
 })
 export class PatientsModule {}

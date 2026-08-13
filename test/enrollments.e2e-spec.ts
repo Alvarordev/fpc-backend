@@ -219,7 +219,7 @@ describe('Enrollment wizard (e2e)', () => {
       .send({ followUpQualityRating: 5 })
       .expect(200)
       .expect(({ body }) => {
-        expect(body as Enrollment).toMatchObject({
+        expect(body).toMatchObject({
           id: enrollment.id,
           followUpQualityRating: 5,
         });
@@ -503,7 +503,7 @@ describe('Enrollment wizard (e2e)', () => {
     // Scoped to this agent, like the assertions above: the database also holds
     // the demo dataset (`npm run seed:demo`) and rows from the other suites.
     const countForAgent = async (table: string): Promise<number> => {
-      const [{ count }] = await dataSource.query(
+      const [{ count }] = await dataSource.query<{ count: number }[]>(
         `SELECT COUNT(*)::int AS count FROM "${table}" t
            JOIN follow_ups f ON f.id = t.follow_up_id
           WHERE f.agent_id = $1`,
@@ -554,10 +554,6 @@ async function clearPromptSevenData(
   // before the follow_ups delete below.
   await dataSource.query(
     `DELETE FROM patient_addresses WHERE patient_id IN ${patientIds}`,
-    [emailPrefix],
-  );
-  await dataSource.query(
-    `DELETE FROM patient_referrals WHERE patient_id IN ${patientIds}`,
     [emailPrefix],
   );
   await dataSource.query(

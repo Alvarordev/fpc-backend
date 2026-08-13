@@ -294,7 +294,7 @@ export class DashboardService {
         FROM patient_diagnoses
         WHERE is_current = true
       ), current_treatments AS (
-        SELECT DISTINCT ON (treatment.patient_id) treatment.patient_id, treatment.diagnosis_id, treatment.health_center_id
+        SELECT DISTINCT ON (treatment.patient_id) treatment.patient_id, treatment.diagnosis_id, treatment.receiving_health_center_id
         FROM patient_treatments treatment
         WHERE treatment.is_current = true
         ORDER BY treatment.patient_id, treatment.created_at DESC, treatment.id DESC
@@ -311,7 +311,7 @@ export class DashboardService {
         SELECT
           patient.id,
           details.primary_health_center_id,
-          COALESCE(appointment.health_center_id, treatment.health_center_id, diagnosis.health_center_id) AS fallback_health_center_id,
+           COALESCE(appointment.health_center_id, treatment.receiving_health_center_id, diagnosis.health_center_id) AS fallback_health_center_id,
           address.department AS current_department,
           details.birth_department
         FROM cohort
@@ -335,11 +335,11 @@ export class DashboardService {
         LEFT JOIN health_centers fallback_health_center ON fallback_health_center.id = patient_context.fallback_health_center_id
         UNION ALL
         SELECT 'referrals', COALESCE(from_center.name, '${UNKNOWN_LABEL}') || ' → ' || COALESCE(to_center.name, '${UNKNOWN_LABEL}')
-        FROM patient_referrals referral
-        JOIN cohort ON cohort.patient_id = referral.patient_id
-        LEFT JOIN health_centers from_center ON from_center.id = referral.from_health_center_id
-        LEFT JOIN health_centers to_center ON to_center.id = referral.to_health_center_id
-        WHERE referral.is_active = true
+        FROM patient_treatments treatment
+        JOIN cohort ON cohort.patient_id = treatment.patient_id
+        LEFT JOIN health_centers from_center ON from_center.id = treatment.source_health_center_id
+        LEFT JOIN health_centers to_center ON to_center.id = treatment.receiving_health_center_id
+        WHERE treatment.is_referred = true AND treatment.is_current = true
       ) values
       GROUP BY category, name
       ORDER BY category, count DESC, name ASC
