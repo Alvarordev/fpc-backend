@@ -183,6 +183,7 @@ export class PsychooncologyAppointmentsService {
     if (input.followUpId && !followUp)
       throw new BadRequestException('Follow-up does not belong to the patient');
 
+    const scheduledAt = this.slotDate(availability);
     availability.status = AvailabilityStatus.RESERVED;
     await manager.getRepository(VolunteerAvailability).save(availability);
 
@@ -190,7 +191,6 @@ export class PsychooncologyAppointmentsService {
       (await manager.getRepository(PsychooncologyAppointment).count({
         where: { patientId: patient.id },
       })) + 1;
-    const scheduledAt = this.slotDate(availability);
     return manager.getRepository(PsychooncologyAppointment).save(
       manager.getRepository(PsychooncologyAppointment).create({
         patientId: patient.id,
@@ -233,6 +233,8 @@ export class PsychooncologyAppointmentsService {
       throw new BadRequestException(
         'Availability slot has an invalid date or time',
       );
+    if (scheduledAt <= new Date())
+      throw new ConflictException('Availability slot has already passed');
     return scheduledAt;
   }
 
