@@ -64,7 +64,8 @@ $ npm run seed:demo
 Credentials: the admin is whatever `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`
 hold; every other seeded account uses `*@fpc.demo` with the password
 `Demo1234!`. The `@fpc.demo` domain is deliberately outside the prefixes the
-e2e suites clean up, so running the tests will not wipe the demo dataset.
+e2e suites clean up during their individual cases; the global e2e hooks restore
+the complete demo dataset before and after the run.
 
 The data is random-looking but reproducible: the generator is seeded from
 `SEED_DEMO_SEED` (default `20260805`), and dates are anchored to midnight UTC of
@@ -78,12 +79,16 @@ the run day, so two runs on the same day produce an identical dataset. Set
 # unit tests
 $ npm run test
 
-# e2e tests
+# e2e tests (reset the local database before and after the run)
 $ npm run test:e2e
 
 # test coverage
 $ npm run test:cov
 ```
+
+The e2e command uses the local `DATABASE_URL` (normally `fpc_dev`). It restores
+the demo seed before starting and after finishing, so rows created by the last
+test case do not remain in the database. It does not use a separate database.
 
 ## OpenAPI contract
 

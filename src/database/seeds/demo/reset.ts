@@ -5,8 +5,10 @@ import type { EntityManager } from 'typeorm';
  * risk truncating TypeORM's `migrations` bookkeeping table, which must survive.
  */
 const DOMAIN_TABLES = [
+  'patient_social_notes',
   'patient_summary_rate_limits',
   'patient_summaries',
+  'alert_events',
   'alerts',
   'reminders',
   'psychooncology_appointments',

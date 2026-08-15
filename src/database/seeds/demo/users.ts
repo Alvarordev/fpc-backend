@@ -9,7 +9,7 @@ import { Volunteer } from '../../entities/volunteer.entity';
 /**
  * Shared password for every seeded account. The e2e suites clean up by email
  * prefix (`e2e-%@example.test`, `p7-%@example.test`), so the demo domain is
- * deliberately different — running the tests must not delete the demo dataset.
+ * deliberately different from their suite-local test data.
  */
 export const DEMO_PASSWORD = 'Demo1234!';
 export const DEMO_EMAIL_DOMAIN = 'fpc.demo';

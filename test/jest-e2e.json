@@ -3,6 +3,8 @@
   "rootDir": ".",
   "testEnvironment": "node",
   "setupFiles": ["<rootDir>/e2e.setup.ts"],
+  "globalSetup": "<rootDir>/e2e.seed.ts",
+  "globalTeardown": "<rootDir>/e2e.seed.ts",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
