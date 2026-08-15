@@ -6,5 +6,6 @@ export class UpdateFollowUpDto {
   @IsOptional()
   @IsIn(Object.values(FollowUpStatus))
   status?: FollowUpStatus;
+  @IsOptional() @IsDateString() scheduledAt?: string;
   @IsOptional() @IsDateString() completedAt?: string;
 }

@@ -31,6 +31,7 @@ import { CreateFollowUpDto } from './dto/create-follow-up.dto';
 import { FindFollowUpsQueryDto } from './dto/list-follow-ups.dto';
 import { UpdateFollowUpDto } from './dto/update-follow-up.dto';
 import { FollowUpResponseDto } from './dto/follow-up-response.dto';
+import { CreateFollowUpsBatchDto } from './dto/create-follow-ups-batch.dto';
 import { FollowUpsService } from './follow-ups.service';
 import { UserRole } from '../../database/entities/user-role.enum';
 const READ = [
@@ -59,6 +60,23 @@ export class FollowUpsController {
   @ApiNotFoundResponse({ description: 'Patient or agent not found' })
   create(@Body() dto: CreateFollowUpDto, @CurrentUser() user: User) {
     return this.service.create(dto, user.id, user.role).then(this.toFollowUp);
+  }
+  @Post('batch')
+  @Roles(...WRITE)
+  @ApiOperation({ summary: 'Create multiple future follow-ups' })
+  @ApiCreatedResponse({ type: FollowUpResponseDto, isArray: true })
+  @ApiBadRequestResponse({
+    description:
+      'The batch must contain future follow-ups for the same patient',
+  })
+  @ApiForbiddenResponse({
+    description: 'Agents can only assign follow-ups to themselves',
+  })
+  @ApiNotFoundResponse({ description: 'Patient or agent not found' })
+  createBatch(@Body() dto: CreateFollowUpsBatchDto, @CurrentUser() user: User) {
+    return this.service
+      .createBatch(dto, user.id, user.role)
+      .then((items) => items.map(this.toFollowUp));
   }
   @Get()
   @Roles(...READ)

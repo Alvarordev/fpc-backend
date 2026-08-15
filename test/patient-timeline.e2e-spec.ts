@@ -236,6 +236,71 @@ describe('Patient timeline (e2e)', () => {
     );
   });
 
+  it('keeps multiple future follow-ups as independent timeline events', async () => {
+    const firstScheduledAt = new Date(
+      Date.now() + 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const secondScheduledAt = new Date(
+      Date.now() + 15 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const response = await request(server)
+      .post('/follow-ups/batch')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        followUps: [
+          {
+            subjectPatientId: patient.id,
+            interlocutorId: patient.id,
+            agentId: agentA.id,
+            type: 'CALL',
+            purpose: 'FOLLOW_UP',
+            scheduledAt: firstScheduledAt,
+          },
+          {
+            subjectPatientId: patient.id,
+            interlocutorId: patient.id,
+            agentId: agentA.id,
+            type: 'WHATSAPP',
+            purpose: 'FOLLOW_UP',
+            scheduledAt: secondScheduledAt,
+          },
+        ],
+      })
+      .expect(201);
+    const created = response.body as Array<{
+      id: string;
+      status: string;
+      nextFollowUpId: string | null;
+    }>;
+
+    expect(created).toHaveLength(2);
+    expect(created).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          status: 'SCHEDULED',
+          nextFollowUpId: null,
+        }),
+      ]),
+    );
+    expect(created[0].nextFollowUpId).toBeNull();
+    expect(created[1].nextFollowUpId).toBeNull();
+
+    const timeline = await request(server)
+      .get(`/patients/${patient.id}/timeline?limit=100`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    const timelineBody = timeline.body as {
+      data: Array<{ id: string; kind: string; occurredAt: string }>;
+    };
+    const createdIds = new Set(created.map((followUp) => followUp.id));
+    const scheduled = timelineBody.data.filter(
+      (event) => event.kind === 'FOLLOW_UP' && createdIds.has(event.id),
+    );
+    expect(scheduled).toHaveLength(2);
+    expect(scheduled[0].occurredAt).toBe(secondScheduledAt);
+    expect(scheduled[1].occurredAt).toBe(firstScheduledAt);
+  });
+
   it('paginates a stable global projection', async () => {
     const full = await request(server)
       .get(`/patients/${patient.id}/timeline?limit=100&offset=0`)

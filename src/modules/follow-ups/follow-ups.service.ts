@@ -16,9 +16,11 @@ import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Patient } from '../../database/entities/patient.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
 import { ReminderStatus } from '../../database/entities/reminder-status.enum';
+import { UserRole } from '../../database/entities/user-role.enum';
 import { CreateFollowUpDto } from './dto/create-follow-up.dto';
 import { FindFollowUpsQueryDto } from './dto/list-follow-ups.dto';
 import { UpdateFollowUpDto } from './dto/update-follow-up.dto';
+import { CreateFollowUpsBatchDto } from './dto/create-follow-ups-batch.dto';
 import { CreateReminderDto } from '../reminders/dto/create-reminder.dto';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { PatientAccessService } from '../patients/access/patient-access.service';
@@ -109,6 +111,51 @@ export class FollowUpsService {
     await this.invalidations.markDirty(followUp.subjectPatientId, manager);
     return followUp;
   }
+  async createBatch(
+    input: CreateFollowUpsBatchDto,
+    userId: string,
+    userRole: string,
+  ) {
+    const patientIds = new Set(
+      input.followUps.map((followUp) => followUp.subjectPatientId),
+    );
+    if (patientIds.size !== 1) {
+      throw new BadRequestException(
+        'All follow-ups in a batch must belong to the same patient',
+      );
+    }
+
+    const now = Date.now();
+    for (const followUp of input.followUps) {
+      const scheduledAt = followUp.scheduledAt
+        ? new Date(followUp.scheduledAt).getTime()
+        : Number.NaN;
+      if (!Number.isFinite(scheduledAt) || scheduledAt <= now) {
+        throw new BadRequestException(
+          'Batch follow-ups must have a future scheduledAt and cannot be completed',
+        );
+      }
+    }
+
+    return this.dataSource.transaction(async (manager) => {
+      const created: FollowUp[] = [];
+      for (const followUp of input.followUps) {
+        const createdFollowUp = await this.create(
+          followUp,
+          userId,
+          userRole,
+          manager,
+        );
+        if (createdFollowUp.status !== FollowUpStatus.SCHEDULED) {
+          throw new BadRequestException(
+            'Batch follow-ups must have a future scheduledAt and cannot be completed',
+          );
+        }
+        created.push(createdFollowUp);
+      }
+      return created;
+    });
+  }
   async findOne(id: string, manager?: EntityManager) {
     const item = await (
       manager?.getRepository(FollowUp) ?? this.followUps
@@ -128,7 +175,7 @@ export class FollowUpsService {
       .orderBy('follow_up.scheduled_at', 'ASC')
       .addOrderBy('follow_up.created_at', 'DESC');
 
-    if (user.role === 'AGENT') {
+    if (user.role === UserRole.AGENT) {
       const agent = await this.agents.findOne({ where: { userId: user.id } });
       if (!agent)
         throw new BadRequestException(
@@ -192,6 +239,7 @@ export class FollowUpsService {
     Object.assign(
       item,
       input,
+      input.scheduledAt ? { scheduledAt: new Date(input.scheduledAt) } : {},
       input.completedAt ? { completedAt: new Date(input.completedAt) } : {},
     );
     const followUp = await this.followUps.save(item);

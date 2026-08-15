@@ -1227,6 +1227,58 @@
         ]
       }
     },
+    "/follow-ups/batch": {
+      "post": {
+        "operationId": "FollowUpsController_createBatch",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFollowUpsBatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FollowUpResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The batch must contain future follow-ups for the same patient"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only assign follow-ups to themselves"
+          },
+          "404": {
+            "description": "Patient or agent not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create multiple future follow-ups",
+        "tags": [
+          "follow-ups"
+        ]
+      }
+    },
     "/follow-ups/{id}": {
       "get": {
         "operationId": "FollowUpsController_findOne",
@@ -7134,6 +7186,72 @@
           "updatedAt"
         ]
       },
+      "CreateScheduledFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "interlocutorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ]
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "FIRST_CONTACT",
+              "ENROLLMENT",
+              "FOLLOW_UP",
+              "PSYCHOONCOLOGY_REFERRAL",
+              "OTHER"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          },
+          "scheduledAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subjectPatientId",
+          "interlocutorId",
+          "type",
+          "purpose",
+          "scheduledAt"
+        ]
+      },
+      "CreateFollowUpsBatchDto": {
+        "type": "object",
+        "properties": {
+          "followUps": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateScheduledFollowUpDto"
+            }
+          }
+        },
+        "required": [
+          "followUps"
+        ]
+      },
       "UpdateFollowUpDto": {
         "type": "object",
         "properties": {
@@ -7148,6 +7266,9 @@
               "CANCELLED",
               "NO_ANSWER"
             ]
+          },
+          "scheduledAt": {
+            "type": "string"
           },
           "completedAt": {
             "type": "string"

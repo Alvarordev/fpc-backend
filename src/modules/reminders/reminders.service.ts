@@ -95,6 +95,11 @@ export class RemindersService {
   async findAll(filters: ListRemindersDto, user: User) {
     const query = this.repository.createQueryBuilder('reminder');
     await this.access.scopeQuery(query, 'reminder.subject_patient_id', user);
+    const agentId = await this.agentIdFor(user);
+    if (agentId)
+      query.andWhere('reminder.assigned_agent_id = :reminderAgentId', {
+        reminderAgentId: agentId,
+      });
     if (filters.patientId)
       query.andWhere('reminder.subject_patient_id = :patientId', {
         patientId: filters.patientId,
