@@ -20,7 +20,9 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build && npm prune --omit=dev
+RUN npm run build \
+  && npm prune --omit=dev \
+  && rm -rf node_modules/ts-node node_modules/typescript
 
 FROM node:20-alpine AS runtime
 
