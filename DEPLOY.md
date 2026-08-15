@@ -16,6 +16,9 @@ Cada ejecución también publica un tag inmutable con el SHA completo:
 producción usa el environment `production`, donde se pueden configurar
 revisores obligatorios antes del despliegue.
 
+Un push a `develop` inicia el workflow de staging; un push a `main` inicia el
+workflow de production.
+
 Si el paquete de GHCR es privado, Dokploy debe tener configuradas credenciales
 de lectura del registry. Esas credenciales se configuran en Dokploy y no se
 guardan en este repositorio.
