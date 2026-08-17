@@ -234,6 +234,20 @@ describe('Patient timeline (e2e)', () => {
         occurredAt: '2026-08-04T10:00:00.000Z',
       }),
     );
+    expect(body.data).toContainEqual(
+      expect.objectContaining({
+        id: otherAgentFollowUp.id,
+        kind: 'FOLLOW_UP',
+        outcomes: expect.arrayContaining([
+          expect.objectContaining({
+            type: 'REMINDER',
+            recordId: otherAgentReminder.id,
+            label: 'Recordatorio',
+            summary: expect.stringContaining('Recordatorio pendiente'),
+          }),
+        ]),
+      }),
+    );
   });
 
   it('keeps multiple future follow-ups as independent timeline events', async () => {

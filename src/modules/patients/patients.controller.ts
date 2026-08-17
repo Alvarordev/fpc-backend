@@ -47,6 +47,7 @@ import { PatientTimelineService } from './patient-timeline.service';
 import {
   FollowUpTimelineEventDto,
   PatientTimelineQueryDto,
+  PatientTimelineOutcomeDto,
   PatientTimelineResponseDto,
   PsychooncologyAppointmentTimelineEventDto,
   ReminderTimelineEventDto,
@@ -70,6 +71,7 @@ const PATIENT_WRITE_ROLES = [
 @ApiBearerAuth()
 @ApiExtraModels(
   FollowUpTimelineEventDto,
+  PatientTimelineOutcomeDto,
   ReminderTimelineEventDto,
   PsychooncologyAppointmentTimelineEventDto,
   SocialNoteTimelineEventDto,

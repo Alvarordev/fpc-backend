@@ -7712,6 +7712,45 @@
           "changeReason"
         ]
       },
+      "PatientTimelineOutcomeDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "DIAGNOSIS",
+              "TREATMENT",
+              "MEDICATION",
+              "SYMPTOM",
+              "INSURANCE",
+              "SIS_AFFILIATION",
+              "ADDRESS",
+              "SOCIAL_NOTE",
+              "REMINDER",
+              "PSYCHOONCOLOGY_APPOINTMENT",
+              "ALERT"
+            ],
+            "type": "string"
+          },
+          "recordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "description": "Etiqueta legible del tipo de registro"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Resumen operativo del registro relacionado"
+          }
+        },
+        "required": [
+          "type",
+          "recordId",
+          "label",
+          "summary"
+        ]
+      },
       "FollowUpTimelineEventDto": {
         "type": "object",
         "properties": {
@@ -7766,6 +7805,12 @@
           "notes": {
             "type": "string",
             "nullable": true
+          },
+          "outcomes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientTimelineOutcomeDto"
+            }
           }
         },
         "required": [
@@ -7776,7 +7821,8 @@
           "followUpId",
           "type",
           "purpose",
-          "notes"
+          "notes",
+          "outcomes"
         ]
       },
       "ReminderTimelineEventDto": {

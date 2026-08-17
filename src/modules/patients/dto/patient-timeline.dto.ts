@@ -24,6 +24,20 @@ export enum PatientTimelineEventKind {
   SOCIAL_NOTE = 'SOCIAL_NOTE',
 }
 
+export enum PatientTimelineOutcomeType {
+  DIAGNOSIS = 'DIAGNOSIS',
+  TREATMENT = 'TREATMENT',
+  MEDICATION = 'MEDICATION',
+  SYMPTOM = 'SYMPTOM',
+  INSURANCE = 'INSURANCE',
+  SIS_AFFILIATION = 'SIS_AFFILIATION',
+  ADDRESS = 'ADDRESS',
+  SOCIAL_NOTE = 'SOCIAL_NOTE',
+  REMINDER = 'REMINDER',
+  PSYCHOONCOLOGY_APPOINTMENT = 'PSYCHOONCOLOGY_APPOINTMENT',
+  ALERT = 'ALERT',
+}
+
 export class PatientTimelineQueryDto {
   @ApiPropertyOptional({ default: 50, minimum: 1, maximum: 100 })
   @Type(() => Number)
@@ -39,6 +53,20 @@ export class PatientTimelineQueryDto {
   offset = 0;
 }
 
+export class PatientTimelineOutcomeDto {
+  @ApiProperty({ enum: PatientTimelineOutcomeType })
+  type!: PatientTimelineOutcomeType;
+
+  @ApiProperty({ format: 'uuid' })
+  recordId!: string;
+
+  @ApiProperty({ description: 'Etiqueta legible del tipo de registro' })
+  label!: string;
+
+  @ApiProperty({ description: 'Resumen operativo del registro relacionado' })
+  summary!: string;
+}
+
 export class FollowUpTimelineEventDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ enum: [PatientTimelineEventKind.FOLLOW_UP] })
@@ -49,6 +77,8 @@ export class FollowUpTimelineEventDto {
   @ApiProperty({ enum: FollowUpType }) type!: FollowUpType;
   @ApiProperty({ enum: FollowUpPurpose }) purpose!: FollowUpPurpose;
   @ApiProperty({ nullable: true, type: String }) notes!: string | null;
+  @ApiProperty({ type: PatientTimelineOutcomeDto, isArray: true })
+  outcomes!: PatientTimelineOutcomeDto[];
 }
 
 export class ReminderTimelineEventDto {
