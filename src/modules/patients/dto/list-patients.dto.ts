@@ -1,14 +1,8 @@
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { PatientActivityStatus } from '../../../database/entities/patient-activity-status.enum';
+import { PatientListSegment } from '../../../database/entities/patient-list-segment.enum';
 import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../../database/entities/patient-status.enum';
 
@@ -23,11 +17,15 @@ export class ListPatientsDto {
   @IsIn(Object.values(PatientStatus))
   status?: PatientStatus;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: PatientActivityStatus })
   @IsOptional()
-  @Type(() => Boolean)
-  @IsBoolean()
-  isActive?: boolean;
+  @IsIn(Object.values(PatientActivityStatus))
+  activityStatus?: PatientActivityStatus;
+
+  @ApiPropertyOptional({ enum: PatientListSegment })
+  @IsOptional()
+  @IsIn(Object.values(PatientListSegment))
+  segment?: PatientListSegment;
 
   @ApiPropertyOptional()
   @IsOptional()

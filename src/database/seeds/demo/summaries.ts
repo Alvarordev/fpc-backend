@@ -2,6 +2,7 @@ import {
   PatientSummary,
   PatientSummaryStatus,
 } from '../../entities/patient-summary.entity';
+import { PatientActivityStatus } from '../../entities/patient-activity-status.enum';
 import type { DemoContext } from './context';
 import type { PatientFollowUps } from './follow-ups';
 import { addDays } from './rng';
@@ -24,7 +25,9 @@ export async function seedPatientSummaries(
 ): Promise<void> {
   const candidates = histories.filter(
     (history) =>
-      history.enrollment !== null && history.demoPatient.patient.isActive,
+      history.enrollment !== null &&
+      history.demoPatient.patient.activityStatus !==
+        PatientActivityStatus.INACTIVE,
   );
   const [ready, pending, failed] = rng.pickN(candidates, 3);
   if (!ready || !pending || !failed) return;

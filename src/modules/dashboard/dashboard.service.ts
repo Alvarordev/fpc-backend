@@ -195,10 +195,10 @@ export class DashboardService {
       SELECT
         (SELECT COUNT(*) FROM enrollments WHERE created_at >= $1 AND created_at < $2) AS "enrollmentEvents",
         COUNT(*) AS "cohortPatients",
-        COUNT(*) FILTER (WHERE patient.is_active) AS "activePatients",
-        COUNT(*) FILTER (WHERE NOT patient.is_active) AS "inactivePatients",
+        COUNT(*) FILTER (WHERE patient.activity_status IN ('ACTIVE', 'REACTIVE')) AS "activePatients",
+        COUNT(*) FILTER (WHERE patient.activity_status = 'INACTIVE') AS "inactivePatients",
         COUNT(*) FILTER (WHERE patient.deceased_at IS NOT NULL OR patient.deactivation_reason = 'DECEASED') AS "deceasedPatients",
-        COUNT(*) FILTER (WHERE NOT patient.is_active AND patient.deceased_at IS NULL AND patient.deactivation_reason IS DISTINCT FROM 'DECEASED') AS "dropoutPatients",
+        COUNT(*) FILTER (WHERE patient.activity_status = 'INACTIVE' AND patient.deceased_at IS NULL AND patient.deactivation_reason IS DISTINCT FROM 'DECEASED') AS "dropoutPatients",
         (SELECT COUNT(*) FROM psychooncology_appointments WHERE scheduled_at >= $1 AND scheduled_at < $2) AS "sessions",
         (SELECT COUNT(*) FROM psychooncology_appointments WHERE scheduled_at >= $1 AND scheduled_at < $2 AND status = 'COMPLETED') AS "completedSessions"
       FROM cohort

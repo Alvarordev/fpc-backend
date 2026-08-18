@@ -10,6 +10,7 @@ import { PatientSisAffiliation } from '../../database/entities/patient-sis-affil
 import { PatientSymptomReport } from '../../database/entities/patient-symptom-report.entity';
 import { PatientTreatment } from '../../database/entities/patient-treatment.entity';
 import { Patient } from '../../database/entities/patient.entity';
+import { PatientActivityStatus } from '../../database/entities/patient-activity-status.enum';
 import { PatientAddress } from '../../database/entities/patient-address.entity';
 import { HealthCenter } from '../../database/entities/health-center.entity';
 
@@ -97,7 +98,7 @@ export class PatientSummaryPayloadService {
       patient: {
         role: patient.role,
         status: patient.status,
-        active: patient.isActive,
+        active: patient.activityStatus !== PatientActivityStatus.INACTIVE,
         age: ageOnDate(patient.birthDate),
         gender: patient.gender,
         location: patient.details

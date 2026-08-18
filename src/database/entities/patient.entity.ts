@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { DeactivationReason } from './deactivation-reason.enum';
+import { PatientActivityStatus } from './patient-activity-status.enum';
 import { PatientDetails } from './patient-details.entity';
 import { PatientRole } from './patient-role.enum';
 import { PatientStatus } from './patient-status.enum';
@@ -17,14 +18,20 @@ import { PatientStatus } from './patient-status.enum';
 @Check("\"role\" IN ('UNKNOWN', 'PATIENT', 'COMPANION')")
 @Check("\"status\" IN ('UNENROLLED', 'ENROLLED')")
 @Check(
+  'CHK_patients_activity_status',
+  "\"activity_status\" IN ('ACTIVE', 'INACTIVE', 'REACTIVE')",
+)
+@Check(
   "\"deactivation_reason\" IN ('DECEASED', 'WITHDREW_CONSENT', 'LOST_CONTACT', 'TRANSFERRED_OUT', 'OTHER')",
 )
 @Check(
-  '(("is_active" = true AND "deactivation_reason" IS NULL AND "deactivated_at" IS NULL AND "deactivation_reason_detail" IS NULL) OR ("is_active" = false AND "deactivation_reason" IS NOT NULL AND "deactivated_at" IS NOT NULL AND (("deactivation_reason" = \'OTHER\' AND "deactivation_reason_detail" IS NOT NULL) OR ("deactivation_reason" != \'OTHER\' AND "deactivation_reason_detail" IS NULL))))',
+  'CHK_patients_activity_deactivation',
+  '(("activity_status" IN (\'ACTIVE\', \'REACTIVE\') AND "deactivation_reason" IS NULL AND "deactivated_at" IS NULL AND "deactivation_reason_detail" IS NULL) OR ("activity_status" = \'INACTIVE\' AND "deactivation_reason" IS NOT NULL AND "deactivated_at" IS NOT NULL AND (("deactivation_reason" = \'OTHER\' AND "deactivation_reason_detail" IS NOT NULL) OR ("deactivation_reason" != \'OTHER\' AND "deactivation_reason_detail" IS NULL))))',
 )
 @Index('IDX_patients_dni', ['dni'])
 @Index('IDX_patients_role', ['role'])
 @Index('IDX_patients_status', ['status'])
+@Index('IDX_patients_activity_status', ['activityStatus'])
 @Index('IDX_patients_created_at_id', ['createdAt', 'id'])
 export class Patient {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' })
@@ -65,8 +72,13 @@ export class Patient {
   @Column({ type: 'varchar', length: 20, default: PatientStatus.UNENROLLED })
   status!: PatientStatus;
 
-  @Column({ name: 'is_active', type: 'boolean', default: true })
-  isActive!: boolean;
+  @Column({
+    name: 'activity_status',
+    type: 'varchar',
+    length: 20,
+    default: PatientActivityStatus.ACTIVE,
+  })
+  activityStatus!: PatientActivityStatus;
 
   @Column({
     name: 'deactivation_reason',

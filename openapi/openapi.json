@@ -2152,11 +2152,28 @@
             }
           },
           {
-            "name": "isActive",
+            "name": "activityStatus",
             "required": false,
             "in": "query",
             "schema": {
-              "type": "boolean"
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "INACTIVE",
+                "REACTIVE"
+              ]
+            }
+          },
+          {
+            "name": "segment",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CARE",
+                "PROSPECTS"
+              ]
             }
           },
           {
@@ -8021,8 +8038,13 @@
             ],
             "type": "string"
           },
-          "isActive": {
-            "type": "boolean"
+          "activityStatus": {
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "REACTIVE"
+            ],
+            "type": "string"
           },
           "deactivationReason": {
             "nullable": true,
@@ -8070,7 +8092,7 @@
           "hasWhatsapp",
           "role",
           "status",
-          "isActive",
+          "activityStatus",
           "deactivationReason",
           "deactivationReasonDetail",
           "deactivatedAt",
@@ -8277,8 +8299,13 @@
             ],
             "type": "string"
           },
-          "isActive": {
-            "type": "boolean"
+          "activityStatus": {
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "REACTIVE"
+            ],
+            "type": "string"
           },
           "deactivationReason": {
             "nullable": true,
@@ -8348,7 +8375,7 @@
           "hasWhatsapp",
           "role",
           "status",
-          "isActive",
+          "activityStatus",
           "deactivationReason",
           "deactivationReasonDetail",
           "deactivatedAt",
@@ -9291,8 +9318,13 @@
             ],
             "type": "string"
           },
-          "isActive": {
-            "type": "boolean"
+          "activityStatus": {
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "REACTIVE"
+            ],
+            "type": "string"
           },
           "deactivationReason": {
             "nullable": true,
@@ -9395,7 +9427,7 @@
           "hasWhatsapp",
           "role",
           "status",
-          "isActive",
+          "activityStatus",
           "deactivationReason",
           "deactivationReasonDetail",
           "deactivatedAt",

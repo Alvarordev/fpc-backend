@@ -1,4 +1,5 @@
 import type { Agent } from '../../entities/agent.entity';
+import { PatientActivityStatus } from '../../entities/patient-activity-status.enum';
 import { FollowUp } from '../../entities/follow-up.entity';
 import {
   FollowUpPurpose,
@@ -193,7 +194,10 @@ function planFollowUps(
   }
 
   // Only patients still in the program have something on the calendar.
-  if (patient.isActive && rng.bool(0.55)) {
+  if (
+    patient.activityStatus === PatientActivityStatus.ACTIVE &&
+    rng.bool(0.55)
+  ) {
     plans.push({
       purpose: FollowUpPurpose.FOLLOW_UP,
       status: FollowUpStatus.SCHEDULED,

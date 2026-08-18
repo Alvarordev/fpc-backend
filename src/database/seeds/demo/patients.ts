@@ -1,5 +1,6 @@
 import { CompanionPatient } from '../../entities/companion-patient.entity';
 import { DeactivationReason } from '../../entities/deactivation-reason.enum';
+import { PatientActivityStatus } from '../../entities/patient-activity-status.enum';
 import { PatientDetails } from '../../entities/patient-details.entity';
 import { PatientAddress } from '../../entities/patient-address.entity';
 import { AddressType } from '../../entities/address-type.enum';
@@ -91,7 +92,7 @@ export async function seedPatients(
         hasWhatsapp: rng.bool(0.75),
         role: PatientRole.PATIENT,
         status: isEnrolled ? PatientStatus.ENROLLED : PatientStatus.UNENROLLED,
-        isActive: true,
+        activityStatus: PatientActivityStatus.ACTIVE,
         deactivationReason: null,
         deactivationReasonDetail: null,
         deactivatedAt: null,
@@ -105,13 +106,13 @@ export async function seedPatients(
   // and a detail only when the reason is OTHER.
   const deceased = patientRows[ENROLLED_COUNT - 1];
   const deceasedAt = addDays(now, -rng.int(20, 70));
-  deceased.isActive = false;
+  deceased.activityStatus = PatientActivityStatus.INACTIVE;
   deceased.deactivationReason = DeactivationReason.DECEASED;
   deceased.deactivatedAt = deceasedAt;
   deceased.deceasedAt = toDateOnly(deceasedAt);
 
   const lost = patientRows[ENROLLED_COUNT - 2];
-  lost.isActive = false;
+  lost.activityStatus = PatientActivityStatus.INACTIVE;
   lost.deactivationReason = DeactivationReason.LOST_CONTACT;
   lost.deactivatedAt = addDays(now, -rng.int(30, 90));
 
@@ -134,7 +135,7 @@ export async function seedPatients(
         hasWhatsapp: rng.bool(0.9),
         role: PatientRole.COMPANION,
         status: PatientStatus.UNENROLLED,
-        isActive: true,
+        activityStatus: PatientActivityStatus.ACTIVE,
       }),
     );
   }

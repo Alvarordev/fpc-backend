@@ -16,6 +16,7 @@ import { PatientSymptomReportResponseDto } from '../symptom-reports/dto/patient-
 import { CompanionPatient } from '../../../database/entities/companion-patient.entity';
 import { DeactivationReason } from '../../../database/entities/deactivation-reason.enum';
 import { EducationLevel } from '../../../database/entities/education-level.enum';
+import { PatientActivityStatus } from '../../../database/entities/patient-activity-status.enum';
 import { PatientDetails } from '../../../database/entities/patient-details.entity';
 import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../../database/entities/patient-status.enum';
@@ -161,8 +162,8 @@ export class PatientResponseDto {
   @ApiProperty({ enum: PatientStatus })
   status!: PatientStatus;
 
-  @ApiProperty()
-  isActive!: boolean;
+  @ApiProperty({ enum: PatientActivityStatus })
+  activityStatus!: PatientActivityStatus;
 
   @ApiProperty({ enum: DeactivationReason, nullable: true })
   deactivationReason!: DeactivationReason | null;
@@ -195,7 +196,7 @@ export class PatientResponseDto {
       hasWhatsapp: patient.hasWhatsapp,
       role: patient.role,
       status: patient.status,
-      isActive: patient.isActive,
+      activityStatus: patient.activityStatus,
       deactivationReason: patient.deactivationReason,
       deactivationReasonDetail: patient.deactivationReasonDetail,
       deactivatedAt: patient.deactivatedAt?.toISOString() ?? null,
@@ -252,19 +253,27 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
         ? PatientDetailsResponseDto.from(patient.details)
         : null,
       summary: patient.summary,
-      diagnoses: patient.diagnoses.map(PatientDiagnosisResponseDto.from),
-      treatments: patient.treatments.map(PatientTreatmentResponseDto.from),
-      insurance: patient.insurance.map(PatientInsuranceResponseDto.from),
-      medicalAppointments: patient.medicalAppointments.map(
-        PatientMedicalAppointmentResponseDto.from,
+      diagnoses: patient.diagnoses.map((diagnosis) =>
+        PatientDiagnosisResponseDto.from(diagnosis),
       ),
-      sisAffiliations: patient.sisAffiliations.map(
-        PatientSisAffiliationResponseDto.from,
+      treatments: patient.treatments.map((treatment) =>
+        PatientTreatmentResponseDto.from(treatment),
       ),
-      symptomReports: patient.symptomReports.map(
-        PatientSymptomReportResponseDto.from,
+      insurance: patient.insurance.map((item) =>
+        PatientInsuranceResponseDto.from(item),
       ),
-      companions: patient.companions.map(CompanionPatientResponseDto.from),
+      medicalAppointments: patient.medicalAppointments.map((appointment) =>
+        PatientMedicalAppointmentResponseDto.from(appointment),
+      ),
+      sisAffiliations: patient.sisAffiliations.map((affiliation) =>
+        PatientSisAffiliationResponseDto.from(affiliation),
+      ),
+      symptomReports: patient.symptomReports.map((report) =>
+        PatientSymptomReportResponseDto.from(report),
+      ),
+      companions: patient.companions.map((companion) =>
+        CompanionPatientResponseDto.from(companion),
+      ),
     };
   }
 }

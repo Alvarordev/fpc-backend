@@ -10,10 +10,12 @@ import { PatientSummary } from '../../database/entities/patient-summary.entity';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CompanionPatient } from '../../database/entities/companion-patient.entity';
 import { DeactivationReason } from '../../database/entities/deactivation-reason.enum';
+import { PatientActivityStatus } from '../../database/entities/patient-activity-status.enum';
 import { PatientDetails } from '../../database/entities/patient-details.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
 import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
+import { PatientListSegment } from '../../database/entities/patient-list-segment.enum';
 import { PatientRole } from '../../database/entities/patient-role.enum';
 import { PatientSisAffiliation } from '../../database/entities/patient-sis-affiliation.entity';
 import { PatientStatus } from '../../database/entities/patient-status.enum';
@@ -237,13 +239,31 @@ export class PatientsService {
   }> {
     const query = this.patientsRepository.createQueryBuilder('patient');
     await this.access.scopeQuery(query, 'patient.id', user);
+    if (filters.segment === PatientListSegment.CARE) {
+      query.andWhere(
+        '(patient.status = :careEnrolledStatus OR patient.role = :careCompanionRole)',
+        {
+          careEnrolledStatus: PatientStatus.ENROLLED,
+          careCompanionRole: PatientRole.COMPANION,
+        },
+      );
+    }
+    if (filters.segment === PatientListSegment.PROSPECTS) {
+      query.andWhere(
+        'patient.status = :prospectStatus AND patient.role != :prospectCompanionRole',
+        {
+          prospectStatus: PatientStatus.UNENROLLED,
+          prospectCompanionRole: PatientRole.COMPANION,
+        },
+      );
+    }
     if (filters.role)
       query.andWhere('patient.role = :role', { role: filters.role });
     if (filters.status)
       query.andWhere('patient.status = :status', { status: filters.status });
-    if (filters.isActive !== undefined)
-      query.andWhere('patient.is_active = :isActive', {
-        isActive: filters.isActive,
+    if (filters.activityStatus)
+      query.andWhere('patient.activity_status = :activityStatus', {
+        activityStatus: filters.activityStatus,
       });
     if (filters.search)
       query.andWhere(
@@ -410,7 +430,7 @@ export class PatientsService {
 
   async deactivate(id: string, input: DeactivatePatientDto): Promise<Patient> {
     const patient = await this.findById(id);
-    patient.isActive = false;
+    patient.activityStatus = PatientActivityStatus.INACTIVE;
     patient.deactivationReason = input.reason;
     patient.deactivationReasonDetail =
       input.reason === DeactivationReason.OTHER ? (input.detail ?? null) : null;
@@ -423,7 +443,7 @@ export class PatientsService {
 
   async reactivate(id: string): Promise<Patient> {
     const patient = await this.findById(id);
-    patient.isActive = true;
+    patient.activityStatus = PatientActivityStatus.REACTIVE;
     patient.deactivationReason = null;
     patient.deactivationReasonDetail = null;
     patient.deactivatedAt = null;
@@ -449,7 +469,9 @@ export class PatientsService {
         where: { id: input.primaryHealthCenterId, isActive: true },
       });
       if (!healthCenter)
-        throw new NotFoundException('Primary health center not found or inactive');
+        throw new NotFoundException(
+          'Primary health center not found or inactive',
+        );
     }
     const details = await repository.findOne({
       where: { patientId: id },

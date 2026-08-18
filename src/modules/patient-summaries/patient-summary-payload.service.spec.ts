@@ -23,7 +23,7 @@ describe('PatientSummaryPayloadService', () => {
       gender: 'F',
       role: 'PATIENT',
       status: 'ENROLLED',
-      isActive: true,
+      activityStatus: 'ACTIVE',
       details: {
         travelTimeToHospital: { label: '30m' },
         requiresTranslation: false,
