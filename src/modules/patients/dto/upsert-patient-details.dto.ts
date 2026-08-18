@@ -11,9 +11,15 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { EducationLevel } from '../../../database/entities/education-level.enum';
+import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
 import { DurationDto } from '../../../shared/duration/duration.dto';
 
 export class UpsertPatientDetailsDto {
+  @ApiPropertyOptional({ enum: PatientHealthPhase })
+  @IsOptional()
+  @IsIn(Object.values(PatientHealthPhase))
+  healthPhase?: PatientHealthPhase;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

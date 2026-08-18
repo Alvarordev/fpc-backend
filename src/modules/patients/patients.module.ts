@@ -25,6 +25,7 @@ import { PatientAddress } from '../../database/entities/patient-address.entity';
 import { TreatmentMedication } from '../../database/entities/treatment-medication.entity';
 import { HealthCenter } from '../../database/entities/health-center.entity';
 import { PatientDetails } from '../../database/entities/patient-details.entity';
+import { PatientHealthPhaseHistory } from '../../database/entities/patient-health-phase-history.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
 import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
@@ -47,6 +48,7 @@ import { PatientSocialNotesService } from './social-notes/patient-social-notes.s
     TypeOrmModule.forFeature([
       Patient,
       PatientDetails,
+      PatientHealthPhaseHistory,
       PatientAddress,
       CompanionPatient,
       PatientDiagnosis,

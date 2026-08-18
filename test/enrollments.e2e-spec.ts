@@ -91,6 +91,7 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: true,
         },
         affiliationType: 'FAMILY_FRIEND',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'IN_PERSON', notes: 'Enrollment completed' },
         details: { birthDepartment: 'LIMA', requiresTranslation: true },
         addresses: [
@@ -208,6 +209,7 @@ describe('Enrollment wizard (e2e)', () => {
           email: 'p7-rating@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
       })
       .expect(201);
@@ -252,6 +254,7 @@ describe('Enrollment wizard (e2e)', () => {
           email: 'p7-invalid-rating@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
       })
       .expect(201);
@@ -295,6 +298,7 @@ describe('Enrollment wizard (e2e)', () => {
           email: 'p7-cross-agent-rating@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
       })
       .expect(201);
@@ -324,6 +328,7 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: true,
         },
         affiliationType: 'FAMILY_FRIEND',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
       })
       .expect(201);
@@ -340,6 +345,7 @@ describe('Enrollment wizard (e2e)', () => {
         },
         companionId: firstEnrollmentBody.companionId,
         affiliationType: 'FAMILY_FRIEND',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
       })
       .expect(201);
@@ -368,6 +374,7 @@ describe('Enrollment wizard (e2e)', () => {
       .send({
         patientId: companion.id,
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
       })
       .expect(409);
@@ -390,6 +397,7 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: false,
         },
         affiliationType: 'FAMILY_FRIEND',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
       })
       .expect(400);
@@ -412,6 +420,7 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: true,
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
       })
       .expect(400);
@@ -446,6 +455,7 @@ describe('Enrollment wizard (e2e)', () => {
       .send({
         patientId: patient.id,
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
         treatments: [{ treatmentType: 'Existing diagnosis treatment' }],
       })
@@ -467,6 +477,7 @@ describe('Enrollment wizard (e2e)', () => {
           email: 'p7-missing-diagnosis@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
         treatments: [{ treatmentType: 'Missing diagnosis treatment' }],
       })
@@ -484,6 +495,7 @@ describe('Enrollment wizard (e2e)', () => {
           email: 'p7-rollback@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
         insurance: { insuranceType: 'NONE' },
         treatments: [{ treatmentType: 'This has no diagnosis' }],

@@ -19,6 +19,7 @@ import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.enti
 import { InsuranceType } from '../../database/entities/patient-insurance.entity';
 import { PatientRole } from '../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../database/entities/patient-status.enum';
+import { PatientHealthPhase } from '../../database/entities/patient-health-phase.enum';
 import { Patient } from '../../database/entities/patient.entity';
 import { FollowUpsService } from '../follow-ups/follow-ups.service';
 import { PatientDiagnosesService } from '../patients/clinical/diagnoses/patient-diagnoses.service';
@@ -73,9 +74,18 @@ export class EnrollmentsService {
         medicalAppointments,
         symptomReport,
         familyPreventionTalkInterests,
+        healthPhase,
         addresses,
         ...metadata
       } = input;
+      if (
+        healthPhase !== PatientHealthPhase.CANCER_DIAGNOSIS &&
+        healthPhase !== PatientHealthPhase.SIGNS_AND_SYMPTOMS
+      ) {
+        throw new BadRequestException(
+          'Enrollment requires a cancer diagnosis or signs and symptoms phase',
+        );
+      }
       if (Boolean(patientId) === Boolean(patientInput))
         throw new BadRequestException(
           'Provide exactly one of patientId or patient',
@@ -151,8 +161,11 @@ export class EnrollmentsService {
         }
       }
 
-      if (details)
-        await this.patients.upsertDetails(patient.id, details, manager);
+      await this.patients.upsertDetails(
+        patient.id,
+        { ...details, healthPhase },
+        manager,
+      );
       const followUp = await this.followUps.create(
         {
           ...followUpInput,

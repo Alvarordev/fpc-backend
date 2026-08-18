@@ -1,4 +1,4 @@
-import { OmitType } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -23,6 +23,10 @@ import { CreateCompanionDto } from '../../patients/dto/create-companion.dto';
 import { CreatePatientDto } from '../../patients/dto/create-patient.dto';
 import { UpsertPatientDetailsDto } from '../../patients/dto/upsert-patient-details.dto';
 import { CreatePatientAddressDto } from '../../patients/addresses/dto/create-patient-address.dto';
+import {
+  ENROLLMENT_HEALTH_PHASES,
+  PatientHealthPhase,
+} from '../../../database/entities/patient-health-phase.enum';
 
 export class EnrollmentFollowUpDto {
   @IsIn(Object.values(FollowUpType)) type!: FollowUpType;
@@ -77,6 +81,9 @@ export class CreateEnrollmentDto {
   @Type(() => EnrollmentFollowUpDto)
   followUp!: EnrollmentFollowUpDto;
   @IsIn(Object.values(AffiliationType)) affiliationType!: AffiliationType;
+  @ApiProperty({ enum: ENROLLMENT_HEALTH_PHASES })
+  @IsIn(ENROLLMENT_HEALTH_PHASES)
+  healthPhase!: PatientHealthPhase;
   @IsOptional() @IsUUID() companionId?: string;
   @IsOptional()
   @ValidateNested()

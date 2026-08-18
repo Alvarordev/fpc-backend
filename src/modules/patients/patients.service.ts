@@ -13,6 +13,7 @@ import { DeactivationReason } from '../../database/entities/deactivation-reason.
 import { PatientActivityStatus } from '../../database/entities/patient-activity-status.enum';
 import { PatientDetails } from '../../database/entities/patient-details.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
+import { PatientHealthPhaseHistory } from '../../database/entities/patient-health-phase-history.entity';
 import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
 import { PatientListSegment } from '../../database/entities/patient-list-segment.enum';
@@ -44,6 +45,8 @@ export class PatientsService {
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(PatientDetails)
     private readonly detailsRepository: Repository<PatientDetails>,
+    @InjectRepository(PatientHealthPhaseHistory)
+    private readonly healthPhaseHistoryRepository: Repository<PatientHealthPhaseHistory>,
     @InjectRepository(CompanionPatient)
     private readonly companionPatientsRepository: Repository<CompanionPatient>,
     @InjectRepository(PatientSummary)
@@ -351,6 +354,7 @@ export class PatientsService {
       sisAffiliations: PatientSisAffiliation[];
       symptomReports: PatientSymptomReport[];
       companions: CompanionPatient[];
+      healthPhaseHistory: PatientHealthPhaseHistory[];
     }
   > {
     await this.access.assertCanRead(id, user);
@@ -364,6 +368,7 @@ export class PatientsService {
       sisAffiliations,
       symptomReports,
       companions,
+      healthPhaseHistory,
     ] = await Promise.all([
       this.patientsRepository.findOne({
         where: { id },
@@ -406,6 +411,10 @@ export class PatientsService {
         relations: { companion: true },
         order: { createdAt: 'DESC' },
       }),
+      this.healthPhaseHistoryRepository.find({
+        where: { patientId: id },
+        order: { changedAt: 'DESC', id: 'DESC' },
+      }),
     ]);
     if (!patient) throw new NotFoundException('Patient not found');
     return Object.assign(patient, {
@@ -417,6 +426,7 @@ export class PatientsService {
       sisAffiliations,
       symptomReports,
       companions,
+      healthPhaseHistory,
     });
   }
 
@@ -458,6 +468,11 @@ export class PatientsService {
     input: UpsertPatientDetailsDto,
     manager?: EntityManager,
   ): Promise<PatientDetails> {
+    if (!manager) {
+      return this.dataSource.transaction((transactionManager) =>
+        this.upsertDetails(id, input, transactionManager),
+      );
+    }
     await this.assertPatientRole(id, PatientRole.PATIENT, undefined, manager);
     const repository =
       manager?.getRepository(PatientDetails) ?? this.detailsRepository;
@@ -476,6 +491,7 @@ export class PatientsService {
     const details = await repository.findOne({
       where: { patientId: id },
     });
+    const previousHealthPhase = details?.healthPhase ?? null;
     const { travelTimeToHospital, ...rest } = input;
     const normalized = {
       ...rest,
@@ -486,12 +502,27 @@ export class PatientsService {
         ? Object.assign(details, normalized)
         : repository.create({ ...normalized, patientId: id }),
     );
+    const historyRepository =
+      manager?.getRepository(PatientHealthPhaseHistory) ??
+      this.healthPhaseHistoryRepository;
+    if (input.healthPhase && input.healthPhase !== previousHealthPhase) {
+      await historyRepository.save(
+        historyRepository.create({
+          patientId: id,
+          healthPhase: input.healthPhase,
+        }),
+      );
+    }
+    const healthPhaseHistory = await historyRepository.find({
+      where: { patientId: id },
+      order: { changedAt: 'DESC', id: 'DESC' },
+    });
     if (saved.primaryHealthCenterId)
       saved.primaryHealthCenter = await healthCenters.findOne({
         where: { id: saved.primaryHealthCenterId },
       });
     await this.invalidations.markDirty(id, manager);
-    return saved;
+    return Object.assign(saved, { healthPhaseHistory });
   }
 
   private async createCompanionWithManager(

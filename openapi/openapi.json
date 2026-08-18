@@ -6317,6 +6317,14 @@
       "UpsertPatientDetailsDto": {
         "type": "object",
         "properties": {
+          "healthPhase": {
+            "enum": [
+              "CANCER_DIAGNOSIS",
+              "ANNUAL_CHECKUP",
+              "SIGNS_AND_SYMPTOMS"
+            ],
+            "type": "string"
+          },
           "birthDepartment": {
             "type": "string",
             "maxLength": 255
@@ -6816,6 +6824,13 @@
       "CreateEnrollmentDto": {
         "type": "object",
         "properties": {
+          "healthPhase": {
+            "enum": [
+              "CANCER_DIAGNOSIS",
+              "SIGNS_AND_SYMPTOMS"
+            ],
+            "type": "string"
+          },
           "patientId": {
             "type": "string",
             "format": "uuid"
@@ -6922,6 +6937,7 @@
           }
         },
         "required": [
+          "healthPhase",
           "followUp",
           "affiliationType"
         ]
@@ -8520,6 +8536,32 @@
           "label"
         ]
       },
+      "PatientHealthPhaseHistoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "healthPhase": {
+            "enum": [
+              "CANCER_DIAGNOSIS",
+              "ANNUAL_CHECKUP",
+              "SIGNS_AND_SYMPTOMS"
+            ],
+            "type": "string"
+          },
+          "changedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "healthPhase",
+          "changedAt"
+        ]
+      },
       "PatientDetailsResponseDto": {
         "type": "object",
         "properties": {
@@ -8530,6 +8572,15 @@
           "patientId": {
             "type": "string",
             "format": "uuid"
+          },
+          "healthPhase": {
+            "nullable": true,
+            "enum": [
+              "CANCER_DIAGNOSIS",
+              "ANNUAL_CHECKUP",
+              "SIGNS_AND_SYMPTOMS"
+            ],
+            "type": "string"
           },
           "birthDepartment": {
             "type": "string",
@@ -8636,11 +8687,18 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "healthPhaseHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientHealthPhaseHistoryResponseDto"
+            }
           }
         },
         "required": [
           "id",
           "patientId",
+          "healthPhase",
           "birthDepartment",
           "primaryHealthCenterId",
           "travelTimeToHospital",
@@ -8661,7 +8719,8 @@
           "programDropoutReason",
           "programDropoutDate",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "healthPhaseHistory"
         ]
       },
       "PatientDiagnosisResponseDto": {

@@ -2,6 +2,8 @@ import { CompanionPatient } from '../../entities/companion-patient.entity';
 import { DeactivationReason } from '../../entities/deactivation-reason.enum';
 import { PatientActivityStatus } from '../../entities/patient-activity-status.enum';
 import { PatientDetails } from '../../entities/patient-details.entity';
+import { PatientHealthPhase } from '../../entities/patient-health-phase.enum';
+import { PatientHealthPhaseHistory } from '../../entities/patient-health-phase-history.entity';
 import { PatientAddress } from '../../entities/patient-address.entity';
 import { AddressType } from '../../entities/address-type.enum';
 import { DurationUnit } from '../../entities/duration-unit.enum';
@@ -35,6 +37,23 @@ export interface DemoPatient {
   companion: Patient | null;
   healthCenter: HealthCenter;
   isEnrolled: boolean;
+  initialHealthPhase: PatientHealthPhase | null;
+  healthPhase: PatientHealthPhase | null;
+}
+
+function initialHealthPhaseFor(index: number): PatientHealthPhase {
+  return index % 2 === 0
+    ? PatientHealthPhase.CANCER_DIAGNOSIS
+    : PatientHealthPhase.SIGNS_AND_SYMPTOMS;
+}
+
+function currentHealthPhaseFor(
+  index: number,
+  isEnrolled: boolean,
+): PatientHealthPhase | null {
+  if (!isEnrolled) return null;
+  if (index === 2 || index === 7) return PatientHealthPhase.ANNUAL_CHECKUP;
+  return initialHealthPhaseFor(index);
 }
 
 interface Person {
@@ -151,12 +170,17 @@ export async function seedPatients(
     ),
   );
 
-  const demoPatients: DemoPatient[] = patients.map((patient, index) => ({
-    patient,
-    companion: index < COMPANION_COUNT ? companions[index] : null,
-    healthCenter: assignedCenters[index],
-    isEnrolled: index < ENROLLED_COUNT,
-  }));
+  const demoPatients: DemoPatient[] = patients.map((patient, index) => {
+    const isEnrolled = index < ENROLLED_COUNT;
+    return {
+      patient,
+      companion: index < COMPANION_COUNT ? companions[index] : null,
+      healthCenter: assignedCenters[index],
+      isEnrolled,
+      initialHealthPhase: isEnrolled ? initialHealthPhaseFor(index) : null,
+      healthPhase: currentHealthPhaseFor(index, isEnrolled),
+    };
+  });
 
   await seedPatientDetails(ctx, demoPatients);
   await seedPatientAddresses(ctx, demoPatients);
@@ -182,7 +206,7 @@ async function seedPatientDetails(
   const rows = demoPatients
     // Details are captured during enrollment, so unenrolled leads have none.
     .filter(({ isEnrolled }) => isEnrolled)
-    .map(({ patient, healthCenter }) => {
+    .map(({ patient, healthCenter, healthPhase }) => {
       const department = healthCenter.department;
       const nativeLanguage = rng.pick(NATIVE_LANGUAGES);
       const droppedOut = rng.bool(0.12);
@@ -190,6 +214,7 @@ async function seedPatientDetails(
 
       return manager.create(PatientDetails, {
         patientId: patient.id,
+        healthPhase,
         birthDepartment: department,
         primaryHealthCenterId: healthCenter.id,
         travelTimeToHospital: normalizeDuration({
@@ -220,6 +245,40 @@ async function seedPatientDetails(
     });
 
   await manager.save(rows);
+
+  const historyRows = demoPatients
+    .filter(
+      ({ isEnrolled, initialHealthPhase, healthPhase }) =>
+        isEnrolled && initialHealthPhase && healthPhase,
+    )
+    .flatMap(({ patient, initialHealthPhase, healthPhase }) => {
+      if (!initialHealthPhase || !healthPhase) return [];
+      if (initialHealthPhase === healthPhase) {
+        return [
+          manager.create(PatientHealthPhaseHistory, {
+            patientId: patient.id,
+            healthPhase: initialHealthPhase,
+            changedAt: patient.createdAt,
+          }),
+        ];
+      }
+
+      const changedAt = addDays(now, -rng.int(20, 90));
+      return [
+        manager.create(PatientHealthPhaseHistory, {
+          patientId: patient.id,
+          healthPhase: initialHealthPhase,
+          changedAt: addDays(changedAt, -rng.int(60, 180)),
+        }),
+        manager.create(PatientHealthPhaseHistory, {
+          patientId: patient.id,
+          healthPhase,
+          changedAt,
+        }),
+      ];
+    });
+
+  await manager.save(historyRows);
 }
 
 /**

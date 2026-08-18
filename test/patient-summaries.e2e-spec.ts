@@ -251,6 +251,7 @@ describe('Patient summaries (e2e)', () => {
           email: 'p10-enrollment@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL', agentId: assignedAgentId },
       })
       .expect(201);
@@ -283,6 +284,7 @@ describe('Patient summaries (e2e)', () => {
           email: 'p10-rollback@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL', agentId: assignedAgentId },
         treatments: [{ treatmentType: 'Requires a diagnosis' }],
       })

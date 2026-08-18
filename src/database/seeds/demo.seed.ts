@@ -25,6 +25,7 @@ const REPORTED_TABLES = [
   'patients',
   'companion_patient',
   'patient_details',
+  'patient_health_phase_history',
   'follow_ups',
   'enrollments',
   'enrollment_family_talk_interests',

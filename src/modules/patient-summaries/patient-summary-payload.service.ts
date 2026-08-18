@@ -98,6 +98,7 @@ export class PatientSummaryPayloadService {
       patient: {
         role: patient.role,
         status: patient.status,
+        healthPhase: patient.details?.healthPhase ?? null,
         active: patient.activityStatus !== PatientActivityStatus.INACTIVE,
         age: ageOnDate(patient.birthDate),
         gender: patient.gender,

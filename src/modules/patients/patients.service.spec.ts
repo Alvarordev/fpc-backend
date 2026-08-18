@@ -1,4 +1,8 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { HealthCenter } from '../../database/entities/health-center.entity';
+import { PatientHealthPhase } from '../../database/entities/patient-health-phase.enum';
+import { PatientDetails } from '../../database/entities/patient-details.entity';
+import { PatientHealthPhaseHistory } from '../../database/entities/patient-health-phase-history.entity';
 import { PatientRole } from '../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../database/entities/patient-status.enum';
 import { Patient } from '../../database/entities/patient.entity';
@@ -59,5 +63,67 @@ describe('PatientsService.assertPatientRole', () => {
     await expect(
       service.assertPatientRole(patient.id, PatientRole.PATIENT),
     ).rejects.toThrow(NotFoundException);
+  });
+});
+
+describe('PatientsService.upsertDetails health phase history', () => {
+  it('records a phase change once and does not duplicate the current phase', async () => {
+    const details = {
+      patientId: 'patient-id',
+      healthPhase: PatientHealthPhase.CANCER_DIAGNOSIS,
+    } as PatientDetails;
+    const detailsRepository = {
+      findOne: jest.fn().mockResolvedValue(details),
+      save: jest.fn((value: unknown) => Promise.resolve(value)),
+      create: jest.fn((value: unknown) => value),
+    };
+    const historyRepository = {
+      find: jest.fn().mockResolvedValue([]),
+      save: jest.fn((value: unknown) => Promise.resolve(value)),
+      create: jest.fn((value: unknown) => value),
+    };
+    const healthCentersRepository = { findOne: jest.fn() };
+    const invalidations = { markDirty: jest.fn().mockResolvedValue(undefined) };
+    const transactionManager = {
+      getRepository: jest.fn((entity: unknown) => {
+        if (entity === PatientDetails) return detailsRepository;
+        if (entity === PatientHealthPhaseHistory) return historyRepository;
+        if (entity === HealthCenter) return healthCentersRepository;
+        return { findOne: jest.fn() };
+      }),
+    };
+    const dependencies = [
+      { findOne: jest.fn() },
+      detailsRepository,
+      historyRepository,
+      ...Array.from({ length: 10 }, () => ({})),
+      {
+        getRepository: jest.fn().mockReturnValue(healthCentersRepository),
+        transaction: jest.fn((callback: (manager: unknown) => unknown) =>
+          callback(transactionManager),
+        ),
+      },
+      invalidations,
+      {},
+      {},
+    ] as unknown as ConstructorParameters<typeof PatientsService>;
+    const service = new PatientsService(...dependencies);
+    jest.spyOn(service, 'assertPatientRole').mockResolvedValue({} as Patient);
+
+    await service.upsertDetails('patient-id', {
+      healthPhase: PatientHealthPhase.ANNUAL_CHECKUP,
+    });
+
+    expect(historyRepository.save).toHaveBeenCalledWith({
+      patientId: 'patient-id',
+      healthPhase: PatientHealthPhase.ANNUAL_CHECKUP,
+    });
+
+    historyRepository.save.mockClear();
+    await service.upsertDetails('patient-id', {
+      healthPhase: PatientHealthPhase.ANNUAL_CHECKUP,
+    });
+
+    expect(historyRepository.save).not.toHaveBeenCalled();
   });
 });

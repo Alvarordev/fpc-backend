@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { EducationLevel } from './education-level.enum';
+import { PatientHealthPhase } from './patient-health-phase.enum';
 import { Patient } from './patient.entity';
 import { Duration } from './embedded/duration.embedded';
 import { HealthCenter } from './health-center.entity';
@@ -18,12 +19,19 @@ import { HealthCenter } from './health-center.entity';
 @Check(
   "\"education_level\" IN ('INITIAL', 'PRIMARY_INCOMPLETE', 'PRIMARY', 'SECONDARY_INCOMPLETE', 'SECONDARY', 'TECHNICAL', 'TECHNICAL_INCOMPLETE', 'HIGHER', 'HIGHER_INCOMPLETE', 'NONE')",
 )
+@Check(
+  'CHK_patient_details_health_phase',
+  "\"health_phase\" IS NULL OR \"health_phase\" IN ('CANCER_DIAGNOSIS', 'ANNUAL_CHECKUP', 'SIGNS_AND_SYMPTOMS')",
+)
 export class PatientDetails {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' })
   id!: string;
 
   @Column({ name: 'patient_id', type: 'uuid' })
   patientId!: string;
+
+  @Column({ name: 'health_phase', type: 'varchar', length: 30, nullable: true })
+  healthPhase!: PatientHealthPhase | null;
 
   @OneToOne(() => Patient, (patient) => patient.details, {
     onDelete: 'CASCADE',

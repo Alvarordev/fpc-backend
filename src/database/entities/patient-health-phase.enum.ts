@@ -1,0 +1,10 @@
+export enum PatientHealthPhase {
+  CANCER_DIAGNOSIS = 'CANCER_DIAGNOSIS',
+  ANNUAL_CHECKUP = 'ANNUAL_CHECKUP',
+  SIGNS_AND_SYMPTOMS = 'SIGNS_AND_SYMPTOMS',
+}
+
+export const ENROLLMENT_HEALTH_PHASES = [
+  PatientHealthPhase.CANCER_DIAGNOSIS,
+  PatientHealthPhase.SIGNS_AND_SYMPTOMS,
+] as const;

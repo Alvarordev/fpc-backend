@@ -26,7 +26,7 @@ import { PatientStatus } from './patient-status.enum';
 )
 @Check(
   'CHK_patients_activity_deactivation',
-  '(("activity_status" IN (\'ACTIVE\', \'REACTIVE\') AND "deactivation_reason" IS NULL AND "deactivated_at" IS NULL AND "deactivation_reason_detail" IS NULL) OR ("activity_status" = \'INACTIVE\' AND "deactivation_reason" IS NOT NULL AND "deactivated_at" IS NOT NULL AND (("deactivation_reason" = \'OTHER\' AND "deactivation_reason_detail" IS NOT NULL) OR ("deactivation_reason" != \'OTHER\' AND "deactivation_reason_detail" IS NULL))))',
+  '(("activity_status" IN (\'ACTIVE\', \'REACTIVE\') AND "deactivation_reason" IS NULL AND "deactivated_at" IS NULL AND "deactivation_reason_detail" IS NULL) OR ("activity_status" = \'INACTIVE\' AND "deactivation_reason" IS NOT NULL AND "deactivated_at" IS NOT NULL AND (("deactivation_reason" = \'OTHER\' AND "deactivation_reason_detail" IS NOT NULL) OR ("deactivation_reason" != \'OTHER\' AND "deactivation_reason_detail" IS NULL)))))',
 )
 @Index('IDX_patients_dni', ['dni'])
 @Index('IDX_patients_role', ['role'])

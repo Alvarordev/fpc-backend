@@ -23,6 +23,7 @@ const DOMAIN_TABLES = [
   'patient_insurance',
   'patient_diagnoses',
   'companion_patient',
+  'patient_health_phase_history',
   'patient_addresses',
   'patient_details',
   'patients',

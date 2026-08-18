@@ -18,10 +18,33 @@ import { DeactivationReason } from '../../../database/entities/deactivation-reas
 import { EducationLevel } from '../../../database/entities/education-level.enum';
 import { PatientActivityStatus } from '../../../database/entities/patient-activity-status.enum';
 import { PatientDetails } from '../../../database/entities/patient-details.entity';
+import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
+import { PatientHealthPhaseHistory } from '../../../database/entities/patient-health-phase-history.entity';
 import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../../database/entities/patient-status.enum';
 import { Patient } from '../../../database/entities/patient.entity';
 import { DurationResponseDto } from '../../../shared/duration/duration-response.dto';
+
+export class PatientHealthPhaseHistoryResponseDto {
+  @ApiProperty({ format: 'uuid' })
+  id!: string;
+
+  @ApiProperty({ enum: PatientHealthPhase })
+  healthPhase!: PatientHealthPhase;
+
+  @ApiProperty({ format: 'date-time' })
+  changedAt!: string;
+
+  static from(
+    history: PatientHealthPhaseHistory,
+  ): PatientHealthPhaseHistoryResponseDto {
+    return {
+      id: history.id,
+      healthPhase: history.healthPhase,
+      changedAt: history.changedAt.toISOString(),
+    };
+  }
+}
 
 export class PatientDetailsResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -29,6 +52,9 @@ export class PatientDetailsResponseDto {
 
   @ApiProperty({ format: 'uuid' })
   patientId!: string;
+
+  @ApiProperty({ enum: PatientHealthPhase, nullable: true })
+  healthPhase!: PatientHealthPhase | null;
 
   @ApiProperty({ nullable: true })
   birthDepartment!: string | null;
@@ -96,10 +122,26 @@ export class PatientDetailsResponseDto {
   @ApiProperty({ format: 'date-time' })
   updatedAt!: string;
 
-  static from(details: PatientDetails): PatientDetailsResponseDto {
+  @ApiProperty({ type: PatientHealthPhaseHistoryResponseDto, isArray: true })
+  healthPhaseHistory!: PatientHealthPhaseHistoryResponseDto[];
+
+  static from(
+    details: PatientDetails,
+    healthPhaseHistory?: PatientHealthPhaseHistory[],
+  ): PatientDetailsResponseDto {
+    const history =
+      healthPhaseHistory ??
+      (
+        details as PatientDetails & {
+          healthPhaseHistory?: PatientHealthPhaseHistory[];
+        }
+      ).healthPhaseHistory ??
+      [];
+
     return {
       id: details.id,
       patientId: details.patientId,
+      healthPhase: details.healthPhase,
       birthDepartment: details.birthDepartment,
       primaryHealthCenterId: details.primaryHealthCenterId,
       primaryHealthCenterName: details.primaryHealthCenter?.name ?? null,
@@ -124,6 +166,9 @@ export class PatientDetailsResponseDto {
       programDropoutDate: details.programDropoutDate,
       createdAt: details.createdAt.toISOString(),
       updatedAt: details.updatedAt.toISOString(),
+      healthPhaseHistory: history.map((history) =>
+        PatientHealthPhaseHistoryResponseDto.from(history),
+      ),
     };
   }
 }
@@ -245,12 +290,16 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
       sisAffiliations: PatientSisAffiliation[];
       symptomReports: PatientSymptomReport[];
       companions: CompanionPatient[];
+      healthPhaseHistory: PatientHealthPhaseHistory[];
     },
   ): PatientDetailsWithSummaryResponseDto {
     return {
       ...PatientResponseDto.from(patient),
       details: patient.details
-        ? PatientDetailsResponseDto.from(patient.details)
+        ? PatientDetailsResponseDto.from(
+            patient.details,
+            patient.healthPhaseHistory,
+          )
         : null,
       summary: patient.summary,
       diagnoses: patient.diagnoses.map((diagnosis) =>
