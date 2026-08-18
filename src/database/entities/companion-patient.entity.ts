@@ -26,6 +26,10 @@ export class CompanionPatient {
   patient!: Patient;
   @Column({ name: 'is_primary_informant', type: 'boolean', default: false })
   isPrimaryInformant!: boolean;
+  @Column({ name: 'is_primary_contact', type: 'boolean', default: false })
+  isPrimaryContact!: boolean;
+  @Column({ name: 'is_caregiver', type: 'boolean', default: false })
+  isCaregiver!: boolean;
   @Column({ name: 'relationship', type: 'varchar', length: 50, nullable: true })
   relationship!: string | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

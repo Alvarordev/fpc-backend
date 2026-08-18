@@ -2397,6 +2397,71 @@
         ]
       }
     },
+    "/patients/{id}/companions/{linkId}": {
+      "patch": {
+        "operationId": "PatientsController_updateCompanionLink",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "linkId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanionLinkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanionPatientResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or companion link not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a companion link",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
     "/patients/{id}/accompanies": {
       "get": {
         "operationId": "PatientsController_accompanies",
@@ -6272,6 +6337,12 @@
           "isPrimaryInformant": {
             "type": "boolean"
           },
+          "isPrimaryContact": {
+            "type": "boolean"
+          },
+          "isCaregiver": {
+            "type": "boolean"
+          },
           "relationship": {
             "type": "string",
             "maxLength": 50
@@ -7288,6 +7359,10 @@
       "UpdateFollowUpDto": {
         "type": "object",
         "properties": {
+          "interlocutorId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "notes": {
             "type": "string"
           },
@@ -8127,6 +8202,12 @@
           "isPrimaryInformant": {
             "type": "boolean"
           },
+          "isPrimaryContact": {
+            "type": "boolean"
+          },
+          "isCaregiver": {
+            "type": "boolean"
+          },
           "relationship": {
             "type": "string",
             "maxLength": 50
@@ -8154,6 +8235,12 @@
           "isPrimaryInformant": {
             "type": "boolean"
           },
+          "isPrimaryContact": {
+            "type": "boolean"
+          },
+          "isCaregiver": {
+            "type": "boolean"
+          },
           "relationship": {
             "type": "string",
             "nullable": true
@@ -8178,10 +8265,30 @@
           "companionId",
           "patientId",
           "isPrimaryInformant",
+          "isPrimaryContact",
+          "isCaregiver",
           "relationship",
           "companionDisplayName",
           "createdAt"
         ]
+      },
+      "UpdateCompanionLinkDto": {
+        "type": "object",
+        "properties": {
+          "isPrimaryInformant": {
+            "type": "boolean"
+          },
+          "isPrimaryContact": {
+            "type": "boolean"
+          },
+          "isCaregiver": {
+            "type": "boolean"
+          },
+          "relationship": {
+            "type": "string",
+            "maxLength": 50
+          }
+        }
       },
       "CurrentDiagnosisResponseDto": {
         "type": "object",

@@ -30,6 +30,7 @@ import { ListPatientsDto } from './dto/list-patients.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { UpsertPatientDetailsDto } from './dto/upsert-patient-details.dto';
 import { LinkCompanionDto } from './dto/link-companion.dto';
+import { UpdateCompanionLinkDto } from './dto/update-companion-link.dto';
 import { User } from '../../database/entities/user.entity';
 import { PatientAccessService } from './access/patient-access.service';
 import { N8nTransactionalDispatchService } from '../../integrations/n8n/transactional-dispatch.service';
@@ -195,14 +196,44 @@ export class PatientsService {
       throw new ConflictException(
         'Companion is already linked to this patient',
       );
+    if (input.isPrimaryContact)
+      await repository.update({ patientId }, { isPrimaryContact: false });
     return repository.save(
       repository.create({
         companionId: input.existingCompanionId,
         patientId,
         isPrimaryInformant: input.isPrimaryInformant ?? false,
+        isPrimaryContact: input.isPrimaryContact ?? false,
+        isCaregiver: input.isCaregiver ?? false,
         relationship: input.relationship ?? null,
       }),
     );
+  }
+
+  async updateCompanionLink(
+    patientId: string,
+    linkId: string,
+    input: UpdateCompanionLinkDto,
+  ): Promise<CompanionPatient> {
+    await this.assertPatientRole(
+      patientId,
+      PatientRole.PATIENT,
+      PatientStatus.ENROLLED,
+    );
+    return this.dataSource.transaction(async (manager) => {
+      const repository = manager.getRepository(CompanionPatient);
+      const link = await repository.findOne({
+        where: { id: linkId, patientId },
+        relations: { companion: true },
+      });
+      if (!link) throw new NotFoundException('Companion link not found');
+      if (input.isPrimaryContact)
+        await repository.update({ patientId }, { isPrimaryContact: false });
+      Object.assign(link, input);
+      const saved = await repository.save(link);
+      await this.invalidations.markDirty(patientId, manager);
+      return saved;
+    });
   }
 
   async findCompanions(
@@ -530,7 +561,13 @@ export class PatientsService {
     input: CreateCompanionDto,
     manager: EntityManager,
   ): Promise<Patient> {
-    const { isPrimaryInformant, relationship, ...patientFields } = input;
+    const {
+      isPrimaryInformant,
+      isPrimaryContact,
+      isCaregiver,
+      relationship,
+      ...patientFields
+    } = input;
     const patients = manager.getRepository(Patient);
     const companion = await patients.save(
       patients.create({
@@ -545,6 +582,8 @@ export class PatientsService {
         companionId: companion.id,
         patientId,
         isPrimaryInformant: isPrimaryInformant ?? false,
+        isPrimaryContact: isPrimaryContact ?? false,
+        isCaregiver: isCaregiver ?? false,
         relationship: relationship ?? null,
       }),
     );

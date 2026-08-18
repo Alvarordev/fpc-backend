@@ -90,10 +90,11 @@ export class EnrollmentsService {
         throw new BadRequestException(
           'Provide exactly one of patientId or patient',
         );
+      const hasCompanion = Boolean(companionId || companionInput);
       if (input.affiliationType === AffiliationType.SELF) {
-        if (companionId || companionInput)
+        if (companionInput?.isPrimaryInformant === true)
           throw new BadRequestException(
-            'SELF enrollment cannot include a primary informant or companion',
+            'SELF enrollment companion cannot be the primary informant',
           );
       } else if (Boolean(companionId) === Boolean(companionInput)) {
         throw new BadRequestException(
@@ -131,7 +132,17 @@ export class EnrollmentsService {
       await manager.getRepository(Patient).save(patient);
 
       let companion: Patient | null = null;
-      if (input.affiliationType === AffiliationType.FAMILY_FRIEND) {
+      if (hasCompanion) {
+        const isFamily =
+          input.affiliationType === AffiliationType.FAMILY_FRIEND;
+        const normalizedCompanion = companionInput
+          ? {
+              ...companionInput,
+              isPrimaryInformant: isFamily,
+              isPrimaryContact: companionInput.isPrimaryContact ?? isFamily,
+              isCaregiver: companionInput.isCaregiver ?? true,
+            }
+          : undefined;
         companion = companionId
           ? await this.patients.assertPatientRole(
               companionId,
@@ -141,7 +152,7 @@ export class EnrollmentsService {
             )
           : await this.patients.createCompanion(
               patient.id,
-              companionInput!,
+              normalizedCompanion!,
               manager,
             );
         if (companionId) {
@@ -154,10 +165,18 @@ export class EnrollmentsService {
               patient.id,
               {
                 existingCompanionId: companion.id,
-                isPrimaryInformant: true,
+                isPrimaryInformant: isFamily,
+                isPrimaryContact: isFamily,
+                isCaregiver: true,
               },
               manager,
             );
+          else if (isFamily) {
+            link.isPrimaryInformant = true;
+            link.isPrimaryContact = true;
+            link.isCaregiver = true;
+            await links.save(link);
+          }
         }
       }
 

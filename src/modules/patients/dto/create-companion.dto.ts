@@ -10,6 +10,16 @@ export class CreateCompanionDto extends CreatePatientDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsBoolean()
+  isPrimaryContact?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isCaregiver?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
   @MaxLength(50)
   relationship?: string;

@@ -16,6 +16,7 @@ import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Patient } from '../../database/entities/patient.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
 import { ReminderStatus } from '../../database/entities/reminder-status.enum';
+import { CompanionPatient } from '../../database/entities/companion-patient.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CreateFollowUpDto } from './dto/create-follow-up.dto';
 import { FindFollowUpsQueryDto } from './dto/list-follow-ups.dto';
@@ -90,6 +91,11 @@ export class FollowUpsService {
       manager,
       input.subjectPatientId,
       input.interlocutorId,
+    );
+    await this.assertInterlocutor(
+      input.subjectPatientId,
+      input.interlocutorId,
+      manager,
     );
     const agents = manager?.getRepository(Agent) ?? this.agents;
     const followUps = manager?.getRepository(FollowUp) ?? this.followUps;
@@ -236,6 +242,11 @@ export class FollowUpsService {
   ) {
     const item = await this.findOne(id);
     await this.assertWriteScope(item, userId, userRole);
+    if (input.interlocutorId)
+      await this.assertInterlocutor(
+        item.subjectPatientId,
+        input.interlocutorId,
+      );
     Object.assign(
       item,
       input,
@@ -323,5 +334,24 @@ export class FollowUpsService {
       if (!(await patients.existsBy({ id })))
         throw new NotFoundException('Patient not found');
     return count;
+  }
+
+  private async assertInterlocutor(
+    subjectPatientId: string,
+    interlocutorId: string,
+    manager?: EntityManager,
+  ) {
+    if (subjectPatientId === interlocutorId) return;
+    const links =
+      manager?.getRepository(CompanionPatient) ??
+      this.dataSource.getRepository(CompanionPatient);
+    const linked = await links.existsBy({
+      patientId: subjectPatientId,
+      companionId: interlocutorId,
+    });
+    if (!linked)
+      throw new BadRequestException(
+        'Interlocutor must be the patient or a linked companion',
+      );
   }
 }

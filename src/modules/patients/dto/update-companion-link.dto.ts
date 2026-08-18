@@ -1,12 +1,6 @@
-import {
-  IsBoolean,
-  IsOptional,
-  IsString,
-  IsUUID,
-  MaxLength,
-} from 'class-validator';
-export class LinkCompanionDto {
-  @IsUUID() existingCompanionId!: string;
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
+
+export class UpdateCompanionLinkDto {
   @IsOptional() @IsBoolean() isPrimaryInformant?: boolean;
   @IsOptional() @IsBoolean() isPrimaryContact?: boolean;
   @IsOptional() @IsBoolean() isCaregiver?: boolean;

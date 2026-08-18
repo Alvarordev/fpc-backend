@@ -27,6 +27,7 @@ import { UserRole } from '../../database/entities/user-role.enum';
 import { CreateCompanionDto } from './dto/create-companion.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { LinkCompanionDto } from './dto/link-companion.dto';
+import { UpdateCompanionLinkDto } from './dto/update-companion-link.dto';
 import { DeactivatePatientDto } from './dto/deactivate-patient.dto';
 import { ListPatientsDto } from './dto/list-patients.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
@@ -126,6 +127,25 @@ export class PatientsController {
   ): Promise<CompanionPatientResponseDto> {
     return CompanionPatientResponseDto.from(
       await this.patientsService.linkCompanion(id, input),
+    );
+  }
+
+  @Patch(':id/companions/:linkId')
+  @Roles(...PATIENT_WRITE_ROLES)
+  @ApiOperation({ summary: 'Update a companion link' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiParam({ name: 'linkId', format: 'uuid' })
+  @ApiOkResponse({ type: CompanionPatientResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Patient or companion link not found' })
+  async updateCompanionLink(
+    @Param('id') id: string,
+    @Param('linkId') linkId: string,
+    @Body() input: UpdateCompanionLinkDto,
+  ): Promise<CompanionPatientResponseDto> {
+    return CompanionPatientResponseDto.from(
+      await this.patientsService.updateCompanionLink(id, linkId, input),
     );
   }
 

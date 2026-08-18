@@ -1,7 +1,14 @@
-import { IsDateString, IsIn, IsOptional, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { FollowUpStatus } from '../../../database/entities/follow-up.enums';
 
 export class UpdateFollowUpDto {
+  @IsOptional() @IsUUID() interlocutorId?: string;
   @IsOptional() @IsString() notes?: string;
   @IsOptional()
   @IsIn(Object.values(FollowUpStatus))

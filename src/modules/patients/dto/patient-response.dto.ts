@@ -464,6 +464,12 @@ export class CompanionPatientResponseDto {
   @ApiProperty()
   isPrimaryInformant!: boolean;
 
+  @ApiProperty()
+  isPrimaryContact!: boolean;
+
+  @ApiProperty()
+  isCaregiver!: boolean;
+
   @ApiProperty({ nullable: true })
   relationship!: string | null;
 
@@ -485,6 +491,8 @@ export class CompanionPatientResponseDto {
       companionId: link.companionId,
       patientId: link.patientId,
       isPrimaryInformant: link.isPrimaryInformant,
+      isPrimaryContact: link.isPrimaryContact,
+      isCaregiver: link.isCaregiver,
       relationship: link.relationship ?? null,
       companionDisplayName: link.companion?.fullName ?? null,
       createdAt: link.createdAt.toISOString(),
