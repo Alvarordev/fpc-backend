@@ -12,6 +12,7 @@ export class PsychooncologyAppointmentResponseDto {
   @ApiProperty({ format: 'uuid' }) availabilityId!: string;
   @ApiProperty({ format: 'email', nullable: true }) patientEmail!:
     string | null;
+  @ApiProperty({ format: 'uri', nullable: true }) zoomLink!: string | null;
   @ApiProperty() sessionNumber!: number;
   @ApiProperty() isAdditionalSession!: boolean;
   @ApiProperty({ enum: AppointmentModality }) modality!: AppointmentModality;

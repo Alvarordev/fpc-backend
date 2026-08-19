@@ -67,6 +67,8 @@ export class PsychooncologyAppointment {
     nullable: true,
   })
   patientEmail!: string | null;
+  @Column({ name: 'zoom_link', type: 'text', nullable: true })
+  zoomLink!: string | null;
   @Column({ name: 'session_number', type: 'int' }) sessionNumber!: number;
   @Column({ name: 'is_additional_session', type: 'boolean', default: false })
   isAdditionalSession!: boolean;

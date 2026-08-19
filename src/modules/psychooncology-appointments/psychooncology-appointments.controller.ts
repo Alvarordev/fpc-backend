@@ -169,6 +169,7 @@ export class PsychooncologyAppointmentsController {
       followUpId: item.followUpId,
       availabilityId: item.availabilityId,
       patientEmail: item.patientEmail,
+      zoomLink: item.zoomLink,
       sessionNumber: item.sessionNumber,
       isAdditionalSession: item.isAdditionalSession,
       modality: item.modality,

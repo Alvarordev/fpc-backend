@@ -1,4 +1,5 @@
-import { ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
+import { AppointmentModality } from '../../database/entities/psychooncology-appointment.entity';
 import { PsychooncologyAppointmentsService } from './psychooncology-appointments.service';
 
 describe('PsychooncologyAppointmentsService', () => {
@@ -26,5 +27,31 @@ describe('PsychooncologyAppointmentsService', () => {
         startTime: 'not-a-time',
       }),
     ).toThrow('Availability slot has an invalid date or time');
+  });
+
+  it('rejects a Zoom link for a phone call', () => {
+    expect(() =>
+      (
+        service as unknown as {
+          assertZoomLinkModality: (input: unknown) => void;
+        }
+      ).assertZoomLinkModality({
+        modality: AppointmentModality.CALL,
+        zoomLink: 'https://zoom.us/j/123456789',
+      }),
+    ).toThrow(BadRequestException);
+  });
+
+  it('allows a Zoom link for a video call', () => {
+    expect(() =>
+      (
+        service as unknown as {
+          assertZoomLinkModality: (input: unknown) => void;
+        }
+      ).assertZoomLinkModality({
+        modality: AppointmentModality.VIDEO_CALL,
+        zoomLink: 'https://zoom.us/j/123456789',
+      }),
+    ).not.toThrow();
   });
 });

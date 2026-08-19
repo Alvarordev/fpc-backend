@@ -10451,6 +10451,10 @@
           "patientEmail": {
             "type": "string"
           },
+          "zoomLink": {
+            "type": "string",
+            "format": "uri"
+          },
           "isAdditionalSession": {
             "type": "boolean"
           },
@@ -10496,6 +10500,11 @@
             "type": "string",
             "nullable": true,
             "format": "email"
+          },
+          "zoomLink": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
           },
           "sessionNumber": {
             "type": "number"
@@ -10564,6 +10573,7 @@
           "followUpId",
           "availabilityId",
           "patientEmail",
+          "zoomLink",
           "sessionNumber",
           "isAdditionalSession",
           "modality",

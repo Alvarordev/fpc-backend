@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import {
+  AppointmentModality,
   AppointmentStatus,
   PsychooncologyAppointment,
 } from '../../database/entities/psychooncology-appointment.entity';
@@ -151,6 +152,8 @@ export class PsychooncologyAppointmentsService {
     input: CreatePsychooncologyAppointmentDto,
     user: User,
   ) {
+    this.assertZoomLinkModality(input);
+
     // Lock the patient as well as the slot so concurrent bookings get sequential sessions.
     const patient = await manager
       .getRepository(Patient)
@@ -198,6 +201,7 @@ export class PsychooncologyAppointmentsService {
         followUpId: followUp?.id ?? null,
         availabilityId: availability.id,
         patientEmail: input.patientEmail ?? null,
+        zoomLink: input.zoomLink ?? null,
         sessionNumber,
         isAdditionalSession: input.isAdditionalSession ?? false,
         modality: input.modality,
@@ -211,6 +215,13 @@ export class PsychooncologyAppointmentsService {
         referral: null,
       }),
     );
+  }
+
+  private assertZoomLinkModality(input: CreatePsychooncologyAppointmentDto) {
+    if (input.modality === AppointmentModality.CALL && input.zoomLink)
+      throw new BadRequestException(
+        'Zoom link is only allowed for video call appointments',
+      );
   }
 
   private async lockAvailability(manager: EntityManager, id: string) {
