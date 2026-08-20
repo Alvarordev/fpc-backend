@@ -30,6 +30,7 @@ import { PatientTreatmentsService } from '../patients/clinical/treatments/patien
 import { PatientSymptomReportsService } from '../patients/symptom-reports/patient-symptom-reports.service';
 import { PatientsService } from '../patients/patients.service';
 import { PatientAddressesService } from '../patients/addresses/patient-addresses.service';
+import { PatientHealthBackgroundAssessmentsService } from '../patients/clinical/health-background/patient-health-background-assessments.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { UpdateEnrollmentSurveyDto } from './dto/update-enrollment-survey.dto';
@@ -54,6 +55,7 @@ export class EnrollmentsService {
     private readonly sisAffiliations: PatientSisAffiliationService,
     private readonly symptomReports: PatientSymptomReportsService,
     private readonly addresses: PatientAddressesService,
+    private readonly healthBackgroundAssessments: PatientHealthBackgroundAssessmentsService,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly webhooks: N8nTransactionalDispatchService,
   ) {}
@@ -73,6 +75,7 @@ export class EnrollmentsService {
         treatments,
         medicalAppointments,
         symptomReport,
+        healthBackgroundAssessment,
         familyPreventionTalkInterests,
         healthPhase,
         addresses,
@@ -272,6 +275,12 @@ export class EnrollmentsService {
             followUpId: followUp.id,
             enrollmentId: enrollment.id,
           },
+          manager,
+        );
+      if (healthBackgroundAssessment)
+        await this.healthBackgroundAssessments.create(
+          patient.id,
+          { ...healthBackgroundAssessment, followUpId: followUp.id },
           manager,
         );
       for (const address of addresses ?? [])

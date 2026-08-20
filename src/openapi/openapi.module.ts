@@ -42,6 +42,8 @@ import { PatientSymptomReportsController } from '../modules/patients/symptom-rep
 import { PatientSymptomReportsService } from '../modules/patients/symptom-reports/patient-symptom-reports.service';
 import { PatientSocialNotesController } from '../modules/patients/social-notes/patient-social-notes.controller';
 import { PatientSocialNotesService } from '../modules/patients/social-notes/patient-social-notes.service';
+import { PatientHealthBackgroundAssessmentsController } from '../modules/patients/clinical/health-background/patient-health-background-assessments.controller';
+import { PatientHealthBackgroundAssessmentsService } from '../modules/patients/clinical/health-background/patient-health-background-assessments.service';
 import { PsychooncologyAppointmentsController } from '../modules/psychooncology-appointments/psychooncology-appointments.controller';
 import { PsychooncologyAppointmentsService } from '../modules/psychooncology-appointments/psychooncology-appointments.service';
 import { RemindersController } from '../modules/reminders/reminders.controller';
@@ -81,6 +83,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     PatientAddressesController,
     PatientSymptomReportsController,
     PatientSocialNotesController,
+    PatientHealthBackgroundAssessmentsController,
     PsychooncologyAppointmentsController,
     RemindersController,
     UsersController,
@@ -109,6 +112,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     { provide: PatientSisAffiliationService, useValue: {} },
     { provide: PatientSymptomReportsService, useValue: {} },
     { provide: PatientSocialNotesService, useValue: {} },
+    { provide: PatientHealthBackgroundAssessmentsService, useValue: {} },
     { provide: PatientTreatmentsService, useValue: {} },
     { provide: TreatmentMedicationsService, useValue: {} },
     { provide: PatientAddressesService, useValue: {} },

@@ -70,6 +70,11 @@ const TREATMENT_SITUATION_LABELS: Record<string, string> = {
   PENDIENTE_DE_INICIO: 'pendiente de inicio',
   INTERRUMPIDO: 'interrumpido',
   FINALIZADO: 'finalizado',
+  SEARCHING: 'en búsqueda',
+  ABANDONED: 'abandonado',
+  DECEASED_DURING_TREATMENT: 'falleció durante el tratamiento',
+  NOT_APPLICABLE: 'no aplica',
+  REMISSION: 'en remisión',
 };
 
 const INSURANCE_TYPE_LABELS: Record<string, string> = {
@@ -316,10 +321,11 @@ export class PatientTimelineService {
         jsonb_build_object(
           'diagnosis', diagnosis.diagnosis,
           'cancerStage', diagnosis.cancer_stage,
-          'diagnosisDate', diagnosis.diagnosis_date,
-          'diagnosisSpecialty', diagnosis.diagnosis_specialty,
-          'hasMedicalReport', diagnosis.has_medical_report,
-          'isCurrent', diagnosis.is_current
+           'diagnosisDate', diagnosis.diagnosis_date,
+           'diagnosisSpecialty', diagnosis.diagnosis_specialty,
+           'hasMedicalReport', diagnosis.has_medical_report,
+           'isSepaActiveReferral', diagnosis.is_sepa_active_referral,
+           'isCurrent', diagnosis.is_current
         ) AS data
       FROM patient_diagnoses diagnosis
       WHERE diagnosis.follow_up_id = ANY($1::uuid[])
@@ -337,8 +343,14 @@ export class PatientTimelineService {
           'startDate', treatment.start_date,
           'endDate', treatment.end_date,
           'isCurrent', treatment.is_current,
-          'hasLatestPrescription', treatment.has_latest_prescription,
-          'notReceivingReason', treatment.not_receiving_reason
+           'hasLatestPrescription', treatment.has_latest_prescription,
+           'notReceivingReason', treatment.not_receiving_reason,
+           'operationName', treatment.operation_name,
+           'careProgram', treatment.care_program,
+           'receivesTeleconsultation', treatment.receives_teleconsultation,
+           'teleconsultationNote', treatment.teleconsultation_note,
+           'teleconsultationSpecialties', treatment.teleconsultation_specialties,
+           'treatmentAbandonmentReason', treatment.treatment_abandonment_reason
         ) AS data
       FROM patient_treatments treatment
       WHERE treatment.follow_up_id = ANY($1::uuid[])
@@ -416,8 +428,9 @@ export class PatientTimelineService {
         sis.id AS record_id,
         sis.created_at AS occurred_at,
         jsonb_build_object(
-          'canAffiliate', sis.can_affiliate,
-          'expectedDate', sis.expected_date,
+           'canAffiliate', sis.can_affiliate,
+           'affiliatedViaSepa', sis.affiliated_via_sepa,
+           'expectedDate', sis.expected_date,
           'cantAffiliateReason', sis.cant_affiliate_reason,
           'affiliatedAt', sis.affiliated_at,
           'comments', sis.comments
@@ -540,6 +553,10 @@ export class PatientTimelineService {
           optionalPart('Especialidad', text(data, 'diagnosisSpecialty')),
           optionalPart('Fecha', dateOnly(data, 'diagnosisDate')),
           `Informe médico: ${boolLabel(data, 'hasMedicalReport', 'disponible', 'no registrado')}`,
+          optionalPart(
+            'Derivación SEPA',
+            boolLabel(data, 'isSepaActiveReferral', 'activa', 'inactiva'),
+          ),
           bool(data, 'isCurrent') ? 'Registro vigente' : 'Registro histórico',
         ];
         summary = sentence(parts);
@@ -568,6 +585,24 @@ export class PatientTimelineService {
           optionalPart(
             'Motivo de no recepción',
             text(data, 'notReceivingReason'),
+          ),
+          optionalPart('Operación', text(data, 'operationName')),
+          optionalPart('Programa de atención', text(data, 'careProgram')),
+          optionalPart(
+            'Teleconsulta',
+            boolLabel(data, 'receivesTeleconsultation', 'recibe', 'no recibe'),
+          ),
+          optionalPart(
+            'Especialidades de teleconsulta',
+            textList(data, 'teleconsultationSpecialties'),
+          ),
+          optionalPart(
+            'Nota de teleconsulta',
+            text(data, 'teleconsultationNote'),
+          ),
+          optionalPart(
+            'Motivo de abandono',
+            text(data, 'treatmentAbandonmentReason'),
           ),
         ];
         summary = sentence(parts);
@@ -644,6 +679,10 @@ export class PatientTimelineService {
       case PatientTimelineOutcomeType.SIS_AFFILIATION: {
         const parts = [
           `Afiliación al SIS: ${boolLabel(data, 'canAffiliate', 'puede afiliarse', 'no puede afiliarse')}`,
+          optionalPart(
+            'Afiliación vía SEPA',
+            boolLabel(data, 'affiliatedViaSepa', 'sí', 'no'),
+          ),
           optionalPart('Fecha esperada', dateOnly(data, 'expectedDate')),
           optionalPart('Motivo', text(data, 'cantAffiliateReason')),
           optionalPart('Afiliado el', dateTime(data, 'affiliatedAt')),
@@ -803,6 +842,16 @@ function text(data: OutcomeData, key: string): string | null {
           : (JSON.stringify(value) ?? '');
   const normalized = raw.replace(/\s+/g, ' ').trim();
   return normalized || null;
+}
+
+function textList(data: OutcomeData, key: string): string | null {
+  const value = data[key];
+  if (!Array.isArray(value)) return null;
+  const values = value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  return values.length ? values.join(', ') : null;
 }
 
 function number(data: OutcomeData, key: string): number | null {

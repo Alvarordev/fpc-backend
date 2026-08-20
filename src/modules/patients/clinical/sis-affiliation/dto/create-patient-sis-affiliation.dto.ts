@@ -8,6 +8,7 @@ import {
 export class CreatePatientSisAffiliationDto {
   @IsUUID() followUpId!: string;
   @IsBoolean() canAffiliate!: boolean;
+  @IsOptional() @IsBoolean() affiliatedViaSepa?: boolean;
   @IsOptional() @IsDateString() expectedDate?: string;
   @IsOptional() @IsString() cantAffiliateReason?: string;
   @IsOptional() @IsDateString() affiliatedAt?: string;

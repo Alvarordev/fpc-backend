@@ -10,6 +10,7 @@ import { FollowUp } from '../../../../database/entities/follow-up.entity';
 import { PatientDiagnosis } from '../../../../database/entities/patient-diagnosis.entity';
 import { PatientRole } from '../../../../database/entities/patient-role.enum';
 import { PatientTreatment } from '../../../../database/entities/patient-treatment.entity';
+import { TreatmentSituation } from '../../../../database/entities/treatment-situation.enum';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
@@ -78,7 +79,8 @@ export class PatientTreatmentsService {
         seriesId = crypto.randomUUID();
       }
 
-      const isReferred = input.isReferred ?? previousTreatment?.isReferred ?? false;
+      const isReferred =
+        input.isReferred ?? previousTreatment?.isReferred ?? false;
       const sourceHealthCenterId =
         input.sourceHealthCenterId !== undefined
           ? input.sourceHealthCenterId
@@ -94,10 +96,7 @@ export class PatientTreatmentsService {
         throw new BadRequestException(
           'Referred treatments require source and receiving health centers',
         );
-      if (
-        isReferred &&
-        sourceHealthCenterId === receivingHealthCenterId
-      )
+      if (isReferred && sourceHealthCenterId === receivingHealthCenterId)
         throw new BadRequestException(
           'Source and receiving health centers must be different',
         );
@@ -123,10 +122,20 @@ export class PatientTreatmentsService {
         ...rest,
         patientId,
         seriesId,
+        treatmentAbandonmentReason:
+          input.treatmentSituation === TreatmentSituation.ABANDONED
+            ? (input.treatmentAbandonmentReason ?? null)
+            : null,
         isReferred,
         sourceHealthCenterId: isReferred ? sourceHealthCenterId : null,
         receivingHealthCenterId,
         treatmentFrequency: normalizeDuration(input.treatmentFrequency),
+        ...(input.receivesTeleconsultation === false
+          ? {
+              teleconsultationNote: null,
+              teleconsultationSpecialties: null,
+            }
+          : {}),
       };
       const treatment = await this.versioning.replaceCurrent(
         PatientTreatment,

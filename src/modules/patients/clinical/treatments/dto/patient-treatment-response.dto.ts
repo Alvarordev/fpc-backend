@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { CareProgram } from '../../../../../database/entities/care-program.enum';
 import { CancerStage } from '../../../../../database/entities/patient-diagnosis.entity';
 import { PatientTreatment } from '../../../../../database/entities/patient-treatment.entity';
 import { TreatmentSituation } from '../../../../../database/entities/treatment-situation.enum';
@@ -73,8 +74,26 @@ export class PatientTreatmentResponseDto {
   @ApiProperty({ nullable: true })
   notReceivingReason!: string | null;
 
+  @ApiProperty({ nullable: true })
+  operationName!: string | null;
+
+  @ApiProperty({ enum: CareProgram, nullable: true })
+  careProgram!: CareProgram | null;
+
+  @ApiProperty({ nullable: true })
+  receivesTeleconsultation!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  teleconsultationNote!: string | null;
+
+  @ApiProperty({ type: [String], nullable: true })
+  teleconsultationSpecialties!: string[] | null;
+
   @ApiProperty({ enum: TreatmentSituation, nullable: true })
   treatmentSituation!: TreatmentSituation | null;
+
+  @ApiProperty({ nullable: true })
+  treatmentAbandonmentReason!: string | null;
 
   @ApiProperty({ nullable: true })
   hasLatestPrescription!: boolean | null;
@@ -114,7 +133,13 @@ export class PatientTreatmentResponseDto {
       isCurrent: treatment.isCurrent,
       changeReason: treatment.changeReason,
       notReceivingReason: treatment.notReceivingReason,
+      operationName: treatment.operationName,
+      careProgram: treatment.careProgram,
+      receivesTeleconsultation: treatment.receivesTeleconsultation,
+      teleconsultationNote: treatment.teleconsultationNote,
+      teleconsultationSpecialties: treatment.teleconsultationSpecialties,
       treatmentSituation: treatment.treatmentSituation,
+      treatmentAbandonmentReason: treatment.treatmentAbandonmentReason,
       hasLatestPrescription: treatment.hasLatestPrescription,
       latestPrescriptionDate: treatment.latestPrescriptionDate,
       createdAt: treatment.createdAt.toISOString(),

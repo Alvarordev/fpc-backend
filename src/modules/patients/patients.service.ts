@@ -22,6 +22,7 @@ import { PatientSisAffiliation } from '../../database/entities/patient-sis-affil
 import { PatientStatus } from '../../database/entities/patient-status.enum';
 import { PatientSymptomReport } from '../../database/entities/patient-symptom-report.entity';
 import { PatientTreatment } from '../../database/entities/patient-treatment.entity';
+import { PatientHealthBackgroundAssessment } from '../../database/entities/patient-health-background-assessment.entity';
 import { Patient } from '../../database/entities/patient.entity';
 import { CreateCompanionDto } from './dto/create-companion.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
@@ -68,6 +69,8 @@ export class PatientsService {
     private readonly followUpsRepository: Repository<FollowUp>,
     @InjectRepository(PatientAddress)
     private readonly addressesRepository: Repository<PatientAddress>,
+    @InjectRepository(PatientHealthBackgroundAssessment)
+    private readonly healthBackgroundAssessmentsRepository: Repository<PatientHealthBackgroundAssessment>,
     private readonly dataSource: DataSource,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly access: PatientAccessService,
@@ -384,6 +387,7 @@ export class PatientsService {
       medicalAppointments: PatientMedicalAppointment[];
       sisAffiliations: PatientSisAffiliation[];
       symptomReports: PatientSymptomReport[];
+      healthBackgroundAssessments: PatientHealthBackgroundAssessment[];
       companions: CompanionPatient[];
       healthPhaseHistory: PatientHealthPhaseHistory[];
     }
@@ -398,6 +402,7 @@ export class PatientsService {
       medicalAppointments,
       sisAffiliations,
       symptomReports,
+      healthBackgroundAssessments,
       companions,
       healthPhaseHistory,
     ] = await Promise.all([
@@ -437,6 +442,15 @@ export class PatientsService {
         where: { patientId: id },
         order: { createdAt: 'DESC' },
       }),
+      this.healthBackgroundAssessmentsRepository.find({
+        where: { patientId: id },
+        relations: {
+          activeComorbidities: true,
+          limitations: true,
+          familyCancerHistory: true,
+        },
+        order: { createdAt: 'DESC' },
+      }),
       this.companionPatientsRepository.find({
         where: { patientId: id },
         relations: { companion: true },
@@ -456,6 +470,7 @@ export class PatientsService {
       medicalAppointments,
       sisAffiliations,
       symptomReports,
+      healthBackgroundAssessments,
       companions,
       healthPhaseHistory,
     });

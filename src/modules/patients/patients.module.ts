@@ -42,6 +42,14 @@ import { PatientTimelineService } from './patient-timeline.service';
 import { PatientSocialNote } from '../../database/entities/patient-social-note.entity';
 import { PatientSocialNotesController } from './social-notes/patient-social-notes.controller';
 import { PatientSocialNotesService } from './social-notes/patient-social-notes.service';
+import {
+  PatientActiveComorbidity,
+  PatientFamilyCancerHistory,
+  PatientHealthBackgroundAssessment,
+  PatientLimitation,
+} from '../../database/entities/patient-health-background-assessment.entity';
+import { PatientHealthBackgroundAssessmentsController } from './clinical/health-background/patient-health-background-assessments.controller';
+import { PatientHealthBackgroundAssessmentsService } from './clinical/health-background/patient-health-background-assessments.service';
 
 @Module({
   imports: [
@@ -63,6 +71,10 @@ import { PatientSocialNotesService } from './social-notes/patient-social-notes.s
       Enrollment,
       PatientSummary,
       PatientSocialNote,
+      PatientHealthBackgroundAssessment,
+      PatientActiveComorbidity,
+      PatientLimitation,
+      PatientFamilyCancerHistory,
     ]),
     PatientSummariesModule,
     PatientAccessModule,
@@ -79,6 +91,7 @@ import { PatientSocialNotesService } from './social-notes/patient-social-notes.s
     PatientAddressesController,
     TreatmentMedicationsController,
     PatientSocialNotesController,
+    PatientHealthBackgroundAssessmentsController,
   ],
   providers: [
     PatientsService,
@@ -93,6 +106,7 @@ import { PatientSocialNotesService } from './social-notes/patient-social-notes.s
     PatientAddressesService,
     TreatmentMedicationsService,
     PatientSocialNotesService,
+    PatientHealthBackgroundAssessmentsService,
   ],
   exports: [
     PatientsService,
@@ -106,6 +120,7 @@ import { PatientSocialNotesService } from './social-notes/patient-social-notes.s
     PatientAddressesService,
     TreatmentMedicationsService,
     PatientSocialNotesService,
+    PatientHealthBackgroundAssessmentsService,
   ],
 })
 export class PatientsModule {}

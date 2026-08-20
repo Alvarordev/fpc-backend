@@ -19,7 +19,7 @@ describe('PatientsService.assertPatientRole', () => {
 
   beforeEach(() => {
     findOne = jest.fn();
-    // assertPatientRole only reads the patients repository. The other 14
+    // assertPatientRole only reads the patients repository. The other
     // constructor dependencies are never reached, so they are stubbed
     // wholesale rather than imported one by one just to be discarded.
     const dependencies = [
@@ -96,7 +96,7 @@ describe('PatientsService.upsertDetails health phase history', () => {
       { findOne: jest.fn() },
       detailsRepository,
       historyRepository,
-      ...Array.from({ length: 10 }, () => ({})),
+      ...Array.from({ length: 11 }, () => ({})),
       {
         getRepository: jest.fn().mockReturnValue(healthCentersRepository),
         transaction: jest.fn((callback: (manager: unknown) => unknown) =>

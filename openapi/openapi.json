@@ -4130,6 +4130,109 @@
         ]
       }
     },
+    "/patients/{patientId}/health-background-assessments": {
+      "post": {
+        "operationId": "PatientHealthBackgroundAssessmentsController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientHealthBackgroundAssessmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientHealthBackgroundAssessmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a patient health background assessment",
+        "tags": [
+          "Patient health background assessments"
+        ]
+      },
+      "get": {
+        "operationId": "PatientHealthBackgroundAssessmentsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientHealthBackgroundAssessmentResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patient health background assessments",
+        "tags": [
+          "Patient health background assessments"
+        ]
+      }
+    },
     "/psychooncology-appointments": {
       "post": {
         "operationId": "PsychooncologyAppointmentsController_create",
@@ -6521,6 +6624,9 @@
           "canAffiliate": {
             "type": "boolean"
           },
+          "affiliatedViaSepa": {
+            "type": "boolean"
+          },
           "expectedDate": {
             "type": "string"
           },
@@ -6574,6 +6680,9 @@
             "$ref": "#/components/schemas/DurationDto"
           },
           "hasMedicalReport": {
+            "type": "boolean"
+          },
+          "isSepaActiveReferral": {
             "type": "boolean"
           },
           "changeReason": {
@@ -6678,13 +6787,43 @@
           "notReceivingReason": {
             "type": "string"
           },
+          "operationName": {
+            "type": "string"
+          },
+          "careProgram": {
+            "enum": [
+              "COPHOES",
+              "PADOMI"
+            ],
+            "type": "string"
+          },
+          "receivesTeleconsultation": {
+            "type": "boolean"
+          },
+          "teleconsultationNote": {
+            "type": "string"
+          },
+          "teleconsultationSpecialties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "treatmentSituation": {
             "enum": [
               "EN_CURSO",
               "PENDIENTE_DE_INICIO",
               "INTERRUMPIDO",
-              "FINALIZADO"
+              "FINALIZADO",
+              "SEARCHING",
+              "ABANDONED",
+              "DECEASED_DURING_TREATMENT",
+              "NOT_APPLICABLE",
+              "REMISSION"
             ],
+            "type": "string"
+          },
+          "treatmentAbandonmentReason": {
             "type": "string"
           },
           "hasLatestPrescription": {
@@ -6867,6 +7006,87 @@
           }
         }
       },
+      "CreatePatientActiveComorbidityDto": {
+        "type": "object",
+        "properties": {
+          "conditionName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "treatmentDescription": {
+            "type": "string"
+          },
+          "followUpSpecialty": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "conditionName"
+        ]
+      },
+      "CreatePatientLimitationDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "cause": {
+            "type": "string",
+            "enum": [
+              "DIAGNOSIS",
+              "TREATMENT",
+              "NATURAL_CONDITION"
+            ]
+          }
+        },
+        "required": [
+          "description",
+          "cause"
+        ]
+      },
+      "CreatePatientFamilyCancerHistoryDto": {
+        "type": "object",
+        "properties": {
+          "relationship": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "cancerType": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "relationship"
+        ]
+      },
+      "EnrollmentHealthBackgroundAssessmentDto": {
+        "type": "object",
+        "properties": {
+          "hasPsychiatry": {
+            "type": "boolean"
+          },
+          "activeComorbidities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePatientActiveComorbidityDto"
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePatientLimitationDto"
+            }
+          },
+          "familyCancerHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePatientFamilyCancerHistoryDto"
+            }
+          }
+        }
+      },
       "CreateEnrollmentFamilyTalkInterestDto": {
         "type": "object",
         "properties": {
@@ -6958,6 +7178,9 @@
           },
           "symptomReport": {
             "$ref": "#/components/schemas/EnrollmentSymptomReportDto"
+          },
+          "healthBackgroundAssessment": {
+            "$ref": "#/components/schemas/EnrollmentHealthBackgroundAssessmentDto"
           },
           "currentlyAttendingConsultations": {
             "type": "boolean"
@@ -8906,6 +9129,10 @@
           "hasMedicalReport": {
             "type": "boolean"
           },
+          "isSepaActiveReferral": {
+            "type": "boolean",
+            "nullable": true
+          },
           "isCurrent": {
             "type": "boolean"
           },
@@ -8932,6 +9159,7 @@
           "waitTimeSource",
           "waitTimeForDiagnosis",
           "hasMedicalReport",
+          "isSepaActiveReferral",
           "isCurrent",
           "changeReason",
           "createdAt"
@@ -9057,15 +9285,51 @@
             "type": "string",
             "nullable": true
           },
+          "operationName": {
+            "type": "string",
+            "nullable": true
+          },
+          "careProgram": {
+            "nullable": true,
+            "enum": [
+              "COPHOES",
+              "PADOMI"
+            ],
+            "type": "string"
+          },
+          "receivesTeleconsultation": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "teleconsultationNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "teleconsultationSpecialties": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "treatmentSituation": {
             "nullable": true,
             "enum": [
               "EN_CURSO",
               "PENDIENTE_DE_INICIO",
               "INTERRUMPIDO",
-              "FINALIZADO"
+              "FINALIZADO",
+              "SEARCHING",
+              "ABANDONED",
+              "DECEASED_DURING_TREATMENT",
+              "NOT_APPLICABLE",
+              "REMISSION"
             ],
             "type": "string"
+          },
+          "treatmentAbandonmentReason": {
+            "type": "string",
+            "nullable": true
           },
           "hasLatestPrescription": {
             "type": "boolean",
@@ -9097,7 +9361,13 @@
           "isCurrent",
           "changeReason",
           "notReceivingReason",
+          "operationName",
+          "careProgram",
+          "receivesTeleconsultation",
+          "teleconsultationNote",
+          "teleconsultationSpecialties",
           "treatmentSituation",
+          "treatmentAbandonmentReason",
           "hasLatestPrescription",
           "latestPrescriptionDate",
           "createdAt"
@@ -9281,6 +9551,10 @@
           "canAffiliate": {
             "type": "boolean"
           },
+          "affiliatedViaSepa": {
+            "type": "boolean",
+            "nullable": true
+          },
           "expectedDate": {
             "type": "string",
             "nullable": true,
@@ -9309,6 +9583,7 @@
           "patientId",
           "followUpId",
           "canAffiliate",
+          "affiliatedViaSepa",
           "expectedDate",
           "cantAffiliateReason",
           "affiliatedAt",
@@ -9428,6 +9703,131 @@
           "hasSoughtMedicalConsultation",
           "healthCenterId",
           "specialty",
+          "createdAt"
+        ]
+      },
+      "PatientActiveComorbidityResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conditionName": {
+            "type": "string"
+          },
+          "treatmentDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "followUpSpecialty": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "conditionName",
+          "treatmentDescription",
+          "followUpSpecialty"
+        ]
+      },
+      "PatientLimitationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string"
+          },
+          "cause": {
+            "enum": [
+              "DIAGNOSIS",
+              "TREATMENT",
+              "NATURAL_CONDITION"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "cause"
+        ]
+      },
+      "PatientFamilyCancerHistoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "relationship": {
+            "type": "string"
+          },
+          "cancerType": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "relationship",
+          "cancerType"
+        ]
+      },
+      "PatientHealthBackgroundAssessmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "hasPsychiatry": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "activeComorbidities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientActiveComorbidityResponseDto"
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientLimitationResponseDto"
+            }
+          },
+          "familyCancerHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientFamilyCancerHistoryResponseDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "hasPsychiatry",
+          "activeComorbidities",
+          "limitations",
+          "familyCancerHistory",
           "createdAt"
         ]
       },
@@ -9574,6 +9974,12 @@
               "$ref": "#/components/schemas/PatientSymptomReportResponseDto"
             }
           },
+          "healthBackgroundAssessments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientHealthBackgroundAssessmentResponseDto"
+            }
+          },
           "companions": {
             "type": "array",
             "items": {
@@ -9608,6 +10014,7 @@
           "medicalAppointments",
           "sisAffiliations",
           "symptomReports",
+          "healthBackgroundAssessments",
           "companions"
         ]
       },
@@ -9712,6 +10119,9 @@
             "$ref": "#/components/schemas/DurationDto"
           },
           "hasMedicalReport": {
+            "type": "boolean"
+          },
+          "isSepaActiveReferral": {
             "type": "boolean"
           },
           "changeReason": {
@@ -9822,6 +10232,9 @@
           "canAffiliate": {
             "type": "boolean"
           },
+          "affiliatedViaSepa": {
+            "type": "boolean"
+          },
           "expectedDate": {
             "type": "string"
           },
@@ -9884,14 +10297,44 @@
           "notReceivingReason": {
             "type": "string"
           },
+          "operationName": {
+            "type": "string"
+          },
+          "careProgram": {
+            "type": "string",
+            "enum": [
+              "COPHOES",
+              "PADOMI"
+            ]
+          },
+          "receivesTeleconsultation": {
+            "type": "boolean"
+          },
+          "teleconsultationNote": {
+            "type": "string"
+          },
+          "teleconsultationSpecialties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "treatmentSituation": {
             "type": "string",
             "enum": [
               "EN_CURSO",
               "PENDIENTE_DE_INICIO",
               "INTERRUMPIDO",
-              "FINALIZADO"
+              "FINALIZADO",
+              "SEARCHING",
+              "ABANDONED",
+              "DECEASED_DURING_TREATMENT",
+              "NOT_APPLICABLE",
+              "REMISSION"
             ]
+          },
+          "treatmentAbandonmentReason": {
+            "type": "string"
           },
           "hasLatestPrescription": {
             "type": "boolean"
@@ -10431,6 +10874,39 @@
           "note",
           "authorId",
           "createdAt"
+        ]
+      },
+      "CreatePatientHealthBackgroundAssessmentDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "hasPsychiatry": {
+            "type": "boolean"
+          },
+          "activeComorbidities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePatientActiveComorbidityDto"
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePatientLimitationDto"
+            }
+          },
+          "familyCancerHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePatientFamilyCancerHistoryDto"
+            }
+          }
+        },
+        "required": [
+          "followUpId"
         ]
       },
       "CreatePsychooncologyAppointmentDto": {

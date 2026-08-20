@@ -7,12 +7,14 @@ import { PatientMedicalAppointment } from '../../../database/entities/patient-me
 import { PatientSisAffiliation } from '../../../database/entities/patient-sis-affiliation.entity';
 import { PatientSymptomReport } from '../../../database/entities/patient-symptom-report.entity';
 import { PatientTreatment } from '../../../database/entities/patient-treatment.entity';
+import { PatientHealthBackgroundAssessment } from '../../../database/entities/patient-health-background-assessment.entity';
 import { PatientDiagnosisResponseDto } from '../clinical/diagnoses/dto/patient-diagnosis-response.dto';
 import { PatientInsuranceResponseDto } from '../clinical/insurance/dto/patient-insurance-response.dto';
 import { PatientMedicalAppointmentResponseDto } from '../clinical/medical-appointments/dto/patient-medical-appointment-response.dto';
 import { PatientSisAffiliationResponseDto } from '../clinical/sis-affiliation/dto/patient-sis-affiliation-response.dto';
 import { PatientTreatmentResponseDto } from '../clinical/treatments/dto/patient-treatment-response.dto';
 import { PatientSymptomReportResponseDto } from '../symptom-reports/dto/patient-symptom-report-response.dto';
+import { PatientHealthBackgroundAssessmentResponseDto } from '../clinical/health-background/dto/patient-health-background-assessment-response.dto';
 import { CompanionPatient } from '../../../database/entities/companion-patient.entity';
 import { DeactivationReason } from '../../../database/entities/deactivation-reason.enum';
 import { EducationLevel } from '../../../database/entities/education-level.enum';
@@ -277,6 +279,12 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
   @ApiProperty({ type: PatientSymptomReportResponseDto, isArray: true })
   symptomReports!: PatientSymptomReportResponseDto[];
 
+  @ApiProperty({
+    type: PatientHealthBackgroundAssessmentResponseDto,
+    isArray: true,
+  })
+  healthBackgroundAssessments!: PatientHealthBackgroundAssessmentResponseDto[];
+
   @ApiProperty({ type: () => CompanionPatientResponseDto, isArray: true })
   companions!: CompanionPatientResponseDto[];
 
@@ -289,6 +297,7 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
       medicalAppointments: PatientMedicalAppointment[];
       sisAffiliations: PatientSisAffiliation[];
       symptomReports: PatientSymptomReport[];
+      healthBackgroundAssessments: PatientHealthBackgroundAssessment[];
       companions: CompanionPatient[];
       healthPhaseHistory: PatientHealthPhaseHistory[];
     },
@@ -319,6 +328,10 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
       ),
       symptomReports: patient.symptomReports.map((report) =>
         PatientSymptomReportResponseDto.from(report),
+      ),
+      healthBackgroundAssessments: patient.healthBackgroundAssessments.map(
+        (assessment) =>
+          PatientHealthBackgroundAssessmentResponseDto.from(assessment),
       ),
       companions: patient.companions.map((companion) =>
         CompanionPatientResponseDto.from(companion),

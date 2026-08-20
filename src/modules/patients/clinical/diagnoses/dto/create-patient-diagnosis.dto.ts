@@ -24,5 +24,6 @@ export class CreatePatientDiagnosisDto {
   @Type(() => DurationDto)
   waitTimeForDiagnosis?: DurationDto;
   @IsOptional() @IsBoolean() hasMedicalReport?: boolean;
+  @IsOptional() @IsBoolean() isSepaActiveReferral?: boolean;
   @IsOptional() @IsString() changeReason?: string;
 }

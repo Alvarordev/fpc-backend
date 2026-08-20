@@ -23,6 +23,7 @@ import { CreateCompanionDto } from '../../patients/dto/create-companion.dto';
 import { CreatePatientDto } from '../../patients/dto/create-patient.dto';
 import { UpsertPatientDetailsDto } from '../../patients/dto/upsert-patient-details.dto';
 import { CreatePatientAddressDto } from '../../patients/addresses/dto/create-patient-address.dto';
+import { CreatePatientHealthBackgroundAssessmentDto } from '../../patients/clinical/health-background/dto/create-patient-health-background-assessment.dto';
 import {
   ENROLLMENT_HEALTH_PHASES,
   PatientHealthPhase,
@@ -70,6 +71,10 @@ export class EnrollmentSymptomReportDto extends OmitType(
 export class EnrollmentAddressDto extends OmitType(CreatePatientAddressDto, [
   'followUpId',
 ] as const) {}
+export class EnrollmentHealthBackgroundAssessmentDto extends OmitType(
+  CreatePatientHealthBackgroundAssessmentDto,
+  ['followUpId'] as const,
+) {}
 
 export class CreateEnrollmentDto {
   @IsOptional() @IsUUID() patientId?: string;
@@ -124,6 +129,10 @@ export class CreateEnrollmentDto {
   @ValidateNested()
   @Type(() => EnrollmentSymptomReportDto)
   symptomReport?: EnrollmentSymptomReportDto;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentHealthBackgroundAssessmentDto)
+  healthBackgroundAssessment?: EnrollmentHealthBackgroundAssessmentDto;
   @IsOptional() @IsBoolean() currentlyAttendingConsultations?: boolean;
   @IsOptional() @IsBoolean() currentlyReceivingTreatment?: boolean;
   @IsOptional() @IsString() @MaxLength(50) entrySource?: string;

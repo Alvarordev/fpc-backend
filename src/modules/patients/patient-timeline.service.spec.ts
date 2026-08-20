@@ -64,6 +64,9 @@ describe('PatientTimelineService outcomes', () => {
         treatmentSituation: 'EN_CURSO',
         startDate: '2026-08-02',
         hasLatestPrescription: false,
+        careProgram: 'COPHOES',
+        receivesTeleconsultation: true,
+        teleconsultationSpecialties: ['Oncología', 'Psicooncología'],
         isCurrent: true,
       }),
       outcome(PatientTimelineOutcomeType.MEDICATION, 'medication-id', {
@@ -156,6 +159,11 @@ describe('PatientTimelineService outcomes', () => {
     expect(followUp.outcomes.every((item) => item.label && item.summary)).toBe(
       true,
     );
+    expect(
+      followUp.outcomes.find(
+        (item) => item.type === PatientTimelineOutcomeType.TREATMENT,
+      )?.summary,
+    ).toContain('Especialidades de teleconsulta: Oncología, Psicooncología');
     expect(followUp.outcomes.map((item) => item.label)).toEqual([
       'Diagnóstico',
       'Tratamiento',

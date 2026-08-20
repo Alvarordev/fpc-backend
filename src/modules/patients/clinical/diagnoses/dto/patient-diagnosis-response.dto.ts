@@ -49,6 +49,9 @@ export class PatientDiagnosisResponseDto {
   @ApiProperty()
   hasMedicalReport!: boolean;
 
+  @ApiProperty({ nullable: true })
+  isSepaActiveReferral!: boolean | null;
+
   @ApiProperty()
   isCurrent!: boolean;
 
@@ -76,6 +79,7 @@ export class PatientDiagnosisResponseDto {
         diagnosis.waitTimeForDiagnosis,
       ),
       hasMedicalReport: diagnosis.hasMedicalReport,
+      isSepaActiveReferral: diagnosis.isSepaActiveReferral,
       isCurrent: diagnosis.isCurrent,
       changeReason: diagnosis.changeReason,
       createdAt: diagnosis.createdAt.toISOString(),

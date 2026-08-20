@@ -14,6 +14,9 @@ export class PatientSisAffiliationResponseDto {
   @ApiProperty()
   canAffiliate!: boolean;
 
+  @ApiProperty({ nullable: true })
+  affiliatedViaSepa!: boolean | null;
+
   @ApiProperty({ format: 'date', nullable: true })
   expectedDate!: string | null;
 
@@ -37,6 +40,7 @@ export class PatientSisAffiliationResponseDto {
       patientId: affiliation.patientId,
       followUpId: affiliation.followUpId,
       canAffiliate: affiliation.canAffiliate,
+      affiliatedViaSepa: affiliation.affiliatedViaSepa,
       expectedDate: affiliation.expectedDate,
       cantAffiliateReason: affiliation.cantAffiliateReason,
       affiliatedAt: affiliation.affiliatedAt?.toISOString() ?? null,

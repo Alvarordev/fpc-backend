@@ -24,6 +24,8 @@ export class PatientSisAffiliation {
   @JoinColumn({ name: 'follow_up_id' })
   followUp!: FollowUp;
   @Column({ name: 'can_affiliate', type: 'boolean' }) canAffiliate!: boolean;
+  @Column({ name: 'affiliated_via_sepa', type: 'boolean', nullable: true })
+  affiliatedViaSepa!: boolean | null;
   @Column({ name: 'expected_date', type: 'date', nullable: true })
   expectedDate!: string | null;
   @Column({ name: 'cant_affiliate_reason', type: 'text', nullable: true })

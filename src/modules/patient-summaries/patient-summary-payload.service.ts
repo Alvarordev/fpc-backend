@@ -129,6 +129,7 @@ export class PatientSummaryPayloadService {
         date: item.diagnosisDate,
         specialty: item.diagnosisSpecialty,
         symptoms: item.symptomLeadingToCheckup,
+        sepaActiveReferral: item.isSepaActiveReferral,
       })),
       insurance: insurance.map((item) => ({ type: item.insuranceType })),
       treatments: treatments.map((item) => ({
@@ -138,6 +139,11 @@ export class PatientSummaryPayloadService {
         startDate: item.startDate,
         endDate: item.endDate,
         hasLatestPrescription: item.hasLatestPrescription,
+        operationName: item.operationName,
+        careProgram: item.careProgram,
+        receivesTeleconsultation: item.receivesTeleconsultation,
+        teleconsultationSpecialties: item.teleconsultationSpecialties,
+        treatmentAbandonmentReason: item.treatmentAbandonmentReason,
       })),
       appointments: appointments.map((item) => ({
         specialty: item.specialty,
@@ -147,6 +153,7 @@ export class PatientSummaryPayloadService {
       })),
       sisAffiliations: sis.map((item) => ({
         canAffiliate: item.canAffiliate,
+        affiliatedViaSepa: item.affiliatedViaSepa,
         expectedDate: item.expectedDate,
         reason: item.cantAffiliateReason,
       })),

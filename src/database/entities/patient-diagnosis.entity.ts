@@ -78,6 +78,8 @@ export class PatientDiagnosis {
   waitTimeForDiagnosis!: Duration;
   @Column({ name: 'has_medical_report', type: 'boolean', default: false })
   hasMedicalReport!: boolean;
+  @Column({ name: 'is_sepa_active_referral', type: 'boolean', nullable: true })
+  isSepaActiveReferral!: boolean | null;
   @Column({ name: 'is_current', type: 'boolean' }) isCurrent!: boolean;
   @Column({ name: 'change_reason', type: 'text', nullable: true })
   changeReason!: string | null;
