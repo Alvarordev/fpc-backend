@@ -4233,6 +4233,322 @@
         ]
       }
     },
+    "/patients/{patientId}/documents": {
+      "post": {
+        "operationId": "PatientDocumentsController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file",
+                  "documentType"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "documentType": {
+                    "enum": [
+                      "MEDICAL_REPORT",
+                      "PRESCRIPTION",
+                      "OTHER"
+                    ]
+                  },
+                  "diagnosisId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "treatmentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientDocumentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid multipart payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or association not found"
+          },
+          "413": {
+            "description": "File is too large"
+          },
+          "415": {
+            "description": "File type is not supported"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload a patient document",
+        "tags": [
+          "Patient documents"
+        ]
+      },
+      "get": {
+        "operationId": "PatientDocumentsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "MEDICAL_REPORT",
+                "PRESCRIPTION",
+                "OTHER"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "diagnosisId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "treatmentId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeArchived",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientDocumentListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid filters"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patient documents",
+        "tags": [
+          "Patient documents"
+        ]
+      }
+    },
+    "/patients/{patientId}/documents/{documentId}/content": {
+      "get": {
+        "operationId": "PatientDocumentsController_content",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document binary content",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Document not found"
+          },
+          "410": {
+            "description": "Document has been archived"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream a patient document",
+        "tags": [
+          "Patient documents"
+        ]
+      }
+    },
+    "/patients/{patientId}/documents/{documentId}/archive": {
+      "patch": {
+        "operationId": "PatientDocumentsController_archive",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientDocumentResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive a patient document",
+        "tags": [
+          "Patient documents"
+        ]
+      }
+    },
     "/psychooncology-appointments": {
       "post": {
         "operationId": "PsychooncologyAppointmentsController_create",
@@ -10907,6 +11223,122 @@
         },
         "required": [
           "followUpId"
+        ]
+      },
+      "PatientDocumentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentType": {
+            "enum": [
+              "MEDICAL_REPORT",
+              "PRESCRIPTION",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "diagnosisId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "treatmentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "originalFileName": {
+            "type": "string"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "number"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "ACTIVE",
+              "ARCHIVED"
+            ],
+            "type": "string"
+          },
+          "uploadedById": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "archivedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "archivedById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "documentType",
+          "diagnosisId",
+          "treatmentId",
+          "description",
+          "originalFileName",
+          "mediaType",
+          "sizeBytes",
+          "sha256",
+          "status",
+          "uploadedById",
+          "createdAt",
+          "archivedAt",
+          "archivedById"
+        ]
+      },
+      "PatientDocumentListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientDocumentResponseDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "limit",
+          "offset"
         ]
       },
       "CreatePsychooncologyAppointmentDto": {

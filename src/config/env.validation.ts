@@ -41,4 +41,42 @@ export const envValidationSchema = Joi.object({
     .min(100)
     .max(30000)
     .default(5000),
+  PATIENT_DOCUMENT_STORAGE_DRIVER: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.valid('r2').default('r2'),
+    otherwise: Joi.valid('r2', 'memory').default('memory'),
+  }),
+  R2_ACCOUNT_ID: Joi.when('PATIENT_DOCUMENT_STORAGE_DRIVER', {
+    is: 'r2',
+    then: Joi.string().trim().required(),
+    otherwise: Joi.string().trim().optional().allow(''),
+  }),
+  R2_ACCESS_KEY_ID: Joi.when('PATIENT_DOCUMENT_STORAGE_DRIVER', {
+    is: 'r2',
+    then: Joi.string().trim().required(),
+    otherwise: Joi.string().trim().optional().allow(''),
+  }),
+  R2_SECRET_ACCESS_KEY: Joi.when('PATIENT_DOCUMENT_STORAGE_DRIVER', {
+    is: 'r2',
+    then: Joi.string().trim().required(),
+    otherwise: Joi.string().trim().optional().allow(''),
+  }),
+  R2_BUCKET_NAME: Joi.when('PATIENT_DOCUMENT_STORAGE_DRIVER', {
+    is: 'r2',
+    then: Joi.string().trim().required(),
+    otherwise: Joi.string().trim().optional().allow(''),
+  }),
+  R2_ENDPOINT: Joi.when('PATIENT_DOCUMENT_STORAGE_DRIVER', {
+    is: 'r2',
+    then: Joi.string()
+      .trim()
+      .uri({ scheme: ['http', 'https'] })
+      .optional(),
+    otherwise: Joi.string().trim().optional().allow(''),
+  }),
+  PATIENT_DOCUMENT_MAX_BYTES: Joi.number()
+    .integer()
+    .min(1)
+    .max(10485760)
+    .default(10485760),
 });

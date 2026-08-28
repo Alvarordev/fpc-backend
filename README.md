@@ -79,6 +79,10 @@ Las credenciales del administrador se configuran mediante `SEED_ADMIN_EMAIL` y
 - `CORS_ORIGIN`: origen permitido del frontend, por defecto `http://localhost:5173`.
 - `GEMINI_API_KEY`: opcional; deja vacío el valor para desactivar la integración.
 - `N8N_WEBHOOK_URL`: opcional; vacío desactiva los webhooks de n8n.
+- `PATIENT_DOCUMENT_STORAGE_DRIVER`: `memory` para desarrollo local y `r2` para
+  staging/producción.
+- `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` y
+  `R2_BUCKET_NAME`: obligatorias cuando el driver es `r2`.
 
 Los webhooks de n8n se envían después de confirmar transacciones de alertas,
 citas médicas y registros de pacientes. Para probarlos localmente configura:
@@ -89,6 +93,11 @@ N8N_WEBHOOK_TIMEOUT_MS=5000
 ```
 
 Si `N8N_WEBHOOK_URL` está vacío, la integración queda desactivada.
+
+Los documentos de pacientes usan un bucket privado de Cloudflare R2. El compose
+local usa memoria por defecto y no persiste archivos entre reinicios. Para probar
+R2 manualmente, configura explícitamente el bucket de staging y sus credenciales;
+nunca uses credenciales de producción en local.
 
 Para ejecutar el API fuera de Docker:
 
