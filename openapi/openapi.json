@@ -12188,6 +12188,19 @@
       "DiagnosticStatusDiagnosisDto": {
         "type": "object",
         "properties": {
+          "mode": {
+            "enum": [
+              "PARALLEL",
+              "REPLACE"
+            ],
+            "type": "string",
+            "example": "PARALLEL"
+          },
+          "replacementDiagnosisId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required when mode is REPLACE; the active diagnosis to retire"
+          },
           "diagnosis": {
             "type": "string"
           },
@@ -12231,6 +12244,7 @@
           }
         },
         "required": [
+          "mode",
           "diagnosis"
         ]
       },
