@@ -23,6 +23,7 @@ import { PatientStatus } from '../src/database/entities/patient-status.enum';
 import { PatientSymptomReport } from '../src/database/entities/patient-symptom-report.entity';
 import { PatientAddress } from '../src/database/entities/patient-address.entity';
 import { PatientTreatment } from '../src/database/entities/patient-treatment.entity';
+import { PatientMedicalAppointment } from '../src/database/entities/patient-medical-appointment.entity';
 import { Patient } from '../src/database/entities/patient.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
 import { UsersService } from '../src/modules/users/users.service';
@@ -117,7 +118,13 @@ describe('Enrollment wizard (e2e)', () => {
           mode: 'PARALLEL',
         },
         treatments: [{ treatmentType: 'Chemotherapy' }],
-        medicalAppointments: [{ specialty: 'ONCOLOGY' }],
+        medicalAppointments: [
+          {
+            specialty: 'ONCOLOGY',
+            nextAppointmentDate: '2030-02-01',
+            nextAppointmentSpecialty: 'Radioterapia',
+          },
+        ],
         symptomReport: { isPainPresent: true, painIntensity: 7 },
         currentlyReceivingTreatment: true,
         consentToContact: true,
@@ -178,6 +185,14 @@ describe('Enrollment wizard (e2e)', () => {
       enrollmentId: body.id,
       followUpId: followUp.id,
       painIntensity: 7,
+    });
+    await expect(
+      dataSource.getRepository(PatientMedicalAppointment).findOneByOrFail({
+        patientId: patient.id,
+      }),
+    ).resolves.toMatchObject({
+      nextAppointmentDate: '2030-02-01',
+      nextAppointmentSpecialty: 'Radioterapia',
     });
 
     const addresses = await dataSource.getRepository(PatientAddress).find({

@@ -93,6 +93,10 @@ export class MedicalAppointmentsService {
           input.nextAppointmentDate !== undefined
             ? input.nextAppointmentDate
             : existing.nextAppointmentDate,
+        nextAppointmentSpecialty:
+          input.nextAppointmentSpecialty !== undefined
+            ? input.nextAppointmentSpecialty
+            : existing.nextAppointmentSpecialty,
         hasReferralSheet:
           input.hasReferralSheet !== undefined
             ? input.hasReferralSheet

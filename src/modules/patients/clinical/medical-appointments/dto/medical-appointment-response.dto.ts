@@ -17,6 +17,8 @@ export class MedicalAppointmentResponseDto {
   appointmentTime!: string | null;
   @ApiProperty({ format: 'date', nullable: true })
   nextAppointmentDate!: string | null;
+  @ApiProperty({ nullable: true })
+  nextAppointmentSpecialty!: string | null;
   @ApiProperty({ nullable: true }) hasReferralSheet!: boolean | null;
   @ApiProperty({ nullable: true }) referredTo!: string | null;
   @ApiProperty({ nullable: true }) referralNotProvidedReason!: string | null;
@@ -41,6 +43,7 @@ export class MedicalAppointmentResponseDto {
       appointmentDate: appointment.appointmentDate,
       appointmentTime: appointment.appointmentTime,
       nextAppointmentDate: appointment.nextAppointmentDate,
+      nextAppointmentSpecialty: appointment.nextAppointmentSpecialty,
       hasReferralSheet: appointment.hasReferralSheet,
       referredTo: appointment.referredTo,
       referralNotProvidedReason: appointment.referralNotProvidedReason,

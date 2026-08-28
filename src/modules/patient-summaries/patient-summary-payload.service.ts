@@ -149,6 +149,7 @@ export class PatientSummaryPayloadService {
         specialty: item.specialty,
         date: item.appointmentDate,
         nextDate: item.nextAppointmentDate,
+        nextSpecialty: item.nextAppointmentSpecialty,
         difficulties: item.difficulties,
       })),
       sisAffiliations: sis.map((item) => ({

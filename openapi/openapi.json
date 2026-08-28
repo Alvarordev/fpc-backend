@@ -7842,6 +7842,10 @@
           "nextAppointmentDate": {
             "type": "string"
           },
+          "nextAppointmentSpecialty": {
+            "type": "string",
+            "maxLength": 255
+          },
           "hasReferralSheet": {
             "type": "boolean"
           },
@@ -8906,6 +8910,10 @@
           "nextAppointmentDate": {
             "type": "string"
           },
+          "nextAppointmentSpecialty": {
+            "type": "string",
+            "maxLength": 255
+          },
           "hasReferralSheet": {
             "type": "boolean"
           },
@@ -8976,6 +8984,10 @@
             "nullable": true,
             "format": "date"
           },
+          "nextAppointmentSpecialty": {
+            "type": "string",
+            "nullable": true
+          },
           "hasReferralSheet": {
             "type": "boolean",
             "nullable": true
@@ -9019,6 +9031,7 @@
           "appointmentDate",
           "appointmentTime",
           "nextAppointmentDate",
+          "nextAppointmentSpecialty",
           "hasReferralSheet",
           "referredTo",
           "referralNotProvidedReason",
@@ -9062,6 +9075,10 @@
           },
           "nextAppointmentDate": {
             "type": "string"
+          },
+          "nextAppointmentSpecialty": {
+            "type": "string",
+            "maxLength": 255
           },
           "hasReferralSheet": {
             "type": "boolean"
@@ -10557,6 +10574,10 @@
             "nullable": true,
             "format": "date"
           },
+          "nextAppointmentSpecialty": {
+            "type": "string",
+            "nullable": true
+          },
           "hasReferralSheet": {
             "type": "boolean",
             "nullable": true
@@ -10597,6 +10618,7 @@
           "appointmentDate",
           "appointmentTime",
           "nextAppointmentDate",
+          "nextAppointmentSpecialty",
           "hasReferralSheet",
           "referredTo",
           "referralNotProvidedReason",
@@ -11358,6 +11380,10 @@
           },
           "nextAppointmentDate": {
             "type": "string"
+          },
+          "nextAppointmentSpecialty": {
+            "type": "string",
+            "maxLength": 255
           },
           "hasReferralSheet": {
             "type": "boolean"

@@ -30,6 +30,9 @@ export class PatientMedicalAppointmentResponseDto {
   nextAppointmentDate!: string | null;
 
   @ApiProperty({ nullable: true })
+  nextAppointmentSpecialty!: string | null;
+
+  @ApiProperty({ nullable: true })
   hasReferralSheet!: boolean | null;
 
   @ApiProperty({ nullable: true })
@@ -66,6 +69,7 @@ export class PatientMedicalAppointmentResponseDto {
       appointmentDate: appointment.appointmentDate,
       appointmentTime: appointment.appointmentTime,
       nextAppointmentDate: appointment.nextAppointmentDate,
+      nextAppointmentSpecialty: appointment.nextAppointmentSpecialty,
       hasReferralSheet: appointment.hasReferralSheet,
       referredTo: appointment.referredTo,
       referralNotProvidedReason: appointment.referralNotProvidedReason,

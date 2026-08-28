@@ -127,6 +127,7 @@ describe('MedicalAppointmentsService', () => {
       appointmentDate: null,
       appointmentTime: null,
       nextAppointmentDate: null,
+      nextAppointmentSpecialty: null,
       hasReferralSheet: false,
       referredTo: null,
       difficulties: null,
@@ -161,6 +162,7 @@ describe('MedicalAppointmentsService', () => {
     );
 
     const dto: UpdateMedicalAppointmentDto = {
+      nextAppointmentSpecialty: 'Radioterapia',
       changeReason: 'Cambio de fecha por disponibilidad',
     };
     await service.update('appointment-1', dto);
@@ -171,6 +173,7 @@ describe('MedicalAppointmentsService', () => {
       expect.objectContaining({
         changeReason: 'Cambio de fecha por disponibilidad',
         specialty: 'Oncología',
+        nextAppointmentSpecialty: 'Radioterapia',
       }),
     );
   });

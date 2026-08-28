@@ -137,9 +137,15 @@ describe('Global medical appointments (e2e)', () => {
         patientId: assignedPatient.id,
         specialty: 'Oncología',
         healthCenterId: healthCenter.id,
+        nextAppointmentDate: '2030-02-01',
+        nextAppointmentSpecialty: 'Radioterapia',
       })
       .expect(201);
     const firstAppointment = first.body as MedicalAppointmentResponseDto;
+    expect(firstAppointment).toMatchObject({
+      nextAppointmentDate: '2030-02-01',
+      nextAppointmentSpecialty: 'Radioterapia',
+    });
 
     const second = await request(server)
       .post('/medical-appointments')
