@@ -13,6 +13,7 @@ export class PatientAddressResponseDto {
   @ApiProperty({ nullable: true }) province!: string | null;
   @ApiProperty({ nullable: true }) department!: string | null;
   @ApiProperty({ nullable: true }) reference!: string | null;
+  @ApiProperty({ nullable: true, format: 'uri' }) locationUrl!: string | null;
   @ApiProperty({ nullable: true }) dniMatchesAddress!: boolean | null;
   @ApiProperty({ format: 'date', nullable: true }) validFrom!: string | null;
   @ApiProperty({ format: 'date', nullable: true }) validTo!: string | null;
@@ -31,6 +32,7 @@ export class PatientAddressResponseDto {
       province: address.province,
       department: address.department,
       reference: address.reference,
+      locationUrl: address.locationUrl,
       dniMatchesAddress: address.dniMatchesAddress,
       validFrom: address.validFrom,
       validTo: address.validTo,

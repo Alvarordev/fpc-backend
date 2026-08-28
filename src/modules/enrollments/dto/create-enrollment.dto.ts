@@ -28,6 +28,34 @@ import {
   ENROLLMENT_HEALTH_PHASES,
   PatientHealthPhase,
 } from '../../../database/entities/patient-health-phase.enum';
+import { CompanionContactRole } from '../../../database/entities/companion-contact-role.enum';
+import { EnrollmentContactSource } from '../enrollment-contact-source.enum';
+
+export class EnrollmentContactPersonDto extends OmitType(CreateCompanionDto, [
+  'email',
+  'isPrimaryInformant',
+  'isPrimaryContact',
+  'contactRole',
+  'isCaregiver',
+  'relationship',
+] as const) {
+  @IsString() @MaxLength(50) relationship!: string;
+}
+
+export class EnrollmentContactInputDto {
+  @ApiProperty({ enum: CompanionContactRole })
+  @IsIn(Object.values(CompanionContactRole))
+  role!: CompanionContactRole;
+
+  @ApiProperty({ enum: EnrollmentContactSource })
+  @IsIn(Object.values(EnrollmentContactSource))
+  source!: EnrollmentContactSource;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentContactPersonDto)
+  person?: EnrollmentContactPersonDto;
+}
 
 export class EnrollmentFollowUpDto {
   @IsIn(Object.values(FollowUpType)) type!: FollowUpType;
@@ -94,6 +122,11 @@ export class CreateEnrollmentDto {
   @ValidateNested()
   @Type(() => CreateCompanionDto)
   companion?: CreateCompanionDto;
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EnrollmentContactInputDto)
+  contacts?: EnrollmentContactInputDto[];
   @IsOptional()
   @ValidateNested()
   @Type(() => UpsertPatientDetailsDto)

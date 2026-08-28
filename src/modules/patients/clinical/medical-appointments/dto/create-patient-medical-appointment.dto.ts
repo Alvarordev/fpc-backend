@@ -17,6 +17,7 @@ export class CreatePatientMedicalAppointmentDto {
   @IsOptional() @IsDateString() nextAppointmentDate?: string;
   @IsOptional() @IsBoolean() hasReferralSheet?: boolean;
   @IsOptional() @IsString() referredTo?: string;
+  @IsOptional() @IsString() referralNotProvidedReason?: string;
   @IsOptional() @IsString() difficulties?: string;
   @IsOptional() @IsBoolean() isFirstConsultation?: boolean;
   @IsOptional() @IsString() changeReason?: string;

@@ -50,6 +50,9 @@ import {
 } from '../../database/entities/patient-health-background-assessment.entity';
 import { PatientHealthBackgroundAssessmentsController } from './clinical/health-background/patient-health-background-assessments.controller';
 import { PatientHealthBackgroundAssessmentsService } from './clinical/health-background/patient-health-background-assessments.service';
+import { PatientDiagnosticStatusEvent } from '../../database/entities/patient-diagnostic-status-event.entity';
+import { PatientDiagnosticStatusesController } from './diagnostic-status/patient-diagnostic-statuses.controller';
+import { PatientDiagnosticStatusesService } from './diagnostic-status/patient-diagnostic-statuses.service';
 
 @Module({
   imports: [
@@ -75,6 +78,7 @@ import { PatientHealthBackgroundAssessmentsService } from './clinical/health-bac
       PatientActiveComorbidity,
       PatientLimitation,
       PatientFamilyCancerHistory,
+      PatientDiagnosticStatusEvent,
     ]),
     PatientSummariesModule,
     PatientAccessModule,
@@ -92,6 +96,7 @@ import { PatientHealthBackgroundAssessmentsService } from './clinical/health-bac
     TreatmentMedicationsController,
     PatientSocialNotesController,
     PatientHealthBackgroundAssessmentsController,
+    PatientDiagnosticStatusesController,
   ],
   providers: [
     PatientsService,
@@ -107,6 +112,7 @@ import { PatientHealthBackgroundAssessmentsService } from './clinical/health-bac
     TreatmentMedicationsService,
     PatientSocialNotesService,
     PatientHealthBackgroundAssessmentsService,
+    PatientDiagnosticStatusesService,
   ],
   exports: [
     PatientsService,
@@ -121,6 +127,7 @@ import { PatientHealthBackgroundAssessmentsService } from './clinical/health-bac
     TreatmentMedicationsService,
     PatientSocialNotesService,
     PatientHealthBackgroundAssessmentsService,
+    PatientDiagnosticStatusesService,
   ],
 })
 export class PatientsModule {}

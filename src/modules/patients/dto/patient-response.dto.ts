@@ -26,6 +26,7 @@ import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../../database/entities/patient-status.enum';
 import { Patient } from '../../../database/entities/patient.entity';
 import { DurationResponseDto } from '../../../shared/duration/duration-response.dto';
+import { CompanionContactRole } from '../../../database/entities/companion-contact-role.enum';
 
 export class PatientHealthPhaseHistoryResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -480,6 +481,9 @@ export class CompanionPatientResponseDto {
   @ApiProperty()
   isPrimaryContact!: boolean;
 
+  @ApiProperty({ enum: CompanionContactRole, nullable: true })
+  contactRole!: CompanionContactRole | null;
+
   @ApiProperty()
   isCaregiver!: boolean;
 
@@ -505,6 +509,7 @@ export class CompanionPatientResponseDto {
       patientId: link.patientId,
       isPrimaryInformant: link.isPrimaryInformant,
       isPrimaryContact: link.isPrimaryContact,
+      contactRole: link.contactRole,
       isCaregiver: link.isCaregiver,
       relationship: link.relationship ?? null,
       companionDisplayName: link.companion?.fullName ?? null,

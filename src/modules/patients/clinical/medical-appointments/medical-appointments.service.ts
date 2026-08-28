@@ -19,6 +19,7 @@ import { FindMedicalAppointmentsDto } from './dto/list-medical-appointments.dto'
 import { UpdateMedicalAppointmentDto } from './dto/update-medical-appointment.dto';
 import { N8nTransactionalDispatchService } from '../../../../integrations/n8n/transactional-dispatch.service';
 import { citaEnvelopeFor } from './cita-envelope';
+import { normalizeReferralFields } from './referral-fields';
 
 @Injectable()
 export class MedicalAppointmentsService {
@@ -54,7 +55,7 @@ export class MedicalAppointmentsService {
         specialty: input.specialty,
         isCurrent: true,
       },
-      { ...input, followUpId },
+      { ...normalizeReferralFields(input), followUpId },
     );
     await this.invalidations.markDirty(input.patientId);
     await this.webhooks.enqueue(citaEnvelopeFor(patient, appointment));
@@ -72,7 +73,7 @@ export class MedicalAppointmentsService {
         specialty: existing.specialty,
         isCurrent: true,
       },
-      {
+      normalizeReferralFields({
         patientId: existing.patientId,
         followUpId: existing.followUpId,
         specialty: existing.specialty,
@@ -100,6 +101,10 @@ export class MedicalAppointmentsService {
           input.referredTo !== undefined
             ? input.referredTo
             : existing.referredTo,
+        referralNotProvidedReason:
+          input.referralNotProvidedReason !== undefined
+            ? input.referralNotProvidedReason
+            : existing.referralNotProvidedReason,
         difficulties:
           input.difficulties !== undefined
             ? input.difficulties
@@ -109,7 +114,7 @@ export class MedicalAppointmentsService {
             ? input.isFirstConsultation
             : existing.isFirstConsultation,
         changeReason: input.changeReason,
-      },
+      }),
     );
     await this.invalidations.markDirty(existing.patientId);
     return this.findOneOrThrow(appointment.id);

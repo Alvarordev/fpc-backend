@@ -39,6 +39,18 @@ import { buildRegistroEnvelope } from '../../integrations/n8n/n8n-webhook.payloa
 import { PatientAddress } from '../../database/entities/patient-address.entity';
 import { HealthCenter } from '../../database/entities/health-center.entity';
 import { normalizeDuration } from '../../shared/duration/duration.util';
+import { CompanionContactRole } from '../../database/entities/companion-contact-role.enum';
+
+function resolveContactRole(
+  contactRole: CompanionContactRole | null | undefined,
+  isPrimaryContact: boolean | undefined,
+  fallback: CompanionContactRole | null,
+): CompanionContactRole | null {
+  if (contactRole !== undefined) return contactRole;
+  if (isPrimaryContact !== undefined)
+    return isPrimaryContact ? CompanionContactRole.PRIMARY : null;
+  return fallback;
+}
 
 @Injectable()
 export class PatientsService {
@@ -199,14 +211,23 @@ export class PatientsService {
       throw new ConflictException(
         'Companion is already linked to this patient',
       );
-    if (input.isPrimaryContact)
-      await repository.update({ patientId }, { isPrimaryContact: false });
+    const contactRole = resolveContactRole(
+      input.contactRole,
+      input.isPrimaryContact,
+      null,
+    );
+    if (contactRole)
+      await repository.update(
+        { patientId, contactRole },
+        { contactRole: null, isPrimaryContact: false },
+      );
     return repository.save(
       repository.create({
         companionId: input.existingCompanionId,
         patientId,
         isPrimaryInformant: input.isPrimaryInformant ?? false,
-        isPrimaryContact: input.isPrimaryContact ?? false,
+        contactRole,
+        isPrimaryContact: contactRole === CompanionContactRole.PRIMARY,
         isCaregiver: input.isCaregiver ?? false,
         relationship: input.relationship ?? null,
       }),
@@ -230,9 +251,20 @@ export class PatientsService {
         relations: { companion: true },
       });
       if (!link) throw new NotFoundException('Companion link not found');
-      if (input.isPrimaryContact)
-        await repository.update({ patientId }, { isPrimaryContact: false });
-      Object.assign(link, input);
+      const contactRole = resolveContactRole(
+        input.contactRole,
+        input.isPrimaryContact,
+        link.contactRole,
+      );
+      if (contactRole)
+        await repository.update(
+          { patientId, contactRole },
+          { contactRole: null, isPrimaryContact: false },
+        );
+      Object.assign(link, input, {
+        contactRole,
+        isPrimaryContact: contactRole === CompanionContactRole.PRIMARY,
+      });
       const saved = await repository.save(link);
       await this.invalidations.markDirty(patientId, manager);
       return saved;
@@ -579,6 +611,7 @@ export class PatientsService {
     const {
       isPrimaryInformant,
       isPrimaryContact,
+      contactRole,
       isCaregiver,
       relationship,
       ...patientFields
@@ -592,12 +625,23 @@ export class PatientsService {
       }),
     );
     const links = manager.getRepository(CompanionPatient);
+    const resolvedContactRole = resolveContactRole(
+      contactRole,
+      isPrimaryContact,
+      null,
+    );
+    if (resolvedContactRole)
+      await links.update(
+        { patientId, contactRole: resolvedContactRole },
+        { contactRole: null, isPrimaryContact: false },
+      );
     await links.save(
       links.create({
         companionId: companion.id,
         patientId,
         isPrimaryInformant: isPrimaryInformant ?? false,
-        isPrimaryContact: isPrimaryContact ?? false,
+        contactRole: resolvedContactRole,
+        isPrimaryContact: resolvedContactRole === CompanionContactRole.PRIMARY,
         isCaregiver: isCaregiver ?? false,
         relationship: relationship ?? null,
       }),

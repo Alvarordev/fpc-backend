@@ -41,10 +41,16 @@ export class PatientMedicalAppointment {
   appointmentTime!: string | null;
   @Column({ name: 'next_appointment_date', type: 'date', nullable: true })
   nextAppointmentDate!: string | null;
-  @Column({ name: 'has_referral_sheet', type: 'boolean', default: false })
-  hasReferralSheet!: boolean;
+  @Column({ name: 'has_referral_sheet', type: 'boolean', nullable: true })
+  hasReferralSheet!: boolean | null;
   @Column({ name: 'referred_to', type: 'varchar', length: 255, nullable: true })
   referredTo!: string | null;
+  @Column({
+    name: 'referral_not_provided_reason',
+    type: 'text',
+    nullable: true,
+  })
+  referralNotProvidedReason!: string | null;
   @Column({ type: 'text', nullable: true }) difficulties!: string | null;
   @Column({ name: 'is_first_consultation', type: 'boolean', default: false })
   isFirstConsultation!: boolean;

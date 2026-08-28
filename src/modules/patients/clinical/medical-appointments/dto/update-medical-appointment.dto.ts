@@ -22,6 +22,7 @@ export class UpdateMedicalAppointmentDto {
   @IsOptional() @IsDateString() nextAppointmentDate?: string;
   @IsOptional() @IsBoolean() hasReferralSheet?: boolean;
   @IsOptional() @IsString() referredTo?: string;
+  @IsOptional() @IsString() referralNotProvidedReason?: string;
   @IsOptional() @IsString() difficulties?: string;
   @IsOptional() @IsBoolean() isFirstConsultation?: boolean;
   @IsString() @IsNotEmpty() changeReason!: string;

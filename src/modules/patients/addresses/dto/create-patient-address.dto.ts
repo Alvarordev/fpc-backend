@@ -5,6 +5,7 @@ import {
   IsIn,
   IsOptional,
   IsString,
+  IsUrl,
   IsUUID,
   MaxLength,
 } from 'class-validator';
@@ -24,6 +25,9 @@ export class CreatePatientAddressDto {
   @IsIn(PERU_DEPARTMENTS)
   department?: PeruDepartment;
   @IsOptional() @IsString() reference?: string;
+  @IsOptional()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  locationUrl?: string;
   @IsOptional() @IsBoolean() dniMatchesAddress?: boolean;
   @IsOptional() @IsDateString() validFrom?: string;
   @IsOptional() @IsDateString() validTo?: string;

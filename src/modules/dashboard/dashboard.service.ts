@@ -119,7 +119,7 @@ export class DashboardService {
       startDate,
       trendEndDate:
         query.period === DashboardPeriod.MONTH
-          ? startDate
+          ? new Date(Date.UTC(query.year, month, 0)).toISOString().slice(0, 10)
           : this.dateString(query.year, 12),
     };
   }
@@ -307,6 +307,7 @@ export class DashboardService {
         SELECT DISTINCT ON (patient_id) patient_id, department
         FROM patient_addresses
         WHERE is_primary = true AND is_active = true
+        ORDER BY patient_id, created_at DESC, id DESC
       ), patient_context AS (
         SELECT
           patient.id,
@@ -329,10 +330,8 @@ export class DashboardService {
         LEFT JOIN health_centers primary_health_center ON primary_health_center.id = patient_context.primary_health_center_id
         LEFT JOIN health_centers fallback_health_center ON fallback_health_center.id = patient_context.fallback_health_center_id
         UNION ALL
-        SELECT 'regions', COALESCE(primary_health_center.department, fallback_health_center.department, NULLIF(BTRIM(patient_context.current_department), ''), NULLIF(BTRIM(patient_context.birth_department), ''), '${UNKNOWN_LABEL}')
-        FROM patient_context
-        LEFT JOIN health_centers primary_health_center ON primary_health_center.id = patient_context.primary_health_center_id
-        LEFT JOIN health_centers fallback_health_center ON fallback_health_center.id = patient_context.fallback_health_center_id
+         SELECT 'regions', COALESCE(NULLIF(BTRIM(patient_context.current_department), ''), '${UNKNOWN_LABEL}')
+         FROM patient_context
         UNION ALL
         SELECT 'referrals', COALESCE(from_center.name, '${UNKNOWN_LABEL}') || ' → ' || COALESCE(to_center.name, '${UNKNOWN_LABEL}')
         FROM patient_treatments treatment

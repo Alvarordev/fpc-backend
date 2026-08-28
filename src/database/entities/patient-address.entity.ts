@@ -47,6 +47,8 @@ export class PatientAddress {
   @Column({ type: 'varchar', length: 50, nullable: true })
   department!: PeruDepartment | null;
   @Column({ type: 'text', nullable: true }) reference!: string | null;
+  @Column({ name: 'location_url', type: 'text', nullable: true })
+  locationUrl!: string | null;
   @Column({ name: 'dni_matches_address', type: 'boolean', nullable: true })
   dniMatchesAddress!: boolean | null;
   @Column({ name: 'valid_from', type: 'date', nullable: true })

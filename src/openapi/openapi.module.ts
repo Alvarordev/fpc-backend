@@ -8,6 +8,7 @@ import { AlertSummaryService } from '../modules/alerts/alert-summary.service';
 import { CallCenterController } from '../modules/call-center/call-center.controller';
 import { CallCenterService } from '../modules/call-center/call-center.service';
 import { DashboardController } from '../modules/dashboard/dashboard.controller';
+import { DashboardIndicatorsService } from '../modules/dashboard/dashboard-indicators.service';
 import { DashboardService } from '../modules/dashboard/dashboard.service';
 import { AuthController } from '../modules/auth/auth.controller';
 import { AuthService } from '../modules/auth/auth.service';
@@ -44,6 +45,8 @@ import { PatientSocialNotesController } from '../modules/patients/social-notes/p
 import { PatientSocialNotesService } from '../modules/patients/social-notes/patient-social-notes.service';
 import { PatientHealthBackgroundAssessmentsController } from '../modules/patients/clinical/health-background/patient-health-background-assessments.controller';
 import { PatientHealthBackgroundAssessmentsService } from '../modules/patients/clinical/health-background/patient-health-background-assessments.service';
+import { PatientDiagnosticStatusesController } from '../modules/patients/diagnostic-status/patient-diagnostic-statuses.controller';
+import { PatientDiagnosticStatusesService } from '../modules/patients/diagnostic-status/patient-diagnostic-statuses.service';
 import { PsychooncologyAppointmentsController } from '../modules/psychooncology-appointments/psychooncology-appointments.controller';
 import { PsychooncologyAppointmentsService } from '../modules/psychooncology-appointments/psychooncology-appointments.service';
 import { RemindersController } from '../modules/reminders/reminders.controller';
@@ -84,6 +87,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     PatientSymptomReportsController,
     PatientSocialNotesController,
     PatientHealthBackgroundAssessmentsController,
+    PatientDiagnosticStatusesController,
     PsychooncologyAppointmentsController,
     RemindersController,
     UsersController,
@@ -97,6 +101,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     { provide: AlertSummaryService, useValue: {} },
     { provide: CallCenterService, useValue: {} },
     { provide: DashboardService, useValue: {} },
+    { provide: DashboardIndicatorsService, useValue: {} },
     { provide: AuthService, useValue: {} },
     { provide: EnrollmentsService, useValue: {} },
     { provide: FollowUpsService, useValue: {} },
@@ -113,6 +118,7 @@ import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
     { provide: PatientSymptomReportsService, useValue: {} },
     { provide: PatientSocialNotesService, useValue: {} },
     { provide: PatientHealthBackgroundAssessmentsService, useValue: {} },
+    { provide: PatientDiagnosticStatusesService, useValue: {} },
     { provide: PatientTreatmentsService, useValue: {} },
     { provide: TreatmentMedicationsService, useValue: {} },
     { provide: PatientAddressesService, useValue: {} },

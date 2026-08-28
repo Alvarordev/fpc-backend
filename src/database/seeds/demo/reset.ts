@@ -15,6 +15,7 @@ const DOMAIN_TABLES = [
   'volunteer_availability',
   'enrollment_family_talk_interests',
   'enrollments',
+  'patient_diagnostic_status_events',
   'patient_symptom_reports',
   'patient_sis_affiliation',
   'treatment_medications',

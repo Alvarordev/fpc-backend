@@ -570,6 +570,220 @@
         ]
       }
     },
+    "/dashboard/indicators/demographics": {
+      "get": {
+        "operationId": "DashboardController_getDemographics",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "month",
+              "type": "string",
+              "enum": [
+                "month",
+                "year"
+              ]
+            }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 2000,
+              "maximum": 2100,
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Required with period=month and year. Month is one-based.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 12,
+              "example": 8,
+              "type": "number"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive Lima calendar date. Use with to as an alternative to period/year/month.",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive Lima calendar date. Use with from.",
+            "schema": {
+              "example": "2026-02-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "Only America/Lima is supported.",
+            "schema": {
+              "default": "America/Lima",
+              "example": "America/Lima",
+              "type": "string",
+              "enum": [
+                "America/Lima"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardDemographicsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The indicator period or timezone is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get demographic dashboard indicators",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/dashboard/indicators/epidemiology": {
+      "get": {
+        "operationId": "DashboardController_getEpidemiology",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "month",
+              "type": "string",
+              "enum": [
+                "month",
+                "year"
+              ]
+            }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 2000,
+              "maximum": 2100,
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Required with period=month and year. Month is one-based.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 12,
+              "example": 8,
+              "type": "number"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive Lima calendar date. Use with to as an alternative to period/year/month.",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive Lima calendar date. Use with from.",
+            "schema": {
+              "example": "2026-02-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "Only America/Lima is supported.",
+            "schema": {
+              "default": "America/Lima",
+              "example": "America/Lima",
+              "type": "string",
+              "enum": [
+                "America/Lima"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardEpidemiologyResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The indicator period or timezone is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get epidemiological dashboard indicators",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
     "/dashboard": {
       "get": {
         "operationId": "DashboardController_getDashboard",
@@ -4233,6 +4447,164 @@
         ]
       }
     },
+    "/patients/{patientId}/diagnostic-status": {
+      "get": {
+        "operationId": "PatientDiagnosticStatusesController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientDiagnosticStatusEventResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patient diagnostic status history",
+        "tags": [
+          "Patient diagnostic status"
+        ]
+      }
+    },
+    "/patients/{patientId}/diagnostic-status/current": {
+      "get": {
+        "operationId": "PatientDiagnosticStatusesController_current",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/PatientDiagnosticStatusEventResponseDto"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current patient diagnostic status",
+        "tags": [
+          "Patient diagnostic status"
+        ]
+      }
+    },
+    "/patients/{patientId}/diagnostic-status/transition": {
+      "post": {
+        "operationId": "PatientDiagnosticStatusesController_transition",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitionPatientDiagnosticStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientDiagnosticStatusEventResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid diagnostic transition"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or follow-up not found"
+          },
+          "409": {
+            "description": "Patient is not searching for diagnosis"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Transition patient diagnostic status",
+        "tags": [
+          "Patient diagnostic status"
+        ]
+      }
+    },
     "/psychooncology-appointments": {
       "post": {
         "operationId": "PsychooncologyAppointmentsController_create",
@@ -5950,6 +6322,205 @@
           "pendingReminders"
         ]
       },
+      "DashboardIndicatorMetaDto": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "description": "Exclusive end date."
+          },
+          "timezone": {
+            "type": "string",
+            "example": "America/Lima"
+          },
+          "definition": {
+            "type": "string"
+          },
+          "population": {
+            "type": "string"
+          },
+          "populationCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "timezone",
+          "definition",
+          "population",
+          "populationCount"
+        ]
+      },
+      "DashboardIndicatorItemDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "example": "18-29"
+          },
+          "count": {
+            "type": "number",
+            "example": 42
+          }
+        },
+        "required": [
+          "label",
+          "count"
+        ]
+      },
+      "DashboardIndicatorDistributionDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardIndicatorItemDto"
+            }
+          },
+          "known": {
+            "type": "number",
+            "description": "Patients with a known value for this indicator."
+          },
+          "unknown": {
+            "type": "number",
+            "description": "Patients without a value for this indicator."
+          },
+          "coveragePct": {
+            "type": "number",
+            "description": "Known divided by known plus unknown, from 0 to 100."
+          },
+          "population": {
+            "type": "number",
+            "description": "Patients included in this indicator denominator."
+          }
+        },
+        "required": [
+          "items",
+          "known",
+          "unknown",
+          "coveragePct",
+          "population"
+        ]
+      },
+      "DashboardDemographicsResponseDto": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/DashboardIndicatorMetaDto"
+          },
+          "age": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "gender": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "district": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "province": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "department": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "zoneType": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "educationLevel": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "nativeLanguage": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "requiresTranslation": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "isWorking": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "insuranceType": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "epsProvider": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          }
+        },
+        "required": [
+          "meta",
+          "age",
+          "gender",
+          "district",
+          "province",
+          "department",
+          "zoneType",
+          "educationLevel",
+          "nativeLanguage",
+          "requiresTranslation",
+          "isWorking",
+          "insuranceType",
+          "epsProvider"
+        ]
+      },
+      "DashboardEpidemiologyEventsDto": {
+        "type": "object",
+        "properties": {
+          "deaths": {
+            "type": "number"
+          },
+          "diagnosticConfirmed": {
+            "type": "number"
+          },
+          "diagnosticRuledOut": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "deaths",
+          "diagnosticConfirmed",
+          "diagnosticRuledOut"
+        ]
+      },
+      "DashboardEpidemiologyResponseDto": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/DashboardIndicatorMetaDto"
+          },
+          "currentDiagnoses": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "currentCancerStages": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "currentTreatmentTypes": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "currentTreatmentSituations": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "currentDiagnosticStatuses": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "events": {
+            "$ref": "#/components/schemas/DashboardEpidemiologyEventsDto"
+          }
+        },
+        "required": [
+          "meta",
+          "currentDiagnoses",
+          "currentCancerStages",
+          "currentTreatmentTypes",
+          "currentTreatmentSituations",
+          "currentDiagnosticStatuses",
+          "events"
+        ]
+      },
       "DashboardMetaDto": {
         "type": "object",
         "properties": {
@@ -6443,6 +7014,14 @@
           "isPrimaryContact": {
             "type": "boolean"
           },
+          "contactRole": {
+            "nullable": true,
+            "enum": [
+              "PRIMARY",
+              "SECONDARY"
+            ],
+            "type": "string"
+          },
           "isCaregiver": {
             "type": "boolean"
           },
@@ -6454,6 +7033,73 @@
         "required": [
           "fullName",
           "primaryPhone"
+        ]
+      },
+      "EnrollmentContactPersonDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "primaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "dni": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "birthDate": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "maxLength": 10
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "relationship": {
+            "type": "string",
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "fullName",
+          "primaryPhone",
+          "relationship"
+        ]
+      },
+      "EnrollmentContactInputDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "enum": [
+              "PRIMARY",
+              "SECONDARY"
+            ],
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "PATIENT",
+              "CALLER",
+              "NEW"
+            ],
+            "type": "string"
+          },
+          "person": {
+            "$ref": "#/components/schemas/EnrollmentContactPersonDto"
+          }
+        },
+        "required": [
+          "role",
+          "source"
         ]
       },
       "DurationDto": {
@@ -6868,6 +7514,9 @@
           "referredTo": {
             "type": "string"
           },
+          "referralNotProvidedReason": {
+            "type": "string"
+          },
           "difficulties": {
             "type": "string"
           },
@@ -6939,6 +7588,10 @@
           "reference": {
             "type": "string"
           },
+          "locationUrl": {
+            "type": "string",
+            "format": "uri"
+          },
           "dniMatchesAddress": {
             "type": "boolean"
           },
@@ -6965,6 +7618,9 @@
           },
           "hasDiscomfort": {
             "type": "boolean"
+          },
+          "checkupMotivation": {
+            "type": "string"
           },
           "signsAndSymptoms": {
             "type": "string"
@@ -6996,6 +7652,20 @@
           "hasSoughtMedicalConsultation": {
             "type": "boolean"
           },
+          "hasRequestedMedicalConsultation": {
+            "type": "boolean"
+          },
+          "consultationStatus": {
+            "enum": [
+              "NOT_OBTAINED",
+              "SCHEDULED",
+              "ATTENDED"
+            ],
+            "type": "string"
+          },
+          "consultationNotObtainedReason": {
+            "type": "string"
+          },
           "healthCenterId": {
             "type": "string",
             "format": "uuid"
@@ -7003,6 +7673,27 @@
           "specialty": {
             "type": "string",
             "maxLength": 255
+          },
+          "diagnosisSearchDuration": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "hasReceivedDiagnosis": {
+            "type": "boolean"
+          },
+          "reportedDiagnosis": {
+            "type": "string"
+          },
+          "isReceivingReportedTreatment": {
+            "type": "boolean"
+          },
+          "reportedTreatment": {
+            "type": "string"
+          },
+          "reportedTreatmentFrequency": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "notReceivingTreatmentReason": {
+            "type": "string"
           }
         }
       },
@@ -7145,6 +7836,12 @@
           },
           "companion": {
             "$ref": "#/components/schemas/CreateCompanionDto"
+          },
+          "contacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentContactInputDto"
+            }
           },
           "details": {
             "$ref": "#/components/schemas/UpsertPatientDetailsDto"
@@ -7881,6 +8578,9 @@
           "referredTo": {
             "type": "string"
           },
+          "referralNotProvidedReason": {
+            "type": "string"
+          },
           "difficulties": {
             "type": "string"
           },
@@ -7943,9 +8643,14 @@
             "format": "date"
           },
           "hasReferralSheet": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "referredTo": {
+            "type": "string",
+            "nullable": true
+          },
+          "referralNotProvidedReason": {
             "type": "string",
             "nullable": true
           },
@@ -7982,6 +8687,7 @@
           "nextAppointmentDate",
           "hasReferralSheet",
           "referredTo",
+          "referralNotProvidedReason",
           "difficulties",
           "isFirstConsultation",
           "isCurrent",
@@ -8027,6 +8733,9 @@
             "type": "boolean"
           },
           "referredTo": {
+            "type": "string"
+          },
+          "referralNotProvidedReason": {
             "type": "string"
           },
           "difficulties": {
@@ -8428,6 +9137,14 @@
           "isPrimaryContact": {
             "type": "boolean"
           },
+          "contactRole": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "PRIMARY",
+              "SECONDARY"
+            ]
+          },
           "isCaregiver": {
             "type": "boolean"
           },
@@ -8461,6 +9178,14 @@
           "isPrimaryContact": {
             "type": "boolean"
           },
+          "contactRole": {
+            "nullable": true,
+            "enum": [
+              "PRIMARY",
+              "SECONDARY"
+            ],
+            "type": "string"
+          },
           "isCaregiver": {
             "type": "boolean"
           },
@@ -8489,6 +9214,7 @@
           "patientId",
           "isPrimaryInformant",
           "isPrimaryContact",
+          "contactRole",
           "isCaregiver",
           "relationship",
           "companionDisplayName",
@@ -8503,6 +9229,14 @@
           },
           "isPrimaryContact": {
             "type": "boolean"
+          },
+          "contactRole": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "PRIMARY",
+              "SECONDARY"
+            ]
           },
           "isCaregiver": {
             "type": "boolean"
@@ -9490,9 +10224,14 @@
             "format": "date"
           },
           "hasReferralSheet": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "referredTo": {
+            "type": "string",
+            "nullable": true
+          },
+          "referralNotProvidedReason": {
             "type": "string",
             "nullable": true
           },
@@ -9526,6 +10265,7 @@
           "nextAppointmentDate",
           "hasReferralSheet",
           "referredTo",
+          "referralNotProvidedReason",
           "difficulties",
           "isFirstConsultation",
           "isCurrent",
@@ -9623,6 +10363,10 @@
             "type": "boolean",
             "nullable": true
           },
+          "checkupMotivation": {
+            "type": "string",
+            "nullable": true
+          },
           "signsAndSymptoms": {
             "type": "string",
             "nullable": true
@@ -9670,12 +10414,67 @@
           "hasSoughtMedicalConsultation": {
             "type": "boolean"
           },
+          "hasRequestedMedicalConsultation": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "consultationStatus": {
+            "nullable": true,
+            "enum": [
+              "NOT_OBTAINED",
+              "SCHEDULED",
+              "ATTENDED"
+            ],
+            "type": "string"
+          },
+          "consultationNotObtainedReason": {
+            "type": "string",
+            "nullable": true
+          },
           "healthCenterId": {
             "type": "string",
             "nullable": true,
             "format": "uuid"
           },
           "specialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "diagnosisSearchDuration": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationResponseDto"
+              }
+            ]
+          },
+          "hasReceivedDiagnosis": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "reportedDiagnosis": {
+            "type": "string",
+            "nullable": true
+          },
+          "isReceivingReportedTreatment": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "reportedTreatment": {
+            "type": "string",
+            "nullable": true
+          },
+          "reportedTreatmentFrequency": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationResponseDto"
+              }
+            ]
+          },
+          "notReceivingTreatmentReason": {
             "type": "string",
             "nullable": true
           },
@@ -9692,6 +10491,7 @@
           "discomfortSeverity",
           "discomfortDescription",
           "hasDiscomfort",
+          "checkupMotivation",
           "signsAndSymptoms",
           "indicationsReceived",
           "symptomDuration",
@@ -9701,8 +10501,18 @@
           "painLocation",
           "painDescription",
           "hasSoughtMedicalConsultation",
+          "hasRequestedMedicalConsultation",
+          "consultationStatus",
+          "consultationNotObtainedReason",
           "healthCenterId",
           "specialty",
+          "diagnosisSearchDuration",
+          "hasReceivedDiagnosis",
+          "reportedDiagnosis",
+          "isReceivingReportedTreatment",
+          "reportedTreatment",
+          "reportedTreatmentFrequency",
+          "notReceivingTreatmentReason",
           "createdAt"
         ]
       },
@@ -10207,6 +11017,9 @@
           "referredTo": {
             "type": "string"
           },
+          "referralNotProvidedReason": {
+            "type": "string"
+          },
           "difficulties": {
             "type": "string"
           },
@@ -10570,6 +11383,10 @@
           "reference": {
             "type": "string"
           },
+          "locationUrl": {
+            "type": "string",
+            "format": "uri"
+          },
           "dniMatchesAddress": {
             "type": "boolean"
           },
@@ -10630,6 +11447,11 @@
             "type": "string",
             "nullable": true
           },
+          "locationUrl": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
           "dniMatchesAddress": {
             "type": "boolean",
             "nullable": true
@@ -10663,6 +11485,7 @@
           "province",
           "department",
           "reference",
+          "locationUrl",
           "dniMatchesAddress",
           "validFrom",
           "validTo",
@@ -10731,6 +11554,10 @@
           "reference": {
             "type": "string"
           },
+          "locationUrl": {
+            "type": "string",
+            "format": "uri"
+          },
           "dniMatchesAddress": {
             "type": "boolean"
           },
@@ -10763,6 +11590,9 @@
           "hasDiscomfort": {
             "type": "boolean"
           },
+          "checkupMotivation": {
+            "type": "string"
+          },
           "signsAndSymptoms": {
             "type": "string"
           },
@@ -10793,6 +11623,20 @@
           "hasSoughtMedicalConsultation": {
             "type": "boolean"
           },
+          "hasRequestedMedicalConsultation": {
+            "type": "boolean"
+          },
+          "consultationStatus": {
+            "type": "string",
+            "enum": [
+              "NOT_OBTAINED",
+              "SCHEDULED",
+              "ATTENDED"
+            ]
+          },
+          "consultationNotObtainedReason": {
+            "type": "string"
+          },
           "healthCenterId": {
             "type": "string",
             "format": "uuid"
@@ -10800,6 +11644,27 @@
           "specialty": {
             "type": "string",
             "maxLength": 255
+          },
+          "diagnosisSearchDuration": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "hasReceivedDiagnosis": {
+            "type": "boolean"
+          },
+          "reportedDiagnosis": {
+            "type": "string"
+          },
+          "isReceivingReportedTreatment": {
+            "type": "boolean"
+          },
+          "reportedTreatment": {
+            "type": "string"
+          },
+          "reportedTreatmentFrequency": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "notReceivingTreatmentReason": {
+            "type": "string"
           }
         },
         "required": [
@@ -10906,6 +11771,152 @@
           }
         },
         "required": [
+          "followUpId"
+        ]
+      },
+      "PatientDiagnosticStatusEventResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "status": {
+            "enum": [
+              "SEARCHING",
+              "CONFIRMED",
+              "RULED_OUT"
+            ],
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reportedDiagnosis": {
+            "type": "string",
+            "nullable": true
+          },
+          "diagnosisId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "supportedBySepa": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "status",
+          "occurredAt",
+          "reportedDiagnosis",
+          "diagnosisId",
+          "supportedBySepa",
+          "notes",
+          "createdAt"
+        ]
+      },
+      "DiagnosticStatusDiagnosisDto": {
+        "type": "object",
+        "properties": {
+          "diagnosis": {
+            "type": "string"
+          },
+          "cancerStage": {
+            "enum": [
+              "STAGE_1",
+              "STAGE_2",
+              "STAGE_3",
+              "STAGE_4",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "diagnosisDate": {
+            "type": "string"
+          },
+          "firstSymptomsDate": {
+            "type": "string"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosisSpecialty": {
+            "type": "string"
+          },
+          "symptomLeadingToCheckup": {
+            "type": "string"
+          },
+          "waitTimeForDiagnosis": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "hasMedicalReport": {
+            "type": "boolean"
+          },
+          "isSepaActiveReferral": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "diagnosis"
+        ]
+      },
+      "TransitionPatientDiagnosticStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "SEARCHING",
+              "CONFIRMED",
+              "RULED_OUT"
+            ],
+            "type": "string"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "diagnosis": {
+            "$ref": "#/components/schemas/DiagnosticStatusDiagnosisDto"
+          },
+          "supportedBySepa": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
           "followUpId"
         ]
       },

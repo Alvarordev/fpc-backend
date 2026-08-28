@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PatientSymptomReport } from '../../../../database/entities/patient-symptom-report.entity';
 import { DurationResponseDto } from '../../../../shared/duration/duration-response.dto';
+import { MedicalConsultationStatus } from '../../../../database/entities/medical-consultation-status.enum';
 
 export class PatientSymptomReportResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -23,6 +24,9 @@ export class PatientSymptomReportResponseDto {
 
   @ApiProperty({ nullable: true })
   hasDiscomfort!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  checkupMotivation!: string | null;
 
   @ApiProperty({ nullable: true })
   signsAndSymptoms!: string | null;
@@ -51,11 +55,41 @@ export class PatientSymptomReportResponseDto {
   @ApiProperty()
   hasSoughtMedicalConsultation!: boolean;
 
+  @ApiProperty({ nullable: true })
+  hasRequestedMedicalConsultation!: boolean | null;
+
+  @ApiProperty({ enum: MedicalConsultationStatus, nullable: true })
+  consultationStatus!: MedicalConsultationStatus | null;
+
+  @ApiProperty({ nullable: true })
+  consultationNotObtainedReason!: string | null;
+
   @ApiProperty({ format: 'uuid', nullable: true })
   healthCenterId!: string | null;
 
   @ApiProperty({ nullable: true })
   specialty!: string | null;
+
+  @ApiProperty({ type: DurationResponseDto, nullable: true })
+  diagnosisSearchDuration!: DurationResponseDto | null;
+
+  @ApiProperty({ nullable: true })
+  hasReceivedDiagnosis!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  reportedDiagnosis!: string | null;
+
+  @ApiProperty({ nullable: true })
+  isReceivingReportedTreatment!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  reportedTreatment!: string | null;
+
+  @ApiProperty({ type: DurationResponseDto, nullable: true })
+  reportedTreatmentFrequency!: DurationResponseDto | null;
+
+  @ApiProperty({ nullable: true })
+  notReceivingTreatmentReason!: string | null;
 
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
@@ -69,6 +103,7 @@ export class PatientSymptomReportResponseDto {
       discomfortSeverity: report.discomfortSeverity,
       discomfortDescription: report.discomfortDescription,
       hasDiscomfort: report.hasDiscomfort,
+      checkupMotivation: report.checkupMotivation,
       signsAndSymptoms: report.signsAndSymptoms,
       indicationsReceived: report.indicationsReceived,
       symptomDuration: DurationResponseDto.from(report.symptomDuration),
@@ -78,8 +113,22 @@ export class PatientSymptomReportResponseDto {
       painLocation: report.painLocation,
       painDescription: report.painDescription,
       hasSoughtMedicalConsultation: report.hasSoughtMedicalConsultation,
+      hasRequestedMedicalConsultation: report.hasRequestedMedicalConsultation,
+      consultationStatus: report.consultationStatus,
+      consultationNotObtainedReason: report.consultationNotObtainedReason,
       healthCenterId: report.healthCenterId,
       specialty: report.specialty,
+      diagnosisSearchDuration: DurationResponseDto.from(
+        report.diagnosisSearchDuration,
+      ),
+      hasReceivedDiagnosis: report.hasReceivedDiagnosis,
+      reportedDiagnosis: report.reportedDiagnosis,
+      isReceivingReportedTreatment: report.isReceivingReportedTreatment,
+      reportedTreatment: report.reportedTreatment,
+      reportedTreatmentFrequency: DurationResponseDto.from(
+        report.reportedTreatmentFrequency,
+      ),
+      notReceivingTreatmentReason: report.notReceivingTreatmentReason,
       createdAt: report.createdAt.toISOString(),
     };
   }

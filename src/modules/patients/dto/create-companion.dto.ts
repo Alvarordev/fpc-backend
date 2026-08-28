@@ -1,6 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 import { CreatePatientDto } from './create-patient.dto';
+import { CompanionContactRole } from '../../../database/entities/companion-contact-role.enum';
 
 export class CreateCompanionDto extends CreatePatientDto {
   @ApiPropertyOptional()
@@ -12,6 +19,11 @@ export class CreateCompanionDto extends CreatePatientDto {
   @IsOptional()
   @IsBoolean()
   isPrimaryContact?: boolean;
+
+  @ApiPropertyOptional({ enum: CompanionContactRole, nullable: true })
+  @IsOptional()
+  @IsIn(Object.values(CompanionContactRole))
+  contactRole?: CompanionContactRole | null;
 
   @ApiPropertyOptional()
   @IsOptional()

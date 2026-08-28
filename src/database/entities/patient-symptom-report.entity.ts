@@ -13,6 +13,7 @@ import { HealthCenter } from './health-center.entity';
 import { FollowUp } from './follow-up.entity';
 import { Patient } from './patient.entity';
 import { Duration } from './embedded/duration.embedded';
+import { MedicalConsultationStatus } from './medical-consultation-status.enum';
 
 @Entity('patient_symptom_reports')
 @Check('"pain_intensity" IS NULL OR "pain_intensity" BETWEEN 0 AND 10')
@@ -46,6 +47,8 @@ export class PatientSymptomReport {
   discomfortDescription!: string | null;
   @Column({ name: 'has_discomfort', type: 'boolean', nullable: true })
   hasDiscomfort!: boolean | null;
+  @Column({ name: 'checkup_motivation', type: 'text', nullable: true })
+  checkupMotivation!: string | null;
   @Column({ name: 'signs_and_symptoms', type: 'text', nullable: true })
   signsAndSymptoms!: string | null;
   @Column({ name: 'indications_received', type: 'text', nullable: true })
@@ -73,6 +76,25 @@ export class PatientSymptomReport {
     default: false,
   })
   hasSoughtMedicalConsultation!: boolean;
+  @Column({
+    name: 'has_requested_medical_consultation',
+    type: 'boolean',
+    nullable: true,
+  })
+  hasRequestedMedicalConsultation!: boolean | null;
+  @Column({
+    name: 'consultation_status',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
+  consultationStatus!: MedicalConsultationStatus | null;
+  @Column({
+    name: 'consultation_not_obtained_reason',
+    type: 'text',
+    nullable: true,
+  })
+  consultationNotObtainedReason!: string | null;
   @Column({ name: 'health_center_id', type: 'uuid', nullable: true })
   healthCenterId!: string | null;
   @ManyToOne(() => HealthCenter)
@@ -80,6 +102,28 @@ export class PatientSymptomReport {
   healthCenter!: HealthCenter | null;
   @Column({ type: 'varchar', length: 255, nullable: true }) specialty!:
     string | null;
+  @Column(() => Duration, { prefix: 'diagnosis_search_duration' })
+  diagnosisSearchDuration!: Duration;
+  @Column({ name: 'has_received_diagnosis', type: 'boolean', nullable: true })
+  hasReceivedDiagnosis!: boolean | null;
+  @Column({ name: 'reported_diagnosis', type: 'text', nullable: true })
+  reportedDiagnosis!: string | null;
+  @Column({
+    name: 'is_receiving_reported_treatment',
+    type: 'boolean',
+    nullable: true,
+  })
+  isReceivingReportedTreatment!: boolean | null;
+  @Column({ name: 'reported_treatment', type: 'text', nullable: true })
+  reportedTreatment!: string | null;
+  @Column(() => Duration, { prefix: 'reported_treatment_frequency' })
+  reportedTreatmentFrequency!: Duration;
+  @Column({
+    name: 'not_receiving_treatment_reason',
+    type: 'text',
+    nullable: true,
+  })
+  notReceivingTreatmentReason!: string | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }

@@ -11,6 +11,7 @@ import { CreatePatientMedicalAppointmentDto } from './dto/create-patient-medical
 import { User } from '../../../../database/entities/user.entity';
 import { N8nTransactionalDispatchService } from '../../../../integrations/n8n/transactional-dispatch.service';
 import { citaEnvelopeFor } from './cita-envelope';
+import { normalizeReferralFields } from './referral-fields';
 @Injectable()
 export class PatientMedicalAppointmentsService {
   constructor(
@@ -27,6 +28,7 @@ export class PatientMedicalAppointmentsService {
     patientId: string,
     input: CreatePatientMedicalAppointmentDto,
     manager?: EntityManager,
+    dispatchWebhook = true,
   ) {
     const patient = await this.patients.assertPatientRole(
       patientId,
@@ -45,16 +47,20 @@ export class PatientMedicalAppointmentsService {
       ? this.versioning.replaceCurrent(
           PatientMedicalAppointment,
           { patientId, specialty: input.specialty, isCurrent: true },
-          { ...input, patientId },
+          { ...normalizeReferralFields(input), patientId },
           manager,
         )
       : this.versioning.replaceCurrent(
           PatientMedicalAppointment,
           { patientId, specialty: input.specialty, isCurrent: true },
-          { ...input, patientId },
+          { ...normalizeReferralFields(input), patientId },
         ));
     await this.invalidations.markDirty(patientId, manager);
-    await this.webhooks.enqueue(citaEnvelopeFor(patient, appointment), manager);
+    if (dispatchWebhook)
+      await this.webhooks.enqueue(
+        citaEnvelopeFor(patient, appointment),
+        manager,
+      );
     return appointment;
   }
   async findAll(patientId: string, user: User) {
