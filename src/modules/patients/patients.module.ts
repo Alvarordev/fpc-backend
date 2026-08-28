@@ -53,6 +53,10 @@ import { PatientHealthBackgroundAssessmentsService } from './clinical/health-bac
 import { PatientDiagnosticStatusEvent } from '../../database/entities/patient-diagnostic-status-event.entity';
 import { PatientDiagnosticStatusesController } from './diagnostic-status/patient-diagnostic-statuses.controller';
 import { PatientDiagnosticStatusesService } from './diagnostic-status/patient-diagnostic-statuses.service';
+import { PatientDocument } from '../../database/entities/patient-document.entity';
+import { PatientDocumentsController } from './documents/patient-documents.controller';
+import { PatientDocumentsService } from './documents/patient-documents.service';
+import { PatientDocumentStorageModule } from '../../integrations/storage/patient-document-storage.module';
 
 @Module({
   imports: [
@@ -79,10 +83,12 @@ import { PatientDiagnosticStatusesService } from './diagnostic-status/patient-di
       PatientLimitation,
       PatientFamilyCancerHistory,
       PatientDiagnosticStatusEvent,
+      PatientDocument,
     ]),
     PatientSummariesModule,
     PatientAccessModule,
     N8nModule,
+    PatientDocumentStorageModule,
   ],
   controllers: [
     PatientsController,
@@ -97,6 +103,7 @@ import { PatientDiagnosticStatusesService } from './diagnostic-status/patient-di
     PatientSocialNotesController,
     PatientHealthBackgroundAssessmentsController,
     PatientDiagnosticStatusesController,
+    PatientDocumentsController,
   ],
   providers: [
     PatientsService,
@@ -113,6 +120,7 @@ import { PatientDiagnosticStatusesService } from './diagnostic-status/patient-di
     PatientSocialNotesService,
     PatientHealthBackgroundAssessmentsService,
     PatientDiagnosticStatusesService,
+    PatientDocumentsService,
   ],
   exports: [
     PatientsService,
@@ -128,6 +136,7 @@ import { PatientDiagnosticStatusesService } from './diagnostic-status/patient-di
     PatientSocialNotesService,
     PatientHealthBackgroundAssessmentsService,
     PatientDiagnosticStatusesService,
+    PatientDocumentsService,
   ],
 })
 export class PatientsModule {}
