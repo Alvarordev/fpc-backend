@@ -289,12 +289,15 @@ export class DashboardService {
       WITH cohort AS (
         SELECT DISTINCT patient_id FROM enrollments
         WHERE created_at >= $1 AND created_at < $2
-      ), current_diagnoses AS (
-        SELECT id, patient_id, health_center_id
+      ), latest_current_diagnoses AS (
+        SELECT DISTINCT ON (patient_id) patient_id, health_center_id
         FROM patient_diagnoses
         WHERE is_current = true
+        ORDER BY patient_id, created_at DESC, id DESC
       ), current_treatments AS (
-        SELECT DISTINCT ON (treatment.patient_id) treatment.patient_id, treatment.diagnosis_id, treatment.receiving_health_center_id
+        SELECT DISTINCT ON (treatment.patient_id)
+          treatment.patient_id,
+          treatment.receiving_health_center_id
         FROM patient_treatments treatment
         WHERE treatment.is_current = true
         ORDER BY treatment.patient_id, treatment.created_at DESC, treatment.id DESC
@@ -318,8 +321,8 @@ export class DashboardService {
         FROM cohort
         JOIN patients patient ON patient.id = cohort.patient_id
         LEFT JOIN patient_details details ON details.patient_id = patient.id
-        LEFT JOIN current_diagnoses diagnosis ON diagnosis.patient_id = patient.id
-        LEFT JOIN current_treatments treatment ON treatment.diagnosis_id = diagnosis.id
+        LEFT JOIN latest_current_diagnoses diagnosis ON diagnosis.patient_id = patient.id
+        LEFT JOIN current_treatments treatment ON treatment.patient_id = patient.id
         LEFT JOIN latest_current_appointments appointment ON appointment.patient_id = patient.id
         LEFT JOIN primary_addresses address ON address.patient_id = patient.id
       )

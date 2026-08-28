@@ -2,6 +2,7 @@ import { ConflictException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { FollowUp } from '../../../database/entities/follow-up.entity';
 import { PatientDiagnosis } from '../../../database/entities/patient-diagnosis.entity';
+import { PatientDiagnosisMode } from '../../../database/entities/patient-diagnosis-mode.enum';
 import {
   InsuranceType,
   PatientInsurance,
@@ -112,8 +113,15 @@ describe('clinical history services', () => {
   it('computes long diagnosis waits using months', async () => {
     (followUps.existsBy as jest.Mock).mockResolvedValue(true);
     replaceCurrent.mockResolvedValue({ id: 'diagnosis-id' });
+    const diagnoses = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 'replacement-id',
+        patientId: 'patient-id',
+        isCurrent: true,
+      }),
+    } as unknown as Repository<PatientDiagnosis>;
     const service = new PatientDiagnosesService(
-      {} as Repository<PatientDiagnosis>,
+      diagnoses,
       followUps,
       patients,
       versioning,
@@ -123,6 +131,8 @@ describe('clinical history services', () => {
     await service.create('patient-id', {
       followUpId: 'followUp-id',
       diagnosis: 'Breast cancer',
+      mode: PatientDiagnosisMode.REPLACE,
+      replacementDiagnosisId: 'replacement-id',
       firstSymptomsDate: '2026-01-01',
       diagnosisDate: '2026-03-02',
     });
@@ -148,8 +158,15 @@ describe('clinical history services', () => {
   it('keeps a reported diagnosis wait when dates are also provided', async () => {
     (followUps.existsBy as jest.Mock).mockResolvedValue(true);
     replaceCurrent.mockResolvedValue({ id: 'diagnosis-id' });
+    const diagnoses = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 'replacement-id',
+        patientId: 'patient-id',
+        isCurrent: true,
+      }),
+    } as unknown as Repository<PatientDiagnosis>;
     const service = new PatientDiagnosesService(
-      {} as Repository<PatientDiagnosis>,
+      diagnoses,
       followUps,
       patients,
       versioning,
@@ -159,6 +176,8 @@ describe('clinical history services', () => {
     await service.create('patient-id', {
       followUpId: 'followUp-id',
       diagnosis: 'Breast cancer',
+      mode: PatientDiagnosisMode.REPLACE,
+      replacementDiagnosisId: 'replacement-id',
       firstSymptomsDate: '2026-01-01',
       diagnosisDate: '2026-03-02',
       waitTimeForDiagnosis: { valueMin: 1.5, unit: DurationUnit.MONTH },
@@ -180,6 +199,147 @@ describe('clinical history services', () => {
       valueMin: '1.5',
       unit: 'MONTH',
     });
+  });
+
+  it('adds a parallel active diagnosis without retiring another diagnosis', async () => {
+    (followUps.existsBy as jest.Mock).mockResolvedValue(true);
+    const created = {
+      id: 'diagnosis-id',
+      patientId: 'patient-id',
+      isCurrent: true,
+    } as PatientDiagnosis;
+    const create = jest.fn((value: PatientDiagnosis) => value);
+    const save = jest.fn().mockResolvedValue(created);
+    const diagnoses = {
+      create,
+      save,
+    } as unknown as Repository<PatientDiagnosis>;
+    const service = new PatientDiagnosesService(
+      diagnoses,
+      followUps,
+      patients,
+      versioning,
+      invalidations,
+    );
+
+    await expect(
+      service.create('patient-id', {
+        followUpId: 'followUp-id',
+        diagnosis: 'Breast cancer',
+        mode: PatientDiagnosisMode.PARALLEL,
+      }),
+    ).resolves.toBe(created);
+
+    expect(replaceCurrent).not.toHaveBeenCalled();
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patientId: 'patient-id',
+        diagnosis: 'Breast cancer',
+        isCurrent: true,
+      }),
+    );
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patientId: 'patient-id',
+        diagnosis: 'Breast cancer',
+        isCurrent: true,
+      }),
+    );
+  });
+
+  it('replaces only the selected active diagnosis', async () => {
+    (followUps.existsBy as jest.Mock).mockResolvedValue(true);
+    replaceCurrent.mockResolvedValue({ id: 'new-diagnosis-id' });
+    const diagnoses = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 'replacement-id',
+        patientId: 'patient-id',
+        isCurrent: true,
+      }),
+    } as unknown as Repository<PatientDiagnosis>;
+    const service = new PatientDiagnosesService(
+      diagnoses,
+      followUps,
+      patients,
+      versioning,
+      invalidations,
+    );
+
+    await service.create('patient-id', {
+      followUpId: 'followUp-id',
+      diagnosis: 'Updated diagnosis',
+      mode: PatientDiagnosisMode.REPLACE,
+      replacementDiagnosisId: 'replacement-id',
+    });
+
+    expect(replaceCurrent).toHaveBeenCalledWith(
+      PatientDiagnosis,
+      {
+        id: 'replacement-id',
+        patientId: 'patient-id',
+        isCurrent: true,
+      },
+      expect.objectContaining({
+        patientId: 'patient-id',
+        diagnosis: 'Updated diagnosis',
+      }),
+    );
+  });
+
+  it('rejects an inactive replacement diagnosis', async () => {
+    (followUps.existsBy as jest.Mock).mockResolvedValue(true);
+    const diagnoses = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 'replacement-id',
+        patientId: 'patient-id',
+        isCurrent: false,
+      }),
+    } as unknown as Repository<PatientDiagnosis>;
+    const service = new PatientDiagnosesService(
+      diagnoses,
+      followUps,
+      patients,
+      versioning,
+      invalidations,
+    );
+
+    await expect(
+      service.create('patient-id', {
+        followUpId: 'followUp-id',
+        diagnosis: 'Updated diagnosis',
+        mode: PatientDiagnosisMode.REPLACE,
+        replacementDiagnosisId: 'replacement-id',
+      }),
+    ).rejects.toThrow(ConflictException);
+    expect(replaceCurrent).not.toHaveBeenCalled();
+  });
+
+  it('rejects a replacement diagnosis belonging to another patient', async () => {
+    (followUps.existsBy as jest.Mock).mockResolvedValue(true);
+    const diagnoses = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 'replacement-id',
+        patientId: 'other-patient',
+        isCurrent: true,
+      }),
+    } as unknown as Repository<PatientDiagnosis>;
+    const service = new PatientDiagnosesService(
+      diagnoses,
+      followUps,
+      patients,
+      versioning,
+      invalidations,
+    );
+
+    await expect(
+      service.create('patient-id', {
+        followUpId: 'followUp-id',
+        diagnosis: 'Updated diagnosis',
+        mode: PatientDiagnosisMode.REPLACE,
+        replacementDiagnosisId: 'replacement-id',
+      }),
+    ).rejects.toThrow(ConflictException);
+    expect(replaceCurrent).not.toHaveBeenCalled();
   });
 
   it('rejects treatments that reference another patient diagnosis', async () => {

@@ -327,6 +327,7 @@ export class EnrollmentsService {
         : treatments?.length
           ? await manager.getRepository(PatientDiagnosis).findOne({
               where: { patientId: patient.id, isCurrent: true },
+              order: { createdAt: 'DESC', id: 'DESC' },
             })
           : null;
       if (treatments?.length && !treatmentDiagnosis)

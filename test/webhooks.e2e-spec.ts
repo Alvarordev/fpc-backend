@@ -190,7 +190,11 @@ describe('n8n webhook dispatch (e2e)', () => {
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
         insurance: { insuranceType: 'NONE' },
-        diagnosis: { diagnosis: 'Breast cancer', cancerStage: 'STAGE_2' },
+        diagnosis: {
+          diagnosis: 'Breast cancer',
+          cancerStage: 'STAGE_2',
+          mode: 'PARALLEL',
+        },
         medicalAppointments: [{ specialty: 'ONCOLOGY' }],
       })
       .expect(201);

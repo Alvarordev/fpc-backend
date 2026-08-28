@@ -125,11 +125,11 @@ function medicationsFor(treatmentType: string): MedicationSeed[] {
 }
 
 /**
- * Clinical history is versioned: every table keeps one `is_current` row per
- * patient (per treatment series for treatments, per specialty for
- * appointments) plus any number of superseded rows carrying a
- * `change_reason`. Partial unique indexes enforce that, so this step must
- * never emit two current rows for the same key.
+ * Clinical history is versioned: rows carry an `is_current` flag and any
+ * superseded row may carry a `change_reason`. Diagnoses may have multiple
+ * current rows per patient; treatments remain current per series and
+ * appointments per specialty. This seed intentionally creates one current
+ * diagnosis per patient because each seeded treatment is linked to it.
  */
 export async function seedClinicalHistory(
   ctx: DemoContext,

@@ -3155,6 +3155,7 @@
     },
     "/patients/{patientId}/diagnoses": {
       "post": {
+        "description": "PARALLEL adds a new active diagnosis. REPLACE retires only the active diagnosis identified by replacementDiagnosisId and adds the new diagnosis as active.",
         "operationId": "PatientDiagnosesController_create",
         "parameters": [
           {
@@ -3198,7 +3199,10 @@
             "description": ""
           },
           "404": {
-            "description": "Patient or follow-up not found"
+            "description": "Patient, follow-up, or replacement diagnosis not found"
+          },
+          "409": {
+            "description": "The replacement diagnosis belongs to another patient or is not active"
           }
         },
         "security": [
@@ -7609,6 +7613,19 @@
       "EnrollmentDiagnosisDto": {
         "type": "object",
         "properties": {
+          "mode": {
+            "enum": [
+              "PARALLEL",
+              "REPLACE"
+            ],
+            "type": "string",
+            "example": "PARALLEL"
+          },
+          "replacementDiagnosisId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required when mode is REPLACE; the active diagnosis to retire"
+          },
           "diagnosis": {
             "type": "string"
           },
@@ -7652,6 +7669,7 @@
           }
         },
         "required": [
+          "mode",
           "diagnosis"
         ]
       },
@@ -11208,6 +11226,19 @@
       "CreatePatientDiagnosisDto": {
         "type": "object",
         "properties": {
+          "mode": {
+            "enum": [
+              "PARALLEL",
+              "REPLACE"
+            ],
+            "type": "string",
+            "example": "PARALLEL"
+          },
+          "replacementDiagnosisId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required when mode is REPLACE; the active diagnosis to retire"
+          },
           "followUpId": {
             "type": "string",
             "format": "uuid"
@@ -11255,6 +11286,7 @@
           }
         },
         "required": [
+          "mode",
           "followUpId",
           "diagnosis"
         ]

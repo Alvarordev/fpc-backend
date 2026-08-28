@@ -3,6 +3,7 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiConflictResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -33,13 +34,23 @@ export class PatientDiagnosesController {
 
   @Post()
   @Roles(...WRITE)
-  @ApiOperation({ summary: 'Record a patient diagnosis' })
+  @ApiOperation({
+    summary: 'Record a patient diagnosis',
+    description:
+      'PARALLEL adds a new active diagnosis. REPLACE retires only the active diagnosis identified by replacementDiagnosisId and adds the new diagnosis as active.',
+  })
   @ApiParam({ name: 'patientId', format: 'uuid' })
   @ApiCreatedResponse({ type: PatientDiagnosisResponseDto })
   @ApiBadRequestResponse({ description: 'Invalid request payload' })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient or follow-up not found' })
+  @ApiConflictResponse({
+    description:
+      'The replacement diagnosis belongs to another patient or is not active',
+  })
+  @ApiNotFoundResponse({
+    description: 'Patient, follow-up, or replacement diagnosis not found',
+  })
   async create(
     @Param('patientId') patientId: string,
     @Body() dto: CreatePatientDiagnosisDto,

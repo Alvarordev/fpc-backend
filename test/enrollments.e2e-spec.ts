@@ -111,7 +111,11 @@ describe('Enrollment wizard (e2e)', () => {
         ],
         insurance: { insuranceType: 'NONE' },
         sisAffiliation: { canAffiliate: true, comments: 'Start process' },
-        diagnosis: { diagnosis: 'Breast cancer', cancerStage: 'STAGE_2' },
+        diagnosis: {
+          diagnosis: 'Breast cancer',
+          cancerStage: 'STAGE_2',
+          mode: 'PARALLEL',
+        },
         treatments: [{ treatmentType: 'Chemotherapy' }],
         medicalAppointments: [{ specialty: 'ONCOLOGY' }],
         symptomReport: { isPainPresent: true, painIntensity: 7 },
@@ -196,6 +200,68 @@ describe('Enrollment wizard (e2e)', () => {
         followUpId: followUp.id,
       }),
     ]);
+  });
+
+  it('keeps parallel diagnoses active and replaces only the selected diagnosis', async () => {
+    const patient = await dataSource.getRepository(Patient).save({
+      fullName: 'Parallel Diagnosis Patient',
+      primaryPhone: '18',
+      email: 'p7-parallel-diagnosis@example.test',
+      role: PatientRole.PATIENT,
+      status: PatientStatus.ENROLLED,
+    });
+    const followUp = await dataSource.getRepository(FollowUp).save({
+      subjectPatientId: patient.id,
+      interlocutorId: patient.id,
+      agentId: agent.id,
+      type: FollowUpType.CALL,
+      status: FollowUpStatus.COMPLETED,
+      purpose: FollowUpPurpose.FIRST_CONTACT,
+    });
+
+    const createDiagnosis = (diagnosis: string) =>
+      request(server)
+        .post(`/patients/${patient.id}/diagnoses`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          followUpId: followUp.id,
+          diagnosis,
+          mode: 'PARALLEL',
+        })
+        .expect(201);
+    const first = (await createDiagnosis('First active diagnosis')).body as {
+      id: string;
+    };
+    const second = (await createDiagnosis('Second active diagnosis')).body as {
+      id: string;
+    };
+
+    await expect(
+      dataSource.getRepository(PatientDiagnosis).find({
+        where: { patientId: patient.id, isCurrent: true },
+      }),
+    ).resolves.toHaveLength(2);
+
+    await request(server)
+      .post(`/patients/${patient.id}/diagnoses`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        followUpId: followUp.id,
+        diagnosis: 'Replacement diagnosis',
+        mode: 'REPLACE',
+        replacementDiagnosisId: first.id,
+      })
+      .expect(201);
+
+    const diagnoses = await dataSource.getRepository(PatientDiagnosis).find({
+      where: { patientId: patient.id },
+    });
+    expect(diagnoses).toHaveLength(3);
+    expect(diagnoses.find(({ id }) => id === first.id)?.isCurrent).toBe(false);
+    expect(diagnoses.find(({ id }) => id === second.id)?.isCurrent).toBe(true);
+    expect(diagnoses.filter((diagnosis) => diagnosis.isCurrent)).toHaveLength(
+      2,
+    );
   });
 
   it('records and updates the enrollment rating after enrollment', async () => {
@@ -426,7 +492,7 @@ describe('Enrollment wizard (e2e)', () => {
       .expect(400);
   });
 
-  it('uses the current diagnosis for enrollment treatment and rejects when absent', async () => {
+  it('uses the newest active diagnosis for enrollment treatment and rejects when absent', async () => {
     const patient = await dataSource.getRepository(Patient).save({
       fullName: 'Existing Diagnosis Patient',
       primaryPhone: '12',
@@ -442,12 +508,22 @@ describe('Enrollment wizard (e2e)', () => {
       status: FollowUpStatus.COMPLETED,
       purpose: FollowUpPurpose.FIRST_CONTACT,
     });
-    const diagnosis = await dataSource.getRepository(PatientDiagnosis).save({
+    await dataSource.getRepository(PatientDiagnosis).save({
       patientId: patient.id,
       followUpId: diagnosisFollowUp.id,
       diagnosis: 'Existing cancer diagnosis',
       isCurrent: true,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
     });
+    const newestDiagnosis = await dataSource
+      .getRepository(PatientDiagnosis)
+      .save({
+        patientId: patient.id,
+        followUpId: diagnosisFollowUp.id,
+        diagnosis: 'Newest active cancer diagnosis',
+        isCurrent: true,
+        createdAt: new Date('2026-01-02T00:00:00.000Z'),
+      });
 
     await request(server)
       .post('/enrollments')
@@ -465,7 +541,7 @@ describe('Enrollment wizard (e2e)', () => {
       dataSource.getRepository(PatientTreatment).findOneByOrFail({
         patientId: patient.id,
       }),
-    ).resolves.toMatchObject({ diagnosisId: diagnosis.id });
+    ).resolves.toMatchObject({ diagnosisId: newestDiagnosis.id });
 
     await request(server)
       .post('/enrollments')

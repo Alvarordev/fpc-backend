@@ -358,6 +358,9 @@ export class PatientsService {
           .leftJoinAndSelect('diagnosis.healthCenter', 'healthCenter')
           .where('diagnosis.patient_id IN (:...patientIds)', { patientIds })
           .andWhere('diagnosis.is_current = true')
+          .orderBy('diagnosis.patient_id', 'ASC')
+          .addOrderBy('diagnosis.created_at', 'DESC')
+          .addOrderBy('diagnosis.id', 'DESC')
           .getMany(),
         this.followUpsRepository
           .createQueryBuilder('followUp')
@@ -379,9 +382,12 @@ export class PatientsService {
         address.department,
       ]),
     );
-    const diagnoses = new Map(
-      currentDiagnoses.map((diagnosis) => [diagnosis.patientId, diagnosis]),
-    );
+    // The list response remains singular for compatibility, so choose the
+    // newest active diagnosis consistently when a patient has parallel ones.
+    const diagnoses = new Map<string, PatientDiagnosis>();
+    for (const diagnosis of currentDiagnoses)
+      if (!diagnoses.has(diagnosis.patientId))
+        diagnoses.set(diagnosis.patientId, diagnosis);
     const followUps = new Map(
       latestFollowUps.map((followUp) => [followUp.subjectPatientId, followUp]),
     );
@@ -446,7 +452,7 @@ export class PatientsService {
       this.diagnosesRepository.find({
         where: { patientId: id },
         relations: { healthCenter: true },
-        order: { createdAt: 'DESC' },
+        order: { createdAt: 'DESC', id: 'DESC' },
       }),
       this.treatmentsRepository.find({
         where: { patientId: id },

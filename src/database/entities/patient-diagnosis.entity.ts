@@ -29,8 +29,7 @@ export enum CancerStage {
 @Check(
   `"wait_time_source" IS NULL OR "wait_time_source" IN ('COMPUTED','REPORTED')`,
 )
-@Index('UQ_patient_diagnoses_current', ['patientId'], {
-  unique: true,
+@Index('IDX_patient_diagnoses_current', ['patientId'], {
   where: '"is_current" = true',
 })
 @Index('IDX_patient_diagnoses_patient_id', ['patientId'])

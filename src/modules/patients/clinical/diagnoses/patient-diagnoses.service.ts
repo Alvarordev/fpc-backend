@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { FollowUp } from '../../../../database/entities/follow-up.entity';
 import { PatientDiagnosis } from '../../../../database/entities/patient-diagnosis.entity';
+import { PatientDiagnosisMode } from '../../../../database/entities/patient-diagnosis-mode.enum';
 import { PatientRole } from '../../../../database/entities/patient-role.enum';
 import { WaitTimeSource } from '../../../../database/entities/wait-time-source.enum';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
@@ -48,8 +50,50 @@ export class PatientDiagnosesService {
     )
       throw new NotFoundException('Follow-up not found');
 
-    const { waitTimeForDiagnosis, firstSymptomsDate, diagnosisDate, ...rest } =
-      input;
+    const {
+      mode,
+      replacementDiagnosisId,
+      waitTimeForDiagnosis,
+      firstSymptomsDate,
+      diagnosisDate,
+      ...rest
+    } = input;
+    if (
+      mode !== PatientDiagnosisMode.PARALLEL &&
+      mode !== PatientDiagnosisMode.REPLACE
+    )
+      throw new BadRequestException(
+        'Diagnosis creation mode must be PARALLEL or REPLACE',
+      );
+    if (
+      mode === PatientDiagnosisMode.PARALLEL &&
+      replacementDiagnosisId !== undefined
+    )
+      throw new BadRequestException(
+        'replacementDiagnosisId is only valid when mode is REPLACE',
+      );
+
+    const diagnosisRepository =
+      manager?.getRepository(PatientDiagnosis) ?? this.repository;
+    let replacementDiagnosis: PatientDiagnosis | null = null;
+    if (mode === PatientDiagnosisMode.REPLACE) {
+      if (!replacementDiagnosisId)
+        throw new BadRequestException(
+          'replacementDiagnosisId is required when mode is REPLACE',
+        );
+      replacementDiagnosis = await diagnosisRepository.findOne({
+        where: { id: replacementDiagnosisId },
+      });
+      if (!replacementDiagnosis)
+        throw new NotFoundException('Replacement diagnosis not found');
+      if (replacementDiagnosis.patientId !== patientId)
+        throw new ConflictException(
+          'Replacement diagnosis does not belong to patient',
+        );
+      if (!replacementDiagnosis.isCurrent)
+        throw new ConflictException('Replacement diagnosis is not active');
+    }
+
     let waitTime = normalizeDuration(waitTimeForDiagnosis);
     let waitTimeSource: WaitTimeSource | null = waitTimeForDiagnosis
       ? WaitTimeSource.REPORTED
@@ -78,18 +122,31 @@ export class PatientDiagnosesService {
       waitTimeForDiagnosis: waitTime,
       waitTimeSource,
     };
-    const diagnosis = await (manager
-      ? this.versioning.replaceCurrent(
-          PatientDiagnosis,
-          { patientId, isCurrent: true },
-          values,
-          manager,
-        )
-      : this.versioning.replaceCurrent(
-          PatientDiagnosis,
-          { patientId, isCurrent: true },
-          values,
-        ));
+    const diagnosis =
+      mode === PatientDiagnosisMode.REPLACE
+        ? await (manager
+            ? this.versioning.replaceCurrent(
+                PatientDiagnosis,
+                {
+                  id: replacementDiagnosis!.id,
+                  patientId,
+                  isCurrent: true,
+                },
+                values,
+                manager,
+              )
+            : this.versioning.replaceCurrent(
+                PatientDiagnosis,
+                {
+                  id: replacementDiagnosis!.id,
+                  patientId,
+                  isCurrent: true,
+                },
+                values,
+              ))
+        : await diagnosisRepository.save(
+            diagnosisRepository.create({ ...values, isCurrent: true }),
+          );
     await this.invalidations.markDirty(patientId, manager);
     return diagnosis;
   }
@@ -97,7 +154,7 @@ export class PatientDiagnosesService {
     await this.patients.assertCanRead(patientId, user);
     return this.repository.find({
       where: { patientId },
-      order: { createdAt: 'DESC' },
+      order: { createdAt: 'DESC', id: 'DESC' },
     });
   }
 }
