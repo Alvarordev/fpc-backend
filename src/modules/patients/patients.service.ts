@@ -305,6 +305,8 @@ export class PatientsService {
         currentDiagnosis: PatientDiagnosis | null;
         currentDepartment: string | null;
         latestFollowUp: FollowUp | null;
+        healthPhase: PatientDetails['healthPhase'] | null;
+        primaryCompanionName: string | null;
       }
     >;
     total: number;
@@ -351,34 +353,52 @@ export class PatientsService {
     if (!data.length) return { data: [], total };
 
     const patientIds = data.map((patient) => patient.id);
-    const [primaryAddresses, currentDiagnoses, latestFollowUps] =
-      await Promise.all([
-        this.addressesRepository.find({
-          where: { patientId: In(patientIds), isPrimary: true, isActive: true },
-        }),
-        this.diagnosesRepository
-          .createQueryBuilder('diagnosis')
-          .leftJoinAndSelect('diagnosis.healthCenter', 'healthCenter')
-          .where('diagnosis.patient_id IN (:...patientIds)', { patientIds })
-          .andWhere('diagnosis.is_current = true')
-          .orderBy('diagnosis.patient_id', 'ASC')
-          .addOrderBy('diagnosis.created_at', 'DESC')
-          .addOrderBy('diagnosis.id', 'DESC')
-          .getMany(),
-        this.followUpsRepository
-          .createQueryBuilder('followUp')
-          .distinctOn(['followUp.subject_patient_id'])
-          .where('followUp.subject_patient_id IN (:...patientIds)', {
-            patientIds,
-          })
-          .orderBy('followUp.subject_patient_id', 'ASC')
-          .addOrderBy(
-            'COALESCE(followUp.completed_at, followUp.scheduled_at, followUp.created_at)',
-            'DESC',
-          )
-          .addOrderBy('followUp.id', 'DESC')
-          .getMany(),
-      ]);
+    const [
+      primaryAddresses,
+      currentDiagnoses,
+      latestFollowUps,
+      patientDetails,
+      primaryCompanions,
+    ] = await Promise.all([
+      this.addressesRepository.find({
+        where: { patientId: In(patientIds), isPrimary: true, isActive: true },
+      }),
+      this.diagnosesRepository
+        .createQueryBuilder('diagnosis')
+        .leftJoinAndSelect('diagnosis.healthCenter', 'healthCenter')
+        .where('diagnosis.patient_id IN (:...patientIds)', { patientIds })
+        .andWhere('diagnosis.is_current = true')
+        .orderBy('diagnosis.patient_id', 'ASC')
+        .addOrderBy('diagnosis.created_at', 'DESC')
+        .addOrderBy('diagnosis.id', 'DESC')
+        .getMany(),
+      this.followUpsRepository
+        .createQueryBuilder('followUp')
+        .distinctOn(['followUp.subject_patient_id'])
+        .where('followUp.subject_patient_id IN (:...patientIds)', {
+          patientIds,
+        })
+        .orderBy('followUp.subject_patient_id', 'ASC')
+        .addOrderBy(
+          'COALESCE(followUp.completed_at, followUp.scheduled_at, followUp.created_at)',
+          'DESC',
+        )
+        .addOrderBy('followUp.id', 'DESC')
+        .getMany(),
+      this.detailsRepository.find({
+        where: { patientId: In(patientIds) },
+        select: { patientId: true, healthPhase: true },
+      }),
+      this.companionPatientsRepository
+        .createQueryBuilder('link')
+        .innerJoinAndSelect('link.companion', 'companion')
+        .where('link.patient_id IN (:...patientIds)', { patientIds })
+        .andWhere(
+          '(link.contact_role = :primaryRole OR link.is_primary_contact = true)',
+          { primaryRole: CompanionContactRole.PRIMARY },
+        )
+        .getMany(),
+    ]);
     const departments = new Map(
       primaryAddresses.map((address) => [
         address.patientId,
@@ -394,12 +414,25 @@ export class PatientsService {
     const followUps = new Map(
       latestFollowUps.map((followUp) => [followUp.subjectPatientId, followUp]),
     );
+    const healthPhases = new Map(
+      patientDetails.map((details) => [details.patientId, details.healthPhase]),
+    );
+    const primaryCompanionNames = new Map<string, string | null>();
+    for (const link of primaryCompanions) {
+      if (primaryCompanionNames.has(link.patientId)) continue;
+      primaryCompanionNames.set(
+        link.patientId,
+        link.companion?.fullName ?? null,
+      );
+    }
     return {
       data: data.map((patient) =>
         Object.assign(patient, {
           currentDepartment: departments.get(patient.id) ?? null,
           currentDiagnosis: diagnoses.get(patient.id) ?? null,
           latestFollowUp: followUps.get(patient.id) ?? null,
+          healthPhase: healthPhases.get(patient.id) ?? null,
+          primaryCompanionName: primaryCompanionNames.get(patient.id) ?? null,
         }),
       ),
       total,
@@ -429,6 +462,7 @@ export class PatientsService {
       sisAffiliations: PatientSisAffiliation[];
       symptomReports: PatientSymptomReport[];
       healthBackgroundAssessments: PatientHealthBackgroundAssessment[];
+      psychooncologySupportAssessments: PatientPsychooncologySupportAssessment[];
       companions: CompanionPatient[];
       healthPhaseHistory: PatientHealthPhaseHistory[];
     }
@@ -444,6 +478,7 @@ export class PatientsService {
       sisAffiliations,
       symptomReports,
       healthBackgroundAssessments,
+      psychooncologySupportAssessments,
       companions,
       healthPhaseHistory,
     ] = await Promise.all([
@@ -457,7 +492,6 @@ export class PatientsService {
         relations: { healthCenter: true },
         order: { createdAt: 'DESC', id: 'DESC' },
       }),
-      psychooncologySupportAssessments: PatientPsychooncologySupportAssessment[];
       this.treatmentsRepository.find({
         where: { patientId: id },
         relations: {
@@ -473,7 +507,6 @@ export class PatientsService {
       }),
       this.medicalAppointmentsRepository.find({
         where: { patientId: id },
-      psychooncologySupportAssessments,
         relations: { healthCenter: true },
         order: { createdAt: 'DESC' },
       }),
@@ -492,6 +525,10 @@ export class PatientsService {
           limitations: true,
           familyCancerHistory: true,
         },
+        order: { createdAt: 'DESC' },
+      }),
+      this.psychooncologySupportAssessmentsRepository.find({
+        where: { patientId: id },
         order: { createdAt: 'DESC' },
       }),
       this.companionPatientsRepository.find({
@@ -514,6 +551,7 @@ export class PatientsService {
       sisAffiliations,
       symptomReports,
       healthBackgroundAssessments,
+      psychooncologySupportAssessments,
       companions,
       healthPhaseHistory,
     });
@@ -522,10 +560,6 @@ export class PatientsService {
   async update(id: string, input: UpdatePatientDto): Promise<Patient> {
     const patient = await this.findById(id);
     Object.assign(patient, input);
-      this.psychooncologySupportAssessmentsRepository.find({
-        where: { patientId: id },
-        order: { createdAt: 'DESC' },
-      }),
     const updated = await this.patientsRepository.save(patient);
     await this.invalidations.markDirty(id);
     return updated;
@@ -546,7 +580,6 @@ export class PatientsService {
 
   async reactivate(id: string): Promise<Patient> {
     const patient = await this.findById(id);
-      psychooncologySupportAssessments,
     patient.activityStatus = PatientActivityStatus.REACTIVE;
     patient.deactivationReason = null;
     patient.deactivationReasonDetail = null;

@@ -432,11 +432,19 @@ export class PatientListItemResponseDto extends PatientResponseDto {
   @ApiProperty({ type: LatestFollowUpResponseDto, nullable: true })
   latestFollowUp!: LatestFollowUpResponseDto | null;
 
+  @ApiProperty({ enum: PatientHealthPhase, nullable: true })
+  healthPhase!: PatientHealthPhase | null;
+
+  @ApiProperty({ nullable: true })
+  primaryCompanionName!: string | null;
+
   static from(
     patient: Patient & {
       currentDiagnosis: PatientDiagnosis | null;
       currentDepartment: string | null;
       latestFollowUp: FollowUp | null;
+      healthPhase: PatientHealthPhase | null;
+      primaryCompanionName: string | null;
     },
   ): PatientListItemResponseDto {
     return {
@@ -448,6 +456,8 @@ export class PatientListItemResponseDto extends PatientResponseDto {
       latestFollowUp: patient.latestFollowUp
         ? LatestFollowUpResponseDto.from(patient.latestFollowUp)
         : null,
+      healthPhase: patient.healthPhase,
+      primaryCompanionName: patient.primaryCompanionName,
     };
   }
 }
@@ -465,6 +475,8 @@ export class PatientListResponseDto {
         currentDiagnosis: PatientDiagnosis | null;
         currentDepartment: string | null;
         latestFollowUp: FollowUp | null;
+        healthPhase: PatientHealthPhase | null;
+        primaryCompanionName: string | null;
       }
     >;
     total: number;

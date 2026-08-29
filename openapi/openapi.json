@@ -9877,6 +9877,19 @@
                 "$ref": "#/components/schemas/LatestFollowUpResponseDto"
               }
             ]
+          },
+          "healthPhase": {
+            "nullable": true,
+            "enum": [
+              "CANCER_DIAGNOSIS",
+              "ANNUAL_CHECKUP",
+              "SIGNS_AND_SYMPTOMS"
+            ],
+            "type": "string"
+          },
+          "primaryCompanionName": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -9900,7 +9913,9 @@
           "updatedAt",
           "currentDiagnosis",
           "currentDepartment",
-          "latestFollowUp"
+          "latestFollowUp",
+          "healthPhase",
+          "primaryCompanionName"
         ]
       },
       "PatientListResponseDto": {
@@ -11082,21 +11097,6 @@
           "createdAt"
         ]
       },
-      "PatientDetailsWithSummaryResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "fullName": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string",
-            "nullable": true,
-            "format": "email"
-          },
       "PatientPsychooncologySupportAssessmentResponseDto": {
         "type": "object",
         "properties": {
@@ -11145,6 +11145,21 @@
           "createdAt"
         ]
       },
+      "PatientDetailsWithSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
           "dni": {
             "type": "string",
             "nullable": true
@@ -11279,6 +11294,12 @@
               "$ref": "#/components/schemas/PatientHealthBackgroundAssessmentResponseDto"
             }
           },
+          "psychooncologySupportAssessments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientPsychooncologySupportAssessmentResponseDto"
+            }
+          },
           "companions": {
             "type": "array",
             "items": {
@@ -11294,12 +11315,6 @@
           "birthDate",
           "gender",
           "primaryPhone",
-          "psychooncologySupportAssessments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PatientPsychooncologySupportAssessmentResponseDto"
-            }
-          },
           "secondaryPhone",
           "hasWhatsapp",
           "role",
@@ -11320,6 +11335,7 @@
           "sisAffiliations",
           "symptomReports",
           "healthBackgroundAssessments",
+          "psychooncologySupportAssessments",
           "companions"
         ]
       },
@@ -11335,7 +11351,6 @@
             "maxLength": 50
           },
           "secondaryPhone": {
-          "psychooncologySupportAssessments",
             "type": "string",
             "maxLength": 50
           },
