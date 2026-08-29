@@ -87,6 +87,14 @@ export class PsychooncologyAppointment {
   @Column({ type: 'text', nullable: true }) recommendations!: string | null;
   @Column({ type: 'varchar', length: 30, nullable: true }) referral!:
     string | null;
+  @Column({ name: 'scheduling_notes', type: 'text', nullable: true })
+  schedulingNotes!: string | null;
+  @Column({ name: 'no_answer_note', type: 'text', nullable: true })
+  noAnswerNote!: string | null;
+  @Column({ name: 'satisfaction_rating', type: 'int', nullable: true })
+  satisfactionRating!: number | null;
+  @Column({ name: 'satisfaction_comment', type: 'text', nullable: true })
+  satisfactionComment!: string | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })

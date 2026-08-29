@@ -18,4 +18,5 @@ export class CreatePsychooncologyAppointmentDto {
   zoomLink?: string;
   @IsOptional() @IsBoolean() isAdditionalSession?: boolean;
   @IsIn(Object.values(AppointmentModality)) modality!: AppointmentModality;
+  @IsOptional() @IsString() schedulingNotes?: string;
 }

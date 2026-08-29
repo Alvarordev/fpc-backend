@@ -95,6 +95,18 @@ export class PsychooncologyAppointmentsService {
       if (!appointment)
         throw new NotFoundException('Psycho-oncology appointment not found');
       this.assertTransition(appointment, input, user);
+      this.assertZoomLinkModality(input);
+
+      if (
+        input.availabilityId &&
+        input.availabilityId !== appointment.availabilityId
+      ) {
+        await this.rescheduleAppointment(
+          manager,
+          appointment,
+          input.availabilityId,
+        );
+      }
 
       if (input.status === AppointmentStatus.CANCELLED) {
         const availability = await this.lockAvailability(
@@ -105,7 +117,19 @@ export class PsychooncologyAppointmentsService {
         await manager.getRepository(VolunteerAvailability).save(availability);
       }
 
-      Object.assign(appointment, input);
+      const { availabilityId: _availabilityId, ...updates } = input;
+      Object.assign(appointment, updates);
+
+      if (
+        input.availabilityId &&
+        appointment.status === AppointmentStatus.NO_ANSWER &&
+        input.status === undefined
+      ) {
+        appointment.status = AppointmentStatus.SCHEDULED;
+      }
+
+      if (input.modality === AppointmentModality.CALL) appointment.zoomLink = null;
+
       if (input.status === AppointmentStatus.COMPLETED)
         appointment.completedAt = new Date();
 
@@ -121,18 +145,49 @@ export class PsychooncologyAppointmentsService {
     input: UpdatePsychooncologyAppointmentDto,
     user: User,
   ) {
-    if (appointment.status !== AppointmentStatus.SCHEDULED)
+    if (
+      [AppointmentStatus.COMPLETED, AppointmentStatus.CANCELLED].includes(
+        appointment.status,
+      )
+    )
       throw new ConflictException('Closed appointments cannot be updated');
 
     if (user.role === UserRole.VOLUNTEER) {
-      const { status, ...updates } = input;
-      if (
-        status !== AppointmentStatus.NO_ANSWER ||
-        Object.values(updates).some((value) => value !== undefined)
-      )
+      if (input.status === AppointmentStatus.CANCELLED)
+        throw new ForbiddenException('Volunteers cannot cancel appointments');
+
+      const allowedKeys = new Set([
+        'status',
+        'availabilityId',
+        'modality',
+        'zoomLink',
+        'schedulingNotes',
+        'noAnswerNote',
+        'satisfactionRating',
+        'satisfactionComment',
+        'topicAddressed',
+        'sessionDetails',
+        'additionalObservations',
+        'recommendations',
+        'referral',
+      ]);
+      const disallowed = Object.entries(input).filter(
+        ([key, value]) => value !== undefined && !allowedKeys.has(key),
+      );
+      if (disallowed.length)
         throw new ForbiddenException(
-          'Volunteers can only mark their scheduled appointments as no answer',
+          'Volunteers have limited update permissions',
         );
+
+      if (
+        input.status &&
+        ![
+          AppointmentStatus.COMPLETED,
+          AppointmentStatus.NO_ANSWER,
+          AppointmentStatus.SCHEDULED,
+        ].includes(input.status)
+      )
+        throw new BadRequestException('Invalid appointment status transition');
       return;
     }
 
@@ -142,9 +197,40 @@ export class PsychooncologyAppointmentsService {
         AppointmentStatus.COMPLETED,
         AppointmentStatus.CANCELLED,
         AppointmentStatus.NO_ANSWER,
+        AppointmentStatus.SCHEDULED,
       ].includes(input.status)
     )
       throw new BadRequestException('Invalid appointment status transition');
+  }
+
+  private async rescheduleAppointment(
+    manager: EntityManager,
+    appointment: PsychooncologyAppointment,
+    nextAvailabilityId: string,
+  ) {
+    const nextAvailability = await this.lockAvailability(
+      manager,
+      nextAvailabilityId,
+    );
+    if (nextAvailability.volunteerId !== appointment.volunteerId)
+      throw new BadRequestException(
+        'The new availability slot must belong to the same volunteer',
+      );
+    if (nextAvailability.status !== AvailabilityStatus.AVAILABLE)
+      throw new ConflictException('Availability slot is already reserved');
+
+    const currentAvailability = await this.lockAvailability(
+      manager,
+      appointment.availabilityId,
+    );
+    currentAvailability.status = AvailabilityStatus.AVAILABLE;
+    await manager.getRepository(VolunteerAvailability).save(currentAvailability);
+
+    nextAvailability.status = AvailabilityStatus.RESERVED;
+    await manager.getRepository(VolunteerAvailability).save(nextAvailability);
+
+    appointment.availabilityId = nextAvailability.id;
+    appointment.scheduledAt = this.slotDate(nextAvailability);
   }
 
   private async reserveAndCreate(
@@ -154,7 +240,6 @@ export class PsychooncologyAppointmentsService {
   ) {
     this.assertZoomLinkModality(input);
 
-    // Lock the patient as well as the slot so concurrent bookings get sequential sessions.
     const patient = await manager
       .getRepository(Patient)
       .createQueryBuilder('patient')
@@ -213,11 +298,18 @@ export class PsychooncologyAppointmentsService {
         additionalObservations: null,
         recommendations: null,
         referral: null,
+        schedulingNotes: input.schedulingNotes ?? null,
+        noAnswerNote: null,
+        satisfactionRating: null,
+        satisfactionComment: null,
       }),
     );
   }
 
-  private assertZoomLinkModality(input: CreatePsychooncologyAppointmentDto) {
+  private assertZoomLinkModality(input: {
+    modality?: AppointmentModality;
+    zoomLink?: string | null;
+  }) {
     if (input.modality === AppointmentModality.CALL && input.zoomLink)
       throw new BadRequestException(
         'Zoom link is only allowed for video call appointments',

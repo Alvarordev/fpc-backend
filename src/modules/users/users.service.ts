@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -29,8 +30,20 @@ export class UsersService {
 
   async findAll(
     filters: ListUsersDto,
+    requester?: User,
   ): Promise<{ data: User[]; total: number }> {
+    if (
+      requester &&
+      requester.role !== UserRole.ADMIN &&
+      filters.role !== UserRole.FOUNDATION
+    ) {
+      throw new ForbiddenException(
+        'Only administrators can list users without a foundation role filter',
+      );
+    }
+
     const [data, total] = await this.usersRepository.findAndCount({
+      where: filters.role ? { role: filters.role } : undefined,
       order: { createdAt: 'DESC' },
       skip: filters.offset,
       take: filters.limit,

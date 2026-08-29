@@ -5573,6 +5573,20 @@
               "default": 0,
               "type": "number"
             }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ADMIN",
+                "FOUNDATION",
+                "AGENT",
+                "VOLUNTEER"
+              ]
+            }
           }
         ],
         "responses": {
@@ -12610,6 +12624,9 @@
               "CALL",
               "VIDEO_CALL"
             ]
+          },
+          "schedulingNotes": {
+            "type": "string"
           }
         },
         "required": [
@@ -12703,6 +12720,24 @@
             "type": "string",
             "nullable": true
           },
+          "schedulingNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "noAnswerNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "satisfactionRating": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 5
+          },
+          "satisfactionComment": {
+            "type": "string",
+            "nullable": true
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string"
@@ -12731,6 +12766,10 @@
           "additionalObservations",
           "recommendations",
           "referral",
+          "schedulingNotes",
+          "noAnswerNote",
+          "satisfactionRating",
+          "satisfactionComment",
           "createdAt",
           "updatedAt"
         ]
@@ -12747,11 +12786,42 @@
               "NO_ANSWER"
             ]
           },
+          "availabilityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modality": {
+            "type": "string",
+            "enum": [
+              "CALL",
+              "VIDEO_CALL"
+            ]
+          },
+          "zoomLink": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
           "patientEmail": {
             "type": "string"
           },
-          "isAdditionalSession": {
-            "type": "boolean"
+          "schedulingNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "noAnswerNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "satisfactionRating": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 5
+          },
+          "satisfactionComment": {
+            "type": "string",
+            "nullable": true
           },
           "topicAddressed": {
             "type": "string"

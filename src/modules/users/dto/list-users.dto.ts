@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { UserRole } from '../../../database/entities/user-role.enum';
 
 export class ListUsersDto {
   @ApiPropertyOptional({ type: Number, minimum: 1, maximum: 100, default: 20 })
@@ -17,4 +18,9 @@ export class ListUsersDto {
   @IsInt()
   @Min(0)
   offset = 0;
+
+  @ApiPropertyOptional({ enum: UserRole })
+  @IsOptional()
+  @IsEnum(UserRole)
+  role?: UserRole;
 }

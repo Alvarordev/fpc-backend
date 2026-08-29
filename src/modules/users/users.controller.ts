@@ -37,13 +37,16 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.AGENT, UserRole.FOUNDATION)
   @ApiOperation({ summary: 'List users' })
   @ApiOkResponse({ type: UserListResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  async findAll(@Query() query: ListUsersDto): Promise<UserListResponseDto> {
-    return UserListResponseDto.from(await this.usersService.findAll(query));
+  async findAll(
+    @Query() query: ListUsersDto,
+    @CurrentUser() user: User,
+  ): Promise<UserListResponseDto> {
+    return UserListResponseDto.from(await this.usersService.findAll(query, user));
   }
 
   @Get('me')

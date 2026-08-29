@@ -25,6 +25,11 @@ export class PsychooncologyAppointmentResponseDto {
   @ApiProperty({ nullable: true }) additionalObservations!: string | null;
   @ApiProperty({ nullable: true }) recommendations!: string | null;
   @ApiProperty({ nullable: true }) referral!: string | null;
+  @ApiProperty({ nullable: true }) schedulingNotes!: string | null;
+  @ApiProperty({ nullable: true }) noAnswerNote!: string | null;
+  @ApiProperty({ nullable: true, minimum: 1, maximum: 5 })
+  satisfactionRating!: number | null;
+  @ApiProperty({ nullable: true }) satisfactionComment!: string | null;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
   @ApiProperty({ format: 'date-time' }) updatedAt!: Date;
 }

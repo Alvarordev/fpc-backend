@@ -181,6 +181,10 @@ export class PsychooncologyAppointmentsController {
       additionalObservations: item.additionalObservations,
       recommendations: item.recommendations,
       referral: item.referral,
+      schedulingNotes: item.schedulingNotes,
+      noAnswerNote: item.noAnswerNote,
+      satisfactionRating: item.satisfactionRating,
+      satisfactionComment: item.satisfactionComment,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
     };
