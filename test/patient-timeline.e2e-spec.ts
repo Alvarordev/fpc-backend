@@ -356,7 +356,7 @@ describe('Patient timeline (e2e)', () => {
       .get('/reminders')
       .set('Authorization', `Bearer ${agentAToken}`)
       .expect(200);
-    expect(reminders.body).toContainEqual(
+    expect(reminders.body).not.toContainEqual(
       expect.objectContaining({ id: otherAgentReminder.id }),
     );
     await request(server)

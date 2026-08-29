@@ -3,6 +3,7 @@ import { EnrollmentContactSource } from './enrollment-contact-source.enum';
 import { EnrollmentsService } from './enrollments.service';
 import { PatientHealthPhase } from '../../database/entities/patient-health-phase.enum';
 import { CompanionContactRole } from '../../database/entities/companion-contact-role.enum';
+import { PatientDiagnosisMode } from '../../database/entities/patient-diagnosis-mode.enum';
 
 type PrivateValidationMethods = {
   validateClinicalBranches(input: CreateEnrollmentDto): void;
@@ -13,12 +14,15 @@ function validationMethods() {
   return EnrollmentsService.prototype as unknown as PrivateValidationMethods;
 }
 
-function validateClinical(input: Partial<CreateEnrollmentDto>) {
+function validateClinical(
+  input: Partial<CreateEnrollmentDto>,
+  healthPhase = PatientHealthPhase.SIGNS_AND_SYMPTOMS,
+) {
   const service = validationMethods();
   return () =>
     service.validateClinicalBranches({
       ...input,
-      healthPhase: PatientHealthPhase.SIGNS_AND_SYMPTOMS,
+      healthPhase,
     } as CreateEnrollmentDto);
 }
 
@@ -57,5 +61,29 @@ describe('EnrollmentsService phase-one validation', () => {
         },
       ]),
     ).toThrow('contacts may contain the CALLER source only once');
+  });
+
+  it('requires at least one diagnosis for the cancer diagnosis phase', () => {
+    expect(validateClinical({}, PatientHealthPhase.CANCER_DIAGNOSIS)).toThrow(
+      'Cancer diagnosis enrollment requires at least one diagnosis',
+    );
+  });
+
+  it('requires every enrollment treatment to reference a submitted diagnosis', () => {
+    expect(
+      validateClinical(
+        {
+          diagnoses: [
+            {
+              clientRef: 'diagnosis-1',
+              diagnosis: 'Breast cancer',
+              mode: PatientDiagnosisMode.PARALLEL,
+            },
+          ],
+          treatments: [{ treatmentType: 'Chemotherapy' }],
+        },
+        PatientHealthPhase.CANCER_DIAGNOSIS,
+      ),
+    ).toThrow('Every enrollment treatment requires a diagnosisRef');
   });
 });

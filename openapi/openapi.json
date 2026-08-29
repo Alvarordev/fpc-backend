@@ -7666,6 +7666,11 @@
           },
           "changeReason": {
             "type": "string"
+          },
+          "clientRef": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Temporary client reference used to associate enrollment treatments; required for diagnoses[] and omitted only by the legacy diagnosis field"
           }
         },
         "required": [
@@ -7817,6 +7822,11 @@
             "items": {
               "$ref": "#/components/schemas/CreateTreatmentMedicationDto"
             }
+          },
+          "diagnosisRef": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Temporary clientRef of the diagnosis for this treatment; required when diagnoses[] is used and omitted only for the legacy diagnosis field"
           }
         },
         "required": [
@@ -8192,6 +8202,12 @@
           },
           "diagnosis": {
             "$ref": "#/components/schemas/EnrollmentDiagnosisDto"
+          },
+          "diagnoses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentDiagnosisDto"
+            }
           },
           "treatments": {
             "type": "array",

@@ -253,6 +253,7 @@ describe('Patient summaries (e2e)', () => {
         affiliationType: 'SELF',
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL', agentId: assignedAgentId },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(201);
 

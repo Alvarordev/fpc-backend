@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsDateString,
   IsIn,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
@@ -75,11 +76,33 @@ export class CreateEnrollmentFamilyTalkInterestDto {
 export class EnrollmentDiagnosisDto extends OmitType(
   CreatePatientDiagnosisDto,
   ['followUpId'] as const,
-) {}
+) {
+  @ApiProperty({
+    required: false,
+    description:
+      'Temporary client reference used to associate enrollment treatments; required for diagnoses[] and omitted only by the legacy diagnosis field',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  clientRef?: string;
+}
 export class EnrollmentTreatmentDto extends OmitType(
   CreatePatientTreatmentDto,
   ['followUpId', 'diagnosisId'] as const,
-) {}
+) {
+  @ApiProperty({
+    required: false,
+    description:
+      'Temporary clientRef of the diagnosis for this treatment; required when diagnoses[] is used and omitted only for the legacy diagnosis field',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  diagnosisRef?: string;
+}
 export class EnrollmentInsuranceDto extends OmitType(
   CreatePatientInsuranceDto,
   ['followUpId'] as const,
@@ -143,6 +166,11 @@ export class CreateEnrollmentDto {
   @ValidateNested()
   @Type(() => EnrollmentDiagnosisDto)
   diagnosis?: EnrollmentDiagnosisDto;
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EnrollmentDiagnosisDto)
+  diagnoses?: EnrollmentDiagnosisDto[];
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })

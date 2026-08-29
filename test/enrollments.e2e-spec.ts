@@ -292,6 +292,7 @@ describe('Enrollment wizard (e2e)', () => {
         affiliationType: 'SELF',
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(201);
     const enrollment = enrollmentResponse.body as Enrollment;
@@ -337,6 +338,7 @@ describe('Enrollment wizard (e2e)', () => {
         affiliationType: 'SELF',
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(201);
     const enrollment = enrollmentResponse.body as Enrollment;
@@ -381,6 +383,7 @@ describe('Enrollment wizard (e2e)', () => {
         affiliationType: 'SELF',
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(201);
     const enrollment = enrollmentResponse.body as Enrollment;
@@ -411,6 +414,7 @@ describe('Enrollment wizard (e2e)', () => {
         affiliationType: 'FAMILY_FRIEND',
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(201);
     const firstEnrollmentBody = firstEnrollment.body as Enrollment;
@@ -428,6 +432,7 @@ describe('Enrollment wizard (e2e)', () => {
         affiliationType: 'FAMILY_FRIEND',
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(201);
     const secondEnrollmentBody = secondEnrollment.body as Enrollment;
@@ -457,6 +462,7 @@ describe('Enrollment wizard (e2e)', () => {
         affiliationType: 'SELF',
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(409);
   });
@@ -480,6 +486,7 @@ describe('Enrollment wizard (e2e)', () => {
         affiliationType: 'FAMILY_FRIEND',
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(400);
   });
@@ -503,74 +510,100 @@ describe('Enrollment wizard (e2e)', () => {
         affiliationType: 'SELF',
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(400);
   });
 
-  it('uses the newest active diagnosis for enrollment treatment and rejects when absent', async () => {
-    const patient = await dataSource.getRepository(Patient).save({
-      fullName: 'Existing Diagnosis Patient',
-      primaryPhone: '12',
-      email: 'p7-existing-diagnosis@example.test',
-      role: PatientRole.PATIENT,
-      status: PatientStatus.UNENROLLED,
-    });
-    const diagnosisFollowUp = await dataSource.getRepository(FollowUp).save({
-      subjectPatientId: patient.id,
-      interlocutorId: patient.id,
-      agentId: agent.id,
-      type: FollowUpType.CALL,
-      status: FollowUpStatus.COMPLETED,
-      purpose: FollowUpPurpose.FIRST_CONTACT,
-    });
-    await dataSource.getRepository(PatientDiagnosis).save({
-      patientId: patient.id,
-      followUpId: diagnosisFollowUp.id,
-      diagnosis: 'Existing cancer diagnosis',
-      isCurrent: true,
-      createdAt: new Date('2026-01-01T00:00:00.000Z'),
-    });
-    const newestDiagnosis = await dataSource
-      .getRepository(PatientDiagnosis)
-      .save({
-        patientId: patient.id,
-        followUpId: diagnosisFollowUp.id,
-        diagnosis: 'Newest active cancer diagnosis',
-        isCurrent: true,
-        createdAt: new Date('2026-01-02T00:00:00.000Z'),
-      });
-
-    await request(server)
+  it('creates multiple diagnoses and associates each enrollment treatment', async () => {
+    const response = await request(server)
       .post('/enrollments')
       .set('Authorization', `Bearer ${token}`)
       .send({
-        patientId: patient.id,
+        patient: {
+          fullName: 'Multiple Clinical Records Patient',
+          primaryPhone: '12',
+          email: 'p7-multiple-records@example.test',
+        },
         affiliationType: 'SELF',
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
-        treatments: [{ treatmentType: 'Existing diagnosis treatment' }],
+        diagnoses: [
+          {
+            clientRef: 'breast-diagnosis',
+            diagnosis: 'Breast cancer',
+            mode: 'PARALLEL',
+          },
+          {
+            clientRef: 'thyroid-diagnosis',
+            diagnosis: 'Thyroid cancer',
+            mode: 'PARALLEL',
+          },
+        ],
+        treatments: [
+          {
+            diagnosisRef: 'breast-diagnosis',
+            treatmentType: 'Chemotherapy',
+          },
+          {
+            diagnosisRef: 'breast-diagnosis',
+            treatmentType: 'Radiotherapy',
+          },
+          {
+            diagnosisRef: 'thyroid-diagnosis',
+            treatmentType: 'Surgery',
+          },
+        ],
       })
       .expect(201);
-
-    await expect(
-      dataSource.getRepository(PatientTreatment).findOneByOrFail({
-        patientId: patient.id,
+    const enrollment = response.body as Enrollment;
+    const [diagnoses, treatments] = await Promise.all([
+      dataSource.getRepository(PatientDiagnosis).find({
+        where: { patientId: enrollment.patientId },
+        order: { diagnosis: 'ASC' },
       }),
-    ).resolves.toMatchObject({ diagnosisId: newestDiagnosis.id });
+      dataSource.getRepository(PatientTreatment).find({
+        where: { patientId: enrollment.patientId },
+        order: { treatmentType: 'ASC' },
+      }),
+    ]);
 
+    expect(diagnoses).toHaveLength(2);
+    expect(treatments).toHaveLength(3);
+    const diagnosisByName = new Map(
+      diagnoses.map((diagnosis) => [diagnosis.diagnosis, diagnosis.id]),
+    );
+    expect(treatments).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          treatmentType: 'Chemotherapy',
+          diagnosisId: diagnosisByName.get('Breast cancer'),
+        }),
+        expect.objectContaining({
+          treatmentType: 'Radiotherapy',
+          diagnosisId: diagnosisByName.get('Breast cancer'),
+        }),
+        expect.objectContaining({
+          treatmentType: 'Surgery',
+          diagnosisId: diagnosisByName.get('Thyroid cancer'),
+        }),
+      ]),
+    );
+  });
+
+  it('requires a diagnosis for a cancer diagnosis enrollment', async () => {
     await request(server)
       .post('/enrollments')
       .set('Authorization', `Bearer ${token}`)
       .send({
         patient: {
-          fullName: 'Missing Diagnosis Patient',
+          fullName: 'Missing Cancer Diagnosis Patient',
           primaryPhone: '13',
-          email: 'p7-missing-diagnosis@example.test',
+          email: 'p7-missing-cancer-diagnosis@example.test',
         },
         affiliationType: 'SELF',
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
-        treatments: [{ treatmentType: 'Missing diagnosis treatment' }],
       })
       .expect(400);
   });
@@ -589,7 +622,20 @@ describe('Enrollment wizard (e2e)', () => {
         healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
         insurance: { insuranceType: 'NONE' },
-        treatments: [{ treatmentType: 'This has no diagnosis' }],
+        diagnoses: [
+          {
+            clientRef: 'rollback-diagnosis',
+            diagnosis: 'Rollback diagnosis',
+            mode: 'PARALLEL',
+          },
+        ],
+        treatments: [
+          {
+            diagnosisRef: 'rollback-diagnosis',
+            treatmentType: 'This treatment should roll back',
+            isReferred: true,
+          },
+        ],
       })
       .expect(400);
 

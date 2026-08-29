@@ -82,6 +82,7 @@ export class EnrollmentsService {
         insurance,
         sisAffiliation,
         diagnosis,
+        diagnoses,
         treatments,
         medicalAppointments,
         symptomReport,
@@ -318,32 +319,39 @@ export class EnrollmentsService {
           { ...sisAffiliation, followUpId: followUp.id },
           manager,
         );
-      const treatmentDiagnosis = diagnosis
-        ? await this.diagnoses.create(
-            patient.id,
-            { ...diagnosis, followUpId: followUp.id },
-            manager,
-          )
-        : treatments?.length
-          ? await manager.getRepository(PatientDiagnosis).findOne({
-              where: { patientId: patient.id, isCurrent: true },
-              order: { createdAt: 'DESC', id: 'DESC' },
-            })
-          : null;
-      if (treatments?.length && !treatmentDiagnosis)
-        throw new BadRequestException(
-          'Enrollment treatment requires a current diagnosis',
+      const createdDiagnoses = new Map<string, PatientDiagnosis>();
+      const createdDiagnosisList: PatientDiagnosis[] = [];
+      for (const diagnosisInput of diagnoses ??
+        (diagnosis ? [diagnosis] : [])) {
+        const { clientRef, ...diagnosisValues } = diagnosisInput;
+        const createdDiagnosis = await this.diagnoses.create(
+          patient.id,
+          { ...diagnosisValues, followUpId: followUp.id },
+          manager,
         );
-      for (const treatment of treatments ?? [])
+        createdDiagnosisList.push(createdDiagnosis);
+        if (clientRef) createdDiagnoses.set(clientRef, createdDiagnosis);
+      }
+      for (const treatment of treatments ?? []) {
+        const treatmentDiagnosis = diagnoses
+          ? createdDiagnoses.get(treatment.diagnosisRef ?? '')
+          : createdDiagnosisList[0];
+        if (!treatmentDiagnosis)
+          throw new BadRequestException(
+            'Enrollment treatment requires a valid diagnosis reference',
+          );
+        const treatmentValues = { ...treatment };
+        delete treatmentValues.diagnosisRef;
         await this.treatments.create(
           patient.id,
           {
-            ...treatment,
+            ...treatmentValues,
             followUpId: followUp.id,
-            diagnosisId: treatmentDiagnosis!.id,
+            diagnosisId: treatmentDiagnosis.id,
           },
           manager,
         );
+      }
       for (const appointment of medicalAppointments ?? [])
         await this.appointments.create(
           patient.id,
@@ -398,7 +406,10 @@ export class EnrollmentsService {
           dni: patient.dni ?? '',
           phone: patient.primaryPhone,
           email: patient.email,
-          diagnosis: diagnosis?.diagnosis ?? 'En evaluación',
+          diagnosis:
+            diagnosis?.diagnosis ??
+            diagnoses?.map(({ diagnosis: value }) => value).join(', ') ??
+            'En evaluación',
           // patient.role was just set to PATIENT above (the companion, if
           // any, is enrolled separately and never gets its own Registro).
           condition: 'paciente',
@@ -518,6 +529,43 @@ export class EnrollmentsService {
 
   private validateClinicalBranches(input: CreateEnrollmentDto) {
     const { symptomReport, medicalAppointments, healthPhase } = input;
+    if (input.diagnosis && input.diagnoses)
+      throw new BadRequestException(
+        'Provide either diagnosis or diagnoses, not both',
+      );
+    if (
+      healthPhase === PatientHealthPhase.CANCER_DIAGNOSIS &&
+      !input.diagnosis &&
+      !input.diagnoses?.length
+    )
+      throw new BadRequestException(
+        'Cancer diagnosis enrollment requires at least one diagnosis',
+      );
+    if (input.diagnoses) {
+      const refs = input.diagnoses.map(({ clientRef }) => clientRef);
+      if (refs.some((ref) => !ref))
+        throw new BadRequestException(
+          'Every enrollment diagnosis requires a clientRef',
+        );
+      if (new Set(refs).size !== refs.length)
+        throw new BadRequestException(
+          'Enrollment diagnosis clientRefs must be unique',
+        );
+      for (const treatment of input.treatments ?? [])
+        if (!treatment.diagnosisRef)
+          throw new BadRequestException(
+            'Every enrollment treatment requires a diagnosisRef',
+          );
+      const diagnosisRefs = new Set(refs);
+      for (const treatment of input.treatments ?? [])
+        if (
+          treatment.diagnosisRef &&
+          !diagnosisRefs.has(treatment.diagnosisRef)
+        )
+          throw new BadRequestException(
+            'Enrollment treatment diagnosisRef does not match a diagnosis',
+          );
+    }
     if (healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS) {
       if (!symptomReport)
         throw new BadRequestException(
@@ -542,7 +590,7 @@ export class EnrollmentsService {
     }
     if (
       healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS &&
-      (input.diagnosis || input.treatments?.length)
+      (input.diagnosis || input.diagnoses?.length || input.treatments?.length)
     )
       throw new BadRequestException(
         'Signs and symptoms enrollment cannot create formal diagnoses or treatments',
