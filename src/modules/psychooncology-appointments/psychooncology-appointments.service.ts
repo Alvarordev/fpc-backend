@@ -105,6 +105,7 @@ export class PsychooncologyAppointmentsService {
           manager,
           appointment,
           input.availabilityId,
+          user,
         );
       }
 
@@ -117,7 +118,8 @@ export class PsychooncologyAppointmentsService {
         await manager.getRepository(VolunteerAvailability).save(availability);
       }
 
-      const { availabilityId: _availabilityId, ...updates } = input;
+      const updates = { ...input };
+      delete updates.availabilityId;
       Object.assign(appointment, updates);
 
       if (
@@ -128,7 +130,9 @@ export class PsychooncologyAppointmentsService {
         appointment.status = AppointmentStatus.SCHEDULED;
       }
 
-      if (input.modality === AppointmentModality.CALL) appointment.zoomLink = null;
+      if (input.modality === AppointmentModality.CALL) {
+        appointment.zoomLink = null;
+      }
 
       if (input.status === AppointmentStatus.COMPLETED)
         appointment.completedAt = new Date();
@@ -207,29 +211,37 @@ export class PsychooncologyAppointmentsService {
     manager: EntityManager,
     appointment: PsychooncologyAppointment,
     nextAvailabilityId: string,
+    user: User,
   ) {
     const nextAvailability = await this.lockAvailability(
       manager,
       nextAvailabilityId,
     );
-    if (nextAvailability.volunteerId !== appointment.volunteerId)
-      throw new BadRequestException(
-        'The new availability slot must belong to the same volunteer',
-      );
     if (nextAvailability.status !== AvailabilityStatus.AVAILABLE)
       throw new ConflictException('Availability slot is already reserved');
+
+    const nextVolunteer = await manager.getRepository(Volunteer).findOne({
+      where: { id: nextAvailability.volunteerId },
+    });
+    if (!nextVolunteer) throw new NotFoundException('Volunteer not found');
+    if (!nextVolunteer.isActive)
+      throw new ConflictException('Volunteer is inactive');
+    await this.assertScheduleScope(nextAvailability.volunteerId, user);
 
     const currentAvailability = await this.lockAvailability(
       manager,
       appointment.availabilityId,
     );
     currentAvailability.status = AvailabilityStatus.AVAILABLE;
-    await manager.getRepository(VolunteerAvailability).save(currentAvailability);
+    await manager
+      .getRepository(VolunteerAvailability)
+      .save(currentAvailability);
 
     nextAvailability.status = AvailabilityStatus.RESERVED;
     await manager.getRepository(VolunteerAvailability).save(nextAvailability);
 
     appointment.availabilityId = nextAvailability.id;
+    appointment.volunteerId = nextAvailability.volunteerId;
     appointment.scheduledAt = this.slotDate(nextAvailability);
   }
 

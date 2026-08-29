@@ -1,5 +1,16 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
-import { AppointmentModality } from '../../database/entities/psychooncology-appointment.entity';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
+import {
+  AppointmentModality,
+  AppointmentStatus,
+  PsychooncologyAppointment,
+} from '../../database/entities/psychooncology-appointment.entity';
+import { AvailabilityStatus } from '../../database/entities/volunteer-availability.entity';
+import { UserRole } from '../../database/entities/user-role.enum';
+import { Volunteer } from '../../database/entities/volunteer.entity';
 import { PsychooncologyAppointmentsService } from './psychooncology-appointments.service';
 
 describe('PsychooncologyAppointmentsService', () => {
@@ -53,5 +64,121 @@ describe('PsychooncologyAppointmentsService', () => {
         zoomLink: 'https://zoom.us/j/123456789',
       }),
     ).not.toThrow();
+  });
+
+  it('allows staff to move an appointment to another active volunteer', async () => {
+    const service = Object.create(
+      PsychooncologyAppointmentsService.prototype,
+    ) as PsychooncologyAppointmentsService;
+    const nextAvailability = {
+      id: 'new-slot',
+      volunteerId: 'new-volunteer',
+      date: '2099-01-01',
+      startTime: '10:00:00',
+      status: AvailabilityStatus.AVAILABLE,
+    };
+    const currentAvailability = {
+      id: 'old-slot',
+      volunteerId: 'old-volunteer',
+      status: AvailabilityStatus.RESERVED,
+    };
+    const lockAvailability = jest
+      .fn()
+      .mockResolvedValueOnce(nextAvailability)
+      .mockResolvedValueOnce(currentAvailability);
+    const availabilityRepository = {
+      save: jest.fn().mockResolvedValue(undefined),
+    };
+    const volunteerRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 'new-volunteer',
+        isActive: true,
+      }),
+    };
+    const manager = {
+      getRepository: jest.fn((entity: unknown) =>
+        entity === Volunteer ? volunteerRepository : availabilityRepository,
+      ),
+    };
+    (
+      service as unknown as { lockAvailability: typeof lockAvailability }
+    ).lockAvailability = lockAvailability;
+
+    const appointment = {
+      availabilityId: 'old-slot',
+      volunteerId: 'old-volunteer',
+      scheduledAt: new Date('2098-01-01T10:00:00Z'),
+    } as PsychooncologyAppointment;
+    const reschedule = (
+      service as unknown as {
+        rescheduleAppointment: (
+          manager: unknown,
+          appointment: PsychooncologyAppointment,
+          nextAvailabilityId: string,
+          user: unknown,
+        ) => Promise<void>;
+      }
+    ).rescheduleAppointment.bind(service);
+
+    await reschedule(manager, appointment, 'new-slot', {
+      role: UserRole.AGENT,
+    });
+
+    expect(appointment.volunteerId).toBe('new-volunteer');
+    expect(appointment.availabilityId).toBe('new-slot');
+    expect(appointment.scheduledAt).toEqual(new Date('2099-01-01T10:00:00Z'));
+    expect(availabilityRepository.save).toHaveBeenCalledTimes(2);
+  });
+
+  it('prevents a volunteer from moving an appointment to another volunteer', async () => {
+    const service = Object.create(
+      PsychooncologyAppointmentsService.prototype,
+    ) as PsychooncologyAppointmentsService;
+    const lockAvailability = jest.fn().mockResolvedValue({
+      id: 'new-slot',
+      volunteerId: 'other-volunteer',
+      date: '2099-01-01',
+      startTime: '10:00:00',
+      status: AvailabilityStatus.AVAILABLE,
+    });
+    const volunteerRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 'other-volunteer',
+        isActive: true,
+      }),
+    };
+    const manager = {
+      getRepository: jest.fn().mockReturnValue(volunteerRepository),
+    };
+    Object.assign(service, {
+      lockAvailability,
+      access: {
+        volunteerIdFor: jest.fn().mockResolvedValue('own-volunteer'),
+      },
+    });
+
+    const reschedule = (
+      service as unknown as {
+        rescheduleAppointment: (
+          manager: unknown,
+          appointment: PsychooncologyAppointment,
+          nextAvailabilityId: string,
+          user: unknown,
+        ) => Promise<void>;
+      }
+    ).rescheduleAppointment.bind(service);
+
+    await expect(
+      reschedule(
+        manager,
+        {
+          availabilityId: 'old-slot',
+          volunteerId: 'own-volunteer',
+          status: AppointmentStatus.SCHEDULED,
+        } as PsychooncologyAppointment,
+        'new-slot',
+        { role: UserRole.VOLUNTEER },
+      ),
+    ).rejects.toThrow(ForbiddenException);
   });
 });
