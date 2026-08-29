@@ -27,6 +27,8 @@ import { PatientStatus } from '../../../database/entities/patient-status.enum';
 import { Patient } from '../../../database/entities/patient.entity';
 import { DurationResponseDto } from '../../../shared/duration/duration-response.dto';
 import { CompanionContactRole } from '../../../database/entities/companion-contact-role.enum';
+import { PatientPsychooncologySupportAssessment } from '../../../database/entities/patient-psychooncology-support-assessment.entity';
+import { PatientPsychooncologySupportAssessmentResponseDto } from '../clinical/psychooncology-support/dto/patient-psychooncology-support-assessment-response.dto';
 
 export class PatientHealthPhaseHistoryResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -286,6 +288,12 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
   })
   healthBackgroundAssessments!: PatientHealthBackgroundAssessmentResponseDto[];
 
+  @ApiProperty({
+    type: PatientPsychooncologySupportAssessmentResponseDto,
+    isArray: true,
+  })
+  psychooncologySupportAssessments!: PatientPsychooncologySupportAssessmentResponseDto[];
+
   @ApiProperty({ type: () => CompanionPatientResponseDto, isArray: true })
   companions!: CompanionPatientResponseDto[];
 
@@ -299,6 +307,7 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
       sisAffiliations: PatientSisAffiliation[];
       symptomReports: PatientSymptomReport[];
       healthBackgroundAssessments: PatientHealthBackgroundAssessment[];
+      psychooncologySupportAssessments: PatientPsychooncologySupportAssessment[];
       companions: CompanionPatient[];
       healthPhaseHistory: PatientHealthPhaseHistory[];
     },
@@ -334,6 +343,10 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
         (assessment) =>
           PatientHealthBackgroundAssessmentResponseDto.from(assessment),
       ),
+      psychooncologySupportAssessments:
+        patient.psychooncologySupportAssessments.map((assessment) =>
+          PatientPsychooncologySupportAssessmentResponseDto.from(assessment),
+        ),
       companions: patient.companions.map((companion) =>
         CompanionPatientResponseDto.from(companion),
       ),

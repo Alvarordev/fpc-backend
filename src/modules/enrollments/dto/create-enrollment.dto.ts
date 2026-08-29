@@ -31,6 +31,7 @@ import {
 } from '../../../database/entities/patient-health-phase.enum';
 import { CompanionContactRole } from '../../../database/entities/companion-contact-role.enum';
 import { EnrollmentContactSource } from '../enrollment-contact-source.enum';
+import { CreatePatientPsychooncologySupportAssessmentDto } from '../../patients/clinical/psychooncology-support/dto/create-patient-psychooncology-support-assessment.dto';
 
 export class EnrollmentContactPersonDto extends OmitType(CreateCompanionDto, [
   'email',
@@ -126,6 +127,10 @@ export class EnrollmentHealthBackgroundAssessmentDto extends OmitType(
   CreatePatientHealthBackgroundAssessmentDto,
   ['followUpId'] as const,
 ) {}
+export class EnrollmentPsychooncologySupportAssessmentDto extends OmitType(
+  CreatePatientPsychooncologySupportAssessmentDto,
+  ['followUpId'] as const,
+) {}
 
 export class CreateEnrollmentDto {
   @IsOptional() @IsUUID() patientId?: string;
@@ -194,6 +199,10 @@ export class CreateEnrollmentDto {
   @ValidateNested()
   @Type(() => EnrollmentHealthBackgroundAssessmentDto)
   healthBackgroundAssessment?: EnrollmentHealthBackgroundAssessmentDto;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentPsychooncologySupportAssessmentDto)
+  psychooncologySupportAssessment?: EnrollmentPsychooncologySupportAssessmentDto;
   @IsOptional() @IsBoolean() currentlyAttendingConsultations?: boolean;
   @IsOptional() @IsBoolean() currentlyReceivingTreatment?: boolean;
   @IsOptional() @IsString() @MaxLength(50) entrySource?: string;

@@ -96,7 +96,7 @@ describe('PatientsService.upsertDetails health phase history', () => {
       { findOne: jest.fn() },
       detailsRepository,
       historyRepository,
-      ...Array.from({ length: 11 }, () => ({})),
+      ...Array.from({ length: 12 }, () => ({})),
       {
         getRepository: jest.fn().mockReturnValue(healthCentersRepository),
         transaction: jest.fn((callback: (manager: unknown) => unknown) =>

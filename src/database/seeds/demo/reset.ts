@@ -12,6 +12,7 @@ const DOMAIN_TABLES = [
   'alert_events',
   'alerts',
   'reminders',
+  'patient_psychooncology_support_assessments',
   'psychooncology_appointments',
   'volunteer_availability',
   'enrollment_family_talk_interests',

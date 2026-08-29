@@ -4925,6 +4925,52 @@
         ]
       }
     },
+    "/patients/{patientId}/psychooncology-support-assessments": {
+      "get": {
+        "operationId": "PatientPsychooncologySupportAssessmentsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientPsychooncologySupportAssessmentResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patient psycho-oncology support assessments",
+        "tags": [
+          "Patient psycho-oncology support assessments"
+        ]
+      }
+    },
     "/psychooncology-appointments": {
       "post": {
         "operationId": "PsychooncologyAppointmentsController_create",
@@ -8126,6 +8172,26 @@
           }
         }
       },
+      "EnrollmentPsychooncologySupportAssessmentDto": {
+        "type": "object",
+        "properties": {
+          "excessiveWorry": {
+            "type": "boolean"
+          },
+          "emotionalDistressScore": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "preferredModality": {
+            "enum": [
+              "CALL",
+              "VIDEO_CALL"
+            ],
+            "type": "string"
+          }
+        }
+      },
       "CreateEnrollmentFamilyTalkInterestDto": {
         "type": "object",
         "properties": {
@@ -8232,6 +8298,9 @@
           },
           "healthBackgroundAssessment": {
             "$ref": "#/components/schemas/EnrollmentHealthBackgroundAssessmentDto"
+          },
+          "psychooncologySupportAssessment": {
+            "$ref": "#/components/schemas/EnrollmentPsychooncologySupportAssessmentDto"
           },
           "currentlyAttendingConsultations": {
             "type": "boolean"
@@ -11028,6 +11097,54 @@
             "nullable": true,
             "format": "email"
           },
+      "PatientPsychooncologySupportAssessmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "excessiveWorry": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "emotionalDistressScore": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 10
+          },
+          "preferredModality": {
+            "nullable": true,
+            "enum": [
+              "CALL",
+              "VIDEO_CALL"
+            ],
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "excessiveWorry",
+          "emotionalDistressScore",
+          "preferredModality",
+          "createdAt"
+        ]
+      },
           "dni": {
             "type": "string",
             "nullable": true
@@ -11177,6 +11294,12 @@
           "birthDate",
           "gender",
           "primaryPhone",
+          "psychooncologySupportAssessments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientPsychooncologySupportAssessmentResponseDto"
+            }
+          },
           "secondaryPhone",
           "hasWhatsapp",
           "role",
@@ -11212,6 +11335,7 @@
             "maxLength": 50
           },
           "secondaryPhone": {
+          "psychooncologySupportAssessments",
             "type": "string",
             "maxLength": 50
           },

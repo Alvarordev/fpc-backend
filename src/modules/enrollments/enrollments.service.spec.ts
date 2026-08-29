@@ -4,6 +4,7 @@ import { EnrollmentsService } from './enrollments.service';
 import { PatientHealthPhase } from '../../database/entities/patient-health-phase.enum';
 import { CompanionContactRole } from '../../database/entities/companion-contact-role.enum';
 import { PatientDiagnosisMode } from '../../database/entities/patient-diagnosis-mode.enum';
+import { AffiliationType } from '../../database/entities/enrollment.entity';
 
 type PrivateValidationMethods = {
   validateClinicalBranches(input: CreateEnrollmentDto): void;
@@ -85,5 +86,50 @@ describe('EnrollmentsService phase-one validation', () => {
         PatientHealthPhase.CANCER_DIAGNOSIS,
       ),
     ).toThrow('Every enrollment treatment requires a diagnosisRef');
+  });
+
+  it('rejects psycho-oncology support answers for signs enrollment', () => {
+    expect(
+      validateClinical({
+        affiliationType: AffiliationType.SELF,
+        psychooncologySupportAssessment: { excessiveWorry: true },
+      }),
+    ).toThrow(
+      'Psycho-oncology support assessment requires a self enrollment with a cancer diagnosis',
+    );
+  });
+
+  it('rejects psycho-oncology support answers from a third party', () => {
+    expect(
+      validateClinical(
+        {
+          affiliationType: AffiliationType.FAMILY_FRIEND,
+          diagnosis: {
+            diagnosis: 'Breast cancer',
+            mode: PatientDiagnosisMode.PARALLEL,
+          },
+          psychooncologySupportAssessment: {},
+        },
+        PatientHealthPhase.CANCER_DIAGNOSIS,
+      ),
+    ).toThrow(
+      'Psycho-oncology support assessment requires a self enrollment with a cancer diagnosis',
+    );
+  });
+
+  it('accepts optional psycho-oncology support answers from the patient', () => {
+    expect(
+      validateClinical(
+        {
+          affiliationType: AffiliationType.SELF,
+          diagnosis: {
+            diagnosis: 'Breast cancer',
+            mode: PatientDiagnosisMode.PARALLEL,
+          },
+          psychooncologySupportAssessment: {},
+        },
+        PatientHealthPhase.CANCER_DIAGNOSIS,
+      ),
+    ).not.toThrow();
   });
 });

@@ -57,6 +57,9 @@ import { PatientDocument } from '../../database/entities/patient-document.entity
 import { PatientDocumentsController } from './documents/patient-documents.controller';
 import { PatientDocumentsService } from './documents/patient-documents.service';
 import { PatientDocumentStorageModule } from '../../integrations/storage/patient-document-storage.module';
+import { PatientPsychooncologySupportAssessment } from '../../database/entities/patient-psychooncology-support-assessment.entity';
+import { PatientPsychooncologySupportAssessmentsController } from './clinical/psychooncology-support/patient-psychooncology-support-assessments.controller';
+import { PatientPsychooncologySupportAssessmentsService } from './clinical/psychooncology-support/patient-psychooncology-support-assessments.service';
 
 @Module({
   imports: [
@@ -84,6 +87,7 @@ import { PatientDocumentStorageModule } from '../../integrations/storage/patient
       PatientFamilyCancerHistory,
       PatientDiagnosticStatusEvent,
       PatientDocument,
+      PatientPsychooncologySupportAssessment,
     ]),
     PatientSummariesModule,
     PatientAccessModule,
@@ -104,6 +108,7 @@ import { PatientDocumentStorageModule } from '../../integrations/storage/patient
     PatientHealthBackgroundAssessmentsController,
     PatientDiagnosticStatusesController,
     PatientDocumentsController,
+    PatientPsychooncologySupportAssessmentsController,
   ],
   providers: [
     PatientsService,
@@ -121,6 +126,7 @@ import { PatientDocumentStorageModule } from '../../integrations/storage/patient
     PatientHealthBackgroundAssessmentsService,
     PatientDiagnosticStatusesService,
     PatientDocumentsService,
+    PatientPsychooncologySupportAssessmentsService,
   ],
   exports: [
     PatientsService,
@@ -137,6 +143,7 @@ import { PatientDocumentStorageModule } from '../../integrations/storage/patient
     PatientHealthBackgroundAssessmentsService,
     PatientDiagnosticStatusesService,
     PatientDocumentsService,
+    PatientPsychooncologySupportAssessmentsService,
   ],
 })
 export class PatientsModule {}

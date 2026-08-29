@@ -45,6 +45,7 @@ import { N8nTransactionalDispatchService } from '../../integrations/n8n/transact
 import { buildRegistroEnvelope } from '../../integrations/n8n/n8n-webhook.payloads';
 import { EnrollmentContactSource } from './enrollment-contact-source.enum';
 import { PatientDiagnosticStatusesService } from '../patients/diagnostic-status/patient-diagnostic-statuses.service';
+import { PatientPsychooncologySupportAssessmentsService } from '../patients/clinical/psychooncology-support/patient-psychooncology-support-assessments.service';
 
 @Injectable()
 export class EnrollmentsService {
@@ -64,6 +65,7 @@ export class EnrollmentsService {
     private readonly symptomReports: PatientSymptomReportsService,
     private readonly addresses: PatientAddressesService,
     private readonly healthBackgroundAssessments: PatientHealthBackgroundAssessmentsService,
+    private readonly psychooncologySupportAssessments: PatientPsychooncologySupportAssessmentsService,
     private readonly diagnosticStatuses: PatientDiagnosticStatusesService,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly webhooks: N8nTransactionalDispatchService,
@@ -87,6 +89,7 @@ export class EnrollmentsService {
         medicalAppointments,
         symptomReport,
         healthBackgroundAssessment,
+        psychooncologySupportAssessment,
         familyPreventionTalkInterests,
         healthPhase,
         addresses,
@@ -384,6 +387,12 @@ export class EnrollmentsService {
           { ...healthBackgroundAssessment, followUpId: followUp.id },
           manager,
         );
+      if (psychooncologySupportAssessment)
+        await this.psychooncologySupportAssessments.create(
+          patient.id,
+          { ...psychooncologySupportAssessment, followUpId: followUp.id },
+          manager,
+        );
       if (healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS)
         await this.diagnosticStatuses.recordSearching(
           patient.id,
@@ -529,6 +538,14 @@ export class EnrollmentsService {
 
   private validateClinicalBranches(input: CreateEnrollmentDto) {
     const { symptomReport, medicalAppointments, healthPhase } = input;
+    if (
+      input.psychooncologySupportAssessment &&
+      (healthPhase !== PatientHealthPhase.CANCER_DIAGNOSIS ||
+        input.affiliationType !== AffiliationType.SELF)
+    )
+      throw new BadRequestException(
+        'Psycho-oncology support assessment requires a self enrollment with a cancer diagnosis',
+      );
     if (input.diagnosis && input.diagnoses)
       throw new BadRequestException(
         'Provide either diagnosis or diagnoses, not both',

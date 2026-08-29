@@ -40,6 +40,7 @@ import { PatientAddress } from '../../database/entities/patient-address.entity';
 import { HealthCenter } from '../../database/entities/health-center.entity';
 import { normalizeDuration } from '../../shared/duration/duration.util';
 import { CompanionContactRole } from '../../database/entities/companion-contact-role.enum';
+import { PatientPsychooncologySupportAssessment } from '../../database/entities/patient-psychooncology-support-assessment.entity';
 
 function resolveContactRole(
   contactRole: CompanionContactRole | null | undefined,
@@ -83,6 +84,8 @@ export class PatientsService {
     private readonly addressesRepository: Repository<PatientAddress>,
     @InjectRepository(PatientHealthBackgroundAssessment)
     private readonly healthBackgroundAssessmentsRepository: Repository<PatientHealthBackgroundAssessment>,
+    @InjectRepository(PatientPsychooncologySupportAssessment)
+    private readonly psychooncologySupportAssessmentsRepository: Repository<PatientPsychooncologySupportAssessment>,
     private readonly dataSource: DataSource,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly access: PatientAccessService,
@@ -454,6 +457,7 @@ export class PatientsService {
         relations: { healthCenter: true },
         order: { createdAt: 'DESC', id: 'DESC' },
       }),
+      psychooncologySupportAssessments: PatientPsychooncologySupportAssessment[];
       this.treatmentsRepository.find({
         where: { patientId: id },
         relations: {
@@ -469,6 +473,7 @@ export class PatientsService {
       }),
       this.medicalAppointmentsRepository.find({
         where: { patientId: id },
+      psychooncologySupportAssessments,
         relations: { healthCenter: true },
         order: { createdAt: 'DESC' },
       }),
@@ -517,6 +522,10 @@ export class PatientsService {
   async update(id: string, input: UpdatePatientDto): Promise<Patient> {
     const patient = await this.findById(id);
     Object.assign(patient, input);
+      this.psychooncologySupportAssessmentsRepository.find({
+        where: { patientId: id },
+        order: { createdAt: 'DESC' },
+      }),
     const updated = await this.patientsRepository.save(patient);
     await this.invalidations.markDirty(id);
     return updated;
@@ -537,6 +546,7 @@ export class PatientsService {
 
   async reactivate(id: string): Promise<Patient> {
     const patient = await this.findById(id);
+      psychooncologySupportAssessments,
     patient.activityStatus = PatientActivityStatus.REACTIVE;
     patient.deactivationReason = null;
     patient.deactivationReasonDetail = null;

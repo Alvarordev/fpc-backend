@@ -62,6 +62,8 @@ import { VolunteerCalendarService } from '../modules/volunteers/calendar/volunte
 import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
 import { PatientDocumentsController } from '../modules/patients/documents/patient-documents.controller';
 import { PatientDocumentsService } from '../modules/patients/documents/patient-documents.service';
+import { PatientPsychooncologySupportAssessmentsController } from '../modules/patients/clinical/psychooncology-support/patient-psychooncology-support-assessments.controller';
+import { PatientPsychooncologySupportAssessmentsService } from '../modules/patients/clinical/psychooncology-support/patient-psychooncology-support-assessments.service';
 
 // Controllers only need their route metadata to build the OpenAPI document.
 // Empty providers keep generation independent from infrastructure services.
@@ -91,6 +93,7 @@ import { PatientDocumentsService } from '../modules/patients/documents/patient-d
     PatientHealthBackgroundAssessmentsController,
     PatientDiagnosticStatusesController,
     PatientDocumentsController,
+    PatientPsychooncologySupportAssessmentsController,
     PsychooncologyAppointmentsController,
     RemindersController,
     UsersController,
@@ -123,6 +126,7 @@ import { PatientDocumentsService } from '../modules/patients/documents/patient-d
     { provide: PatientHealthBackgroundAssessmentsService, useValue: {} },
     { provide: PatientDiagnosticStatusesService, useValue: {} },
     { provide: PatientDocumentsService, useValue: {} },
+    { provide: PatientPsychooncologySupportAssessmentsService, useValue: {} },
     { provide: PatientTreatmentsService, useValue: {} },
     { provide: TreatmentMedicationsService, useValue: {} },
     { provide: PatientAddressesService, useValue: {} },
