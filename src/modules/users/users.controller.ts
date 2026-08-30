@@ -37,7 +37,12 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.AGENT, UserRole.FOUNDATION)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.AGENT,
+    UserRole.FOUNDATION,
+    UserRole.VOLUNTEER,
+  )
   @ApiOperation({ summary: 'List users' })
   @ApiOkResponse({ type: UserListResponseDto })
   @ApiUnauthorizedResponse()
