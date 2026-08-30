@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 import { AuthModule } from './modules/auth/auth.module';
 import { AgentsModule } from './modules/agents/agents.module';
+import { FoundationsModule } from './modules/foundations/foundations.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
 import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
 import { envValidationSchema } from './config/env.validation';
@@ -73,6 +74,7 @@ import { EmbeddedUnderscoreNamingStrategy } from './database/embedded-underscore
     N8nModule,
     PatientsModule,
     AgentsModule,
+    FoundationsModule,
     VolunteersModule,
     VolunteerCalendarModule,
     VolunteerAvailabilityModule,

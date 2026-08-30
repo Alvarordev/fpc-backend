@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AgentsController } from '../modules/agents/agents.controller';
 import { AgentsService } from '../modules/agents/agents.service';
+import { FoundationsController } from '../modules/foundations/foundations.controller';
+import { FoundationsService } from '../modules/foundations/foundations.service';
 import { AlertsController } from '../modules/alerts/alerts.controller';
 import { AlertsService } from '../modules/alerts/alerts.service';
 import { AlertSummaryService } from '../modules/alerts/alert-summary.service';
@@ -74,6 +76,7 @@ import { PatientPsychooncologySupportAssessmentsService } from '../modules/patie
     CallCenterController,
     DashboardController,
     AgentsController,
+    FoundationsController,
     AuthController,
     EnrollmentsController,
     FollowUpsController,
@@ -103,6 +106,7 @@ import { PatientPsychooncologySupportAssessmentsService } from '../modules/patie
   ],
   providers: [
     { provide: AgentsService, useValue: {} },
+    { provide: FoundationsService, useValue: {} },
     { provide: AlertsService, useValue: {} },
     { provide: AlertSummaryService, useValue: {} },
     { provide: CallCenterService, useValue: {} },
