@@ -9175,11 +9175,27 @@
               "TUMBES",
               "UCAYALI"
             ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "I-1",
+              "I-2",
+              "I-3",
+              "I-4",
+              "II-1",
+              "II-2",
+              "II-E",
+              "III-1",
+              "III-E",
+              "III-2"
+            ]
           }
         },
         "required": [
           "name",
-          "department"
+          "department",
+          "category"
         ]
       },
       "HealthCenterResponseDto": {
@@ -9225,6 +9241,22 @@
             ],
             "type": "string"
           },
+          "category": {
+            "nullable": true,
+            "enum": [
+              "I-1",
+              "I-2",
+              "I-3",
+              "I-4",
+              "II-1",
+              "II-2",
+              "II-E",
+              "III-1",
+              "III-E",
+              "III-2"
+            ],
+            "type": "string"
+          },
           "isActive": {
             "type": "boolean"
           },
@@ -9246,6 +9278,7 @@
           "name",
           "slug",
           "department",
+          "category",
           "isActive",
           "patientCount",
           "createdAt",
@@ -9287,6 +9320,21 @@
               "TACNA",
               "TUMBES",
               "UCAYALI"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "I-1",
+              "I-2",
+              "I-3",
+              "I-4",
+              "II-1",
+              "II-2",
+              "II-E",
+              "III-1",
+              "III-E",
+              "III-2"
             ]
           },
           "isActive": {

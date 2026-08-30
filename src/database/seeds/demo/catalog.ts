@@ -1,6 +1,9 @@
 import { EducationLevel } from '../../entities/education-level.enum';
 import { CancerStage } from '../../entities/patient-diagnosis.entity';
-import type { PeruDepartment } from '../../entities/health-center.entity';
+import type {
+  HealthCenterCategory,
+  PeruDepartment,
+} from '../../entities/health-center.entity';
 
 /**
  * Fixed reference data for the demo seed. Everything here is hand-written so
@@ -12,6 +15,7 @@ export interface HealthCenterSeed {
   name: string;
   slug: string;
   department: PeruDepartment;
+  category: HealthCenterCategory;
   isActive?: boolean;
 }
 
@@ -21,103 +25,123 @@ export const HEALTH_CENTERS: readonly HealthCenterSeed[] = [
     name: 'Instituto Nacional de Enfermedades Neoplásicas (INEN)',
     slug: 'inen-lima',
     department: 'LIMA',
+    category: 'III-1',
   },
   {
     name: 'Hospital Nacional Edgardo Rebagliati Martins',
     slug: 'rebagliati-lima',
     department: 'LIMA',
+    category: 'III-1',
   },
   {
     name: 'Hospital Nacional Guillermo Almenara Irigoyen',
     slug: 'almenara-lima',
     department: 'LIMA',
+    category: 'III-1',
   },
   {
     name: 'Hospital Nacional Arzobispo Loayza',
     slug: 'loayza-lima',
     department: 'LIMA',
+    category: 'III-1',
   },
   {
     name: 'Hospital Nacional Dos de Mayo',
     slug: 'dos-de-mayo-lima',
     department: 'LIMA',
+    category: 'III-1',
   },
   {
     name: 'Instituto Nacional de Salud del Niño San Borja',
     slug: 'insn-san-borja-lima',
     department: 'LIMA',
+    category: 'III-1',
   },
   {
     name: 'Hospital Nacional Alberto Sabogal Sologuren',
     slug: 'sabogal-callao',
     department: 'CALLAO',
+    category: 'III-1',
   },
   {
     name: 'Hospital Nacional Daniel Alcides Carrión',
     slug: 'carrion-callao',
     department: 'CALLAO',
+    category: 'III-1',
   },
   // Regional centers — the reason patients report long travel times.
   {
     name: 'Instituto Regional de Enfermedades Neoplásicas del Sur',
     slug: 'iren-sur-arequipa',
     department: 'AREQUIPA',
+    category: 'III-1',
   },
   {
     name: 'Hospital Goyeneche',
     slug: 'goyeneche-arequipa',
     department: 'AREQUIPA',
+    category: 'II-2',
   },
   {
     name: 'Instituto Regional de Enfermedades Neoplásicas del Norte',
     slug: 'iren-norte-la-libertad',
     department: 'LA_LIBERTAD',
+    category: 'III-1',
   },
   {
     name: 'Hospital Regional Docente de Trujillo',
     slug: 'regional-trujillo-la-libertad',
     department: 'LA_LIBERTAD',
+    category: 'II-2',
   },
   {
     name: 'Hospital Regional Lambayeque',
     slug: 'regional-lambayeque',
     department: 'LAMBAYEQUE',
+    category: 'II-2',
   },
   {
     name: 'Hospital Regional José Cayetano Heredia',
     slug: 'cayetano-heredia-piura',
     department: 'PIURA',
+    category: 'II-2',
   },
   {
     name: 'Hospital Regional del Cusco',
     slug: 'regional-cusco',
     department: 'CUSCO',
+    category: 'II-2',
   },
   {
     name: 'Hospital Regional Docente Clínico Quirúrgico Daniel Alcides Carrión',
     slug: 'regional-huancayo-junin',
     department: 'JUNIN',
+    category: 'II-2',
   },
   {
     name: 'Hospital Víctor Ramos Guardia',
     slug: 'ramos-guardia-ancash',
     department: 'ANCASH',
+    category: 'II-2',
   },
   {
     name: 'Hospital Regional de Loreto',
     slug: 'regional-loreto',
     department: 'LORETO',
+    category: 'II-2',
   },
   {
     name: 'Hospital Regional de Ica',
     slug: 'regional-ica',
     department: 'ICA',
+    category: 'II-2',
     isActive: false,
   },
   {
     name: 'Hospital Regional Manuel Núñez Butrón',
     slug: 'nunez-butron-puno',
     department: 'PUNO',
+    category: 'II-2',
     isActive: false,
   },
 ];

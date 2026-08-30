@@ -86,6 +86,7 @@ export class HealthCentersController {
       name: item.name,
       slug: item.slug,
       department: item.department,
+      category: item.category,
       isActive: item.isActive,
       patientCount: item.patientCount ?? 0,
       createdAt: item.createdAt,
