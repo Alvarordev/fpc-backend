@@ -4,6 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import {
+  AppointmentBeneficiaryType,
   AppointmentModality,
   AppointmentStatus,
   PsychooncologyAppointment,
@@ -180,5 +181,97 @@ describe('PsychooncologyAppointmentsService', () => {
         { role: UserRole.VOLUNTEER },
       ),
     ).rejects.toThrow(ForbiddenException);
+  });
+
+  it.each([
+    AppointmentStatus.COMPLETED,
+    AppointmentStatus.NO_ANSWER,
+    AppointmentStatus.CANCELLED,
+  ])('only lets volunteers record a %s result', (status) => {
+    const assertTransition = (
+      service as unknown as {
+        assertTransition: (
+          appointment: PsychooncologyAppointment,
+          input: { status: AppointmentStatus },
+          user: { role: UserRole },
+        ) => void;
+      }
+    ).assertTransition.bind(service);
+
+    expect(() =>
+      assertTransition(
+        { status: AppointmentStatus.SCHEDULED } as PsychooncologyAppointment,
+        { status },
+        { role: UserRole.AGENT },
+      ),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows volunteers to cancel their own appointment', () => {
+    const assertTransition = (
+      service as unknown as {
+        assertTransition: (
+          appointment: PsychooncologyAppointment,
+          input: { status: AppointmentStatus },
+          user: { role: UserRole },
+        ) => void;
+      }
+    ).assertTransition.bind(service);
+
+    expect(() =>
+      assertTransition(
+        { status: AppointmentStatus.SCHEDULED } as PsychooncologyAppointment,
+        { status: AppointmentStatus.CANCELLED },
+        { role: UserRole.VOLUNTEER },
+      ),
+    ).not.toThrow();
+  });
+
+  it('requires a linked companion for companion sessions', async () => {
+    const resolveBeneficiary = (
+      service as unknown as {
+        resolveBeneficiary: (
+          manager: unknown,
+          patientId: string,
+          beneficiaryType: AppointmentBeneficiaryType | undefined,
+          companionId: string | null | undefined,
+        ) => Promise<unknown>;
+      }
+    ).resolveBeneficiary.bind(service);
+
+    await expect(
+      resolveBeneficiary(
+        {},
+        'patient-1',
+        AppointmentBeneficiaryType.COMPANION,
+        undefined,
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('normalizes patient sessions without a companion', async () => {
+    const resolveBeneficiary = (
+      service as unknown as {
+        resolveBeneficiary: (
+          manager: unknown,
+          patientId: string,
+          beneficiaryType: AppointmentBeneficiaryType | undefined,
+          companionId: string | null | undefined,
+        ) => Promise<unknown>;
+      }
+    ).resolveBeneficiary.bind(service);
+
+    await expect(
+      resolveBeneficiary(
+        {},
+        'patient-1',
+        AppointmentBeneficiaryType.PATIENT,
+        null,
+      ),
+    ).resolves.toEqual({
+      beneficiaryType: AppointmentBeneficiaryType.PATIENT,
+      companionId: null,
+      companion: null,
+    });
   });
 });

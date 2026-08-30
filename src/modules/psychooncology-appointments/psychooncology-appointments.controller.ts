@@ -45,7 +45,7 @@ const SCHEDULE = [
   UserRole.AGENT,
   UserRole.VOLUNTEER,
 ];
-const CANCEL = [UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT];
+const CANCEL = [UserRole.VOLUNTEER];
 
 @Controller('psychooncology-appointments')
 @ApiTags('psychooncology-appointments')
@@ -165,6 +165,9 @@ export class PsychooncologyAppointmentsController {
     return {
       id: item.id,
       patientId: item.patientId,
+      beneficiaryType: item.beneficiaryType,
+      companionId: item.companionId,
+      companionFullName: item.companion?.fullName ?? null,
       volunteerId: item.volunteerId,
       followUpId: item.followUpId,
       availabilityId: item.availabilityId,

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { UserRole } from '../../database/entities/user-role.enum';
+import { User } from '../../database/entities/user.entity';
 import { Volunteer } from '../../database/entities/volunteer.entity';
 import { UsersService } from '../users/users.service';
 import { CreateVolunteerDto } from './dto/create-volunteer.dto';
@@ -33,12 +34,25 @@ export class VolunteersService {
           specialty: input.specialty,
           email: input.email,
           phone: input.phone,
+          birthDate: input.birthDate ?? null,
+          commitmentStartAt: input.commitmentStartAt ?? null,
+          commitmentEndAt: input.commitmentEndAt ?? null,
+          hasVolunteerCertificate: input.hasVolunteerCertificate ?? false,
+          additionalComments: input.additionalComments ?? null,
+          completedSustainabilityModule:
+            input.completedSustainabilityModule ?? false,
+          completedDesignThinkingModule:
+            input.completedDesignThinkingModule ?? false,
         }),
       );
     });
   }
-  findAll(): Promise<Volunteer[]> {
-    return this.volunteersRepository.find({ relations: { user: true } });
+  findAll(user?: User): Promise<Volunteer[]> {
+    return this.volunteersRepository.find({
+      where:
+        user?.role === UserRole.VOLUNTEER ? { userId: user.id } : undefined,
+      relations: { user: true },
+    });
   }
   async findById(id: string): Promise<Volunteer> {
     const volunteer = await this.volunteersRepository.findOne({

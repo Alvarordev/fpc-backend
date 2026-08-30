@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  AppointmentBeneficiaryType,
   AppointmentModality,
   AppointmentStatus,
 } from '../../../database/entities/psychooncology-appointment.entity';
@@ -7,6 +8,12 @@ import {
 export class PsychooncologyAppointmentResponseDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) patientId!: string;
+  @ApiProperty({ enum: AppointmentBeneficiaryType })
+  beneficiaryType!: AppointmentBeneficiaryType;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  companionId!: string | null;
+  @ApiProperty({ nullable: true })
+  companionFullName!: string | null;
   @ApiProperty({ format: 'uuid' }) volunteerId!: string;
   @ApiProperty({ format: 'uuid', nullable: true }) followUpId!: string | null;
   @ApiProperty({ format: 'uuid' }) availabilityId!: string;

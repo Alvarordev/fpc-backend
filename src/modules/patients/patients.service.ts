@@ -24,6 +24,7 @@ import { PatientSymptomReport } from '../../database/entities/patient-symptom-re
 import { PatientTreatment } from '../../database/entities/patient-treatment.entity';
 import { PatientHealthBackgroundAssessment } from '../../database/entities/patient-health-background-assessment.entity';
 import { Patient } from '../../database/entities/patient.entity';
+import { UserRole } from '../../database/entities/user-role.enum';
 import { CreateCompanionDto } from './dto/create-companion.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { DeactivatePatientDto } from './dto/deactivate-patient.dto';
@@ -152,7 +153,10 @@ export class PatientsService {
     patientId: string,
     input: CreateCompanionDto,
     manager?: EntityManager,
+    user?: User,
   ): Promise<Patient> {
+    if (user && user.role === UserRole.VOLUNTEER)
+      await this.access.assertCanRead(patientId, user);
     await this.assertPatientRole(
       patientId,
       PatientRole.PATIENT,

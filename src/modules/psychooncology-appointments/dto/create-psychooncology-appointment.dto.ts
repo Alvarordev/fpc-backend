@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsIn,
@@ -6,10 +7,21 @@ import {
   IsUrl,
   IsUUID,
 } from 'class-validator';
-import { AppointmentModality } from '../../../database/entities/psychooncology-appointment.entity';
+import {
+  AppointmentBeneficiaryType,
+  AppointmentModality,
+} from '../../../database/entities/psychooncology-appointment.entity';
 
 export class CreatePsychooncologyAppointmentDto {
   @IsUUID() patientId!: string;
+  @ApiPropertyOptional({ enum: AppointmentBeneficiaryType })
+  @IsOptional()
+  @IsIn(Object.values(AppointmentBeneficiaryType))
+  beneficiaryType?: AppointmentBeneficiaryType;
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  @IsOptional()
+  @IsUUID()
+  companionId?: string | null;
   @IsUUID() availabilityId!: string;
   @IsOptional() @IsUUID() followUpId?: string;
   @IsOptional() @IsString() patientEmail?: string;

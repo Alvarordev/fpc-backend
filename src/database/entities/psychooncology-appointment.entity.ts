@@ -17,6 +17,12 @@ export enum AppointmentModality {
   CALL = 'CALL',
   VIDEO_CALL = 'VIDEO_CALL',
 }
+
+export enum AppointmentBeneficiaryType {
+  PATIENT = 'PATIENT',
+  COMPANION = 'COMPANION',
+}
+
 export enum AppointmentStatus {
   SCHEDULED = 'SCHEDULED',
   COMPLETED = 'COMPLETED',
@@ -27,10 +33,14 @@ export enum AppointmentStatus {
 @Check('"session_number" > 0')
 @Check(`"modality" IN ('CALL','VIDEO_CALL')`)
 @Check(`"status" IN ('SCHEDULED','COMPLETED','CANCELLED','NO_ANSWER')`)
+@Check(
+  `"beneficiary_type" IN ('PATIENT','COMPANION') AND (("beneficiary_type" = 'PATIENT' AND "companion_id" IS NULL) OR ("beneficiary_type" = 'COMPANION' AND "companion_id" IS NOT NULL))`,
+)
 @Index('IDX_psychooncology_appointments_patient_id', ['patientId'])
 @Index('IDX_psychooncology_appointments_volunteer_id', ['volunteerId'])
 @Index('IDX_psychooncology_appointments_follow_up_id', ['followUpId'])
 @Index('IDX_psychooncology_appointments_availability_id', ['availabilityId'])
+@Index('IDX_psychooncology_appointments_companion_id', ['companionId'])
 @Index('IDX_psychooncology_appointments_status', ['status'])
 @Index('IDX_psychooncology_appointments_volunteer_patient', [
   'volunteerId',
@@ -47,6 +57,18 @@ export class PsychooncologyAppointment {
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'patient_id' })
   patient!: Patient;
+  @Column({
+    name: 'beneficiary_type',
+    type: 'varchar',
+    length: 20,
+    default: AppointmentBeneficiaryType.PATIENT,
+  })
+  beneficiaryType!: AppointmentBeneficiaryType;
+  @Column({ name: 'companion_id', type: 'uuid', nullable: true })
+  companionId!: string | null;
+  @ManyToOne(() => Patient)
+  @JoinColumn({ name: 'companion_id' })
+  companion!: Patient | null;
   @Column({ name: 'volunteer_id', type: 'uuid' }) volunteerId!: string;
   @ManyToOne(() => Volunteer)
   @JoinColumn({ name: 'volunteer_id' })

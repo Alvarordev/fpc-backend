@@ -9,11 +9,21 @@ import {
   Min,
 } from 'class-validator';
 import {
+  AppointmentBeneficiaryType,
   AppointmentModality,
   AppointmentStatus,
 } from '../../../database/entities/psychooncology-appointment.entity';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdatePsychooncologyAppointmentDto {
+  @ApiPropertyOptional({ enum: AppointmentBeneficiaryType })
+  @IsOptional()
+  @IsIn(Object.values(AppointmentBeneficiaryType))
+  beneficiaryType?: AppointmentBeneficiaryType;
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  @IsOptional()
+  @IsUUID()
+  companionId?: string | null;
   @IsOptional()
   @IsIn(Object.values(AppointmentStatus))
   status?: AppointmentStatus;

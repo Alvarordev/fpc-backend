@@ -10,8 +10,10 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { UserRole } from '../../database/entities/user-role.enum';
+import { User } from '../../database/entities/user.entity';
 import { Volunteer } from '../../database/entities/volunteer.entity';
 import { CreateVolunteerDto } from './dto/create-volunteer.dto';
 import { UpdateVolunteerDto } from './dto/update-volunteer.dto';
@@ -35,9 +37,9 @@ export class VolunteersController {
   @Get()
   @ApiOperation({ summary: 'List volunteers' })
   @ApiOkResponse({ type: VolunteerResponseDto, isArray: true })
-  findAll() {
+  findAll(@CurrentUser() user: User) {
     return this.volunteersService
-      .findAll()
+      .findAll(user)
       .then((items) => items.map(this.toResponse));
   }
   @Get(':id')
@@ -102,6 +104,13 @@ export class VolunteersController {
       specialty: volunteer.specialty,
       email: volunteer.email,
       phone: volunteer.phone,
+      birthDate: volunteer.birthDate,
+      commitmentStartAt: volunteer.commitmentStartAt,
+      commitmentEndAt: volunteer.commitmentEndAt,
+      hasVolunteerCertificate: volunteer.hasVolunteerCertificate,
+      additionalComments: volunteer.additionalComments,
+      completedSustainabilityModule: volunteer.completedSustainabilityModule,
+      completedDesignThinkingModule: volunteer.completedDesignThinkingModule,
       isActive: volunteer.isActive,
       createdAt: volunteer.createdAt,
       updatedAt: volunteer.updatedAt,

@@ -12596,6 +12596,18 @@
       "CreatePsychooncologyAppointmentDto": {
         "type": "object",
         "properties": {
+          "beneficiaryType": {
+            "enum": [
+              "PATIENT",
+              "COMPANION"
+            ],
+            "type": "string"
+          },
+          "companionId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
           "patientId": {
             "type": "string",
             "format": "uuid"
@@ -12645,6 +12657,22 @@
           "patientId": {
             "type": "string",
             "format": "uuid"
+          },
+          "beneficiaryType": {
+            "enum": [
+              "PATIENT",
+              "COMPANION"
+            ],
+            "type": "string"
+          },
+          "companionId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "companionFullName": {
+            "type": "string",
+            "nullable": true
           },
           "volunteerId": {
             "type": "string",
@@ -12750,6 +12778,9 @@
         "required": [
           "id",
           "patientId",
+          "beneficiaryType",
+          "companionId",
+          "companionFullName",
           "volunteerId",
           "followUpId",
           "availabilityId",
@@ -12777,6 +12808,18 @@
       "UpdatePsychooncologyAppointmentDto": {
         "type": "object",
         "properties": {
+          "beneficiaryType": {
+            "enum": [
+              "PATIENT",
+              "COMPANION"
+            ],
+            "type": "string"
+          },
+          "companionId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -13021,6 +13064,31 @@
       "CreateVolunteerDto": {
         "type": "object",
         "properties": {
+          "birthDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "commitmentStartAt": {
+            "type": "string",
+            "format": "date"
+          },
+          "commitmentEndAt": {
+            "type": "string",
+            "format": "date"
+          },
+          "hasVolunteerCertificate": {
+            "type": "boolean"
+          },
+          "additionalComments": {
+            "type": "string",
+            "maxLength": 5000
+          },
+          "completedSustainabilityModule": {
+            "type": "boolean"
+          },
+          "completedDesignThinkingModule": {
+            "type": "boolean"
+          },
           "email": {
             "type": "string",
             "format": "email"
@@ -13082,6 +13150,34 @@
           "phone": {
             "type": "string"
           },
+          "birthDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "commitmentStartAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "commitmentEndAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "hasVolunteerCertificate": {
+            "type": "boolean"
+          },
+          "additionalComments": {
+            "type": "string",
+            "nullable": true
+          },
+          "completedSustainabilityModule": {
+            "type": "boolean"
+          },
+          "completedDesignThinkingModule": {
+            "type": "boolean"
+          },
           "isActive": {
             "type": "boolean"
           },
@@ -13102,6 +13198,13 @@
           "specialty",
           "email",
           "phone",
+          "birthDate",
+          "commitmentStartAt",
+          "commitmentEndAt",
+          "hasVolunteerCertificate",
+          "additionalComments",
+          "completedSustainabilityModule",
+          "completedDesignThinkingModule",
           "isActive",
           "createdAt",
           "updatedAt"
@@ -13129,6 +13232,32 @@
           "phone": {
             "type": "string",
             "maxLength": 50
+          },
+          "birthDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "commitmentStartAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "commitmentEndAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasVolunteerCertificate": {
+            "type": "boolean"
+          },
+          "additionalComments": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 5000
+          },
+          "completedSustainabilityModule": {
+            "type": "boolean"
+          },
+          "completedDesignThinkingModule": {
+            "type": "boolean"
           }
         }
       },

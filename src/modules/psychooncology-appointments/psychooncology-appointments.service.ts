@@ -8,12 +8,15 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import {
+  AppointmentBeneficiaryType,
   AppointmentModality,
   AppointmentStatus,
   PsychooncologyAppointment,
 } from '../../database/entities/psychooncology-appointment.entity';
+import { CompanionPatient } from '../../database/entities/companion-patient.entity';
 import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Patient } from '../../database/entities/patient.entity';
+import { PatientRole } from '../../database/entities/patient-role.enum';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { User } from '../../database/entities/user.entity';
 import {
@@ -47,7 +50,9 @@ export class PsychooncologyAppointmentsService {
   ) {
     const query = this.appointments
       .createQueryBuilder('appointment')
-      .orderBy('appointment.scheduled_at', 'ASC');
+      .leftJoinAndSelect('appointment.companion', 'companion')
+      .orderBy('appointment.scheduled_at', 'DESC')
+      .addOrderBy('appointment.id', 'DESC');
     const volunteerId = await this.access.volunteerIdFor(user);
     if (volunteerId) {
       query.andWhere('appointment.volunteer_id = :volunteerId', {
@@ -72,7 +77,10 @@ export class PsychooncologyAppointmentsService {
   }
 
   async findOne(id: string, user: User) {
-    const appointment = await this.appointments.findOne({ where: { id } });
+    const appointment = await this.appointments.findOne({
+      where: { id },
+      relations: { companion: true },
+    });
     if (!appointment)
       throw new NotFoundException('Psycho-oncology appointment not found');
     await this.access.assertCanRead(appointment.patientId, user);
@@ -96,6 +104,16 @@ export class PsychooncologyAppointmentsService {
         throw new NotFoundException('Psycho-oncology appointment not found');
       this.assertTransition(appointment, input, user);
       this.assertZoomLinkModality(input);
+      const beneficiary = await this.resolveBeneficiary(
+        manager,
+        appointment.patientId,
+        input.beneficiaryType ?? appointment.beneficiaryType,
+        input.beneficiaryType === AppointmentBeneficiaryType.PATIENT
+          ? null
+          : input.companionId !== undefined
+            ? input.companionId
+            : appointment.companionId,
+      );
 
       if (
         input.availabilityId &&
@@ -120,7 +138,12 @@ export class PsychooncologyAppointmentsService {
 
       const updates = { ...input };
       delete updates.availabilityId;
+      delete updates.beneficiaryType;
+      delete updates.companionId;
       Object.assign(appointment, updates);
+      appointment.beneficiaryType = beneficiary.beneficiaryType;
+      appointment.companionId = beneficiary.companionId;
+      appointment.companion = beneficiary.companion;
 
       if (
         input.availabilityId &&
@@ -157,9 +180,6 @@ export class PsychooncologyAppointmentsService {
       throw new ConflictException('Closed appointments cannot be updated');
 
     if (user.role === UserRole.VOLUNTEER) {
-      if (input.status === AppointmentStatus.CANCELLED)
-        throw new ForbiddenException('Volunteers cannot cancel appointments');
-
       const allowedKeys = new Set([
         'status',
         'availabilityId',
@@ -187,6 +207,7 @@ export class PsychooncologyAppointmentsService {
         input.status &&
         ![
           AppointmentStatus.COMPLETED,
+          AppointmentStatus.CANCELLED,
           AppointmentStatus.NO_ANSWER,
           AppointmentStatus.SCHEDULED,
         ].includes(input.status)
@@ -195,16 +216,10 @@ export class PsychooncologyAppointmentsService {
       return;
     }
 
-    if (
-      input.status &&
-      ![
-        AppointmentStatus.COMPLETED,
-        AppointmentStatus.CANCELLED,
-        AppointmentStatus.NO_ANSWER,
-        AppointmentStatus.SCHEDULED,
-      ].includes(input.status)
-    )
-      throw new BadRequestException('Invalid appointment status transition');
+    if (input.status && input.status !== AppointmentStatus.SCHEDULED)
+      throw new ForbiddenException(
+        'Only volunteers can record psycho-oncology session results',
+      );
   }
 
   private async rescheduleAppointment(
@@ -283,6 +298,12 @@ export class PsychooncologyAppointmentsService {
     if (input.followUpId && !followUp)
       throw new BadRequestException('Follow-up does not belong to the patient');
 
+    const beneficiary = await this.resolveBeneficiary(
+      manager,
+      patient.id,
+      input.beneficiaryType,
+      input.companionId,
+    );
     const scheduledAt = this.slotDate(availability);
     availability.status = AvailabilityStatus.RESERVED;
     await manager.getRepository(VolunteerAvailability).save(availability);
@@ -294,6 +315,9 @@ export class PsychooncologyAppointmentsService {
     return manager.getRepository(PsychooncologyAppointment).save(
       manager.getRepository(PsychooncologyAppointment).create({
         patientId: patient.id,
+        beneficiaryType: beneficiary.beneficiaryType,
+        companionId: beneficiary.companionId,
+        companion: beneficiary.companion,
         volunteerId: volunteer.id,
         followUpId: followUp?.id ?? null,
         availabilityId: availability.id,
@@ -316,6 +340,58 @@ export class PsychooncologyAppointmentsService {
         satisfactionComment: null,
       }),
     );
+  }
+
+  private async resolveBeneficiary(
+    manager: EntityManager,
+    patientId: string,
+    beneficiaryType: AppointmentBeneficiaryType | undefined,
+    companionId: string | null | undefined,
+  ): Promise<{
+    beneficiaryType: AppointmentBeneficiaryType;
+    companionId: string | null;
+    companion: Patient | null;
+  }> {
+    const resolvedType = beneficiaryType ?? AppointmentBeneficiaryType.PATIENT;
+
+    if (resolvedType === AppointmentBeneficiaryType.PATIENT) {
+      if (companionId !== undefined && companionId !== null) {
+        throw new BadRequestException(
+          'A patient session cannot include a companion',
+        );
+      }
+      return {
+        beneficiaryType: resolvedType,
+        companionId: null,
+        companion: null,
+      };
+    }
+
+    if (!companionId) {
+      throw new BadRequestException(
+        'A companion is required for a companion session',
+      );
+    }
+
+    const companion = await manager.getRepository(Patient).findOne({
+      where: { id: companionId },
+    });
+    if (!companion || companion.role !== PatientRole.COMPANION) {
+      throw new NotFoundException('Companion not found');
+    }
+
+    const link = await manager.getRepository(CompanionPatient).findOne({
+      where: { patientId, companionId },
+    });
+    if (!link) {
+      throw new BadRequestException('Companion does not belong to the patient');
+    }
+
+    return {
+      beneficiaryType: resolvedType,
+      companionId,
+      companion,
+    };
   }
 
   private assertZoomLinkModality(input: {

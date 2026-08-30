@@ -66,6 +66,7 @@ const PATIENT_WRITE_ROLES = [
   UserRole.FOUNDATION,
   UserRole.AGENT,
 ];
+const COMPANION_CREATE_ROLES = [...PATIENT_WRITE_ROLES, UserRole.VOLUNTEER];
 
 @Controller('patients')
 @ApiTags('Patients')
@@ -95,7 +96,7 @@ export class PatientsController {
   }
 
   @Post(':id/companions')
-  @Roles(...PATIENT_WRITE_ROLES)
+  @Roles(...COMPANION_CREATE_ROLES)
   @ApiOperation({ summary: 'Create and link a companion to a patient' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiCreatedResponse({ type: PatientResponseDto })
@@ -106,9 +107,10 @@ export class PatientsController {
   async createCompanion(
     @Param('id') id: string,
     @Body() input: CreateCompanionDto,
+    @CurrentUser() user: User,
   ): Promise<PatientResponseDto> {
     return PatientResponseDto.from(
-      await this.patientsService.createCompanion(id, input),
+      await this.patientsService.createCompanion(id, input, undefined, user),
     );
   }
 
