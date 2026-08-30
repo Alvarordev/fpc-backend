@@ -12,6 +12,7 @@ import {
 import { Type } from 'class-transformer';
 import { EducationLevel } from '../../../database/entities/education-level.enum';
 import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
+import { PatientHealthSubcategory } from '../../../database/entities/patient-health-subcategory.enum';
 import { DurationDto } from '../../../shared/duration/duration.dto';
 
 export class UpsertPatientDetailsDto {
@@ -19,6 +20,11 @@ export class UpsertPatientDetailsDto {
   @IsOptional()
   @IsIn(Object.values(PatientHealthPhase))
   healthPhase?: PatientHealthPhase;
+
+  @ApiPropertyOptional({ enum: PatientHealthSubcategory, nullable: true })
+  @IsOptional()
+  @IsIn(Object.values(PatientHealthSubcategory))
+  healthSubcategory?: PatientHealthSubcategory | null;
 
   @ApiPropertyOptional()
   @IsOptional()

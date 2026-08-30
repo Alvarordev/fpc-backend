@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBadRequestResponse,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
@@ -330,6 +331,9 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientDetailsResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
+  @ApiBadRequestResponse({
+    description: 'An active diagnosis is required for this subcategory',
+  })
   @ApiNotFoundResponse({ description: 'Patient not found' })
   @ApiConflictResponse({
     description: 'Patient does not have the required role',

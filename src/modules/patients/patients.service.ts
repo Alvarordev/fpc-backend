@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -14,6 +15,10 @@ import { PatientActivityStatus } from '../../database/entities/patient-activity-
 import { PatientDetails } from '../../database/entities/patient-details.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
 import { PatientHealthPhaseHistory } from '../../database/entities/patient-health-phase-history.entity';
+import {
+  HEALTH_SUBCATEGORY_PHASE,
+  ONCOLOGICAL_HEALTH_SUBCATEGORIES,
+} from '../../database/entities/patient-health-subcategory.enum';
 import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
 import { PatientListSegment } from '../../database/entities/patient-list-segment.enum';
@@ -28,7 +33,10 @@ import { UserRole } from '../../database/entities/user-role.enum';
 import { CreateCompanionDto } from './dto/create-companion.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { DeactivatePatientDto } from './dto/deactivate-patient.dto';
-import { ListPatientsDto } from './dto/list-patients.dto';
+import {
+  ListPatientsDto,
+  UNASSIGNED_HEALTH_SUBCATEGORY,
+} from './dto/list-patients.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { UpsertPatientDetailsDto } from './dto/upsert-patient-details.dto';
 import { LinkCompanionDto } from './dto/link-companion.dto';
@@ -310,12 +318,15 @@ export class PatientsService {
         currentDepartment: string | null;
         latestFollowUp: FollowUp | null;
         healthPhase: PatientDetails['healthPhase'] | null;
+        healthSubcategory: PatientDetails['healthSubcategory'] | null;
         primaryCompanionName: string | null;
       }
     >;
     total: number;
   }> {
-    const query = this.patientsRepository.createQueryBuilder('patient');
+    const query = this.patientsRepository
+      .createQueryBuilder('patient')
+      .leftJoin('patient.details', 'details');
     await this.access.scopeQuery(query, 'patient.id', user);
     if (filters.segment === PatientListSegment.CARE) {
       query.andWhere(
@@ -343,6 +354,17 @@ export class PatientsService {
       query.andWhere('patient.activity_status = :activityStatus', {
         activityStatus: filters.activityStatus,
       });
+    if (filters.healthPhase)
+      query.andWhere('details.health_phase = :healthPhase', {
+        healthPhase: filters.healthPhase,
+      });
+    if (filters.healthSubcategory === UNASSIGNED_HEALTH_SUBCATEGORY) {
+      query.andWhere('details.health_subcategory IS NULL');
+    } else if (filters.healthSubcategory) {
+      query.andWhere('details.health_subcategory = :healthSubcategory', {
+        healthSubcategory: filters.healthSubcategory,
+      });
+    }
     if (filters.search)
       query.andWhere(
         '(patient.full_name ILIKE :search OR patient.dni ILIKE :search)',
@@ -391,7 +413,7 @@ export class PatientsService {
         .getMany(),
       this.detailsRepository.find({
         where: { patientId: In(patientIds) },
-        select: { patientId: true, healthPhase: true },
+        select: { patientId: true, healthPhase: true, healthSubcategory: true },
       }),
       this.companionPatientsRepository
         .createQueryBuilder('link')
@@ -421,6 +443,12 @@ export class PatientsService {
     const healthPhases = new Map(
       patientDetails.map((details) => [details.patientId, details.healthPhase]),
     );
+    const healthSubcategories = new Map(
+      patientDetails.map((details) => [
+        details.patientId,
+        details.healthSubcategory,
+      ]),
+    );
     const primaryCompanionNames = new Map<string, string | null>();
     for (const link of primaryCompanions) {
       if (primaryCompanionNames.has(link.patientId)) continue;
@@ -436,6 +464,7 @@ export class PatientsService {
           currentDiagnosis: diagnoses.get(patient.id) ?? null,
           latestFollowUp: followUps.get(patient.id) ?? null,
           healthPhase: healthPhases.get(patient.id) ?? null,
+          healthSubcategory: healthSubcategories.get(patient.id) ?? null,
           primaryCompanionName: primaryCompanionNames.get(patient.id) ?? null,
         }),
       ),
@@ -623,9 +652,45 @@ export class PatientsService {
       where: { patientId: id },
     });
     const previousHealthPhase = details?.healthPhase ?? null;
+    const previousHealthSubcategory = details?.healthSubcategory ?? null;
+    const hasSubcategoryInput = input.healthSubcategory !== undefined;
+    let healthSubcategory = hasSubcategoryInput
+      ? (input.healthSubcategory ?? null)
+      : previousHealthSubcategory;
+    let healthPhase = input.healthPhase ?? previousHealthPhase;
+
+    if (healthSubcategory) {
+      if (
+        ONCOLOGICAL_HEALTH_SUBCATEGORIES.some(
+          (value) => value === healthSubcategory,
+        )
+      ) {
+        const diagnoses =
+          manager?.getRepository(PatientDiagnosis) ?? this.diagnosesRepository;
+        const hasActiveDiagnosis = await diagnoses.existsBy({
+          patientId: id,
+          isCurrent: true,
+        });
+        if (!hasActiveDiagnosis) {
+          throw new BadRequestException(
+            'An active diagnosis is required for this health subcategory',
+          );
+        }
+      }
+      healthPhase = HEALTH_SUBCATEGORY_PHASE[healthSubcategory];
+    } else if (
+      input.healthPhase &&
+      previousHealthSubcategory &&
+      HEALTH_SUBCATEGORY_PHASE[previousHealthSubcategory] !== input.healthPhase
+    ) {
+      healthSubcategory = null;
+    }
+
     const { travelTimeToHospital, ...rest } = input;
     const normalized = {
       ...rest,
+      healthPhase,
+      healthSubcategory,
       travelTimeToHospital: normalizeDuration(travelTimeToHospital),
     };
     const saved = await repository.save(
@@ -636,11 +701,11 @@ export class PatientsService {
     const historyRepository =
       manager?.getRepository(PatientHealthPhaseHistory) ??
       this.healthPhaseHistoryRepository;
-    if (input.healthPhase && input.healthPhase !== previousHealthPhase) {
+    if (healthPhase && healthPhase !== previousHealthPhase) {
       await historyRepository.save(
         historyRepository.create({
           patientId: id,
-          healthPhase: input.healthPhase,
+          healthPhase,
         }),
       );
     }

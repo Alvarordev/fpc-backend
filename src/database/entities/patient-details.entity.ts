@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToOne,
@@ -11,6 +12,7 @@ import {
 } from 'typeorm';
 import { EducationLevel } from './education-level.enum';
 import { PatientHealthPhase } from './patient-health-phase.enum';
+import { PatientHealthSubcategory } from './patient-health-subcategory.enum';
 import { Patient } from './patient.entity';
 import { Duration } from './embedded/duration.embedded';
 import { HealthCenter } from './health-center.entity';
@@ -23,6 +25,12 @@ import { HealthCenter } from './health-center.entity';
   'CHK_patient_details_health_phase',
   "\"health_phase\" IS NULL OR \"health_phase\" IN ('CANCER_DIAGNOSIS', 'ANNUAL_CHECKUP', 'SIGNS_AND_SYMPTOMS')",
 )
+@Check(
+  'CHK_patient_details_health_subcategory',
+  "\"health_subcategory\" IS NULL OR \"health_subcategory\" IN ('SIGNS_AND_SYMPTOMS_PATIENT', 'ACTIVE_TREATMENT', 'UNDER_CONTROLS', 'TREATMENT_ABANDONED', 'PALLIATIVE_NO_ACTIVE_TREATMENT', 'CANCER_RULED_OUT')",
+)
+@Index('IDX_patient_details_health_phase', ['healthPhase'])
+@Index('IDX_patient_details_health_subcategory', ['healthSubcategory'])
 export class PatientDetails {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' })
   id!: string;
@@ -32,6 +40,14 @@ export class PatientDetails {
 
   @Column({ name: 'health_phase', type: 'varchar', length: 30, nullable: true })
   healthPhase!: PatientHealthPhase | null;
+
+  @Column({
+    name: 'health_subcategory',
+    type: 'varchar',
+    length: 40,
+    nullable: true,
+  })
+  healthSubcategory!: PatientHealthSubcategory | null;
 
   @OneToOne(() => Patient, (patient) => patient.details, {
     onDelete: 'CASCADE',

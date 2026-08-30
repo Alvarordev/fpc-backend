@@ -2379,6 +2379,36 @@
             }
           },
           {
+            "name": "healthPhase",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CANCER_DIAGNOSIS",
+                "ANNUAL_CHECKUP",
+                "SIGNS_AND_SYMPTOMS"
+              ]
+            }
+          },
+          {
+            "name": "healthSubcategory",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SIGNS_AND_SYMPTOMS_PATIENT",
+                "ACTIVE_TREATMENT",
+                "UNDER_CONTROLS",
+                "TREATMENT_ABANDONED",
+                "PALLIATIVE_NO_ACTIVE_TREATMENT",
+                "CANCER_RULED_OUT",
+                "UNASSIGNED"
+              ]
+            }
+          },
+          {
             "name": "segment",
             "required": false,
             "in": "query",
@@ -3128,6 +3158,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "An active diagnosis is required for this subcategory"
           },
           "401": {
             "description": ""
@@ -7525,6 +7558,18 @@
             ],
             "type": "string"
           },
+          "healthSubcategory": {
+            "nullable": true,
+            "enum": [
+              "SIGNS_AND_SYMPTOMS_PATIENT",
+              "ACTIVE_TREATMENT",
+              "UNDER_CONTROLS",
+              "TREATMENT_ABANDONED",
+              "PALLIATIVE_NO_ACTIVE_TREATMENT",
+              "CANCER_RULED_OUT"
+            ],
+            "type": "string"
+          },
           "birthDepartment": {
             "type": "string",
             "maxLength": 255
@@ -9901,6 +9946,18 @@
             ],
             "type": "string"
           },
+          "healthSubcategory": {
+            "nullable": true,
+            "enum": [
+              "SIGNS_AND_SYMPTOMS_PATIENT",
+              "ACTIVE_TREATMENT",
+              "UNDER_CONTROLS",
+              "TREATMENT_ABANDONED",
+              "PALLIATIVE_NO_ACTIVE_TREATMENT",
+              "CANCER_RULED_OUT"
+            ],
+            "type": "string"
+          },
           "primaryCompanionName": {
             "type": "string",
             "nullable": true
@@ -9929,6 +9986,7 @@
           "currentDepartment",
           "latestFollowUp",
           "healthPhase",
+          "healthSubcategory",
           "primaryCompanionName"
         ]
       },
@@ -10111,6 +10169,18 @@
             ],
             "type": "string"
           },
+          "healthSubcategory": {
+            "nullable": true,
+            "enum": [
+              "SIGNS_AND_SYMPTOMS_PATIENT",
+              "ACTIVE_TREATMENT",
+              "UNDER_CONTROLS",
+              "TREATMENT_ABANDONED",
+              "PALLIATIVE_NO_ACTIVE_TREATMENT",
+              "CANCER_RULED_OUT"
+            ],
+            "type": "string"
+          },
           "birthDepartment": {
             "type": "string",
             "nullable": true
@@ -10228,6 +10298,7 @@
           "id",
           "patientId",
           "healthPhase",
+          "healthSubcategory",
           "birthDepartment",
           "primaryHealthCenterId",
           "travelTimeToHospital",

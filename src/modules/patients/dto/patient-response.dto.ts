@@ -21,6 +21,7 @@ import { EducationLevel } from '../../../database/entities/education-level.enum'
 import { PatientActivityStatus } from '../../../database/entities/patient-activity-status.enum';
 import { PatientDetails } from '../../../database/entities/patient-details.entity';
 import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
+import { PatientHealthSubcategory } from '../../../database/entities/patient-health-subcategory.enum';
 import { PatientHealthPhaseHistory } from '../../../database/entities/patient-health-phase-history.entity';
 import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../../database/entities/patient-status.enum';
@@ -60,6 +61,9 @@ export class PatientDetailsResponseDto {
 
   @ApiProperty({ enum: PatientHealthPhase, nullable: true })
   healthPhase!: PatientHealthPhase | null;
+
+  @ApiProperty({ enum: PatientHealthSubcategory, nullable: true })
+  healthSubcategory!: PatientHealthSubcategory | null;
 
   @ApiProperty({ nullable: true })
   birthDepartment!: string | null;
@@ -147,6 +151,7 @@ export class PatientDetailsResponseDto {
       id: details.id,
       patientId: details.patientId,
       healthPhase: details.healthPhase,
+      healthSubcategory: details.healthSubcategory,
       birthDepartment: details.birthDepartment,
       primaryHealthCenterId: details.primaryHealthCenterId,
       primaryHealthCenterName: details.primaryHealthCenter?.name ?? null,
@@ -435,6 +440,9 @@ export class PatientListItemResponseDto extends PatientResponseDto {
   @ApiProperty({ enum: PatientHealthPhase, nullable: true })
   healthPhase!: PatientHealthPhase | null;
 
+  @ApiProperty({ enum: PatientHealthSubcategory, nullable: true })
+  healthSubcategory!: PatientHealthSubcategory | null;
+
   @ApiProperty({ nullable: true })
   primaryCompanionName!: string | null;
 
@@ -444,6 +452,7 @@ export class PatientListItemResponseDto extends PatientResponseDto {
       currentDepartment: string | null;
       latestFollowUp: FollowUp | null;
       healthPhase: PatientHealthPhase | null;
+      healthSubcategory: PatientHealthSubcategory | null;
       primaryCompanionName: string | null;
     },
   ): PatientListItemResponseDto {
@@ -457,6 +466,7 @@ export class PatientListItemResponseDto extends PatientResponseDto {
         ? LatestFollowUpResponseDto.from(patient.latestFollowUp)
         : null,
       healthPhase: patient.healthPhase,
+      healthSubcategory: patient.healthSubcategory,
       primaryCompanionName: patient.primaryCompanionName,
     };
   }
@@ -476,6 +486,7 @@ export class PatientListResponseDto {
         currentDepartment: string | null;
         latestFollowUp: FollowUp | null;
         healthPhase: PatientHealthPhase | null;
+        healthSubcategory: PatientHealthSubcategory | null;
         primaryCompanionName: string | null;
       }
     >;
