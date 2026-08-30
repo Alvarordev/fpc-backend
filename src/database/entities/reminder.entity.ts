@@ -11,13 +11,18 @@ import {
 import { Agent } from './agent.entity';
 import { FollowUp } from './follow-up.entity';
 import { Patient } from './patient.entity';
+import { PatientMedicalAppointment } from './patient-medical-appointment.entity';
+import { ReminderKind } from './reminder-kind.enum';
 import { ReminderStatus } from './reminder-status.enum';
+
 @Entity('reminders')
 @Check(`"status" IN ('PENDING','DONE','DISMISSED')`)
+@Check(`"kind" IN ('GENERIC','MEDICAL_APPOINTMENT')`)
 @Index('IDX_reminders_subject_patient_id', ['subjectPatientId'])
 @Index('IDX_reminders_created_from_follow_up_id', ['createdFromFollowUpId'])
 @Index('IDX_reminders_assigned_agent_id', ['assignedAgentId'])
 @Index('IDX_reminders_resulting_follow_up_id', ['resultingFollowUpId'])
+@Index('IDX_reminders_medical_appointment_id', ['medicalAppointmentId'])
 @Index('IDX_reminders_status', ['status'])
 @Index('IDX_reminders_due_at', ['dueAt'])
 @Index('IDX_reminders_patient_due_timeline', [
@@ -43,6 +48,17 @@ export class Reminder {
   assignedAgent!: Agent;
   @Column({ name: 'due_at', type: 'timestamptz' }) dueAt!: Date;
   @Column({ type: 'text' }) description!: string;
+  @Column({
+    type: 'varchar',
+    length: 30,
+    default: ReminderKind.GENERIC,
+  })
+  kind!: ReminderKind;
+  @Column({ name: 'medical_appointment_id', type: 'uuid', nullable: true })
+  medicalAppointmentId!: string | null;
+  @ManyToOne(() => PatientMedicalAppointment, { nullable: true })
+  @JoinColumn({ name: 'medical_appointment_id' })
+  medicalAppointment!: PatientMedicalAppointment | null;
   @Column({ type: 'varchar', length: 20, default: ReminderStatus.PENDING })
   status!: ReminderStatus;
   @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })

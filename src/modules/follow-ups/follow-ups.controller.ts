@@ -173,9 +173,7 @@ export class FollowUpsController {
     @Body() dto: CreateReminderDto,
     @CurrentUser() user: User,
   ) {
-    return this.service
-      .createReminder(id, dto, user.id, user.role)
-      .then(this.toReminder);
+    return this.service.createReminder(id, dto, user).then(this.toReminder);
   }
 
   private toFollowUp(this: void, item: FollowUp): FollowUpResponseDto {
@@ -198,6 +196,7 @@ export class FollowUpsController {
   }
 
   private toReminder(this: void, item: Reminder): ReminderResponseDto {
+    const appointment = item.medicalAppointment;
     return {
       id: item.id,
       subjectPatientId: item.subjectPatientId,
@@ -205,6 +204,20 @@ export class FollowUpsController {
       assignedAgentId: item.assignedAgentId,
       dueAt: item.dueAt,
       description: item.description,
+      kind: item.kind,
+      medicalAppointmentId: item.medicalAppointmentId,
+      medicalAppointment: appointment
+        ? {
+            id: appointment.id,
+            specialty: appointment.specialty,
+            healthCenterId: appointment.healthCenterId,
+            healthCenterName: appointment.healthCenter?.name ?? null,
+            appointmentDate: appointment.appointmentDate,
+            appointmentTime: appointment.appointmentTime,
+            status: appointment.status,
+            isFirstConsultation: appointment.isFirstConsultation,
+          }
+        : null,
       status: item.status,
       completedAt: item.completedAt,
       resultingFollowUpId: item.resultingFollowUpId,

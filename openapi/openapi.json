@@ -9048,6 +9048,25 @@
           }
         }
       },
+      "CreateReminderMedicalAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "isFirstConsultation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "specialty"
+        ]
+      },
       "CreateReminderDto": {
         "type": "object",
         "properties": {
@@ -9068,12 +9087,73 @@
           "createdFromFollowUpId": {
             "type": "string",
             "format": "uuid"
+          },
+          "kind": {
+            "enum": [
+              "GENERIC",
+              "MEDICAL_APPOINTMENT"
+            ],
+            "type": "string"
+          },
+          "medicalAppointment": {
+            "$ref": "#/components/schemas/CreateReminderMedicalAppointmentDto"
           }
         },
         "required": [
           "subjectPatientId",
-          "dueAt",
-          "description"
+          "dueAt"
+        ]
+      },
+      "ReminderMedicalAppointmentSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "healthCenterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "appointmentDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "appointmentTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "isFirstConsultation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "specialty",
+          "healthCenterId",
+          "healthCenterName",
+          "appointmentDate",
+          "appointmentTime",
+          "status",
+          "isFirstConsultation"
         ]
       },
       "ReminderResponseDto": {
@@ -9102,6 +9182,27 @@
           },
           "description": {
             "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "GENERIC",
+              "MEDICAL_APPOINTMENT"
+            ],
+            "type": "string"
+          },
+          "medicalAppointmentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "medicalAppointment": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReminderMedicalAppointmentSummaryDto"
+              }
+            ]
           },
           "status": {
             "enum": [
@@ -9133,6 +9234,8 @@
           "assignedAgentId",
           "dueAt",
           "description",
+          "kind",
+          "medicalAppointmentId",
           "status",
           "completedAt",
           "resultingFollowUpId",
@@ -9462,6 +9565,20 @@
           "isFirstConsultation": {
             "type": "boolean"
           },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "reminderId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
           "isCurrent": {
             "type": "boolean"
           },
@@ -9492,6 +9609,8 @@
           "referralNotProvidedReason",
           "difficulties",
           "isFirstConsultation",
+          "status",
+          "reminderId",
           "isCurrent",
           "changeReason",
           "createdAt"
@@ -9573,6 +9692,7 @@
               "SOCIAL_NOTE",
               "REMINDER",
               "PSYCHOONCOLOGY_APPOINTMENT",
+              "MEDICAL_APPOINTMENT",
               "ALERT"
             ],
             "type": "string"
@@ -11093,6 +11213,20 @@
           "isFirstConsultation": {
             "type": "boolean"
           },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "reminderId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
           "isCurrent": {
             "type": "boolean"
           },
@@ -11120,6 +11254,8 @@
           "referralNotProvidedReason",
           "difficulties",
           "isFirstConsultation",
+          "status",
+          "reminderId",
           "isCurrent",
           "changeReason",
           "createdAt"
@@ -13277,8 +13413,52 @@
           },
           "description": {
             "type": "string"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
+      },
+      "CompleteReminderMedicalAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ]
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          },
+          "referredTo": {
+            "type": "string"
+          },
+          "referralNotProvidedReason": {
+            "type": "string"
+          },
+          "difficulties": {
+            "type": "string"
+          },
+          "nextAppointmentDate": {
+            "type": "string"
+          },
+          "nextAppointmentSpecialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "changeReason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "changeReason"
+        ]
       },
       "CompleteReminderDto": {
         "type": "object",
@@ -13286,6 +13466,9 @@
           "resultingFollowUpId": {
             "type": "string",
             "format": "uuid"
+          },
+          "medicalAppointment": {
+            "$ref": "#/components/schemas/CompleteReminderMedicalAppointmentDto"
           }
         }
       },

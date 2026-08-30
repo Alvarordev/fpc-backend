@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Agent } from '../../../../database/entities/agent.entity';
+import { MedicalAppointmentStatus } from '../../../../database/entities/medical-appointment-status.enum';
 import { PatientMedicalAppointment } from '../../../../database/entities/patient-medical-appointment.entity';
 import { PatientRole } from '../../../../database/entities/patient-role.enum';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
@@ -55,7 +56,7 @@ export class MedicalAppointmentsService {
         specialty: input.specialty,
         isCurrent: true,
       },
-      { ...normalizeReferralFields(input), followUpId },
+        { ...normalizeReferralFields(input), followUpId, status: MedicalAppointmentStatus.SCHEDULED },
     );
     await this.invalidations.markDirty(input.patientId);
     await this.webhooks.enqueue(citaEnvelopeFor(patient, appointment));
@@ -117,6 +118,8 @@ export class MedicalAppointmentsService {
           input.isFirstConsultation !== undefined
             ? input.isFirstConsultation
             : existing.isFirstConsultation,
+        status: existing.status,
+        reminderId: existing.reminderId,
         changeReason: input.changeReason,
       }),
     );

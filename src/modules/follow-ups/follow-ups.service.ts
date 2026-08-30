@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -14,8 +16,6 @@ import {
 } from '../../database/entities/follow-up.enums';
 import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Patient } from '../../database/entities/patient.entity';
-import { Reminder } from '../../database/entities/reminder.entity';
-import { ReminderStatus } from '../../database/entities/reminder-status.enum';
 import { CompanionPatient } from '../../database/entities/companion-patient.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CreateFollowUpDto } from './dto/create-follow-up.dto';
@@ -23,6 +23,7 @@ import { FindFollowUpsQueryDto } from './dto/list-follow-ups.dto';
 import { UpdateFollowUpDto } from './dto/update-follow-up.dto';
 import { CreateFollowUpsBatchDto } from './dto/create-follow-ups-batch.dto';
 import { CreateReminderDto } from '../reminders/dto/create-reminder.dto';
+import { RemindersService } from '../reminders/reminders.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { PatientAccessService } from '../patients/access/patient-access.service';
 import { User } from '../../database/entities/user.entity';
@@ -33,11 +34,11 @@ export class FollowUpsService {
     private readonly followUps: Repository<FollowUp>,
     @InjectRepository(Patient) private readonly patients: Repository<Patient>,
     @InjectRepository(Agent) private readonly agents: Repository<Agent>,
-    @InjectRepository(Reminder)
-    private readonly reminders: Repository<Reminder>,
     private readonly dataSource: DataSource,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly access: PatientAccessService,
+    @Inject(forwardRef(() => RemindersService))
+    private readonly remindersService: RemindersService,
   ) {}
   // Reuses the patient's most recent follow-up, or creates a minimal
   // IN_PERSON/COMPLETED one, matching fpc-back's standalone-appointment
@@ -263,26 +264,17 @@ export class FollowUpsService {
       CreateReminderDto,
       'subjectPatientId' | 'createdFromFollowUpId'
     >,
-    userId: string,
-    userRole: string,
+    user: User,
   ) {
     const followUp = await this.findOne(id);
-    await this.assertWriteScope(followUp, userId, userRole);
-    const assignedAgentId = await this.resolveAgentId(
-      input.assignedAgentId,
-      userId,
-      userRole,
-      this.agents,
-    );
-    return this.reminders.save(
-      this.reminders.create({
+    await this.assertWriteScope(followUp, user.id, user.role);
+    return this.remindersService.create(
+      {
         ...input,
         subjectPatientId: followUp.subjectPatientId,
         createdFromFollowUpId: id,
-        assignedAgentId,
-        dueAt: new Date(input.dueAt),
-        status: ReminderStatus.PENDING,
-      }),
+      },
+      user,
     );
   }
   private async resolveAgentId(

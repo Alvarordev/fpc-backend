@@ -4,4 +4,5 @@ export class UpdateReminderDto {
   @IsOptional() @IsUUID() assignedAgentId?: string;
   @IsOptional() @IsDateString() dueAt?: string;
   @IsOptional() @IsString() description?: string;
+  @IsOptional() @IsUUID() healthCenterId?: string;
 }

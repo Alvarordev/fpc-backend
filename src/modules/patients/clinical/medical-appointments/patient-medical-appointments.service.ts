@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { FollowUp } from '../../../../database/entities/follow-up.entity';
+import { MedicalAppointmentStatus } from '../../../../database/entities/medical-appointment-status.enum';
 import { PatientMedicalAppointment } from '../../../../database/entities/patient-medical-appointment.entity';
 import { PatientRole } from '../../../../database/entities/patient-role.enum';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
@@ -47,13 +48,13 @@ export class PatientMedicalAppointmentsService {
       ? this.versioning.replaceCurrent(
           PatientMedicalAppointment,
           { patientId, specialty: input.specialty, isCurrent: true },
-          { ...normalizeReferralFields(input), patientId },
+          { ...normalizeReferralFields(input), patientId, status: MedicalAppointmentStatus.SCHEDULED },
           manager,
         )
       : this.versioning.replaceCurrent(
           PatientMedicalAppointment,
           { patientId, specialty: input.specialty, isCurrent: true },
-          { ...normalizeReferralFields(input), patientId },
+          { ...normalizeReferralFields(input), patientId, status: MedicalAppointmentStatus.SCHEDULED },
         ));
     await this.invalidations.markDirty(patientId, manager);
     if (dispatchWebhook)

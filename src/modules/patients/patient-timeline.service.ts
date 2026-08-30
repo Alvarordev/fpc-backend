@@ -54,6 +54,7 @@ const OUTCOME_LABELS: Record<PatientTimelineOutcomeType, string> = {
   [PatientTimelineOutcomeType.REMINDER]: 'Recordatorio',
   [PatientTimelineOutcomeType.PSYCHOONCOLOGY_APPOINTMENT]:
     'Cita de psicooncología',
+  [PatientTimelineOutcomeType.MEDICAL_APPOINTMENT]: 'Cita médica',
   [PatientTimelineOutcomeType.ALERT]: 'Alerta',
 };
 
@@ -489,6 +490,7 @@ export class PatientTimelineService {
         ) AS data
       FROM reminders reminder
       WHERE reminder.created_from_follow_up_id = ANY($1::uuid[])
+        AND reminder.kind = 'GENERIC'
 
       UNION ALL
 
@@ -511,6 +513,28 @@ export class PatientTimelineService {
         ) AS data
       FROM psychooncology_appointments appointment
       WHERE appointment.follow_up_id = ANY($1::uuid[])
+
+      UNION ALL
+
+      SELECT
+        medical_appointment.follow_up_id,
+        'MEDICAL_APPOINTMENT'::text AS outcome_type,
+        medical_appointment.id AS record_id,
+        COALESCE(
+          (medical_appointment.appointment_date::timestamp + COALESCE(medical_appointment.appointment_time, TIME '00:00')),
+          medical_appointment.created_at
+        ) AS occurred_at,
+        jsonb_build_object(
+          'specialty', medical_appointment.specialty,
+          'status', medical_appointment.status,
+          'appointmentDate', medical_appointment.appointment_date,
+          'appointmentTime', medical_appointment.appointment_time,
+          'healthCenterId', medical_appointment.health_center_id,
+          'isFirstConsultation', medical_appointment.is_first_consultation
+        ) AS data
+      FROM patient_medical_appointments medical_appointment
+      WHERE medical_appointment.follow_up_id = ANY($1::uuid[])
+        AND medical_appointment.is_current = true
 
       UNION ALL
 
@@ -742,6 +766,25 @@ export class PatientTimelineService {
           optionalPart('Derivación', text(data, 'referral')),
         ];
         summary = sentence(parts);
+        break;
+      }
+      case PatientTimelineOutcomeType.MEDICAL_APPOINTMENT: {
+        const specialty = text(data, 'specialty') ?? 'Especialidad no indicada';
+        const status =
+          mapValue(data, 'status', APPOINTMENT_STATUS_LABELS) ?? 'registrada';
+        const datePart = optionalPart(
+          'Fecha',
+          dateOnly(data, 'appointmentDate'),
+        );
+        const timePart = text(data, 'appointmentTime');
+        summary = sentence([
+          `${specialty} · ${status}`,
+          datePart,
+          timePart ? `Hora ${timePart.slice(0, 5)}` : null,
+          bool(data, 'isFirstConsultation')
+            ? 'Primera consulta oncológica'
+            : null,
+        ]);
         break;
       }
       case PatientTimelineOutcomeType.ALERT: {

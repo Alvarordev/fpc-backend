@@ -1,0 +1,4 @@
+export enum ReminderKind {
+  GENERIC = 'GENERIC',
+  MEDICAL_APPOINTMENT = 'MEDICAL_APPOINTMENT',
+}

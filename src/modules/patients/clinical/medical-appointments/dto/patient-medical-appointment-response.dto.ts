@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { MedicalAppointmentStatus } from '../../../../../database/entities/medical-appointment-status.enum';
 import { PatientMedicalAppointment } from '../../../../../database/entities/patient-medical-appointment.entity';
 
 export class PatientMedicalAppointmentResponseDto {
@@ -47,6 +48,12 @@ export class PatientMedicalAppointmentResponseDto {
   @ApiProperty()
   isFirstConsultation!: boolean;
 
+  @ApiProperty({ enum: MedicalAppointmentStatus })
+  status!: MedicalAppointmentStatus;
+
+  @ApiProperty({ format: 'uuid', nullable: true })
+  reminderId!: string | null;
+
   @ApiProperty()
   isCurrent!: boolean;
 
@@ -75,6 +82,8 @@ export class PatientMedicalAppointmentResponseDto {
       referralNotProvidedReason: appointment.referralNotProvidedReason,
       difficulties: appointment.difficulties,
       isFirstConsultation: appointment.isFirstConsultation,
+      status: appointment.status,
+      reminderId: appointment.reminderId,
       isCurrent: appointment.isCurrent,
       changeReason: appointment.changeReason,
       createdAt: appointment.createdAt.toISOString(),
