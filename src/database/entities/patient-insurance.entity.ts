@@ -63,6 +63,8 @@ export class PatientInsurance {
     string | null;
   @Column({ name: 'end_date', type: 'date', nullable: true }) endDate!:
     string | null;
+  @Column({ name: 'affiliated_via_sepa', type: 'boolean', nullable: true })
+  affiliatedViaSepa!: boolean | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }

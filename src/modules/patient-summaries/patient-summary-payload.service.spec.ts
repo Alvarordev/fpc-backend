@@ -61,4 +61,55 @@ describe('PatientSummaryPayloadService', () => {
     expect(prompt).not.toContain('Secret address');
     expect(prompt).toContain('Lima');
   });
+
+  it('includes medical appointments and difficulties in the prompt', async () => {
+    const patient = {
+      id: 'patient-id',
+      dni: null,
+      email: null,
+      primaryPhone: null,
+      birthDate: '1980-01-01',
+      gender: 'F',
+      role: 'PATIENT',
+      status: 'ENROLLED',
+      activityStatus: 'ACTIVE',
+      details: null,
+    } as unknown as Patient;
+    const emptyFind = jest.fn().mockResolvedValue([]);
+    const appointmentsFind = jest.fn().mockResolvedValue([
+      {
+        specialty: 'Oncologia',
+        appointmentDate: '2026-01-10',
+        nextAppointmentDate: '2026-02-10',
+        nextAppointmentSpecialty: 'Oncologia',
+        difficulties: 'Falta de transporte',
+      },
+    ]);
+    const service = new PatientSummaryPayloadService(
+      {
+        findOne: jest.fn().mockResolvedValue(patient),
+      } as unknown as Repository<Patient>,
+      { find: emptyFind } as unknown as Repository<PatientDiagnosis>,
+      { find: emptyFind } as unknown as Repository<PatientInsurance>,
+      { find: emptyFind } as unknown as Repository<PatientTreatment>,
+      { find: appointmentsFind } as unknown as Repository<PatientMedicalAppointment>,
+      { find: emptyFind } as unknown as Repository<PatientSisAffiliation>,
+      { find: emptyFind } as unknown as Repository<PatientSymptomReport>,
+      { find: emptyFind } as unknown as Repository<Enrollment>,
+      { find: emptyFind } as unknown as Repository<FollowUp>,
+      {
+        findOne: jest.fn().mockResolvedValue(null),
+      } as unknown as Repository<PatientAddress>,
+      {
+        findOneBy: jest.fn().mockResolvedValue(null),
+      } as unknown as Repository<HealthCenter>,
+    );
+
+    const prompt = await service.buildPrompt('patient-id');
+
+    expect(prompt).toContain('Oncologia');
+    expect(prompt).toContain('Falta de transporte');
+    expect(prompt).toContain('citas medicas');
+    expect(prompt).toContain('appointments.difficulties');
+  });
 });

@@ -15,6 +15,7 @@ import { DashboardService } from '../modules/dashboard/dashboard.service';
 import { AuthController } from '../modules/auth/auth.controller';
 import { AuthService } from '../modules/auth/auth.service';
 import { EnrollmentsController } from '../modules/enrollments/enrollments.controller';
+import { FamilyTalkInterestsController } from '../modules/enrollments/family-talk-interests.controller';
 import { EnrollmentsService } from '../modules/enrollments/enrollments.service';
 import { FollowUpsController } from '../modules/follow-ups/follow-ups.controller';
 import { FollowUpsService } from '../modules/follow-ups/follow-ups.service';
@@ -79,6 +80,7 @@ import { PatientPsychooncologySupportAssessmentsService } from '../modules/patie
     FoundationsController,
     AuthController,
     EnrollmentsController,
+    FamilyTalkInterestsController,
     FollowUpsController,
     HealthCentersController,
     HealthController,

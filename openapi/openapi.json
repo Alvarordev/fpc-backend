@@ -1496,6 +1496,71 @@
         ]
       }
     },
+    "/family-talk-interests": {
+      "get": {
+        "description": "Returns interests collected during enrollment, with the related patient.",
+        "operationId": "FamilyTalkInterestsController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by family member name or patient name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyTalkInterestListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List family members interested in cancer prevention talks",
+        "tags": [
+          "family-talk-interests"
+        ]
+      }
+    },
     "/follow-ups": {
       "post": {
         "operationId": "FollowUpsController_create",
@@ -7946,6 +8011,9 @@
           },
           "endDate": {
             "type": "string"
+          },
+          "affiliatedViaSepa": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -8802,6 +8870,73 @@
         },
         "required": [
           "followUpQualityRating"
+        ]
+      },
+      "FamilyTalkInterestResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "talkName": {
+            "type": "string"
+          },
+          "familyMemberName": {
+            "type": "string"
+          },
+          "familyMemberPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "familyMemberEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientFullName": {
+            "type": "string"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "talkName",
+          "familyMemberName",
+          "familyMemberPhone",
+          "familyMemberEmail",
+          "patientId",
+          "patientFullName",
+          "enrollmentId",
+          "createdAt"
+        ]
+      },
+      "FamilyTalkInterestListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamilyTalkInterestResponseDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "total"
         ]
       },
       "CreateFollowUpDto": {
@@ -11130,6 +11265,10 @@
             "nullable": true,
             "format": "date"
           },
+          "affiliatedViaSepa": {
+            "type": "boolean",
+            "nullable": true
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -11145,6 +11284,7 @@
           "changeReason",
           "startDate",
           "endDate",
+          "affiliatedViaSepa",
           "createdAt"
         ]
       },
@@ -12038,6 +12178,9 @@
           },
           "endDate": {
             "type": "string"
+          },
+          "affiliatedViaSepa": {
+            "type": "boolean"
           }
         },
         "required": [

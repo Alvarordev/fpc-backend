@@ -52,6 +52,8 @@ export class EnrollmentsService {
   constructor(
     @InjectRepository(Enrollment)
     private readonly enrollments: Repository<Enrollment>,
+    @InjectRepository(EnrollmentFamilyTalkInterest)
+    private readonly familyTalkInterests: Repository<EnrollmentFamilyTalkInterest>,
     @InjectRepository(Agent)
     private readonly agents: Repository<Agent>,
     private readonly dataSource: DataSource,
@@ -435,6 +437,33 @@ export class EnrollmentsService {
       where: { patientId },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async findFamilyTalkInterests(filters: {
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    const limit = filters.limit ?? 50;
+    const offset = filters.offset ?? 0;
+    const query = this.familyTalkInterests
+      .createQueryBuilder('interest')
+      .innerJoinAndSelect('interest.enrollment', 'enrollment')
+      .innerJoinAndSelect('enrollment.patient', 'patient')
+      .orderBy('interest.createdAt', 'DESC')
+      .skip(offset)
+      .take(limit);
+
+    if (filters.search?.trim()) {
+      const search = `%${filters.search.trim()}%`;
+      query.andWhere(
+        '(interest.familyMemberName ILIKE :search OR patient.fullName ILIKE :search)',
+        { search },
+      );
+    }
+
+    const [data, total] = await query.getManyAndCount();
+    return { data, total };
   }
 
   async updateSurvey(

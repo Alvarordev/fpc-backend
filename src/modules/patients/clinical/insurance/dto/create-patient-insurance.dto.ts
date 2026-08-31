@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsDateString,
   IsIn,
   IsOptional,
@@ -17,4 +18,5 @@ export class CreatePatientInsuranceDto {
   @IsOptional() @IsString() changeReason?: string;
   @IsOptional() @IsDateString() startDate?: string;
   @IsOptional() @IsDateString() endDate?: string;
+  @IsOptional() @IsBoolean() affiliatedViaSepa?: boolean;
 }

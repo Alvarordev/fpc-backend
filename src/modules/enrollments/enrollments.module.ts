@@ -8,6 +8,7 @@ import { PatientsModule } from '../patients/patients.module';
 import { PatientSummariesModule } from '../patient-summaries/patient-summaries.module';
 import { N8nModule } from '../../integrations/n8n/n8n.module';
 import { EnrollmentsController } from './enrollments.controller';
+import { FamilyTalkInterestsController } from './family-talk-interests.controller';
 import { EnrollmentsService } from './enrollments.service';
 
 @Module({
@@ -18,7 +19,7 @@ import { EnrollmentsService } from './enrollments.service';
     FollowUpsModule,
     N8nModule,
   ],
-  controllers: [EnrollmentsController],
+  controllers: [EnrollmentsController, FamilyTalkInterestsController],
   providers: [EnrollmentsService],
 })
 export class EnrollmentsModule {}

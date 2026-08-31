@@ -131,7 +131,10 @@ export class PatientSummaryPayloadService {
         symptoms: item.symptomLeadingToCheckup,
         sepaActiveReferral: item.isSepaActiveReferral,
       })),
-      insurance: insurance.map((item) => ({ type: item.insuranceType })),
+      insurance: insurance.map((item) => ({
+        type: item.insuranceType,
+        affiliatedViaSepa: item.affiliatedViaSepa,
+      })),
       treatments: treatments.map((item) => ({
         type: item.treatmentType,
         frequency: item.treatmentFrequency?.label ?? null,
@@ -183,6 +186,8 @@ export class PatientSummaryPayloadService {
       'Redacta un resumen clinico y operativo conciso en espanol.',
       'Usa exclusivamente los datos provistos, no inventes hechos ni recomendaciones medicas.',
       'Incluye diagnostico, tratamiento, sintomas, barreras y proximos seguimientos si constan.',
+      'Si hay citas medicas (appointments), incluye especialidad, fecha de la ultima consulta y de la siguiente cuando consten.',
+      'Si hay dificultades para asistir a las citas (appointments.difficulties), incluyelas de forma explicita; no las omitas.',
       'Responde en texto plano, en parrafos corridos.',
       'No uses markdown: nada de asteriscos, negritas, encabezados ni listas con vinetas.',
       'No agregues frases introductorias ni de cierre (por ejemplo "Aqui presento..." o "En resumen..."); empieza directamente con el contenido del resumen.',

@@ -33,6 +33,9 @@ export class PatientInsuranceResponseDto {
   @ApiProperty({ format: 'date', nullable: true })
   endDate!: string | null;
 
+  @ApiProperty({ nullable: true })
+  affiliatedViaSepa!: boolean | null;
+
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
 
@@ -47,6 +50,7 @@ export class PatientInsuranceResponseDto {
       changeReason: insurance.changeReason,
       startDate: insurance.startDate,
       endDate: insurance.endDate,
+      affiliatedViaSepa: insurance.affiliatedViaSepa,
       createdAt: insurance.createdAt.toISOString(),
     };
   }
