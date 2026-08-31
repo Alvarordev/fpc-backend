@@ -126,6 +126,14 @@ export class PatientTreatmentsService {
           input.treatmentSituation === TreatmentSituation.ABANDONED
             ? (input.treatmentAbandonmentReason ?? null)
             : null,
+        interruptionReason:
+          input.treatmentSituation === TreatmentSituation.INTERRUMPIDO
+            ? (input.interruptionReason ?? null)
+            : null,
+        interruptionReasonOther:
+          input.treatmentSituation === TreatmentSituation.INTERRUMPIDO
+            ? (input.interruptionReasonOther ?? null)
+            : null,
         isReferred,
         sourceHealthCenterId: isReferred ? sourceHealthCenterId : null,
         receivingHealthCenterId,

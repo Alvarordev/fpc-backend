@@ -3,10 +3,12 @@ import {
   IsBoolean,
   IsDateString,
   IsIn,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
+  Min,
   Validate,
   ValidateIf,
   ValidateNested,
@@ -14,7 +16,9 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
+import { AccessBarrierCode } from '../../../../../database/entities/access-barrier-code.enum';
 import { CareProgram } from '../../../../../database/entities/care-program.enum';
+import { TreatmentInterruptionReason } from '../../../../../database/entities/treatment-interruption-reason.enum';
 import { Type } from 'class-transformer';
 import { TreatmentSituation } from '../../../../../database/entities/treatment-situation.enum';
 import { DurationDto } from '../../../../../shared/duration/duration.dto';
@@ -74,6 +78,24 @@ export class CreatePatientTreatmentDto {
   @IsString()
   @IsNotEmpty()
   treatmentAbandonmentReason?: string;
+
+  @ValidateIf(
+    (dto: CreatePatientTreatmentDto) =>
+      dto.treatmentSituation === TreatmentSituation.INTERRUMPIDO,
+  )
+  @IsIn(Object.values(TreatmentInterruptionReason))
+  @IsNotEmpty()
+  interruptionReason?: TreatmentInterruptionReason;
+  @IsOptional() @IsString() interruptionReasonOther?: string;
+  @IsOptional() @IsBoolean() treatmentViaSepa?: boolean;
+  @IsOptional() @IsInt() @Min(0) scheduledSessions?: number;
+  @IsOptional() @IsInt() @Min(0) completedSessions?: number;
+  @IsOptional() @IsBoolean() hormonalTreatmentCompleted?: boolean;
+  @IsOptional()
+  @IsIn(Object.values(AccessBarrierCode))
+  accessBarrierCode?: AccessBarrierCode;
+  @IsOptional() @IsString() accessBarrierOther?: string;
+  @IsOptional() @IsBoolean() orientedRegardingBarriers?: boolean;
   @IsOptional() @IsBoolean() hasLatestPrescription?: boolean;
   @IsOptional() @IsDateString() latestPrescriptionDate?: string;
   @IsOptional()

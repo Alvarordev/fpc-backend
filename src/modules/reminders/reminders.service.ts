@@ -246,6 +246,8 @@ export class RemindersService {
           referredTo: null,
           referralNotProvidedReason: null,
           difficulties: null,
+          attendedViaSepa: null,
+          referredViaSepa: null,
           changeReason: null,
         },
         manager,
@@ -335,6 +337,14 @@ export class RemindersService {
           payload.difficulties !== undefined
             ? payload.difficulties
             : existing.difficulties,
+        attendedViaSepa:
+          payload.status === MedicalAppointmentStatus.COMPLETED
+            ? (payload.attendedViaSepa ?? existing.attendedViaSepa)
+            : existing.attendedViaSepa,
+        referredViaSepa:
+          payload.status === MedicalAppointmentStatus.COMPLETED
+            ? (payload.referredViaSepa ?? existing.referredViaSepa)
+            : existing.referredViaSepa,
         isFirstConsultation: existing.isFirstConsultation,
         status: payload.status,
         reminderId: reminder.id,
@@ -375,6 +385,8 @@ export class RemindersService {
         referredTo: existing.referredTo,
         referralNotProvidedReason: existing.referralNotProvidedReason,
         difficulties: existing.difficulties,
+        attendedViaSepa: existing.attendedViaSepa,
+        referredViaSepa: existing.referredViaSepa,
         isFirstConsultation: existing.isFirstConsultation,
         status: MedicalAppointmentStatus.CANCELLED,
         reminderId: reminder.id,

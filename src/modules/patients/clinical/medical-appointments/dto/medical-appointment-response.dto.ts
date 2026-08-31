@@ -25,6 +25,8 @@ export class MedicalAppointmentResponseDto {
   @ApiProperty({ nullable: true }) referralNotProvidedReason!: string | null;
   @ApiProperty({ nullable: true }) difficulties!: string | null;
   @ApiProperty() isFirstConsultation!: boolean;
+  @ApiProperty({ nullable: true }) attendedViaSepa!: boolean | null;
+  @ApiProperty({ nullable: true }) referredViaSepa!: boolean | null;
   @ApiProperty({ enum: MedicalAppointmentStatus })
   status!: MedicalAppointmentStatus;
   @ApiProperty({ format: 'uuid', nullable: true }) reminderId!: string | null;
@@ -53,6 +55,8 @@ export class MedicalAppointmentResponseDto {
       referralNotProvidedReason: appointment.referralNotProvidedReason,
       difficulties: appointment.difficulties,
       isFirstConsultation: appointment.isFirstConsultation,
+      attendedViaSepa: appointment.attendedViaSepa,
+      referredViaSepa: appointment.referredViaSepa,
       status: appointment.status,
       reminderId: appointment.reminderId,
       isCurrent: appointment.isCurrent,

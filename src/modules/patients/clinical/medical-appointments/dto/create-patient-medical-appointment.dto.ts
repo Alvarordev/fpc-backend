@@ -23,4 +23,6 @@ export class CreatePatientMedicalAppointmentDto {
   @IsOptional() @IsString() difficulties?: string;
   @IsOptional() @IsBoolean() isFirstConsultation?: boolean;
   @IsOptional() @IsString() changeReason?: string;
+  @IsOptional() @IsBoolean() attendedViaSepa?: boolean;
+  @IsOptional() @IsBoolean() referredViaSepa?: boolean;
 }

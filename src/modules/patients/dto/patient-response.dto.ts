@@ -18,6 +18,9 @@ import { PatientHealthBackgroundAssessmentResponseDto } from '../clinical/health
 import { CompanionPatient } from '../../../database/entities/companion-patient.entity';
 import { DeactivationReason } from '../../../database/entities/deactivation-reason.enum';
 import { EducationLevel } from '../../../database/entities/education-level.enum';
+import { ProgramDropoutReasonCode } from '../../../database/entities/program-dropout-reason-code.enum';
+import { ShelterSepaProvider } from '../../../database/entities/shelter-sepa-provider.enum';
+import { TransportationSepaProvider } from '../../../database/entities/transportation-sepa-provider.enum';
 import { PatientActivityStatus } from '../../../database/entities/patient-activity-status.enum';
 import { PatientDetails } from '../../../database/entities/patient-details.entity';
 import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
@@ -125,6 +128,33 @@ export class PatientDetailsResponseDto {
   @ApiProperty({ format: 'date', nullable: true })
   programDropoutDate!: string | null;
 
+  @ApiProperty({ nullable: true })
+  transportationViaSepa!: boolean | null;
+
+  @ApiProperty({ enum: TransportationSepaProvider, nullable: true })
+  transportationSepaProvider!: TransportationSepaProvider | null;
+
+  @ApiProperty({ nullable: true })
+  transportationSepaProviderOther!: string | null;
+
+  @ApiProperty({ nullable: true })
+  shelterViaSepa!: boolean | null;
+
+  @ApiProperty({ enum: ShelterSepaProvider, nullable: true })
+  shelterSepaProvider!: ShelterSepaProvider | null;
+
+  @ApiProperty({ nullable: true })
+  shelterSepaProviderOther!: string | null;
+
+  @ApiProperty({ nullable: true })
+  attendedEducationalTalk!: boolean | null;
+
+  @ApiProperty({ format: 'date', nullable: true })
+  attendedEducationalTalkAt!: string | null;
+
+  @ApiProperty({ enum: ProgramDropoutReasonCode, nullable: true })
+  programDropoutReasonCode!: ProgramDropoutReasonCode | null;
+
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
 
@@ -174,6 +204,15 @@ export class PatientDetailsResponseDto {
       knowsAboutFissal: details.knowsAboutFissal,
       programDropoutReason: details.programDropoutReason,
       programDropoutDate: details.programDropoutDate,
+      transportationViaSepa: details.transportationViaSepa,
+      transportationSepaProvider: details.transportationSepaProvider,
+      transportationSepaProviderOther: details.transportationSepaProviderOther,
+      shelterViaSepa: details.shelterViaSepa,
+      shelterSepaProvider: details.shelterSepaProvider,
+      shelterSepaProviderOther: details.shelterSepaProviderOther,
+      attendedEducationalTalk: details.attendedEducationalTalk,
+      attendedEducationalTalkAt: details.attendedEducationalTalkAt,
+      programDropoutReasonCode: details.programDropoutReasonCode,
       createdAt: details.createdAt.toISOString(),
       updatedAt: details.updatedAt.toISOString(),
       healthPhaseHistory: history.map((history) =>

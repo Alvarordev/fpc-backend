@@ -22,6 +22,8 @@ export class CompleteReminderMedicalAppointmentDto {
   @IsOptional() @IsString() difficulties?: string;
   @IsOptional() @IsDateString() nextAppointmentDate?: string;
   @IsOptional() @IsString() @MaxLength(255) nextAppointmentSpecialty?: string;
+  @IsOptional() @IsBoolean() attendedViaSepa?: boolean;
+  @IsOptional() @IsBoolean() referredViaSepa?: boolean;
   @IsString() changeReason!: string;
 }
 

@@ -125,3 +125,129 @@ export class DashboardEpidemiologyResponseDto {
   @ApiProperty({ type: DashboardEpidemiologyEventsDto })
   events!: DashboardEpidemiologyEventsDto;
 }
+
+export class DashboardManagementResponseDto {
+  @ApiProperty({ type: DashboardIndicatorMetaDto })
+  meta!: DashboardIndicatorMetaDto;
+
+  @ApiProperty()
+  sisAffiliatedViaSepa!: number;
+
+  @ApiProperty()
+  essaludAffiliatedViaSepa!: number;
+
+  @ApiProperty()
+  primaryCareViaSepa!: number;
+
+  @ApiProperty()
+  referredViaSepa!: number;
+
+  @ApiProperty({ type: DashboardIndicatorDistributionDto })
+  specialtyForDiagnosis!: DashboardIndicatorDistributionDto;
+
+  @ApiProperty()
+  diagnosticRuledOutViaSepa!: number;
+
+  @ApiProperty()
+  diagnosticConfirmedViaSepa!: number;
+
+  @ApiProperty()
+  treatmentViaSepa!: number;
+
+  @ApiProperty()
+  transportationViaSepa!: number;
+
+  @ApiProperty({ type: DashboardIndicatorDistributionDto })
+  transportationSepaProviders!: DashboardIndicatorDistributionDto;
+
+  @ApiProperty()
+  shelterViaSepa!: number;
+
+  @ApiProperty({ type: DashboardIndicatorDistributionDto })
+  shelterSepaProviders!: DashboardIndicatorDistributionDto;
+}
+
+export class DashboardProductivityResponseDto {
+  @ApiProperty({ type: DashboardIndicatorMetaDto })
+  meta!: DashboardIndicatorMetaDto;
+
+  @ApiProperty({
+    description:
+      'Average days from enrollment to SIS affiliation (affiliated_via_sepa only). Null when unknown.',
+    nullable: true,
+  })
+  avgDaysEnrollmentToSis!: number | null;
+
+  @ApiProperty({ nullable: true })
+  avgDaysPrimaryCareToDiagnosis!: number | null;
+
+  @ApiProperty({ nullable: true })
+  avgDaysDiagnosisToTreatment!: number | null;
+
+  @ApiProperty()
+  activePatients!: number;
+
+  @ApiProperty()
+  benefitSupport!: number;
+
+  @ApiProperty()
+  benefitPsychooncology!: number;
+
+  @ApiProperty()
+  benefitEducationalTalks!: number;
+
+  @ApiProperty()
+  allThreeBenefits!: number;
+}
+
+export class DashboardAdherenceResponseDto {
+  @ApiProperty({ type: DashboardIndicatorMetaDto })
+  meta!: DashboardIndicatorMetaDto;
+
+  @ApiProperty({
+    description:
+      'Percentage of completed vs scheduled chemo/radio sessions where both values are known.',
+  })
+  chemoRadioCompliancePct!: number;
+
+  @ApiProperty()
+  hormonalCompleted!: number;
+
+  @ApiProperty()
+  hormonalPatients!: number;
+
+  @ApiProperty()
+  withAccessBarriers!: number;
+
+  @ApiProperty()
+  orientedRegardingBarriers!: number;
+
+  @ApiProperty()
+  abandonedWithBarriers!: number;
+
+  @ApiProperty()
+  interruptedAdverseReaction!: number;
+
+  @ApiProperty()
+  palliativeNoActiveTreatment!: number;
+}
+
+export class DashboardAbandonmentResponseDto {
+  @ApiProperty({ type: DashboardIndicatorMetaDto })
+  meta!: DashboardIndicatorMetaDto;
+
+  @ApiProperty({ type: DashboardIndicatorDistributionDto })
+  dropoutReasons!: DashboardIndicatorDistributionDto;
+
+  @ApiProperty()
+  voluntary!: number;
+
+  @ApiProperty()
+  unlocatable!: number;
+
+  @ApiProperty()
+  deceased!: number;
+
+  @ApiProperty()
+  other!: number;
+}

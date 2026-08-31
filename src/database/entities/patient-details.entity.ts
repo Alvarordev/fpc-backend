@@ -11,6 +11,9 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { EducationLevel } from './education-level.enum';
+import { ProgramDropoutReasonCode } from './program-dropout-reason-code.enum';
+import { ShelterSepaProvider } from './shelter-sepa-provider.enum';
+import { TransportationSepaProvider } from './transportation-sepa-provider.enum';
 import { PatientHealthPhase } from './patient-health-phase.enum';
 import { PatientHealthSubcategory } from './patient-health-subcategory.enum';
 import { Patient } from './patient.entity';
@@ -28,6 +31,18 @@ import { HealthCenter } from './health-center.entity';
 @Check(
   'CHK_patient_details_health_subcategory',
   "\"health_subcategory\" IS NULL OR \"health_subcategory\" IN ('SIGNS_AND_SYMPTOMS_PATIENT', 'ACTIVE_TREATMENT', 'UNDER_CONTROLS', 'TREATMENT_ABANDONED', 'PALLIATIVE_NO_ACTIVE_TREATMENT', 'CANCER_RULED_OUT')",
+)
+@Check(
+  'CHK_patient_details_transportation_sepa_provider',
+  "\"transportation_sepa_provider\" IS NULL OR \"transportation_sepa_provider\" IN ('CRUZ_DEL_SUR','LATAM_AVION_SOLIDARIO','OTHER')",
+)
+@Check(
+  'CHK_patient_details_shelter_sepa_provider',
+  "\"shelter_sepa_provider\" IS NULL OR \"shelter_sepa_provider\" IN ('FRIEDA_HELLER','CASA_MAGIA','CASA_RONALD_MCDONALD','INSPIRA','ALINEN','OTHER')",
+)
+@Check(
+  'CHK_patient_details_program_dropout_reason_code',
+  "\"program_dropout_reason_code\" IS NULL OR \"program_dropout_reason_code\" IN ('VOLUNTARY','UNLOCATABLE','DECEASED','OTHER')",
 )
 @Index('IDX_patient_details_health_phase', ['healthPhase'])
 @Index('IDX_patient_details_health_subcategory', ['healthSubcategory'])
@@ -156,6 +171,53 @@ export class PatientDetails {
 
   @Column({ name: 'program_dropout_date', type: 'date', nullable: true })
   programDropoutDate!: string | null;
+
+
+  @Column({ name: 'transportation_via_sepa', type: 'boolean', nullable: true })
+  transportationViaSepa!: boolean | null;
+
+  @Column({
+    name: 'transportation_sepa_provider',
+    type: 'varchar',
+    length: 40,
+    nullable: true,
+  })
+  transportationSepaProvider!: TransportationSepaProvider | null;
+
+  @Column({
+    name: 'transportation_sepa_provider_other',
+    type: 'text',
+    nullable: true,
+  })
+  transportationSepaProviderOther!: string | null;
+
+  @Column({ name: 'shelter_via_sepa', type: 'boolean', nullable: true })
+  shelterViaSepa!: boolean | null;
+
+  @Column({
+    name: 'shelter_sepa_provider',
+    type: 'varchar',
+    length: 40,
+    nullable: true,
+  })
+  shelterSepaProvider!: ShelterSepaProvider | null;
+
+  @Column({ name: 'shelter_sepa_provider_other', type: 'text', nullable: true })
+  shelterSepaProviderOther!: string | null;
+
+  @Column({ name: 'attended_educational_talk', type: 'boolean', nullable: true })
+  attendedEducationalTalk!: boolean | null;
+
+  @Column({ name: 'attended_educational_talk_at', type: 'date', nullable: true })
+  attendedEducationalTalkAt!: string | null;
+
+  @Column({
+    name: 'program_dropout_reason_code',
+    type: 'varchar',
+    length: 40,
+    nullable: true,
+  })
+  programDropoutReasonCode!: ProgramDropoutReasonCode | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

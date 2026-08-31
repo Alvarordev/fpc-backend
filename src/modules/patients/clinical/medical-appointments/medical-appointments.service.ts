@@ -118,6 +118,14 @@ export class MedicalAppointmentsService {
           input.isFirstConsultation !== undefined
             ? input.isFirstConsultation
             : existing.isFirstConsultation,
+        attendedViaSepa:
+          input.attendedViaSepa !== undefined
+            ? input.attendedViaSepa
+            : existing.attendedViaSepa,
+        referredViaSepa:
+          input.referredViaSepa !== undefined
+            ? input.referredViaSepa
+            : existing.referredViaSepa,
         status: existing.status,
         reminderId: existing.reminderId,
         changeReason: input.changeReason,

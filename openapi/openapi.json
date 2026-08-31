@@ -677,6 +677,434 @@
         ]
       }
     },
+    "/dashboard/indicators/management": {
+      "get": {
+        "operationId": "DashboardController_getManagement",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "month",
+              "type": "string",
+              "enum": [
+                "month",
+                "year"
+              ]
+            }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 2000,
+              "maximum": 2100,
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Required with period=month and year. Month is one-based.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 12,
+              "example": 8,
+              "type": "number"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive Lima calendar date. Use with to as an alternative to period/year/month.",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive Lima calendar date. Use with from.",
+            "schema": {
+              "example": "2026-02-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "Only America/Lima is supported.",
+            "schema": {
+              "default": "America/Lima",
+              "example": "America/Lima",
+              "type": "string",
+              "enum": [
+                "America/Lima"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardManagementResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The indicator period or timezone is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get SEPA management dashboard indicators",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/dashboard/indicators/productivity": {
+      "get": {
+        "operationId": "DashboardController_getProductivity",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "month",
+              "type": "string",
+              "enum": [
+                "month",
+                "year"
+              ]
+            }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 2000,
+              "maximum": 2100,
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Required with period=month and year. Month is one-based.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 12,
+              "example": 8,
+              "type": "number"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive Lima calendar date. Use with to as an alternative to period/year/month.",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive Lima calendar date. Use with from.",
+            "schema": {
+              "example": "2026-02-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "Only America/Lima is supported.",
+            "schema": {
+              "default": "America/Lima",
+              "example": "America/Lima",
+              "type": "string",
+              "enum": [
+                "America/Lima"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardProductivityResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The indicator period or timezone is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get SEPA productivity dashboard indicators",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/dashboard/indicators/adherence": {
+      "get": {
+        "operationId": "DashboardController_getAdherence",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "month",
+              "type": "string",
+              "enum": [
+                "month",
+                "year"
+              ]
+            }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 2000,
+              "maximum": 2100,
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Required with period=month and year. Month is one-based.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 12,
+              "example": 8,
+              "type": "number"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive Lima calendar date. Use with to as an alternative to period/year/month.",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive Lima calendar date. Use with from.",
+            "schema": {
+              "example": "2026-02-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "Only America/Lima is supported.",
+            "schema": {
+              "default": "America/Lima",
+              "example": "America/Lima",
+              "type": "string",
+              "enum": [
+                "America/Lima"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardAdherenceResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The indicator period or timezone is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get SEPA adherence dashboard indicators",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/dashboard/indicators/abandonment": {
+      "get": {
+        "operationId": "DashboardController_getAbandonment",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "month",
+              "type": "string",
+              "enum": [
+                "month",
+                "year"
+              ]
+            }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 2000,
+              "maximum": 2100,
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Required with period=month and year. Month is one-based.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 12,
+              "example": 8,
+              "type": "number"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive Lima calendar date. Use with to as an alternative to period/year/month.",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive Lima calendar date. Use with from.",
+            "schema": {
+              "example": "2026-02-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "Only America/Lima is supported.",
+            "schema": {
+              "default": "America/Lima",
+              "example": "America/Lima",
+              "type": "string",
+              "enum": [
+                "America/Lima"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardAbandonmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The indicator period or timezone is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get SEPA abandonment dashboard indicators",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
     "/dashboard/indicators/epidemiology": {
       "get": {
         "operationId": "DashboardController_getEpidemiology",
@@ -7116,6 +7544,187 @@
           "epsProvider"
         ]
       },
+      "DashboardManagementResponseDto": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/DashboardIndicatorMetaDto"
+          },
+          "sisAffiliatedViaSepa": {
+            "type": "number"
+          },
+          "essaludAffiliatedViaSepa": {
+            "type": "number"
+          },
+          "primaryCareViaSepa": {
+            "type": "number"
+          },
+          "referredViaSepa": {
+            "type": "number"
+          },
+          "specialtyForDiagnosis": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "diagnosticRuledOutViaSepa": {
+            "type": "number"
+          },
+          "diagnosticConfirmedViaSepa": {
+            "type": "number"
+          },
+          "treatmentViaSepa": {
+            "type": "number"
+          },
+          "transportationViaSepa": {
+            "type": "number"
+          },
+          "transportationSepaProviders": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "shelterViaSepa": {
+            "type": "number"
+          },
+          "shelterSepaProviders": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          }
+        },
+        "required": [
+          "meta",
+          "sisAffiliatedViaSepa",
+          "essaludAffiliatedViaSepa",
+          "primaryCareViaSepa",
+          "referredViaSepa",
+          "specialtyForDiagnosis",
+          "diagnosticRuledOutViaSepa",
+          "diagnosticConfirmedViaSepa",
+          "treatmentViaSepa",
+          "transportationViaSepa",
+          "transportationSepaProviders",
+          "shelterViaSepa",
+          "shelterSepaProviders"
+        ]
+      },
+      "DashboardProductivityResponseDto": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/DashboardIndicatorMetaDto"
+          },
+          "avgDaysEnrollmentToSis": {
+            "type": "number",
+            "nullable": true,
+            "description": "Average days from enrollment to SIS affiliation (affiliated_via_sepa only). Null when unknown."
+          },
+          "avgDaysPrimaryCareToDiagnosis": {
+            "type": "number",
+            "nullable": true
+          },
+          "avgDaysDiagnosisToTreatment": {
+            "type": "number",
+            "nullable": true
+          },
+          "activePatients": {
+            "type": "number"
+          },
+          "benefitSupport": {
+            "type": "number"
+          },
+          "benefitPsychooncology": {
+            "type": "number"
+          },
+          "benefitEducationalTalks": {
+            "type": "number"
+          },
+          "allThreeBenefits": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "meta",
+          "avgDaysEnrollmentToSis",
+          "avgDaysPrimaryCareToDiagnosis",
+          "avgDaysDiagnosisToTreatment",
+          "activePatients",
+          "benefitSupport",
+          "benefitPsychooncology",
+          "benefitEducationalTalks",
+          "allThreeBenefits"
+        ]
+      },
+      "DashboardAdherenceResponseDto": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/DashboardIndicatorMetaDto"
+          },
+          "chemoRadioCompliancePct": {
+            "type": "number",
+            "description": "Percentage of completed vs scheduled chemo/radio sessions where both values are known."
+          },
+          "hormonalCompleted": {
+            "type": "number"
+          },
+          "hormonalPatients": {
+            "type": "number"
+          },
+          "withAccessBarriers": {
+            "type": "number"
+          },
+          "orientedRegardingBarriers": {
+            "type": "number"
+          },
+          "abandonedWithBarriers": {
+            "type": "number"
+          },
+          "interruptedAdverseReaction": {
+            "type": "number"
+          },
+          "palliativeNoActiveTreatment": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "meta",
+          "chemoRadioCompliancePct",
+          "hormonalCompleted",
+          "hormonalPatients",
+          "withAccessBarriers",
+          "orientedRegardingBarriers",
+          "abandonedWithBarriers",
+          "interruptedAdverseReaction",
+          "palliativeNoActiveTreatment"
+        ]
+      },
+      "DashboardAbandonmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/DashboardIndicatorMetaDto"
+          },
+          "dropoutReasons": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "voluntary": {
+            "type": "number"
+          },
+          "unlocatable": {
+            "type": "number"
+          },
+          "deceased": {
+            "type": "number"
+          },
+          "other": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "meta",
+          "dropoutReasons",
+          "voluntary",
+          "unlocatable",
+          "deceased",
+          "other"
+        ]
+      },
       "DashboardEpidemiologyEventsDto": {
         "type": "object",
         "properties": {
@@ -7974,6 +8583,53 @@
           "programDropoutDate": {
             "type": "string",
             "format": "date"
+          },
+          "transportationViaSepa": {
+            "type": "boolean"
+          },
+          "transportationSepaProvider": {
+            "enum": [
+              "CRUZ_DEL_SUR",
+              "LATAM_AVION_SOLIDARIO",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "transportationSepaProviderOther": {
+            "type": "string"
+          },
+          "shelterViaSepa": {
+            "type": "boolean"
+          },
+          "shelterSepaProvider": {
+            "enum": [
+              "FRIEDA_HELLER",
+              "CASA_MAGIA",
+              "CASA_RONALD_MCDONALD",
+              "INSPIRA",
+              "ALINEN",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "shelterSepaProviderOther": {
+            "type": "string"
+          },
+          "attendedEducationalTalk": {
+            "type": "boolean"
+          },
+          "attendedEducationalTalkAt": {
+            "type": "string",
+            "format": "date"
+          },
+          "programDropoutReasonCode": {
+            "enum": [
+              "VOLUNTARY",
+              "UNLOCATABLE",
+              "DECEASED",
+              "OTHER"
+            ],
+            "type": "string"
           }
         }
       },
@@ -8247,6 +8903,51 @@
           "treatmentAbandonmentReason": {
             "type": "string"
           },
+          "interruptionReason": {
+            "enum": [
+              "ADVERSE_REACTION",
+              "THERAPEUTIC_OPTION_EVAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "interruptionReasonOther": {
+            "type": "string"
+          },
+          "treatmentViaSepa": {
+            "type": "boolean"
+          },
+          "scheduledSessions": {
+            "type": "number",
+            "minimum": 0
+          },
+          "completedSessions": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hormonalTreatmentCompleted": {
+            "type": "boolean"
+          },
+          "accessBarrierCode": {
+            "enum": [
+              "TRANSFER",
+              "LODGING",
+              "ALTERNATIVE_MEDICINE",
+              "EXCESSIVE_COST",
+              "DOES_NOT_WANT_TO_START",
+              "STOCKOUT",
+              "INFUSION_ROOM_INOPERATIVE",
+              "PATIENT_OVERLOAD",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "accessBarrierOther": {
+            "type": "string"
+          },
+          "orientedRegardingBarriers": {
+            "type": "boolean"
+          },
           "hasLatestPrescription": {
             "type": "boolean"
           },
@@ -8309,6 +9010,12 @@
           },
           "changeReason": {
             "type": "string"
+          },
+          "attendedViaSepa": {
+            "type": "boolean"
+          },
+          "referredViaSepa": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -9621,6 +10328,12 @@
           },
           "isFirstConsultation": {
             "type": "boolean"
+          },
+          "attendedViaSepa": {
+            "type": "boolean"
+          },
+          "referredViaSepa": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -9700,6 +10413,14 @@
           "isFirstConsultation": {
             "type": "boolean"
           },
+          "attendedViaSepa": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "referredViaSepa": {
+            "type": "boolean",
+            "nullable": true
+          },
           "status": {
             "enum": [
               "SCHEDULED",
@@ -9744,6 +10465,8 @@
           "referralNotProvidedReason",
           "difficulties",
           "isFirstConsultation",
+          "attendedViaSepa",
+          "referredViaSepa",
           "status",
           "reminderId",
           "isCurrent",
@@ -9802,6 +10525,12 @@
             "type": "string"
           },
           "isFirstConsultation": {
+            "type": "boolean"
+          },
+          "attendedViaSepa": {
+            "type": "boolean"
+          },
+          "referredViaSepa": {
             "type": "boolean"
           },
           "changeReason": {
@@ -10845,6 +11574,62 @@
             "nullable": true,
             "format": "date"
           },
+          "transportationViaSepa": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "transportationSepaProvider": {
+            "nullable": true,
+            "enum": [
+              "CRUZ_DEL_SUR",
+              "LATAM_AVION_SOLIDARIO",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "transportationSepaProviderOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "shelterViaSepa": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "shelterSepaProvider": {
+            "nullable": true,
+            "enum": [
+              "FRIEDA_HELLER",
+              "CASA_MAGIA",
+              "CASA_RONALD_MCDONALD",
+              "INSPIRA",
+              "ALINEN",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "shelterSepaProviderOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "attendedEducationalTalk": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "attendedEducationalTalkAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "programDropoutReasonCode": {
+            "nullable": true,
+            "enum": [
+              "VOLUNTARY",
+              "UNLOCATABLE",
+              "DECEASED",
+              "OTHER"
+            ],
+            "type": "string"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -10884,6 +11669,15 @@
           "knowsAboutFissal",
           "programDropoutReason",
           "programDropoutDate",
+          "transportationViaSepa",
+          "transportationSepaProvider",
+          "transportationSepaProviderOther",
+          "shelterViaSepa",
+          "shelterSepaProvider",
+          "shelterSepaProviderOther",
+          "attendedEducationalTalk",
+          "attendedEducationalTalkAt",
+          "programDropoutReasonCode",
           "createdAt",
           "updatedAt",
           "healthPhaseHistory"
@@ -11167,6 +11961,58 @@
             "type": "string",
             "nullable": true
           },
+          "treatmentViaSepa": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "interruptionReason": {
+            "nullable": true,
+            "enum": [
+              "ADVERSE_REACTION",
+              "THERAPEUTIC_OPTION_EVAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "interruptionReasonOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduledSessions": {
+            "type": "number",
+            "nullable": true
+          },
+          "completedSessions": {
+            "type": "number",
+            "nullable": true
+          },
+          "hormonalTreatmentCompleted": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "accessBarrierCode": {
+            "nullable": true,
+            "enum": [
+              "TRANSFER",
+              "LODGING",
+              "ALTERNATIVE_MEDICINE",
+              "EXCESSIVE_COST",
+              "DOES_NOT_WANT_TO_START",
+              "STOCKOUT",
+              "INFUSION_ROOM_INOPERATIVE",
+              "PATIENT_OVERLOAD",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "accessBarrierOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "orientedRegardingBarriers": {
+            "type": "boolean",
+            "nullable": true
+          },
           "hasLatestPrescription": {
             "type": "boolean",
             "nullable": true
@@ -11204,6 +12050,15 @@
           "teleconsultationSpecialties",
           "treatmentSituation",
           "treatmentAbandonmentReason",
+          "treatmentViaSepa",
+          "interruptionReason",
+          "interruptionReasonOther",
+          "scheduledSessions",
+          "completedSessions",
+          "hormonalTreatmentCompleted",
+          "accessBarrierCode",
+          "accessBarrierOther",
+          "orientedRegardingBarriers",
           "hasLatestPrescription",
           "latestPrescriptionDate",
           "createdAt"
@@ -11353,6 +12208,14 @@
           "isFirstConsultation": {
             "type": "boolean"
           },
+          "attendedViaSepa": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "referredViaSepa": {
+            "type": "boolean",
+            "nullable": true
+          },
           "status": {
             "enum": [
               "SCHEDULED",
@@ -11394,6 +12257,8 @@
           "referralNotProvidedReason",
           "difficulties",
           "isFirstConsultation",
+          "attendedViaSepa",
+          "referredViaSepa",
           "status",
           "reminderId",
           "isCurrent",
@@ -12232,6 +13097,12 @@
           },
           "changeReason": {
             "type": "string"
+          },
+          "attendedViaSepa": {
+            "type": "boolean"
+          },
+          "referredViaSepa": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -12352,6 +13223,51 @@
           },
           "treatmentAbandonmentReason": {
             "type": "string"
+          },
+          "interruptionReason": {
+            "type": "string",
+            "enum": [
+              "ADVERSE_REACTION",
+              "THERAPEUTIC_OPTION_EVAL",
+              "OTHER"
+            ]
+          },
+          "interruptionReasonOther": {
+            "type": "string"
+          },
+          "treatmentViaSepa": {
+            "type": "boolean"
+          },
+          "scheduledSessions": {
+            "type": "number",
+            "minimum": 0
+          },
+          "completedSessions": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hormonalTreatmentCompleted": {
+            "type": "boolean"
+          },
+          "accessBarrierCode": {
+            "type": "string",
+            "enum": [
+              "TRANSFER",
+              "LODGING",
+              "ALTERNATIVE_MEDICINE",
+              "EXCESSIVE_COST",
+              "DOES_NOT_WANT_TO_START",
+              "STOCKOUT",
+              "INFUSION_ROOM_INOPERATIVE",
+              "PATIENT_OVERLOAD",
+              "OTHER"
+            ]
+          },
+          "accessBarrierOther": {
+            "type": "string"
+          },
+          "orientedRegardingBarriers": {
+            "type": "boolean"
           },
           "hasLatestPrescription": {
             "type": "boolean"
@@ -13593,6 +14509,12 @@
           "nextAppointmentSpecialty": {
             "type": "string",
             "maxLength": 255
+          },
+          "attendedViaSepa": {
+            "type": "boolean"
+          },
+          "referredViaSepa": {
+            "type": "boolean"
           },
           "changeReason": {
             "type": "string"

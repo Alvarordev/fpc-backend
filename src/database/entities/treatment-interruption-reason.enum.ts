@@ -1,0 +1,5 @@
+export enum TreatmentInterruptionReason {
+  ADVERSE_REACTION = 'ADVERSE_REACTION',
+  THERAPEUTIC_OPTION_EVAL = 'THERAPEUTIC_OPTION_EVAL',
+  OTHER = 'OTHER',
+}

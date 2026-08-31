@@ -14,8 +14,12 @@ import { DashboardQueryDto } from './dto/dashboard-query.dto';
 import { DashboardResponseDto } from './dto/dashboard-response.dto';
 import { DashboardIndicatorQueryDto } from './dto/dashboard-indicator-query.dto';
 import {
+  DashboardAbandonmentResponseDto,
+  DashboardAdherenceResponseDto,
   DashboardDemographicsResponseDto,
   DashboardEpidemiologyResponseDto,
+  DashboardManagementResponseDto,
+  DashboardProductivityResponseDto,
 } from './dto/dashboard-indicator-response.dto';
 import { DashboardIndicatorsService } from './dashboard-indicators.service';
 import { DashboardService } from './dashboard.service';
@@ -44,6 +48,71 @@ export class DashboardController {
     @Query() query: DashboardIndicatorQueryDto,
   ): Promise<DashboardDemographicsResponseDto> {
     return this.indicators.getDemographics(query);
+  }
+
+
+  @Get('indicators/management')
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION)
+  @ApiOperation({ summary: 'Get SEPA management dashboard indicators' })
+  @ApiOkResponse({ type: DashboardManagementResponseDto })
+  @ApiBadRequestResponse({
+    description: 'The indicator period or timezone is invalid',
+  })
+  @ApiForbiddenResponse({
+    description: 'Administrator or foundation role required',
+  })
+  getManagement(
+    @Query() query: DashboardIndicatorQueryDto,
+  ): Promise<DashboardManagementResponseDto> {
+    return this.indicators.getManagement(query);
+  }
+
+  @Get('indicators/productivity')
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION)
+  @ApiOperation({ summary: 'Get SEPA productivity dashboard indicators' })
+  @ApiOkResponse({ type: DashboardProductivityResponseDto })
+  @ApiBadRequestResponse({
+    description: 'The indicator period or timezone is invalid',
+  })
+  @ApiForbiddenResponse({
+    description: 'Administrator or foundation role required',
+  })
+  getProductivity(
+    @Query() query: DashboardIndicatorQueryDto,
+  ): Promise<DashboardProductivityResponseDto> {
+    return this.indicators.getProductivity(query);
+  }
+
+  @Get('indicators/adherence')
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION)
+  @ApiOperation({ summary: 'Get SEPA adherence dashboard indicators' })
+  @ApiOkResponse({ type: DashboardAdherenceResponseDto })
+  @ApiBadRequestResponse({
+    description: 'The indicator period or timezone is invalid',
+  })
+  @ApiForbiddenResponse({
+    description: 'Administrator or foundation role required',
+  })
+  getAdherence(
+    @Query() query: DashboardIndicatorQueryDto,
+  ): Promise<DashboardAdherenceResponseDto> {
+    return this.indicators.getAdherence(query);
+  }
+
+  @Get('indicators/abandonment')
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION)
+  @ApiOperation({ summary: 'Get SEPA abandonment dashboard indicators' })
+  @ApiOkResponse({ type: DashboardAbandonmentResponseDto })
+  @ApiBadRequestResponse({
+    description: 'The indicator period or timezone is invalid',
+  })
+  @ApiForbiddenResponse({
+    description: 'Administrator or foundation role required',
+  })
+  getAbandonment(
+    @Query() query: DashboardIndicatorQueryDto,
+  ): Promise<DashboardAbandonmentResponseDto> {
+    return this.indicators.getAbandonment(query);
   }
 
   @Get('indicators/epidemiology')

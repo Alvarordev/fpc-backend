@@ -27,5 +27,7 @@ export class UpdateMedicalAppointmentDto {
   @IsOptional() @IsString() referralNotProvidedReason?: string;
   @IsOptional() @IsString() difficulties?: string;
   @IsOptional() @IsBoolean() isFirstConsultation?: boolean;
+  @IsOptional() @IsBoolean() attendedViaSepa?: boolean;
+  @IsOptional() @IsBoolean() referredViaSepa?: boolean;
   @IsString() @IsNotEmpty() changeReason!: string;
 }

@@ -28,6 +28,25 @@ describe('CreatePatientTreatmentDto', () => {
     expect(await validate(valid)).toHaveLength(0);
   });
 
+  it('requires an interruption reason only for interrupted treatments', async () => {
+    const missingReason = Object.assign(new CreatePatientTreatmentDto(), {
+      ...base,
+      treatmentSituation: TreatmentSituation.INTERRUMPIDO,
+    });
+    const valid = Object.assign(new CreatePatientTreatmentDto(), {
+      ...base,
+      treatmentSituation: TreatmentSituation.INTERRUMPIDO,
+      interruptionReason: 'ADVERSE_REACTION',
+    });
+
+    expect(await validate(missingReason)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ property: 'interruptionReason' }),
+      ]),
+    );
+    expect(await validate(valid)).toHaveLength(0);
+  });
+
   it('rejects teleconsultation details when teleconsultation is disabled', async () => {
     const staleDetails = Object.assign(new CreatePatientTreatmentDto(), {
       ...base,

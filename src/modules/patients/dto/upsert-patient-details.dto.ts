@@ -11,6 +11,9 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { EducationLevel } from '../../../database/entities/education-level.enum';
+import { ProgramDropoutReasonCode } from '../../../database/entities/program-dropout-reason-code.enum';
+import { ShelterSepaProvider } from '../../../database/entities/shelter-sepa-provider.enum';
+import { TransportationSepaProvider } from '../../../database/entities/transportation-sepa-provider.enum';
 import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
 import { PatientHealthSubcategory } from '../../../database/entities/patient-health-subcategory.enum';
 import { DurationDto } from '../../../shared/duration/duration.dto';
@@ -127,4 +130,49 @@ export class UpsertPatientDetailsDto {
   @IsOptional()
   @IsDateString()
   programDropoutDate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  transportationViaSepa?: boolean;
+
+  @ApiPropertyOptional({ enum: TransportationSepaProvider })
+  @IsOptional()
+  @IsIn(Object.values(TransportationSepaProvider))
+  transportationSepaProvider?: TransportationSepaProvider;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  transportationSepaProviderOther?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  shelterViaSepa?: boolean;
+
+  @ApiPropertyOptional({ enum: ShelterSepaProvider })
+  @IsOptional()
+  @IsIn(Object.values(ShelterSepaProvider))
+  shelterSepaProvider?: ShelterSepaProvider;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  shelterSepaProviderOther?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  attendedEducationalTalk?: boolean;
+
+  @ApiPropertyOptional({ format: 'date' })
+  @IsOptional()
+  @IsDateString()
+  attendedEducationalTalkAt?: string;
+
+  @ApiPropertyOptional({ enum: ProgramDropoutReasonCode })
+  @IsOptional()
+  @IsIn(Object.values(ProgramDropoutReasonCode))
+  programDropoutReasonCode?: ProgramDropoutReasonCode;
 }

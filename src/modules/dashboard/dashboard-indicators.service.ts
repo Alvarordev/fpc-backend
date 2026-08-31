@@ -3,10 +3,14 @@ import { DataSource } from 'typeorm';
 import { DashboardPeriod } from './dto/dashboard-query.dto';
 import { DashboardIndicatorQueryDto } from './dto/dashboard-indicator-query.dto';
 import {
+  DashboardAbandonmentResponseDto,
+  DashboardAdherenceResponseDto,
   DashboardDemographicsResponseDto,
   DashboardEpidemiologyResponseDto,
   DashboardIndicatorDistributionDto,
   DashboardIndicatorMetaDto,
+  DashboardManagementResponseDto,
+  DashboardProductivityResponseDto,
 } from './dto/dashboard-indicator-response.dto';
 
 const TIMEZONE = 'America/Lima';
@@ -35,6 +39,11 @@ interface EventRow {
 
 interface PopulationRow {
   count: string | number;
+}
+
+interface MetricRow {
+  metric: string;
+  value: string | number | null;
 }
 
 @Injectable()
@@ -127,6 +136,176 @@ export class DashboardIndicatorsService {
     };
   }
 
+
+  async getManagement(
+    query: DashboardIndicatorQueryDto,
+  ): Promise<DashboardManagementResponseDto> {
+    const bounds = this.getBounds(query);
+    const populationParameters = [bounds.fromAt, bounds.toAt];
+    const eventParameters = [
+      bounds.fromAt,
+      bounds.toAt,
+      bounds.fromDate,
+      bounds.toDate,
+    ];
+    const [populationRows, metricRows, distributionRows] = await Promise.all([
+      this.dataSource.query<PopulationRow[]>(
+        this.populationQuery(),
+        populationParameters,
+      ),
+      this.dataSource.query<MetricRow[]>(
+        this.managementMetricsQuery(),
+        eventParameters,
+      ),
+      this.dataSource.query<DistributionRow[]>(
+        this.managementDistributionsQuery(),
+        populationParameters,
+      ),
+    ]);
+    const populationCount = this.toNumber(populationRows[0]?.count ?? 0);
+    const metrics = this.toMetrics(metricRows);
+    const distributions = this.toDistributions(distributionRows, [
+      'specialtyForDiagnosis',
+      'transportationSepaProviders',
+      'shelterSepaProviders',
+    ]);
+
+    return {
+      meta: this.meta(
+        bounds,
+        populationCount,
+        'Indicadores de gestion SEPA sobre la cohorte enrolada en el periodo.',
+      ),
+      sisAffiliatedViaSepa: metrics.sisAffiliatedViaSepa ?? 0,
+      essaludAffiliatedViaSepa: metrics.essaludAffiliatedViaSepa ?? 0,
+      primaryCareViaSepa: metrics.primaryCareViaSepa ?? 0,
+      referredViaSepa: metrics.referredViaSepa ?? 0,
+      specialtyForDiagnosis: distributions.specialtyForDiagnosis,
+      diagnosticRuledOutViaSepa: metrics.diagnosticRuledOutViaSepa ?? 0,
+      diagnosticConfirmedViaSepa: metrics.diagnosticConfirmedViaSepa ?? 0,
+      treatmentViaSepa: metrics.treatmentViaSepa ?? 0,
+      transportationViaSepa: metrics.transportationViaSepa ?? 0,
+      transportationSepaProviders: distributions.transportationSepaProviders,
+      shelterViaSepa: metrics.shelterViaSepa ?? 0,
+      shelterSepaProviders: distributions.shelterSepaProviders,
+    };
+  }
+
+  async getProductivity(
+    query: DashboardIndicatorQueryDto,
+  ): Promise<DashboardProductivityResponseDto> {
+    const bounds = this.getBounds(query);
+    const parameters = [bounds.fromAt, bounds.toAt, bounds.fromDate, bounds.toDate];
+    const [populationRows, metricRows] = await Promise.all([
+      this.dataSource.query<PopulationRow[]>(
+        this.populationQuery(),
+        parameters.slice(0, 2),
+      ),
+      this.dataSource.query<MetricRow[]>(
+        this.productivityMetricsQuery(),
+        parameters,
+      ),
+    ]);
+    const populationCount = this.toNumber(populationRows[0]?.count ?? 0);
+    const metrics = this.toMetrics(metricRows);
+
+    return {
+      meta: this.meta(
+        bounds,
+        populationCount,
+        'Indicadores de productividad SEPA: tiempos promedio y beneficios recibidos.',
+      ),
+      avgDaysEnrollmentToSis: this.toNullableNumber(
+        metrics.avgDaysEnrollmentToSis,
+      ),
+      avgDaysPrimaryCareToDiagnosis: this.toNullableNumber(
+        metrics.avgDaysPrimaryCareToDiagnosis,
+      ),
+      avgDaysDiagnosisToTreatment: this.toNullableNumber(
+        metrics.avgDaysDiagnosisToTreatment,
+      ),
+      activePatients: metrics.activePatients ?? 0,
+      benefitSupport: metrics.benefitSupport ?? 0,
+      benefitPsychooncology: metrics.benefitPsychooncology ?? 0,
+      benefitEducationalTalks: metrics.benefitEducationalTalks ?? 0,
+      allThreeBenefits: metrics.allThreeBenefits ?? 0,
+    };
+  }
+
+  async getAdherence(
+    query: DashboardIndicatorQueryDto,
+  ): Promise<DashboardAdherenceResponseDto> {
+    const bounds = this.getBounds(query);
+    const parameters = [bounds.fromAt, bounds.toAt];
+    const [populationRows, metricRows] = await Promise.all([
+      this.dataSource.query<PopulationRow[]>(
+        this.populationQuery(),
+        parameters,
+      ),
+      this.dataSource.query<MetricRow[]>(
+        this.adherenceMetricsQuery(),
+        parameters,
+      ),
+    ]);
+    const populationCount = this.toNumber(populationRows[0]?.count ?? 0);
+    const metrics = this.toMetrics(metricRows);
+
+    return {
+      meta: this.meta(
+        bounds,
+        populationCount,
+        'Indicadores de adherencia al tratamiento y barreras de acceso SEPA.',
+      ),
+      chemoRadioCompliancePct: metrics.chemoRadioCompliancePct ?? 0,
+      hormonalCompleted: metrics.hormonalCompleted ?? 0,
+      hormonalPatients: metrics.hormonalPatients ?? 0,
+      withAccessBarriers: metrics.withAccessBarriers ?? 0,
+      orientedRegardingBarriers: metrics.orientedRegardingBarriers ?? 0,
+      abandonedWithBarriers: metrics.abandonedWithBarriers ?? 0,
+      interruptedAdverseReaction: metrics.interruptedAdverseReaction ?? 0,
+      palliativeNoActiveTreatment: metrics.palliativeNoActiveTreatment ?? 0,
+    };
+  }
+
+  async getAbandonment(
+    query: DashboardIndicatorQueryDto,
+  ): Promise<DashboardAbandonmentResponseDto> {
+    const bounds = this.getBounds(query);
+    const parameters = [bounds.fromAt, bounds.toAt];
+    const [populationRows, metricRows, distributionRows] = await Promise.all([
+      this.dataSource.query<PopulationRow[]>(
+        this.populationQuery(),
+        parameters,
+      ),
+      this.dataSource.query<MetricRow[]>(
+        this.abandonmentMetricsQuery(),
+        parameters,
+      ),
+      this.dataSource.query<DistributionRow[]>(
+        this.abandonmentDistributionsQuery(),
+        parameters,
+      ),
+    ]);
+    const populationCount = this.toNumber(populationRows[0]?.count ?? 0);
+    const metrics = this.toMetrics(metricRows);
+    const distributions = this.toDistributions(distributionRows, [
+      'dropoutReasons',
+    ]);
+
+    return {
+      meta: this.meta(
+        bounds,
+        populationCount,
+        'Indicadores de abandono del programa SEPA.',
+      ),
+      dropoutReasons: distributions.dropoutReasons,
+      voluntary: metrics.voluntary ?? 0,
+      unlocatable: metrics.unlocatable ?? 0,
+      deceased: metrics.deceased ?? 0,
+      other: metrics.other ?? 0,
+    };
+  }
+
   private getBounds(query: DashboardIndicatorQueryDto): IndicatorBounds {
     if (query.from || query.to) {
       if (!query.from || !query.to)
@@ -193,7 +372,10 @@ export class DashboardIndicatorsService {
     };
   }
 
-  private toDistributions(rows: DistributionRow[]) {
+  private toDistributions(
+    rows: DistributionRow[],
+    categoryNames?: string[],
+  ) {
     const categories = new Map<string, DashboardIndicatorDistributionDto>();
     for (const row of rows) {
       let distribution = categories.get(row.category);
@@ -215,7 +397,7 @@ export class DashboardIndicatorsService {
       });
     }
     const distributions: Record<string, DashboardIndicatorDistributionDto> = {};
-    for (const category of [
+    for (const category of categoryNames ?? [
       'age',
       'gender',
       'district',
@@ -237,6 +419,21 @@ export class DashboardIndicatorsService {
       distributions[category] =
         categories.get(category) ?? this.emptyDistribution();
     return distributions;
+  }
+
+  private toMetrics(rows: MetricRow[]): Record<string, number> {
+    const metrics: Record<string, number> = {};
+    for (const row of rows) {
+      if (row.value === null || row.value === undefined) continue;
+      const parsed = Number(row.value);
+      if (!Number.isNaN(parsed)) metrics[row.metric] = parsed;
+    }
+    return metrics;
+  }
+
+  private toNullableNumber(value: number | undefined): number | null {
+    if (value === undefined || Number.isNaN(value)) return null;
+    return Number(value.toFixed(2));
   }
 
   private emptyDistribution(): DashboardIndicatorDistributionDto {
@@ -435,4 +632,383 @@ export class DashboardIndicatorsService {
       ) events
     `;
   }
+
+  private managementMetricsQuery(): string {
+    return `
+      WITH cohort AS (
+        SELECT DISTINCT enrollment.patient_id
+        FROM enrollments enrollment
+        JOIN patients patient ON patient.id = enrollment.patient_id
+        WHERE patient.role = 'PATIENT'
+          AND enrollment.created_at >= $1
+          AND enrollment.created_at < $2
+      )
+      SELECT metric, value FROM (
+        SELECT 'sisAffiliatedViaSepa' AS metric,
+          COUNT(DISTINCT insurance.patient_id)::float AS value
+        FROM patient_insurance insurance
+        JOIN cohort ON cohort.patient_id = insurance.patient_id
+        WHERE insurance.is_current = true
+          AND insurance.insurance_type = 'SIS'
+          AND insurance.affiliated_via_sepa = true
+        UNION ALL
+        SELECT 'essaludAffiliatedViaSepa',
+          COUNT(DISTINCT insurance.patient_id)::float
+        FROM patient_insurance insurance
+        JOIN cohort ON cohort.patient_id = insurance.patient_id
+        WHERE insurance.is_current = true
+          AND insurance.insurance_type = 'ESSALUD'
+          AND insurance.affiliated_via_sepa = true
+        UNION ALL
+        SELECT 'primaryCareViaSepa',
+          COUNT(DISTINCT appointment.patient_id)::float
+        FROM patient_medical_appointments appointment
+        JOIN cohort ON cohort.patient_id = appointment.patient_id
+        WHERE appointment.is_current = true
+          AND appointment.attended_via_sepa = true
+        UNION ALL
+        SELECT 'referredViaSepa',
+          COUNT(DISTINCT appointment.patient_id)::float
+        FROM patient_medical_appointments appointment
+        JOIN cohort ON cohort.patient_id = appointment.patient_id
+        WHERE appointment.is_current = true
+          AND appointment.referred_via_sepa = true
+        UNION ALL
+        SELECT 'diagnosticRuledOutViaSepa',
+          COUNT(DISTINCT event.patient_id)::float
+        FROM patient_diagnostic_status_events event
+        WHERE event.status = 'RULED_OUT'
+          AND event.supported_by_sepa = true
+          AND event.occurred_at >= $1 AND event.occurred_at < $2
+        UNION ALL
+        SELECT 'diagnosticConfirmedViaSepa',
+          COUNT(DISTINCT event.patient_id)::float
+        FROM patient_diagnostic_status_events event
+        WHERE event.status = 'CONFIRMED'
+          AND event.supported_by_sepa = true
+          AND event.occurred_at >= $1 AND event.occurred_at < $2
+        UNION ALL
+        SELECT 'treatmentViaSepa',
+          COUNT(DISTINCT treatment.patient_id)::float
+        FROM patient_treatments treatment
+        JOIN cohort ON cohort.patient_id = treatment.patient_id
+        WHERE treatment.is_current = true
+          AND treatment.treatment_via_sepa = true
+        UNION ALL
+        SELECT 'transportationViaSepa',
+          COUNT(DISTINCT details.patient_id)::float
+        FROM patient_details details
+        JOIN cohort ON cohort.patient_id = details.patient_id
+        WHERE details.transportation_via_sepa = true
+        UNION ALL
+        SELECT 'shelterViaSepa',
+          COUNT(DISTINCT details.patient_id)::float
+        FROM patient_details details
+        JOIN cohort ON cohort.patient_id = details.patient_id
+        WHERE details.shelter_via_sepa = true
+      ) metrics
+    `;
+  }
+
+  private managementDistributionsQuery(): string {
+    return `
+      WITH cohort AS (
+        SELECT DISTINCT enrollment.patient_id
+        FROM enrollments enrollment
+        JOIN patients patient ON patient.id = enrollment.patient_id
+        WHERE patient.role = 'PATIENT'
+          AND enrollment.created_at >= $1
+          AND enrollment.created_at < $2
+      ), current_diagnoses AS (
+        SELECT DISTINCT ON (diagnosis.patient_id)
+          diagnosis.patient_id, diagnosis.diagnosis_specialty
+        FROM patient_diagnoses diagnosis
+        JOIN cohort ON cohort.patient_id = diagnosis.patient_id
+        WHERE diagnosis.is_current = true
+        ORDER BY diagnosis.patient_id, diagnosis.created_at DESC, diagnosis.id DESC
+      ), values AS (
+        SELECT 'specialtyForDiagnosis' AS category,
+          COALESCE(NULLIF(BTRIM(diagnosis.diagnosis_specialty), ''), '${UNKNOWN_LABEL}') AS label
+        FROM cohort
+        LEFT JOIN current_diagnoses diagnosis ON diagnosis.patient_id = cohort.patient_id
+        UNION ALL
+        SELECT 'transportationSepaProviders',
+          CASE
+            WHEN details.transportation_via_sepa IS DISTINCT FROM true THEN '${NOT_APPLICABLE_LABEL}'
+            ELSE COALESCE(NULLIF(BTRIM(details.transportation_sepa_provider), ''), '${UNKNOWN_LABEL}')
+          END
+        FROM cohort
+        LEFT JOIN patient_details details ON details.patient_id = cohort.patient_id
+        UNION ALL
+        SELECT 'shelterSepaProviders',
+          CASE
+            WHEN details.shelter_via_sepa IS DISTINCT FROM true THEN '${NOT_APPLICABLE_LABEL}'
+            ELSE COALESCE(NULLIF(BTRIM(details.shelter_sepa_provider), ''), '${UNKNOWN_LABEL}')
+          END
+        FROM cohort
+        LEFT JOIN patient_details details ON details.patient_id = cohort.patient_id
+      ), counts AS (
+        SELECT category, label, COUNT(*) AS count
+        FROM values
+        GROUP BY category, label
+      )
+      SELECT category, label, count,
+        SUM(count) FILTER (WHERE label NOT IN ('${UNKNOWN_LABEL}', '${NOT_APPLICABLE_LABEL}')) OVER (PARTITION BY category) AS known,
+        SUM(count) FILTER (WHERE label = '${UNKNOWN_LABEL}') OVER (PARTITION BY category) AS unknown
+      FROM counts
+      ORDER BY category, count DESC, label ASC
+    `;
+  }
+
+  private productivityMetricsQuery(): string {
+    return `
+      WITH cohort AS (
+        SELECT DISTINCT enrollment.patient_id,
+          MIN(enrollment.created_at) AS enrolled_at
+        FROM enrollments enrollment
+        JOIN patients patient ON patient.id = enrollment.patient_id
+        WHERE patient.role = 'PATIENT'
+          AND enrollment.created_at >= $1
+          AND enrollment.created_at < $2
+        GROUP BY enrollment.patient_id
+      ), sis_days AS (
+        SELECT AVG(
+          EXTRACT(EPOCH FROM (sis.affiliated_at - cohort.enrolled_at)) / 86400.0
+        ) AS avg_days
+        FROM cohort
+        JOIN patient_sis_affiliation sis ON sis.patient_id = cohort.patient_id
+        WHERE sis.affiliated_via_sepa = true
+          AND sis.affiliated_at IS NOT NULL
+      ), primary_care_days AS (
+        SELECT AVG(
+          (diagnosis.diagnosis_date::date - appointment.appointment_date::date)
+        ) AS avg_days
+        FROM cohort
+        JOIN patient_medical_appointments appointment
+          ON appointment.patient_id = cohort.patient_id
+         AND appointment.is_current = true
+         AND appointment.attended_via_sepa = true
+         AND appointment.appointment_date IS NOT NULL
+        JOIN patient_diagnoses diagnosis
+          ON diagnosis.patient_id = cohort.patient_id
+         AND diagnosis.is_current = true
+         AND diagnosis.diagnosis_date IS NOT NULL
+      ), treatment_days AS (
+        SELECT AVG(
+          (treatment.start_date::date - diagnosis.diagnosis_date::date)
+        ) AS avg_days
+        FROM cohort
+        JOIN patient_treatments treatment
+          ON treatment.patient_id = cohort.patient_id
+         AND treatment.is_current = true
+         AND treatment.treatment_via_sepa = true
+         AND treatment.start_date IS NOT NULL
+        JOIN patient_diagnoses diagnosis
+          ON diagnosis.id = treatment.diagnosis_id
+         AND diagnosis.diagnosis_date IS NOT NULL
+      ), benefits AS (
+        SELECT
+          cohort.patient_id,
+          EXISTS (
+            SELECT 1 FROM follow_ups follow_up
+            WHERE follow_up.subject_patient_id = cohort.patient_id
+          ) AS has_support,
+          EXISTS (
+            SELECT 1 FROM psychooncology_appointments psycho
+            WHERE psycho.patient_id = cohort.patient_id
+          ) AS has_psycho,
+          COALESCE(details.attended_educational_talk, false) AS has_talk
+        FROM cohort
+        LEFT JOIN patient_details details ON details.patient_id = cohort.patient_id
+      )
+      SELECT metric, value FROM (
+        SELECT 'avgDaysEnrollmentToSis' AS metric, sis_days.avg_days AS value FROM sis_days
+        UNION ALL
+        SELECT 'avgDaysPrimaryCareToDiagnosis', primary_care_days.avg_days FROM primary_care_days
+        UNION ALL
+        SELECT 'avgDaysDiagnosisToTreatment', treatment_days.avg_days FROM treatment_days
+        UNION ALL
+        SELECT 'activePatients',
+          COUNT(DISTINCT patient.id)::float
+        FROM patients patient
+        JOIN cohort ON cohort.patient_id = patient.id
+        WHERE patient.activity_status IN ('ACTIVE', 'REACTIVE')
+        UNION ALL
+        SELECT 'benefitSupport',
+          COUNT(*) FILTER (WHERE has_support)::float FROM benefits
+        UNION ALL
+        SELECT 'benefitPsychooncology',
+          COUNT(*) FILTER (WHERE has_psycho)::float FROM benefits
+        UNION ALL
+        SELECT 'benefitEducationalTalks',
+          COUNT(*) FILTER (WHERE has_talk)::float FROM benefits
+        UNION ALL
+        SELECT 'allThreeBenefits',
+          COUNT(*) FILTER (WHERE has_support AND has_psycho AND has_talk)::float
+        FROM benefits
+      ) metrics
+    `;
+  }
+
+  private adherenceMetricsQuery(): string {
+    return `
+      WITH cohort AS (
+        SELECT DISTINCT enrollment.patient_id
+        FROM enrollments enrollment
+        JOIN patients patient ON patient.id = enrollment.patient_id
+        WHERE patient.role = 'PATIENT'
+          AND enrollment.created_at >= $1
+          AND enrollment.created_at < $2
+      ), current_treatments AS (
+        SELECT treatment.*
+        FROM patient_treatments treatment
+        JOIN cohort ON cohort.patient_id = treatment.patient_id
+        WHERE treatment.is_current = true
+      ), session_totals AS (
+        SELECT
+          COALESCE(SUM(completed_sessions), 0)::float AS completed,
+          COALESCE(SUM(scheduled_sessions), 0)::float AS scheduled
+        FROM current_treatments
+        WHERE completed_sessions IS NOT NULL
+          AND scheduled_sessions IS NOT NULL
+          AND scheduled_sessions > 0
+          AND (
+            treatment_type ILIKE '%quimio%'
+            OR treatment_type ILIKE '%radio%'
+            OR treatment_type ILIKE '%chemo%'
+          )
+      )
+      SELECT metric, value FROM (
+        SELECT 'chemoRadioCompliancePct' AS metric,
+          CASE
+            WHEN session_totals.scheduled = 0 THEN 0
+            ELSE ROUND((session_totals.completed / session_totals.scheduled) * 100.0, 2)
+          END AS value
+        FROM session_totals
+        UNION ALL
+        SELECT 'hormonalCompleted',
+          COUNT(DISTINCT patient_id)::float
+        FROM current_treatments
+        WHERE hormonal_treatment_completed = true
+        UNION ALL
+        SELECT 'hormonalPatients',
+          COUNT(DISTINCT patient_id)::float
+        FROM current_treatments
+        WHERE treatment_type ILIKE '%hormona%'
+           OR hormonal_treatment_completed IS NOT NULL
+        UNION ALL
+        SELECT 'withAccessBarriers',
+          COUNT(DISTINCT patient_id)::float
+        FROM current_treatments
+        WHERE access_barrier_code IS NOT NULL
+        UNION ALL
+        SELECT 'orientedRegardingBarriers',
+          COUNT(DISTINCT patient_id)::float
+        FROM current_treatments
+        WHERE oriented_regarding_barriers = true
+        UNION ALL
+        SELECT 'abandonedWithBarriers',
+          COUNT(DISTINCT patient_id)::float
+        FROM current_treatments
+        WHERE treatment_situation = 'ABANDONED'
+          AND access_barrier_code IS NOT NULL
+        UNION ALL
+        SELECT 'interruptedAdverseReaction',
+          COUNT(DISTINCT patient_id)::float
+        FROM current_treatments
+        WHERE treatment_situation = 'INTERRUMPIDO'
+          AND interruption_reason = 'ADVERSE_REACTION'
+        UNION ALL
+        SELECT 'palliativeNoActiveTreatment',
+          COUNT(DISTINCT details.patient_id)::float
+        FROM patient_details details
+        JOIN cohort ON cohort.patient_id = details.patient_id
+        WHERE details.health_subcategory = 'PALLIATIVE_NO_ACTIVE_TREATMENT'
+      ) metrics
+    `;
+  }
+
+  private abandonmentMetricsQuery(): string {
+    return `
+      WITH cohort AS (
+        SELECT DISTINCT enrollment.patient_id
+        FROM enrollments enrollment
+        JOIN patients patient ON patient.id = enrollment.patient_id
+        WHERE patient.role = 'PATIENT'
+          AND enrollment.created_at >= $1
+          AND enrollment.created_at < $2
+      ), reasons AS (
+        SELECT
+          COALESCE(
+            details.program_dropout_reason_code,
+            CASE patient.deactivation_reason
+              WHEN 'WITHDREW_CONSENT' THEN 'VOLUNTARY'
+              WHEN 'LOST_CONTACT' THEN 'UNLOCATABLE'
+              WHEN 'DECEASED' THEN 'DECEASED'
+              WHEN 'OTHER' THEN 'OTHER'
+              WHEN 'TRANSFERRED_OUT' THEN 'OTHER'
+              ELSE NULL
+            END
+          ) AS reason_code
+        FROM cohort
+        JOIN patients patient ON patient.id = cohort.patient_id
+        LEFT JOIN patient_details details ON details.patient_id = patient.id
+        WHERE patient.activity_status = 'INACTIVE'
+           OR details.program_dropout_reason_code IS NOT NULL
+           OR details.program_dropout_date IS NOT NULL
+      )
+      SELECT metric, value FROM (
+        SELECT 'voluntary' AS metric, COUNT(*) FILTER (WHERE reason_code = 'VOLUNTARY')::float AS value FROM reasons
+        UNION ALL
+        SELECT 'unlocatable', COUNT(*) FILTER (WHERE reason_code = 'UNLOCATABLE')::float FROM reasons
+        UNION ALL
+        SELECT 'deceased', COUNT(*) FILTER (WHERE reason_code = 'DECEASED')::float FROM reasons
+        UNION ALL
+        SELECT 'other', COUNT(*) FILTER (WHERE reason_code = 'OTHER')::float FROM reasons
+      ) metrics
+    `;
+  }
+
+  private abandonmentDistributionsQuery(): string {
+    return `
+      WITH cohort AS (
+        SELECT DISTINCT enrollment.patient_id
+        FROM enrollments enrollment
+        JOIN patients patient ON patient.id = enrollment.patient_id
+        WHERE patient.role = 'PATIENT'
+          AND enrollment.created_at >= $1
+          AND enrollment.created_at < $2
+      ), values AS (
+        SELECT 'dropoutReasons' AS category,
+          COALESCE(
+            NULLIF(BTRIM(details.program_dropout_reason_code), ''),
+            CASE patient.deactivation_reason
+              WHEN 'WITHDREW_CONSENT' THEN 'VOLUNTARY'
+              WHEN 'LOST_CONTACT' THEN 'UNLOCATABLE'
+              WHEN 'DECEASED' THEN 'DECEASED'
+              WHEN 'OTHER' THEN 'OTHER'
+              WHEN 'TRANSFERRED_OUT' THEN 'OTHER'
+              ELSE NULL
+            END,
+            '${UNKNOWN_LABEL}'
+          ) AS label
+        FROM cohort
+        JOIN patients patient ON patient.id = cohort.patient_id
+        LEFT JOIN patient_details details ON details.patient_id = patient.id
+        WHERE patient.activity_status = 'INACTIVE'
+           OR details.program_dropout_reason_code IS NOT NULL
+           OR details.program_dropout_date IS NOT NULL
+      ), counts AS (
+        SELECT category, label, COUNT(*) AS count
+        FROM values
+        GROUP BY category, label
+      )
+      SELECT category, label, count,
+        SUM(count) FILTER (WHERE label <> '${UNKNOWN_LABEL}') OVER (PARTITION BY category) AS known,
+        SUM(count) FILTER (WHERE label = '${UNKNOWN_LABEL}') OVER (PARTITION BY category) AS unknown
+      FROM counts
+      ORDER BY category, count DESC, label ASC
+    `;
+  }
+
 }

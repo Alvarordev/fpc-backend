@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { AccessBarrierCode } from '../../../../../database/entities/access-barrier-code.enum';
 import { CareProgram } from '../../../../../database/entities/care-program.enum';
+import { TreatmentInterruptionReason } from '../../../../../database/entities/treatment-interruption-reason.enum';
 import { CancerStage } from '../../../../../database/entities/patient-diagnosis.entity';
 import { PatientTreatment } from '../../../../../database/entities/patient-treatment.entity';
 import { TreatmentSituation } from '../../../../../database/entities/treatment-situation.enum';
@@ -96,6 +98,33 @@ export class PatientTreatmentResponseDto {
   treatmentAbandonmentReason!: string | null;
 
   @ApiProperty({ nullable: true })
+  treatmentViaSepa!: boolean | null;
+
+  @ApiProperty({ enum: TreatmentInterruptionReason, nullable: true })
+  interruptionReason!: TreatmentInterruptionReason | null;
+
+  @ApiProperty({ nullable: true })
+  interruptionReasonOther!: string | null;
+
+  @ApiProperty({ nullable: true })
+  scheduledSessions!: number | null;
+
+  @ApiProperty({ nullable: true })
+  completedSessions!: number | null;
+
+  @ApiProperty({ nullable: true })
+  hormonalTreatmentCompleted!: boolean | null;
+
+  @ApiProperty({ enum: AccessBarrierCode, nullable: true })
+  accessBarrierCode!: AccessBarrierCode | null;
+
+  @ApiProperty({ nullable: true })
+  accessBarrierOther!: string | null;
+
+  @ApiProperty({ nullable: true })
+  orientedRegardingBarriers!: boolean | null;
+
+  @ApiProperty({ nullable: true })
   hasLatestPrescription!: boolean | null;
 
   @ApiProperty({ format: 'date', nullable: true })
@@ -140,6 +169,15 @@ export class PatientTreatmentResponseDto {
       teleconsultationSpecialties: treatment.teleconsultationSpecialties,
       treatmentSituation: treatment.treatmentSituation,
       treatmentAbandonmentReason: treatment.treatmentAbandonmentReason,
+      treatmentViaSepa: treatment.treatmentViaSepa,
+      interruptionReason: treatment.interruptionReason,
+      interruptionReasonOther: treatment.interruptionReasonOther,
+      scheduledSessions: treatment.scheduledSessions,
+      completedSessions: treatment.completedSessions,
+      hormonalTreatmentCompleted: treatment.hormonalTreatmentCompleted,
+      accessBarrierCode: treatment.accessBarrierCode,
+      accessBarrierOther: treatment.accessBarrierOther,
+      orientedRegardingBarriers: treatment.orientedRegardingBarriers,
       hasLatestPrescription: treatment.hasLatestPrescription,
       latestPrescriptionDate: treatment.latestPrescriptionDate,
       createdAt: treatment.createdAt.toISOString(),

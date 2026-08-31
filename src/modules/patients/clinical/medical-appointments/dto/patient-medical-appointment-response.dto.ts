@@ -48,6 +48,12 @@ export class PatientMedicalAppointmentResponseDto {
   @ApiProperty()
   isFirstConsultation!: boolean;
 
+  @ApiProperty({ nullable: true })
+  attendedViaSepa!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  referredViaSepa!: boolean | null;
+
   @ApiProperty({ enum: MedicalAppointmentStatus })
   status!: MedicalAppointmentStatus;
 
@@ -82,6 +88,8 @@ export class PatientMedicalAppointmentResponseDto {
       referralNotProvidedReason: appointment.referralNotProvidedReason,
       difficulties: appointment.difficulties,
       isFirstConsultation: appointment.isFirstConsultation,
+      attendedViaSepa: appointment.attendedViaSepa,
+      referredViaSepa: appointment.referredViaSepa,
       status: appointment.status,
       reminderId: appointment.reminderId,
       isCurrent: appointment.isCurrent,

@@ -79,6 +79,10 @@ export class PatientMedicalAppointment {
   @ManyToOne(() => Reminder, { nullable: true })
   @JoinColumn({ name: 'reminder_id' })
   reminder!: Reminder | null;
+  @Column({ name: 'attended_via_sepa', type: 'boolean', nullable: true })
+  attendedViaSepa!: boolean | null;
+  @Column({ name: 'referred_via_sepa', type: 'boolean', nullable: true })
+  referredViaSepa!: boolean | null;
   @Column({ name: 'is_current', type: 'boolean' }) isCurrent!: boolean;
   @Column({ name: 'change_reason', type: 'text', nullable: true })
   changeReason!: string | null;

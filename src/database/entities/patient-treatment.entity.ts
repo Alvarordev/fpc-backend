@@ -13,7 +13,9 @@ import { FollowUp } from './follow-up.entity';
 import { PatientDiagnosis } from './patient-diagnosis.entity';
 import { Patient } from './patient.entity';
 import { Duration } from './embedded/duration.embedded';
+import { AccessBarrierCode } from './access-barrier-code.enum';
 import { CareProgram } from './care-program.enum';
+import { TreatmentInterruptionReason } from './treatment-interruption-reason.enum';
 import { TreatmentSituation } from './treatment-situation.enum';
 
 @Entity('patient_treatments')
@@ -21,6 +23,12 @@ import { TreatmentSituation } from './treatment-situation.enum';
   `"treatment_situation" IS NULL OR "treatment_situation" IN ('EN_CURSO','PENDIENTE_DE_INICIO','INTERRUMPIDO','FINALIZADO','SEARCHING','ABANDONED','DECEASED_DURING_TREATMENT','NOT_APPLICABLE','REMISSION')`,
 )
 @Check(`"care_program" IS NULL OR "care_program" IN ('COPHOES','PADOMI')`)
+@Check(
+  `"interruption_reason" IS NULL OR "interruption_reason" IN ('ADVERSE_REACTION','THERAPEUTIC_OPTION_EVAL','OTHER')`,
+)
+@Check(
+  `"access_barrier_code" IS NULL OR "access_barrier_code" IN ('TRANSFER','LODGING','ALTERNATIVE_MEDICINE','EXCESSIVE_COST','DOES_NOT_WANT_TO_START','STOCKOUT','INFUSION_ROOM_INOPERATIVE','PATIENT_OVERLOAD','OTHER')`,
+)
 @Check(
   '"is_referred" = false AND "source_health_center_id" IS NULL OR "is_referred" = true AND "source_health_center_id" IS NOT NULL AND "receiving_health_center_id" IS NOT NULL AND "source_health_center_id" <> "receiving_health_center_id"',
 )
@@ -119,6 +127,43 @@ export class PatientTreatment {
   hasLatestPrescription!: boolean | null;
   @Column({ name: 'latest_prescription_date', type: 'date', nullable: true })
   latestPrescriptionDate!: string | null;
+
+  @Column({ name: 'treatment_via_sepa', type: 'boolean', nullable: true })
+  treatmentViaSepa!: boolean | null;
+  @Column({
+    name: 'interruption_reason',
+    type: 'varchar',
+    length: 40,
+    nullable: true,
+  })
+  interruptionReason!: TreatmentInterruptionReason | null;
+  @Column({ name: 'interruption_reason_other', type: 'text', nullable: true })
+  interruptionReasonOther!: string | null;
+  @Column({ name: 'scheduled_sessions', type: 'int', nullable: true })
+  scheduledSessions!: number | null;
+  @Column({ name: 'completed_sessions', type: 'int', nullable: true })
+  completedSessions!: number | null;
+  @Column({
+    name: 'hormonal_treatment_completed',
+    type: 'boolean',
+    nullable: true,
+  })
+  hormonalTreatmentCompleted!: boolean | null;
+  @Column({
+    name: 'access_barrier_code',
+    type: 'varchar',
+    length: 40,
+    nullable: true,
+  })
+  accessBarrierCode!: AccessBarrierCode | null;
+  @Column({ name: 'access_barrier_other', type: 'text', nullable: true })
+  accessBarrierOther!: string | null;
+  @Column({
+    name: 'oriented_regarding_barriers',
+    type: 'boolean',
+    nullable: true,
+  })
+  orientedRegardingBarriers!: boolean | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }
