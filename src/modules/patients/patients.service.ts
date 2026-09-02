@@ -327,10 +327,9 @@ export class PatientsService {
     const query = this.patientsRepository
       .createQueryBuilder('patient')
       .leftJoin('patient.details', 'details')
-      .leftJoin(
-        '(SELECT patient_id, MAX(enrolled_on) AS enrolled_on FROM enrollments GROUP BY patient_id)',
-        'latest_enrollment',
-        'latest_enrollment.patient_id = patient.id',
+      .addSelect(
+        '(SELECT MAX(enrollment.enrolled_on) FROM enrollments enrollment WHERE enrollment.patient_id = patient.id)',
+        'latestEnrollmentDate',
       );
     await this.access.scopeQuery(query, 'patient.id', user);
     if (filters.segment === PatientListSegment.CARE) {
@@ -376,7 +375,7 @@ export class PatientsService {
         { search: `%${filters.search}%` },
       );
     const [data, total] = await query
-      .orderBy('latest_enrollment.enrolled_on', 'DESC', 'NULLS LAST')
+      .orderBy('latestEnrollmentDate', 'DESC', 'NULLS LAST')
       .addOrderBy('patient.created_at', 'DESC')
       .addOrderBy('patient.id', 'DESC')
       .skip(filters.offset)
