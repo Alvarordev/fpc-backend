@@ -6603,6 +6603,65 @@
         ]
       }
     },
+    "/users/{id}": {
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": "Administrator role required, or target user is an admin"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "409": {
+            "description": "Email already exists"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a non-admin user account",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/volunteers/{volunteerId}/availability": {
       "post": {
         "operationId": "VolunteerAvailabilityController_create",
@@ -15713,6 +15772,24 @@
           "data",
           "total"
         ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "agent@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "example": "secure-password"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
       },
       "CreateVolunteerAvailabilityDto": {
         "type": "object",

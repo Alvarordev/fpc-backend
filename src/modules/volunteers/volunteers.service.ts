@@ -66,7 +66,16 @@ export class VolunteersService {
   }
   async update(id: string, input: UpdateVolunteerDto): Promise<Volunteer> {
     const volunteer = await this.findById(id);
-    Object.assign(volunteer, input);
+    if (input.email !== undefined) {
+      const updatedUser = await this.usersService.updateEmail(
+        volunteer.userId,
+        input.email,
+      );
+      volunteer.email = updatedUser.email;
+    }
+    const profileFields = { ...input };
+    delete profileFields.email;
+    Object.assign(volunteer, profileFields);
     return this.volunteersRepository.save(volunteer);
   }
   async deactivate(id: string): Promise<Volunteer> {

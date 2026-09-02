@@ -1,11 +1,21 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -15,6 +25,7 @@ import { UserRole } from '../../database/entities/user-role.enum';
 import { User } from '../../database/entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersDto } from './dto/list-users.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserListResponseDto, UserResponseDto } from './dto/user-response.dto';
 import { UsersService } from './users.service';
 
@@ -59,6 +70,25 @@ export class UsersController {
   @ApiOkResponse({ type: UserResponseDto })
   @ApiUnauthorizedResponse()
   me(@CurrentUser() user: User): UserResponseDto {
+    return UserResponseDto.from(user);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Update a non-admin user account' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: UserResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse({
+    description: 'Administrator role required, or target user is an admin',
+  })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiConflictResponse({ description: 'Email already exists' })
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<UserResponseDto> {
+    const user = await this.usersService.update(id, updateUserDto);
     return UserResponseDto.from(user);
   }
 }

@@ -6,16 +6,20 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, Not, Repository } from 'typeorm';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { User } from '../../database/entities/user.entity';
+import { Volunteer } from '../../database/entities/volunteer.entity';
 import { ListUsersDto } from './dto/list-users.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(Volunteer)
+    private readonly volunteersRepository: Repository<Volunteer>,
   ) {}
 
   findByEmail(email: string): Promise<User | null> {
@@ -85,6 +89,71 @@ export class UsersService {
     });
 
     return usersRepository.save(user);
+  }
+
+  async update(id: string, input: UpdateUserDto): Promise<User> {
+    const user = await this.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.role === UserRole.ADMIN) {
+      throw new ForbiddenException('Los administradores no son editables');
+    }
+
+    if (input.email !== undefined) {
+      const email = this.normalizeEmail(input.email);
+      if (email !== user.email) {
+        const existingUser = await this.usersRepository.findOne({
+          where: { email, id: Not(id) },
+        });
+        if (existingUser) {
+          throw new ConflictException('Email already exists');
+        }
+        user.email = email;
+        if (user.role === UserRole.VOLUNTEER) {
+          await this.volunteersRepository.update({ userId: id }, { email });
+        }
+      }
+    }
+
+    if (input.password !== undefined) {
+      user.passwordHash = await bcrypt.hash(input.password, 12);
+    }
+
+    if (input.isActive !== undefined) {
+      user.isActive = input.isActive;
+    }
+
+    return this.usersRepository.save(user);
+  }
+
+  async updateEmail(id: string, email: string): Promise<User> {
+    const user = await this.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.role === UserRole.ADMIN) {
+      throw new ForbiddenException('Los administradores no son editables');
+    }
+
+    const normalized = this.normalizeEmail(email);
+    if (normalized === user.email) {
+      return user;
+    }
+
+    const existingUser = await this.usersRepository.findOne({
+      where: { email: normalized, id: Not(id) },
+    });
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
+    }
+
+    user.email = normalized;
+    return this.usersRepository.save(user);
   }
 
   async setActive(id: string, isActive: boolean): Promise<User> {
