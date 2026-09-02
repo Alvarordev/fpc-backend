@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Agent } from '../../database/entities/agent.entity';
 import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Patient } from '../../database/entities/patient.entity';
+import { Reminder } from '../../database/entities/reminder.entity';
 import { PatientSummariesModule } from '../patient-summaries/patient-summaries.module';
 import { RemindersModule } from '../reminders/reminders.module';
 import { FollowUpsController } from './follow-ups.controller';
@@ -11,7 +12,7 @@ import { PatientAccessModule } from '../patients/access/patient-access.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([FollowUp, Patient, Agent]),
+    TypeOrmModule.forFeature([FollowUp, Patient, Agent, Reminder]),
     PatientSummariesModule,
     PatientAccessModule,
     forwardRef(() => RemindersModule),

@@ -136,7 +136,6 @@ export class DashboardIndicatorsService {
     };
   }
 
-
   async getManagement(
     query: DashboardIndicatorQueryDto,
   ): Promise<DashboardManagementResponseDto> {
@@ -195,7 +194,12 @@ export class DashboardIndicatorsService {
     query: DashboardIndicatorQueryDto,
   ): Promise<DashboardProductivityResponseDto> {
     const bounds = this.getBounds(query);
-    const parameters = [bounds.fromAt, bounds.toAt, bounds.fromDate, bounds.toDate];
+    const parameters = [
+      bounds.fromAt,
+      bounds.toAt,
+      bounds.fromDate,
+      bounds.toDate,
+    ];
     const [populationRows, metricRows] = await Promise.all([
       this.dataSource.query<PopulationRow[]>(
         this.populationQuery(),
@@ -367,15 +371,12 @@ export class DashboardIndicatorsService {
       timezone: TIMEZONE,
       definition,
       population:
-        'Pacientes distintos con un enrolamiento creado en el periodo seleccionado.',
+        'Pacientes distintos con un enrolamiento efectivo en el periodo seleccionado.',
       populationCount,
     };
   }
 
-  private toDistributions(
-    rows: DistributionRow[],
-    categoryNames?: string[],
-  ) {
+  private toDistributions(rows: DistributionRow[], categoryNames?: string[]) {
     const categories = new Map<string, DashboardIndicatorDistributionDto>();
     for (const row of rows) {
       let distribution = categories.get(row.category);
@@ -457,8 +458,14 @@ export class DashboardIndicatorsService {
       FROM enrollments enrollment
       JOIN patients patient ON patient.id = enrollment.patient_id
       WHERE patient.role = 'PATIENT'
-        AND enrollment.created_at >= $1
-        AND enrollment.created_at < $2
+        AND COALESCE(
+          enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          enrollment.created_at
+        ) >= $1
+        AND COALESCE(
+          enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          enrollment.created_at
+        ) < $2
     `;
   }
 
@@ -469,8 +476,14 @@ export class DashboardIndicatorsService {
         FROM enrollments enrollment
         JOIN patients patient ON patient.id = enrollment.patient_id
         WHERE patient.role = 'PATIENT'
-          AND enrollment.created_at >= $1
-          AND enrollment.created_at < $2
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) >= $1
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) < $2
       ), primary_addresses AS (
         SELECT DISTINCT ON (address.patient_id)
           address.patient_id, address.district, address.province, address.department
@@ -558,8 +571,14 @@ export class DashboardIndicatorsService {
         FROM enrollments enrollment
         JOIN patients patient ON patient.id = enrollment.patient_id
         WHERE patient.role = 'PATIENT'
-          AND enrollment.created_at >= $1
-          AND enrollment.created_at < $2
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) >= $1
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) < $2
       ), current_diagnoses AS (
         SELECT DISTINCT ON (diagnosis.patient_id)
           diagnosis.patient_id, diagnosis.diagnosis, diagnosis.cancer_stage
@@ -640,8 +659,14 @@ export class DashboardIndicatorsService {
         FROM enrollments enrollment
         JOIN patients patient ON patient.id = enrollment.patient_id
         WHERE patient.role = 'PATIENT'
-          AND enrollment.created_at >= $1
-          AND enrollment.created_at < $2
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) >= $1
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) < $2
       )
       SELECT metric, value FROM (
         SELECT 'sisAffiliatedViaSepa' AS metric,
@@ -717,8 +742,14 @@ export class DashboardIndicatorsService {
         FROM enrollments enrollment
         JOIN patients patient ON patient.id = enrollment.patient_id
         WHERE patient.role = 'PATIENT'
-          AND enrollment.created_at >= $1
-          AND enrollment.created_at < $2
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) >= $1
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) < $2
       ), current_diagnoses AS (
         SELECT DISTINCT ON (diagnosis.patient_id)
           diagnosis.patient_id, diagnosis.diagnosis_specialty
@@ -764,12 +795,21 @@ export class DashboardIndicatorsService {
     return `
       WITH cohort AS (
         SELECT DISTINCT enrollment.patient_id,
-          MIN(enrollment.created_at) AS enrolled_at
+          MIN(COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          )) AS enrolled_at
         FROM enrollments enrollment
         JOIN patients patient ON patient.id = enrollment.patient_id
         WHERE patient.role = 'PATIENT'
-          AND enrollment.created_at >= $1
-          AND enrollment.created_at < $2
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) >= $1
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) < $2
         GROUP BY enrollment.patient_id
       ), sis_days AS (
         SELECT AVG(
@@ -857,8 +897,14 @@ export class DashboardIndicatorsService {
         FROM enrollments enrollment
         JOIN patients patient ON patient.id = enrollment.patient_id
         WHERE patient.role = 'PATIENT'
-          AND enrollment.created_at >= $1
-          AND enrollment.created_at < $2
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) >= $1
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) < $2
       ), current_treatments AS (
         SELECT treatment.*
         FROM patient_treatments treatment
@@ -935,8 +981,14 @@ export class DashboardIndicatorsService {
         FROM enrollments enrollment
         JOIN patients patient ON patient.id = enrollment.patient_id
         WHERE patient.role = 'PATIENT'
-          AND enrollment.created_at >= $1
-          AND enrollment.created_at < $2
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) >= $1
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) < $2
       ), reasons AS (
         SELECT
           COALESCE(
@@ -976,8 +1028,14 @@ export class DashboardIndicatorsService {
         FROM enrollments enrollment
         JOIN patients patient ON patient.id = enrollment.patient_id
         WHERE patient.role = 'PATIENT'
-          AND enrollment.created_at >= $1
-          AND enrollment.created_at < $2
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) >= $1
+          AND COALESCE(
+            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+            enrollment.created_at
+          ) < $2
       ), values AS (
         SELECT 'dropoutReasons' AS category,
           COALESCE(
@@ -1010,5 +1068,4 @@ export class DashboardIndicatorsService {
       ORDER BY category, count DESC, label ASC
     `;
   }
-
 }

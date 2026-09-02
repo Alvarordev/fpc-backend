@@ -31,6 +31,7 @@ export class MedicalAppointmentResponseDto {
   status!: MedicalAppointmentStatus;
   @ApiProperty({ format: 'uuid', nullable: true }) reminderId!: string | null;
   @ApiProperty() isCurrent!: boolean;
+  @ApiProperty() isHistorical!: boolean;
   @ApiProperty({ nullable: true }) changeReason!: string | null;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
 
@@ -60,6 +61,7 @@ export class MedicalAppointmentResponseDto {
       status: appointment.status,
       reminderId: appointment.reminderId,
       isCurrent: appointment.isCurrent,
+      isHistorical: appointment.isHistorical,
       changeReason: appointment.changeReason,
       createdAt: appointment.createdAt,
     };

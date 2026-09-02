@@ -13,6 +13,7 @@ import { FollowUp } from './follow-up.entity';
 import { Patient } from './patient.entity';
 import { VolunteerAvailability } from './volunteer-availability.entity';
 import { Volunteer } from './volunteer.entity';
+import { User } from './user.entity';
 export enum AppointmentModality {
   CALL = 'CALL',
   VIDEO_CALL = 'VIDEO_CALL',
@@ -48,8 +49,12 @@ export enum AppointmentStatus {
 ])
 @Index('IDX_psychooncology_appointments_patient_scheduled_timeline', [
   'patientId',
-  'scheduledAt',
+  'scheduledOn',
+  'createdAt',
   'id',
+])
+@Index('IDX_psychooncology_appointments_historical_loaded_by_id', [
+  'historicalLoadedById',
 ])
 export class PsychooncologyAppointment {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
@@ -97,9 +102,14 @@ export class PsychooncologyAppointment {
   @Column({ type: 'varchar', length: 20 }) modality!: AppointmentModality;
   @Column({ type: 'varchar', length: 20, default: AppointmentStatus.SCHEDULED })
   status!: AppointmentStatus;
-  @Column({ name: 'scheduled_at', type: 'timestamptz' }) scheduledAt!: Date;
+  @Column({ name: 'scheduled_at', type: 'timestamptz', nullable: true })
+  scheduledAt!: Date | null;
+  @Column({ name: 'scheduled_on', type: 'date', nullable: true })
+  scheduledOn!: string | null;
   @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })
   completedAt!: Date | null;
+  @Column({ name: 'completed_on', type: 'date', nullable: true })
+  completedOn!: string | null;
   @Column({ name: 'topic_addressed', type: 'text', nullable: true })
   topicAddressed!: string | null;
   @Column({ name: 'session_details', type: 'text', nullable: true })
@@ -121,4 +131,11 @@ export class PsychooncologyAppointment {
   createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;
+  @Column({ name: 'is_historical', type: 'boolean', default: false })
+  isHistorical!: boolean;
+  @Column({ name: 'historical_loaded_by_id', type: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'historical_loaded_by_id' })
+  historicalLoadedBy!: User | null;
 }

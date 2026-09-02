@@ -21,5 +21,6 @@ import { EnrollmentsService } from './enrollments.service';
   ],
   controllers: [EnrollmentsController, FamilyTalkInterestsController],
   providers: [EnrollmentsService],
+  exports: [EnrollmentsService],
 })
 export class EnrollmentsModule {}

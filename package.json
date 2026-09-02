@@ -15,6 +15,7 @@
     "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
     "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/database/data-source.ts",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
+    "migration:run:prod": "node scripts/run-migrations.cjs",
     "seed:admin": "ts-node src/database/seeds/admin.seed.ts",
     "seed:demo": "ts-node src/database/seeds/demo.seed.ts",
     "openapi:generate": "npm run build && node dist/openapi/generate-openapi.js",

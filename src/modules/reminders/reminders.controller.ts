@@ -151,14 +151,17 @@ export class RemindersController {
       createdFromFollowUpId: item.createdFromFollowUpId,
       assignedAgentId: item.assignedAgentId,
       dueAt: item.dueAt,
+      dueOn: item.dueOn,
       description: item.description,
       kind: item.kind,
       medicalAppointmentId: item.medicalAppointmentId,
       medicalAppointment,
       status: item.status,
       completedAt: item.completedAt,
+      completedOn: item.completedOn,
       resultingFollowUpId: item.resultingFollowUpId,
       createdAt: item.createdAt,
+      isHistorical: item.isHistorical,
     };
   }
 }

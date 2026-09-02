@@ -7,6 +7,7 @@ import { Volunteer } from '../../database/entities/volunteer.entity';
 import { PsychooncologyAppointmentsController } from './psychooncology-appointments.controller';
 import { PsychooncologyAppointmentsService } from './psychooncology-appointments.service';
 import { PatientAccessModule } from '../patients/access/patient-access.module';
+import { PatientSummariesModule } from '../patient-summaries/patient-summaries.module';
 
 @Module({
   imports: [
@@ -17,8 +18,10 @@ import { PatientAccessModule } from '../patients/access/patient-access.module';
       Patient,
     ]),
     PatientAccessModule,
+    PatientSummariesModule,
   ],
   controllers: [PsychooncologyAppointmentsController],
   providers: [PsychooncologyAppointmentsService],
+  exports: [PsychooncologyAppointmentsService],
 })
 export class PsychooncologyAppointmentsModule {}

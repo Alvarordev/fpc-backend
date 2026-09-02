@@ -139,7 +139,9 @@ export async function seedPsychooncology(
             ? AppointmentStatus.COMPLETED
             : AppointmentStatus.SCHEDULED,
           scheduledAt: slot.startsAt,
+          scheduledOn: slot.availability.date,
           completedAt: isPast ? addMinutes(slot.startsAt, 50) : null,
+          completedOn: isPast ? slot.availability.date : null,
           topicAddressed: isPast ? rng.pick(PSYCHO_TOPICS) : null,
           sessionDetails: isPast ? rng.pick(PSYCHO_DETAILS) : null,
           additionalObservations:

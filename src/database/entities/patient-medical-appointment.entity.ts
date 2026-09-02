@@ -7,17 +7,17 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { HealthCenter } from './health-center.entity';
 import { FollowUp } from './follow-up.entity';
 import { MedicalAppointmentStatus } from './medical-appointment-status.enum';
 import { Patient } from './patient.entity';
 import { Reminder } from './reminder.entity';
+import { User } from './user.entity';
 
 @Entity('patient_medical_appointments')
-@Check(
-  `"status" IN ('SCHEDULED','COMPLETED','CANCELLED','NO_ANSWER')`,
-)
+@Check(`"status" IN ('SCHEDULED','COMPLETED','CANCELLED','NO_ANSWER')`)
 @Index('UQ_patient_medical_appointments_current', ['patientId', 'specialty'], {
   unique: true,
   where: '"is_current" = true',
@@ -26,6 +26,9 @@ import { Reminder } from './reminder.entity';
 @Index('IDX_patient_medical_appointments_follow_up_id', ['followUpId'])
 @Index('IDX_patient_medical_appointments_health_center_id', ['healthCenterId'])
 @Index('IDX_patient_medical_appointments_reminder_id', ['reminderId'])
+@Index('IDX_patient_medical_appointments_historical_loaded_by_id', [
+  'historicalLoadedById',
+])
 export class PatientMedicalAppointment {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'patient_id', type: 'uuid' }) patientId!: string;
@@ -84,8 +87,17 @@ export class PatientMedicalAppointment {
   @Column({ name: 'referred_via_sepa', type: 'boolean', nullable: true })
   referredViaSepa!: boolean | null;
   @Column({ name: 'is_current', type: 'boolean' }) isCurrent!: boolean;
+  @Column({ name: 'is_historical', type: 'boolean', default: false })
+  isHistorical!: boolean;
+  @Column({ name: 'historical_loaded_by_id', type: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'historical_loaded_by_id' })
+  historicalLoadedBy!: User | null;
   @Column({ name: 'change_reason', type: 'text', nullable: true })
   changeReason!: string | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt!: Date;
 }

@@ -7,9 +7,11 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { FollowUp } from './follow-up.entity';
 import { Patient } from './patient.entity';
+import { User } from './user.entity';
 
 export enum AffiliationType {
   SELF = 'SELF',
@@ -24,6 +26,12 @@ export enum AffiliationType {
 @Index('IDX_enrollments_patient_id', ['patientId'])
 @Index('IDX_enrollments_follow_up_id', ['followUpId'])
 @Index('IDX_enrollments_companion_id', ['companionId'])
+@Index('IDX_enrollments_enrolled_on', ['enrolledOn', 'createdAt', 'id'])
+@Index('IDX_enrollments_historical_loaded_by_id', ['historicalLoadedById'])
+@Index('UQ_enrollments_patient_id_operational', ['patientId'], {
+  unique: true,
+  where: '"is_historical" = false',
+})
 export class Enrollment {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'patient_id', type: 'uuid' }) patientId!: string;
@@ -34,6 +42,7 @@ export class Enrollment {
   @ManyToOne(() => FollowUp)
   @JoinColumn({ name: 'follow_up_id' })
   followUp!: FollowUp;
+  @Column({ name: 'enrolled_on', type: 'date' }) enrolledOn!: string;
   @Column({ name: 'affiliation_type', type: 'varchar', length: 20 })
   affiliationType!: AffiliationType;
   @Column({ name: 'companion_id', type: 'uuid', nullable: true })
@@ -76,6 +85,13 @@ export class Enrollment {
   surveyAccepted!: boolean;
   @Column({ name: 'case_comments', type: 'text', nullable: true })
   caseComments!: string | null;
+  @Column({ name: 'is_historical', type: 'boolean', default: false })
+  isHistorical!: boolean;
+  @Column({ name: 'historical_loaded_by_id', type: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'historical_loaded_by_id' })
+  historicalLoadedBy!: User | null;
   @Column({ name: 'call_started_at', type: 'timestamptz', nullable: true })
   callStartedAt!: Date | null;
   @Column({ name: 'call_ended_at', type: 'timestamptz', nullable: true })
@@ -88,4 +104,6 @@ export class Enrollment {
   followUpQualityRating!: number | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt!: Date;
 }

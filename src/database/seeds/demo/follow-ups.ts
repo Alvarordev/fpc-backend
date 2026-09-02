@@ -9,7 +9,7 @@ import {
 import { CANCELLED_NOTES, FOLLOW_UP_NOTES, NO_ANSWER_NOTES } from './catalog';
 import type { DemoContext } from './context';
 import type { DemoPatient } from './patients';
-import { addDays, addMinutes, atTime } from './rng';
+import { addDays, addMinutes, atTime, toDateOnly } from './rng';
 
 /** How far back the case history goes. */
 const HISTORY_DAYS = 240;
@@ -78,9 +78,11 @@ export async function seedFollowUps(
           status: plan.status,
           purpose: plan.purpose,
           scheduledAt: plan.scheduledAt,
+          scheduledOn: toDateOnly(plan.scheduledAt),
           completedAt: isCompleted
             ? addMinutes(plan.scheduledAt, rng.int(0, 45))
             : null,
+          completedOn: isCompleted ? toDateOnly(plan.scheduledAt) : null,
           notes,
         }),
       );

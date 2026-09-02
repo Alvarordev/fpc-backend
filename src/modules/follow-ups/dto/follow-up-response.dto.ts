@@ -16,11 +16,16 @@ export class FollowUpResponseDto {
   @ApiProperty({ enum: FollowUpPurpose }) purpose!: FollowUpPurpose;
   @ApiProperty({ format: 'date-time', nullable: true })
   scheduledAt!: Date | null;
+  @ApiProperty({ format: 'date', nullable: true })
+  scheduledOn!: string | null;
   @ApiProperty({ format: 'date-time', nullable: true })
   completedAt!: Date | null;
+  @ApiProperty({ format: 'date', nullable: true })
+  completedOn!: string | null;
   @ApiProperty({ nullable: true }) notes!: string | null;
   @ApiProperty({ format: 'uuid', nullable: true }) nextFollowUpId!:
     string | null;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
   @ApiProperty({ format: 'date-time' }) updatedAt!: Date;
+  @ApiProperty() isHistorical!: boolean;
 }

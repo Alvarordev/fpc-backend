@@ -28,6 +28,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MedicalAppointmentsModule } from './modules/patients/clinical/medical-appointments/medical-appointments.module';
 import { N8nModule } from './integrations/n8n/n8n.module';
 import { EmbeddedUnderscoreNamingStrategy } from './database/embedded-underscore-naming.strategy';
+import { HistoricalRecordsModule } from './modules/historical-records/historical-records.module';
 
 @Module({
   imports: [
@@ -90,6 +91,7 @@ import { EmbeddedUnderscoreNamingStrategy } from './database/embedded-underscore
     PatientSummariesModule,
     CallCenterModule,
     DashboardModule,
+    HistoricalRecordsModule,
   ],
 })
 export class AppModule {}

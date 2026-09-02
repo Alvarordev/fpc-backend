@@ -20,6 +20,7 @@ describe('PatientTimelineService outcomes', () => {
     id: 'follow-up-id',
     kind: PatientTimelineEventKind.FOLLOW_UP,
     occurred_at: '2026-08-13T12:00:00.000Z',
+    occurred_at_is_approximate: false,
     status: 'COMPLETED',
     follow_up_id: 'follow-up-id',
     type: 'CALL',
@@ -31,6 +32,10 @@ describe('PatientTimelineService outcomes', () => {
     social_note_type: null,
     social_note: null,
     author_id: null,
+    created_at: '2026-08-13T12:00:00.000Z',
+    updated_at: '2026-08-13T12:00:00.000Z',
+    historical_loaded_by_id: null,
+    historical_loaded_by_email: null,
   };
   const reminderEventRow = {
     ...followUpRow,

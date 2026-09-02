@@ -190,17 +190,41 @@ export class DashboardService {
       WITH cohort AS (
         SELECT DISTINCT enrollment.patient_id
         FROM enrollments enrollment
-        WHERE enrollment.created_at >= $1 AND enrollment.created_at < $2
+        WHERE COALESCE(
+          enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          enrollment.created_at
+        ) >= $1 AND COALESCE(
+          enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          enrollment.created_at
+        ) < $2
       )
       SELECT
-        (SELECT COUNT(*) FROM enrollments WHERE created_at >= $1 AND created_at < $2) AS "enrollmentEvents",
+        (SELECT COUNT(*) FROM enrollments enrollment WHERE COALESCE(
+          enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          enrollment.created_at
+        ) >= $1 AND COALESCE(
+          enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          enrollment.created_at
+        ) < $2) AS "enrollmentEvents",
         COUNT(*) AS "cohortPatients",
         COUNT(*) FILTER (WHERE patient.activity_status IN ('ACTIVE', 'REACTIVE')) AS "activePatients",
         COUNT(*) FILTER (WHERE patient.activity_status = 'INACTIVE') AS "inactivePatients",
         COUNT(*) FILTER (WHERE patient.deceased_at IS NOT NULL OR patient.deactivation_reason = 'DECEASED') AS "deceasedPatients",
         COUNT(*) FILTER (WHERE patient.activity_status = 'INACTIVE' AND patient.deceased_at IS NULL AND patient.deactivation_reason IS DISTINCT FROM 'DECEASED') AS "dropoutPatients",
-        (SELECT COUNT(*) FROM psychooncology_appointments WHERE scheduled_at >= $1 AND scheduled_at < $2) AS "sessions",
-        (SELECT COUNT(*) FROM psychooncology_appointments WHERE scheduled_at >= $1 AND scheduled_at < $2 AND status = 'COMPLETED') AS "completedSessions"
+        (SELECT COUNT(*) FROM psychooncology_appointments appointment WHERE COALESCE(
+          appointment.scheduled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          appointment.scheduled_at
+        ) >= $1 AND COALESCE(
+          appointment.scheduled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          appointment.scheduled_at
+        ) < $2) AS "sessions",
+        (SELECT COUNT(*) FROM psychooncology_appointments appointment WHERE COALESCE(
+          appointment.scheduled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          appointment.scheduled_at
+        ) >= $1 AND COALESCE(
+          appointment.scheduled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          appointment.scheduled_at
+        ) < $2 AND status = 'COMPLETED') AS "completedSessions"
       FROM cohort
       JOIN patients patient ON patient.id = cohort.patient_id
     `;
@@ -211,25 +235,37 @@ export class DashboardService {
     const label = period === DashboardPeriod.MONTH ? 'YYYY-MM-DD' : 'YYYY-MM';
     const bucket =
       period === DashboardPeriod.MONTH
-        ? `(created_at AT TIME ZONE '${TIMEZONE}')::date`
-        : `date_trunc('month', created_at AT TIME ZONE '${TIMEZONE}')::date`;
+        ? `COALESCE(enrolled_on, (created_at AT TIME ZONE '${TIMEZONE}')::date)`
+        : `date_trunc('month', COALESCE(enrolled_on::timestamp, created_at AT TIME ZONE '${TIMEZONE}'))::date`;
     const appointmentBucket =
       period === DashboardPeriod.MONTH
-        ? `(scheduled_at AT TIME ZONE '${TIMEZONE}')::date`
-        : `date_trunc('month', scheduled_at AT TIME ZONE '${TIMEZONE}')::date`;
+        ? `COALESCE(scheduled_on, (scheduled_at AT TIME ZONE '${TIMEZONE}')::date)`
+        : `date_trunc('month', COALESCE(scheduled_on::timestamp, scheduled_at AT TIME ZONE '${TIMEZONE}'))::date`;
 
     return `
       WITH enrollment_counts AS (
         SELECT ${bucket} AS bucket, COUNT(*) AS count
         FROM enrollments
-        WHERE created_at >= $1 AND created_at < $2
+        WHERE COALESCE(
+          enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          created_at
+        ) >= $1 AND COALESCE(
+          enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          created_at
+        ) < $2
         GROUP BY bucket
       ), session_counts AS (
         SELECT ${appointmentBucket} AS bucket,
           COUNT(*) AS sessions,
           COUNT(*) FILTER (WHERE status = 'COMPLETED') AS "completedSessions"
         FROM psychooncology_appointments
-        WHERE scheduled_at >= $1 AND scheduled_at < $2
+        WHERE COALESCE(
+          scheduled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          scheduled_at
+        ) >= $1 AND COALESCE(
+          scheduled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          scheduled_at
+        ) < $2
         GROUP BY bucket
       )
       SELECT
@@ -248,7 +284,13 @@ export class DashboardService {
     return `
       WITH cohort AS (
         SELECT DISTINCT patient_id FROM enrollments
-        WHERE created_at >= $1 AND created_at < $2
+        WHERE COALESCE(
+          enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          created_at
+        ) >= $1 AND COALESCE(
+          enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          created_at
+        ) < $2
       ), current_diagnoses AS (
         SELECT patient_id, diagnosis, cancer_stage, id
         FROM patient_diagnoses
@@ -288,7 +330,13 @@ export class DashboardService {
     return `
       WITH cohort AS (
         SELECT DISTINCT patient_id FROM enrollments
-        WHERE created_at >= $1 AND created_at < $2
+        WHERE COALESCE(
+          enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          created_at
+        ) >= $1 AND COALESCE(
+          enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+          created_at
+        ) < $2
       ), latest_current_diagnoses AS (
         SELECT DISTINCT ON (patient_id) patient_id, health_center_id
         FROM patient_diagnoses

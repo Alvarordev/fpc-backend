@@ -326,7 +326,12 @@ export class PatientsService {
   }> {
     const query = this.patientsRepository
       .createQueryBuilder('patient')
-      .leftJoin('patient.details', 'details');
+      .leftJoin('patient.details', 'details')
+      .leftJoin(
+        '(SELECT patient_id, MAX(enrolled_on) AS enrolled_on FROM enrollments GROUP BY patient_id)',
+        'latest_enrollment',
+        'latest_enrollment.patient_id = patient.id',
+      );
     await this.access.scopeQuery(query, 'patient.id', user);
     if (filters.segment === PatientListSegment.CARE) {
       query.andWhere(
@@ -371,7 +376,8 @@ export class PatientsService {
         { search: `%${filters.search}%` },
       );
     const [data, total] = await query
-      .orderBy('patient.created_at', 'DESC')
+      .orderBy('latest_enrollment.enrolled_on', 'DESC', 'NULLS LAST')
+      .addOrderBy('patient.created_at', 'DESC')
       .addOrderBy('patient.id', 'DESC')
       .skip(filters.offset)
       .take(filters.limit)
@@ -406,7 +412,7 @@ export class PatientsService {
         })
         .orderBy('followUp.subject_patient_id', 'ASC')
         .addOrderBy(
-          'COALESCE(followUp.completed_at, followUp.scheduled_at, followUp.created_at)',
+          "COALESCE(followUp.completed_on::timestamp AT TIME ZONE 'America/Lima', followUp.completed_at, followUp.scheduled_on::timestamp AT TIME ZONE 'America/Lima', followUp.scheduled_at, followUp.created_at)",
           'DESC',
         )
         .addOrderBy('followUp.id', 'DESC')

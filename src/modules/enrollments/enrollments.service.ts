@@ -24,7 +24,11 @@ import { PatientHealthPhase } from '../../database/entities/patient-health-phase
 import { Patient } from '../../database/entities/patient.entity';
 import { CompanionContactRole } from '../../database/entities/companion-contact-role.enum';
 import { MedicalConsultationStatus } from '../../database/entities/medical-consultation-status.enum';
-import { FollowUpsService } from '../follow-ups/follow-ups.service';
+import { MedicalAppointmentStatus } from '../../database/entities/medical-appointment-status.enum';
+import {
+  FollowUpCreateOptions,
+  FollowUpsService,
+} from '../follow-ups/follow-ups.service';
 import { PatientDiagnosesService } from '../patients/clinical/diagnoses/patient-diagnoses.service';
 import { PatientInsuranceService } from '../patients/clinical/insurance/patient-insurance.service';
 import { PatientMedicalAppointmentsService } from '../patients/clinical/medical-appointments/patient-medical-appointments.service';
@@ -46,6 +50,21 @@ import { buildRegistroEnvelope } from '../../integrations/n8n/n8n-webhook.payloa
 import { EnrollmentContactSource } from './enrollment-contact-source.enum';
 import { PatientDiagnosticStatusesService } from '../patients/diagnostic-status/patient-diagnostic-statuses.service';
 import { PatientPsychooncologySupportAssessmentsService } from '../patients/clinical/psychooncology-support/patient-psychooncology-support-assessments.service';
+import { dateOnlyInLima } from '../../shared/date-only/date-only.util';
+import type { HistoricalEnrollmentInput } from '../historical-records/dto/create-historical-enrollment.dto';
+
+type EnrollmentInput = CreateEnrollmentDto & {
+  enrolledOn?: string;
+  followUp: CreateEnrollmentDto['followUp'] & {
+    status?: import('../../database/entities/follow-up.enums').FollowUpStatus;
+    scheduledOn?: string;
+    completedOn?: string;
+  };
+};
+
+export interface EnrollmentCreateOptions extends FollowUpCreateOptions {
+  historical?: boolean;
+}
 
 @Injectable()
 export class EnrollmentsService {
@@ -73,7 +92,12 @@ export class EnrollmentsService {
     private readonly webhooks: N8nTransactionalDispatchService,
   ) {}
 
-  async create(input: CreateEnrollmentDto, userId: string, userRole: string) {
+  async create(
+    input: EnrollmentInput,
+    userId: string,
+    userRole: string,
+    options: EnrollmentCreateOptions = {},
+  ) {
     return this.dataSource.transaction(async (manager) => {
       const {
         patientId,
@@ -95,8 +119,21 @@ export class EnrollmentsService {
         familyPreventionTalkInterests,
         healthPhase,
         addresses,
+        enrolledOn,
         ...metadata
       } = input;
+      const followUpValues = {
+        ...followUpInput,
+      } as EnrollmentInput['followUp'];
+      const historicalScheduledOn = followUpValues.scheduledOn;
+      const historicalCompletedOn = followUpValues.completedOn;
+      const historicalStatus = followUpValues.status;
+      const historicalLoadedById = options.historical
+        ? (options.historicalLoadedById ?? userId)
+        : undefined;
+      delete followUpValues.scheduledOn;
+      delete followUpValues.completedOn;
+      delete followUpValues.status;
       const usesExplicitContacts = contacts !== undefined;
       this.validateContacts(contacts);
       this.validateClinicalBranches(input);
@@ -153,7 +190,10 @@ export class EnrollmentsService {
         : await this.patients.create(patientInput!, manager);
       if (!patient) throw new NotFoundException('Patient not found');
       this.validateContactAgeRules(patient, contacts);
-      if (patient.status !== PatientStatus.UNENROLLED)
+      if (
+        patient.status !== PatientStatus.UNENROLLED &&
+        !(options.historical && Boolean(patientId))
+      )
         throw new ConflictException('Patient is already enrolled');
       if (
         patient.role !== PatientRole.UNKNOWN &&
@@ -269,7 +309,7 @@ export class EnrollmentsService {
       );
       const followUp = await this.followUps.create(
         {
-          ...followUpInput,
+          ...followUpValues,
           subjectPatientId: patient.id,
           interlocutorId: companion?.id ?? patient.id,
           purpose: FollowUpPurpose.ENROLLMENT,
@@ -277,6 +317,13 @@ export class EnrollmentsService {
         userId,
         userRole,
         manager,
+        {
+          isHistorical: options.historical ?? false,
+          historicalLoadedById,
+          status: options.historical ? historicalStatus : undefined,
+          scheduledOn: options.historical ? historicalScheduledOn : undefined,
+          completedOn: options.historical ? historicalCompletedOn : undefined,
+        },
       );
       const enrollmentRepository = manager.getRepository(Enrollment);
       const enrollment = await enrollmentRepository.save(
@@ -291,6 +338,9 @@ export class EnrollmentsService {
           patientId: patient.id,
           followUpId: followUp.id,
           companionId: companion?.id ?? null,
+          enrolledOn: enrolledOn ?? dateOnlyInLima(new Date()),
+          isHistorical: options.historical ?? false,
+          historicalLoadedById: historicalLoadedById ?? null,
         }),
       );
       if (familyPreventionTalkInterests?.length)
@@ -357,22 +407,39 @@ export class EnrollmentsService {
           manager,
         );
       }
-      for (const appointment of medicalAppointments ?? [])
-        await this.appointments.create(
-          patient.id,
-          {
-            ...appointment,
-            isFirstConsultation:
-              symptomReport?.consultationStatus ===
-              MedicalConsultationStatus.ATTENDED
-                ? true
-                : appointment.isFirstConsultation,
-            followUpId: followUp.id,
-          },
-          manager,
-          symptomReport?.consultationStatus !==
-            MedicalConsultationStatus.ATTENDED,
-        );
+      for (const appointment of medicalAppointments ?? []) {
+        const appointmentInput = {
+          ...appointment,
+          isFirstConsultation:
+            symptomReport?.consultationStatus ===
+            MedicalConsultationStatus.ATTENDED
+              ? true
+              : appointment.isFirstConsultation,
+          followUpId: followUp.id,
+        };
+        if (options.historical)
+          await this.appointments.createHistorical(
+            {
+              ...appointmentInput,
+              patientId: patient.id,
+              status:
+                symptomReport?.consultationStatus ===
+                MedicalConsultationStatus.ATTENDED
+                  ? MedicalAppointmentStatus.COMPLETED
+                  : MedicalAppointmentStatus.SCHEDULED,
+            },
+            historicalLoadedById!,
+            manager,
+          );
+        else
+          await this.appointments.create(
+            patient.id,
+            appointmentInput,
+            manager,
+            symptomReport?.consultationStatus !==
+              MedicalConsultationStatus.ATTENDED,
+          );
+      }
       if (symptomReport)
         await this.symptomReports.create(
           patient.id,
@@ -409,25 +476,37 @@ export class EnrollmentsService {
         );
 
       await this.invalidations.markDirty(patient.id, manager);
-      // Cita webhooks for medicalAppointments are already dispatched by
-      // this.appointments.create() above; only Registro needs firing here.
-      await this.webhooks.enqueue(
-        buildRegistroEnvelope({
-          fullName: patient.fullName,
-          dni: patient.dni ?? '',
-          phone: patient.primaryPhone,
-          email: patient.email,
-          diagnosis:
-            diagnosis?.diagnosis ??
-            diagnoses?.map(({ diagnosis: value }) => value).join(', ') ??
-            'En evaluación',
-          // patient.role was just set to PATIENT above (the companion, if
-          // any, is enrolled separately and never gets its own Registro).
-          condition: 'paciente',
-        }),
-        manager,
-      );
+      if (!options.historical)
+        // Cita webhooks for medicalAppointments are already dispatched by
+        // this.appointments.create() above; only Registro needs firing here.
+        await this.webhooks.enqueue(
+          buildRegistroEnvelope({
+            fullName: patient.fullName,
+            dni: patient.dni ?? '',
+            phone: patient.primaryPhone,
+            email: patient.email,
+            diagnosis:
+              diagnosis?.diagnosis ??
+              diagnoses?.map(({ diagnosis: value }) => value).join(', ') ??
+              'En evaluación',
+            // patient.role was just set to PATIENT above (the companion, if
+            // any, is enrolled separately and never gets its own Registro).
+            condition: 'paciente',
+          }),
+          manager,
+        );
       return { ...enrollment, patient, companion, followUp };
+    });
+  }
+
+  async createHistorical(
+    input: HistoricalEnrollmentInput,
+    userId: string,
+    userRole: string,
+  ) {
+    return this.create(input, userId, userRole, {
+      historical: true,
+      historicalLoadedById: userId,
     });
   }
 
@@ -435,7 +514,7 @@ export class EnrollmentsService {
     await this.patients.assertCanRead(patientId, user);
     return this.enrollments.find({
       where: { patientId },
-      order: { createdAt: 'DESC' },
+      order: { enrolledOn: 'DESC', createdAt: 'DESC', id: 'DESC' },
     });
   }
 

@@ -91,6 +91,7 @@ export class EnrollmentsController {
       id: item.id,
       patientId: item.patientId,
       followUpId: item.followUpId,
+      enrolledOn: item.enrolledOn,
       affiliationType: item.affiliationType,
       companionId: item.companionId,
       currentlyAttendingConsultations: item.currentlyAttendingConsultations,
@@ -107,6 +108,7 @@ export class EnrollmentsController {
       callStartedAt: item.callStartedAt,
       callEndedAt: item.callEndedAt,
       followUpQualityRating: item.followUpQualityRating,
+      isHistorical: item.isHistorical,
       createdAt: item.createdAt,
     };
   }

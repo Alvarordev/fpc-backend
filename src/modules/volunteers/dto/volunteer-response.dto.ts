@@ -20,6 +20,7 @@ export class VolunteerResponseDto {
   @ApiProperty() completedSustainabilityModule!: boolean;
   @ApiProperty() completedDesignThinkingModule!: boolean;
   @ApiProperty() isActive!: boolean;
+  @ApiProperty() isAnonymous!: boolean;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
   @ApiProperty({ format: 'date-time' }) updatedAt!: Date;
 }

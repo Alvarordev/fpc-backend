@@ -17,6 +17,7 @@ import {
   FollowUpType,
 } from './follow-up.enums';
 import { Patient } from './patient.entity';
+import { User } from './user.entity';
 
 @Entity('follow_ups')
 @Check(
@@ -31,6 +32,13 @@ import { Patient } from './patient.entity';
 @Index('IDX_follow_ups_agent_id', ['agentId'])
 @Index('IDX_follow_ups_next_follow_up_id', ['nextFollowUpId'])
 @Index('IDX_follow_ups_status', ['status'])
+@Index('IDX_follow_ups_scheduled_on', [
+  'subjectPatientId',
+  'scheduledOn',
+  'createdAt',
+  'id',
+])
+@Index('IDX_follow_ups_historical_loaded_by_id', ['historicalLoadedById'])
 export class FollowUp {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'subject_patient_id', type: 'uuid' })
@@ -51,8 +59,12 @@ export class FollowUp {
   @Column({ type: 'varchar', length: 30 }) purpose!: FollowUpPurpose;
   @Column({ name: 'scheduled_at', type: 'timestamptz', nullable: true })
   scheduledAt!: Date | null;
+  @Column({ name: 'scheduled_on', type: 'date', nullable: true })
+  scheduledOn!: string | null;
   @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })
   completedAt!: Date | null;
+  @Column({ name: 'completed_on', type: 'date', nullable: true })
+  completedOn!: string | null;
   @Column({ type: 'text', nullable: true }) notes!: string | null;
   @Column({ name: 'next_follow_up_id', type: 'uuid', nullable: true })
   nextFollowUpId!: string | null;
@@ -65,4 +77,11 @@ export class FollowUp {
   createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;
+  @Column({ name: 'is_historical', type: 'boolean', default: false })
+  isHistorical!: boolean;
+  @Column({ name: 'historical_loaded_by_id', type: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'historical_loaded_by_id' })
+  historicalLoadedBy!: User | null;
 }

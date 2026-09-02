@@ -7,12 +7,10 @@ export class ReminderMedicalAppointmentSummaryDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() specialty!: string;
   @ApiProperty({ format: 'uuid', nullable: true }) healthCenterId!:
-    | string
-    | null;
+    string | null;
   @ApiProperty({ nullable: true }) healthCenterName!: string | null;
   @ApiProperty({ format: 'date', nullable: true }) appointmentDate!:
-    | string
-    | null;
+    string | null;
   @ApiProperty({ nullable: true }) appointmentTime!: string | null;
   @ApiProperty({ enum: MedicalAppointmentStatus })
   status!: MedicalAppointmentStatus;
@@ -23,22 +21,23 @@ export class ReminderResponseDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) subjectPatientId!: string;
   @ApiProperty({ format: 'uuid', nullable: true }) createdFromFollowUpId!:
-    | string
-    | null;
+    string | null;
   @ApiProperty({ format: 'uuid' }) assignedAgentId!: string;
-  @ApiProperty({ format: 'date-time' }) dueAt!: Date;
+  @ApiProperty({ format: 'date-time', nullable: true }) dueAt!: Date | null;
+  @ApiProperty({ format: 'date', nullable: true }) dueOn!: string | null;
   @ApiProperty() description!: string;
   @ApiProperty({ enum: ReminderKind }) kind!: ReminderKind;
   @ApiProperty({ format: 'uuid', nullable: true }) medicalAppointmentId!:
-    | string
-    | null;
+    string | null;
   @ApiPropertyOptional({ type: ReminderMedicalAppointmentSummaryDto })
   medicalAppointment?: ReminderMedicalAppointmentSummaryDto | null;
   @ApiProperty({ enum: ReminderStatus }) status!: ReminderStatus;
   @ApiProperty({ format: 'date-time', nullable: true })
   completedAt!: Date | null;
+  @ApiProperty({ format: 'date', nullable: true })
+  completedOn!: string | null;
   @ApiProperty({ format: 'uuid', nullable: true }) resultingFollowUpId!:
-    | string
-    | null;
+    string | null;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
+  @ApiProperty() isHistorical!: boolean;
 }

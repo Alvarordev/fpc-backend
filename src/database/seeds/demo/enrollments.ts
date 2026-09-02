@@ -9,7 +9,7 @@ import {
 } from './catalog';
 import type { DemoContext } from './context';
 import type { PatientFollowUps } from './follow-ups';
-import { addMinutes } from './rng';
+import { addMinutes, toDateOnly } from './rng';
 import { DEMO_EMAIL_DOMAIN } from './users';
 
 /** Keyed by patient id — the clinical-history step needs the enrollment back. */
@@ -32,6 +32,7 @@ export async function seedEnrollments(
       manager.create(Enrollment, {
         patientId: patient.id,
         followUpId: history.enrollment.id,
+        enrolledOn: toDateOnly(callStartedAt ?? history.enrollment.createdAt),
         affiliationType: companion
           ? AffiliationType.FAMILY_FRIEND
           : AffiliationType.SELF,

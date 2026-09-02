@@ -19,6 +19,7 @@ type TimelineRow = {
   id: string;
   kind: PatientTimelineEventKind;
   occurred_at: Date | string;
+  occurred_at_is_approximate: boolean;
   status: string | null;
   follow_up_id: string | null;
   type: string | null;
@@ -30,6 +31,10 @@ type TimelineRow = {
   social_note_type: string | null;
   social_note: string | null;
   author_id: string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+  historical_loaded_by_id: string | null;
+  historical_loaded_by_email: string | null;
 };
 
 type TimelineOutcomeRow = {
@@ -214,10 +219,17 @@ export class PatientTimelineService {
         'FOLLOW_UP'::text AS kind,
         COALESCE(
           follow_up.completed_at,
+          follow_up.completed_on::timestamp AT TIME ZONE 'America/Lima',
           follow_up.scheduled_at,
+          follow_up.scheduled_on::timestamp AT TIME ZONE 'America/Lima',
           follow_up.created_at
-        ) AS occurred_at,
-        follow_up.status,
+         ) AS occurred_at,
+         CASE WHEN follow_up.completed_at IS NULL
+           AND follow_up.completed_on IS NULL
+           AND follow_up.scheduled_at IS NULL
+           AND follow_up.scheduled_on IS NULL
+           THEN true ELSE false END AS occurred_at_is_approximate,
+         follow_up.status,
         follow_up.id AS follow_up_id,
         follow_up.type,
         follow_up.purpose,
@@ -227,17 +239,29 @@ export class PatientTimelineService {
         NULL::int AS session_number,
         NULL::varchar AS social_note_type,
         NULL::text AS social_note,
-        NULL::uuid AS author_id
-      FROM follow_ups follow_up
-      WHERE follow_up.subject_patient_id = $1
+         NULL::uuid AS author_id,
+         follow_up.created_at,
+         follow_up.updated_at,
+         follow_up.historical_loaded_by_id,
+         historical_loader.email AS historical_loaded_by_email
+       FROM follow_ups follow_up
+       LEFT JOIN users historical_loader
+         ON historical_loader.id = follow_up.historical_loaded_by_id
+       WHERE follow_up.subject_patient_id = $1
 
       UNION ALL
 
       SELECT
         reminder.id,
         'REMINDER'::text AS kind,
-        reminder.due_at AS occurred_at,
-        reminder.status,
+        COALESCE(
+          reminder.due_at,
+          reminder.due_on::timestamp AT TIME ZONE 'America/Lima',
+          reminder.created_at
+         ) AS occurred_at,
+         CASE WHEN reminder.due_at IS NULL AND reminder.due_on IS NULL
+           THEN true ELSE false END AS occurred_at_is_approximate,
+         reminder.status,
         reminder.created_from_follow_up_id AS follow_up_id,
         NULL::varchar AS type,
         NULL::varchar AS purpose,
@@ -247,17 +271,34 @@ export class PatientTimelineService {
         NULL::int AS session_number,
         NULL::varchar AS social_note_type,
         NULL::text AS social_note,
-        NULL::uuid AS author_id
-      FROM reminders reminder
-      WHERE reminder.subject_patient_id = $1
+         NULL::uuid AS author_id,
+         reminder.created_at,
+         reminder.updated_at,
+         reminder.historical_loaded_by_id,
+         historical_loader.email AS historical_loaded_by_email
+       FROM reminders reminder
+       LEFT JOIN users historical_loader
+         ON historical_loader.id = reminder.historical_loaded_by_id
+       WHERE reminder.subject_patient_id = $1
 
       UNION ALL
 
       SELECT
         appointment.id,
         'PSYCHOONCOLOGY_APPOINTMENT'::text AS kind,
-        appointment.scheduled_at AS occurred_at,
-        appointment.status,
+        COALESCE(
+          appointment.completed_at,
+          appointment.completed_on::timestamp AT TIME ZONE 'America/Lima',
+          appointment.scheduled_at,
+          appointment.scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+          appointment.created_at
+         ) AS occurred_at,
+         CASE WHEN appointment.completed_at IS NULL
+           AND appointment.completed_on IS NULL
+           AND appointment.scheduled_at IS NULL
+           AND appointment.scheduled_on IS NULL
+           THEN true ELSE false END AS occurred_at_is_approximate,
+         appointment.status,
         appointment.follow_up_id,
         NULL::varchar AS type,
         NULL::varchar AS purpose,
@@ -267,17 +308,28 @@ export class PatientTimelineService {
         appointment.session_number,
         NULL::varchar AS social_note_type,
         NULL::text AS social_note,
-        NULL::uuid AS author_id
-      FROM psychooncology_appointments appointment
-      WHERE appointment.patient_id = $1
+         NULL::uuid AS author_id,
+         appointment.created_at,
+         appointment.updated_at,
+         appointment.historical_loaded_by_id,
+         historical_loader.email AS historical_loaded_by_email
+       FROM psychooncology_appointments appointment
+       LEFT JOIN users historical_loader
+         ON historical_loader.id = appointment.historical_loaded_by_id
+       WHERE appointment.patient_id = $1
 
       UNION ALL
 
       SELECT
         social_note.id,
         'SOCIAL_NOTE'::text AS kind,
-        social_note.created_at AS occurred_at,
-        NULL::varchar AS status,
+         COALESCE(
+           follow_up.occurred_at,
+           social_note.created_at
+         ) AS occurred_at,
+         COALESCE(follow_up.occurred_at_is_approximate, true)
+           AS occurred_at_is_approximate,
+         NULL::varchar AS status,
         social_note.follow_up_id,
         NULL::varchar AS type,
         NULL::varchar AS purpose,
@@ -287,8 +339,29 @@ export class PatientTimelineService {
         NULL::int AS session_number,
         social_note.type AS social_note_type,
         social_note.note AS social_note,
-        social_note.author_id
-      FROM patient_social_notes social_note
+         social_note.author_id,
+         social_note.created_at,
+         social_note.created_at,
+         NULL::uuid,
+         NULL::text
+       FROM patient_social_notes social_note
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+           scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+           created_at
+           ) AS occurred_at,
+           CASE WHEN completed_at IS NULL
+             AND completed_on IS NULL
+             AND scheduled_at IS NULL
+             AND scheduled_on IS NULL
+             THEN true ELSE false END AS occurred_at_is_approximate
+         FROM follow_ups
+      ) follow_up ON follow_up.id = social_note.follow_up_id
       WHERE social_note.patient_id = $1
 
     `;
@@ -318,7 +391,11 @@ export class PatientTimelineService {
         diagnosis.follow_up_id,
         'DIAGNOSIS'::text AS outcome_type,
         diagnosis.id AS record_id,
-        diagnosis.created_at AS occurred_at,
+        COALESCE(
+          diagnosis.diagnosis_date::timestamp AT TIME ZONE 'America/Lima',
+          follow_up.occurred_at,
+          diagnosis.created_at
+        ) AS occurred_at,
         jsonb_build_object(
           'diagnosis', diagnosis.diagnosis,
           'cancerStage', diagnosis.cancer_stage,
@@ -329,6 +406,18 @@ export class PatientTimelineService {
            'isCurrent', diagnosis.is_current
         ) AS data
       FROM patient_diagnoses diagnosis
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = diagnosis.follow_up_id
       WHERE diagnosis.follow_up_id = ANY($1::uuid[])
 
       UNION ALL
@@ -337,7 +426,11 @@ export class PatientTimelineService {
         treatment.follow_up_id,
         'TREATMENT'::text AS outcome_type,
         treatment.id AS record_id,
-        treatment.created_at AS occurred_at,
+        COALESCE(
+          treatment.start_date::timestamp AT TIME ZONE 'America/Lima',
+          follow_up.occurred_at,
+          treatment.created_at
+        ) AS occurred_at,
         jsonb_build_object(
           'treatmentType', treatment.treatment_type,
           'treatmentSituation', treatment.treatment_situation,
@@ -354,6 +447,18 @@ export class PatientTimelineService {
            'treatmentAbandonmentReason', treatment.treatment_abandonment_reason
         ) AS data
       FROM patient_treatments treatment
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = treatment.follow_up_id
       WHERE treatment.follow_up_id = ANY($1::uuid[])
 
       UNION ALL
@@ -362,7 +467,11 @@ export class PatientTimelineService {
         treatment.follow_up_id,
         'MEDICATION'::text AS outcome_type,
         medication.id AS record_id,
-        medication.created_at AS occurred_at,
+        COALESCE(
+          medication.start_date::timestamp AT TIME ZONE 'America/Lima',
+          follow_up.occurred_at,
+          medication.created_at
+        ) AS occurred_at,
         jsonb_build_object(
           'name', medication.name,
           'doseAmount', medication.dose_amount,
@@ -378,6 +487,18 @@ export class PatientTimelineService {
       FROM treatment_medications medication
       INNER JOIN patient_treatments treatment
         ON treatment.id = medication.treatment_id
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = treatment.follow_up_id
       WHERE treatment.follow_up_id = ANY($1::uuid[])
 
       UNION ALL
@@ -386,7 +507,7 @@ export class PatientTimelineService {
         symptom.follow_up_id,
         'SYMPTOM'::text AS outcome_type,
         symptom.id AS record_id,
-        symptom.created_at AS occurred_at,
+        COALESCE(follow_up.occurred_at, symptom.created_at) AS occurred_at,
         jsonb_build_object(
           'discomfortSeverity', symptom.discomfort_severity,
           'discomfortDescription', symptom.discomfort_description,
@@ -401,6 +522,18 @@ export class PatientTimelineService {
           'specialty', symptom.specialty
         ) AS data
       FROM patient_symptom_reports symptom
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = symptom.follow_up_id
       WHERE symptom.follow_up_id = ANY($1::uuid[])
 
       UNION ALL
@@ -409,7 +542,11 @@ export class PatientTimelineService {
         insurance.follow_up_id,
         'INSURANCE'::text AS outcome_type,
         insurance.id AS record_id,
-        insurance.created_at AS occurred_at,
+        COALESCE(
+          insurance.start_date::timestamp AT TIME ZONE 'America/Lima',
+          follow_up.occurred_at,
+          insurance.created_at
+        ) AS occurred_at,
         jsonb_build_object(
           'insuranceType', insurance.insurance_type,
           'epsProvider', insurance.eps_provider,
@@ -419,6 +556,18 @@ export class PatientTimelineService {
           'endDate', insurance.end_date
         ) AS data
       FROM patient_insurance insurance
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = insurance.follow_up_id
       WHERE insurance.follow_up_id = ANY($1::uuid[])
 
       UNION ALL
@@ -427,7 +576,12 @@ export class PatientTimelineService {
         sis.follow_up_id,
         'SIS_AFFILIATION'::text AS outcome_type,
         sis.id AS record_id,
-        sis.created_at AS occurred_at,
+        COALESCE(
+          sis.affiliated_at,
+          sis.expected_date::timestamp AT TIME ZONE 'America/Lima',
+          follow_up.occurred_at,
+          sis.created_at
+        ) AS occurred_at,
         jsonb_build_object(
            'canAffiliate', sis.can_affiliate,
            'affiliatedViaSepa', sis.affiliated_via_sepa,
@@ -437,6 +591,18 @@ export class PatientTimelineService {
           'comments', sis.comments
         ) AS data
       FROM patient_sis_affiliation sis
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = sis.follow_up_id
       WHERE sis.follow_up_id = ANY($1::uuid[])
 
       UNION ALL
@@ -445,7 +611,11 @@ export class PatientTimelineService {
         address.follow_up_id,
         'ADDRESS'::text AS outcome_type,
         address.id AS record_id,
-        address.created_at AS occurred_at,
+        COALESCE(
+          address.valid_from::timestamp AT TIME ZONE 'America/Lima',
+          follow_up.occurred_at,
+          address.created_at
+        ) AS occurred_at,
         jsonb_build_object(
           'type', address.type,
           'isPrimary', address.is_primary,
@@ -460,6 +630,18 @@ export class PatientTimelineService {
           'isActive', address.is_active
         ) AS data
       FROM patient_addresses address
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = address.follow_up_id
       WHERE address.follow_up_id = ANY($1::uuid[])
 
       UNION ALL
@@ -468,12 +650,24 @@ export class PatientTimelineService {
         social_note.follow_up_id,
         'SOCIAL_NOTE'::text AS outcome_type,
         social_note.id AS record_id,
-        social_note.created_at AS occurred_at,
+        COALESCE(follow_up.occurred_at, social_note.created_at) AS occurred_at,
         jsonb_build_object(
           'type', social_note.type,
           'note', social_note.note
         ) AS data
       FROM patient_social_notes social_note
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = social_note.follow_up_id
       WHERE social_note.follow_up_id = ANY($1::uuid[])
 
       UNION ALL
@@ -482,13 +676,31 @@ export class PatientTimelineService {
         reminder.created_from_follow_up_id,
         'REMINDER'::text AS outcome_type,
         reminder.id AS record_id,
-        reminder.due_at AS occurred_at,
+        COALESCE(
+          reminder.due_at,
+          reminder.due_on::timestamp AT TIME ZONE 'America/Lima',
+          follow_up.occurred_at,
+          reminder.created_at
+        ) AS occurred_at,
         jsonb_build_object(
           'description', reminder.description,
           'status', reminder.status,
-          'dueAt', reminder.due_at
+          'dueAt', reminder.due_at,
+          'dueOn', reminder.due_on
         ) AS data
       FROM reminders reminder
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = reminder.created_from_follow_up_id
       WHERE reminder.created_from_follow_up_id = ANY($1::uuid[])
         AND reminder.kind = 'GENERIC'
 
@@ -498,13 +710,22 @@ export class PatientTimelineService {
         appointment.follow_up_id,
         'PSYCHOONCOLOGY_APPOINTMENT'::text AS outcome_type,
         appointment.id AS record_id,
-        appointment.scheduled_at AS occurred_at,
+        COALESCE(
+          appointment.completed_at,
+          appointment.completed_on::timestamp AT TIME ZONE 'America/Lima',
+          appointment.scheduled_at,
+          appointment.scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+          follow_up.occurred_at,
+          appointment.created_at
+        ) AS occurred_at,
         jsonb_build_object(
           'status', appointment.status,
           'modality', appointment.modality,
           'sessionNumber', appointment.session_number,
           'scheduledAt', appointment.scheduled_at,
+          'scheduledOn', appointment.scheduled_on,
           'completedAt', appointment.completed_at,
+          'completedOn', appointment.completed_on,
           'topicAddressed', appointment.topic_addressed,
           'sessionDetails', appointment.session_details,
           'additionalObservations', appointment.additional_observations,
@@ -512,6 +733,18 @@ export class PatientTimelineService {
           'referral', appointment.referral
         ) AS data
       FROM psychooncology_appointments appointment
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = appointment.follow_up_id
       WHERE appointment.follow_up_id = ANY($1::uuid[])
 
       UNION ALL
@@ -521,7 +754,8 @@ export class PatientTimelineService {
         'MEDICAL_APPOINTMENT'::text AS outcome_type,
         medical_appointment.id AS record_id,
         COALESCE(
-          (medical_appointment.appointment_date::timestamp + COALESCE(medical_appointment.appointment_time, TIME '00:00')),
+          (medical_appointment.appointment_date::timestamp + COALESCE(medical_appointment.appointment_time, TIME '00:00')) AT TIME ZONE 'America/Lima',
+          follow_up.occurred_at,
           medical_appointment.created_at
         ) AS occurred_at,
         jsonb_build_object(
@@ -533,8 +767,20 @@ export class PatientTimelineService {
           'isFirstConsultation', medical_appointment.is_first_consultation
         ) AS data
       FROM patient_medical_appointments medical_appointment
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = medical_appointment.follow_up_id
       WHERE medical_appointment.follow_up_id = ANY($1::uuid[])
-        AND medical_appointment.is_current = true
+        AND (medical_appointment.is_current = true OR medical_appointment.is_historical = true)
 
       UNION ALL
 
@@ -542,7 +788,7 @@ export class PatientTimelineService {
         alert_record.follow_up_id,
         'ALERT'::text AS outcome_type,
         alert_record.id AS record_id,
-        alert_record.created_at AS occurred_at,
+        COALESCE(follow_up.occurred_at, alert_record.created_at) AS occurred_at,
         jsonb_build_object(
           'title', alert_record.title,
           'description', alert_record.description,
@@ -555,6 +801,18 @@ export class PatientTimelineService {
           'derivationNotes', alert_record.derivation_notes
         ) AS data
       FROM alerts alert_record
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = alert_record.follow_up_id
       WHERE alert_record.follow_up_id = ANY($1::uuid[])
 
       ORDER BY follow_up_id, occurred_at DESC, outcome_type ASC, record_id DESC
@@ -749,7 +1007,10 @@ export class PatientTimelineService {
           mapValue(data, 'status', REMINDER_STATUS_LABELS) ?? 'registrado';
         summary = sentence([
           `Recordatorio ${status}: ${text(data, 'description') ?? 'sin descripción'}`,
-          optionalPart('Vence', dateTime(data, 'dueAt')),
+          optionalPart(
+            'Vence',
+            dateOnly(data, 'dueOn') ?? dateTime(data, 'dueAt'),
+          ),
         ]);
         break;
       }
@@ -760,7 +1021,10 @@ export class PatientTimelineService {
             'Modalidad',
             mapValue(data, 'modality', APPOINTMENT_MODALITY_LABELS),
           ),
-          optionalPart('Fecha', dateTime(data, 'scheduledAt')),
+          optionalPart(
+            'Fecha',
+            dateOnly(data, 'scheduledOn') ?? dateTime(data, 'scheduledAt'),
+          ),
           optionalPart('Tema', text(data, 'topicAddressed')),
           optionalPart('Recomendaciones', text(data, 'recommendations')),
           optionalPart('Derivación', text(data, 'referral')),
@@ -828,6 +1092,8 @@ export class PatientTimelineService {
         id: row.id,
         kind: row.kind,
         occurredAt: new Date(row.occurred_at).toISOString(),
+        occurredAtIsApproximate: row.occurred_at_is_approximate,
+        ...this.audit(row),
         followUpId: row.follow_up_id!,
         type: row.social_note_type!,
         note: row.social_note!,
@@ -837,6 +1103,8 @@ export class PatientTimelineService {
     const common = {
       id: row.id,
       occurredAt: new Date(row.occurred_at).toISOString(),
+      occurredAtIsApproximate: row.occurred_at_is_approximate,
+      ...this.audit(row),
       status: row.status,
       followUpId: row.follow_up_id,
     };
@@ -869,6 +1137,17 @@ export class PatientTimelineService {
       } as PsychooncologyAppointmentTimelineEventDto;
 
     throw new Error('Unsupported patient timeline event kind');
+  }
+
+  private audit(row: TimelineRow) {
+    const createdAt = new Date(row.created_at);
+    const updatedAt = row.updated_at ? new Date(row.updated_at) : createdAt;
+    return {
+      createdAt: createdAt.toISOString(),
+      updatedAt: updatedAt.toISOString(),
+      historicalLoadedById: row.historical_loaded_by_id ?? null,
+      historicalLoadedByEmail: row.historical_loaded_by_email ?? null,
+    };
   }
 }
 

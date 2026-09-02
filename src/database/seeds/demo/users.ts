@@ -14,6 +14,7 @@ import { Volunteer } from '../../entities/volunteer.entity';
  */
 export const DEMO_PASSWORD = 'Demo1234!';
 export const DEMO_EMAIL_DOMAIN = 'fpc.demo';
+const SYSTEM_VOLUNTEER_EMAIL = 'voluntario-no-identificado@fpc.system';
 
 interface AgentSeed {
   fullName: string;
@@ -105,9 +106,7 @@ export async function seedUsers(manager: EntityManager): Promise<SeededUsers> {
     manager.create(User, { email, passwordHash, role });
 
   const foundationUsers = await manager.save(
-    FOUNDATION_SEEDS.map(({ email }) =>
-      createUser(email, UserRole.FOUNDATION),
-    ),
+    FOUNDATION_SEEDS.map(({ email }) => createUser(email, UserRole.FOUNDATION)),
   );
   const foundations = await manager.save(
     FOUNDATION_SEEDS.map((seed, index) =>
@@ -148,6 +147,27 @@ export async function seedUsers(manager: EntityManager): Promise<SeededUsers> {
         isActive: true,
       }),
     ),
+  );
+
+  const systemUser = await manager.save(
+    manager.create(User, {
+      email: SYSTEM_VOLUNTEER_EMAIL,
+      passwordHash: '!historical-system-volunteer-disabled!',
+      role: UserRole.VOLUNTEER,
+      isActive: false,
+    }),
+  );
+  await manager.save(
+    manager.create(Volunteer, {
+      userId: systemUser.id,
+      firstName: 'Voluntario',
+      lastName: 'no identificado',
+      specialty: 'Sistema',
+      email: SYSTEM_VOLUNTEER_EMAIL,
+      phone: 'N/A',
+      isActive: false,
+      isAnonymous: true,
+    }),
   );
 
   return {

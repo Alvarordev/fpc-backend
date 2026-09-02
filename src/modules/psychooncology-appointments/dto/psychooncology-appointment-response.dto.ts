@@ -15,6 +15,7 @@ export class PsychooncologyAppointmentResponseDto {
   @ApiProperty({ nullable: true })
   companionFullName!: string | null;
   @ApiProperty({ format: 'uuid' }) volunteerId!: string;
+  @ApiProperty() volunteerFullName!: string;
   @ApiProperty({ format: 'uuid', nullable: true }) followUpId!: string | null;
   @ApiProperty({ format: 'uuid' }) availabilityId!: string;
   @ApiProperty({ format: 'email', nullable: true }) patientEmail!:
@@ -24,9 +25,12 @@ export class PsychooncologyAppointmentResponseDto {
   @ApiProperty() isAdditionalSession!: boolean;
   @ApiProperty({ enum: AppointmentModality }) modality!: AppointmentModality;
   @ApiProperty({ enum: AppointmentStatus }) status!: AppointmentStatus;
-  @ApiProperty({ format: 'date-time' }) scheduledAt!: Date;
+  @ApiProperty({ format: 'date-time', nullable: true })
+  scheduledAt!: Date | null;
+  @ApiProperty({ format: 'date', nullable: true }) scheduledOn!: string | null;
   @ApiProperty({ format: 'date-time', nullable: true })
   completedAt!: Date | null;
+  @ApiProperty({ format: 'date', nullable: true }) completedOn!: string | null;
   @ApiProperty({ nullable: true }) topicAddressed!: string | null;
   @ApiProperty({ nullable: true }) sessionDetails!: string | null;
   @ApiProperty({ nullable: true }) additionalObservations!: string | null;
@@ -39,4 +43,5 @@ export class PsychooncologyAppointmentResponseDto {
   @ApiProperty({ nullable: true }) satisfactionComment!: string | null;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
   @ApiProperty({ format: 'date-time' }) updatedAt!: Date;
+  @ApiProperty() isHistorical!: boolean;
 }

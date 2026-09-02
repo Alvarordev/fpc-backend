@@ -73,6 +73,12 @@ export class FollowUpTimelineEventDto {
   @ApiProperty({ enum: [PatientTimelineEventKind.FOLLOW_UP] })
   kind!: PatientTimelineEventKind.FOLLOW_UP;
   @ApiProperty({ format: 'date-time' }) occurredAt!: string;
+  @ApiProperty() occurredAtIsApproximate!: boolean;
+  @ApiProperty({ format: 'date-time' }) createdAt!: string;
+  @ApiProperty({ format: 'date-time' }) updatedAt!: string;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ApiProperty({ nullable: true }) historicalLoadedByEmail!: string | null;
   @ApiProperty({ enum: FollowUpStatus }) status!: FollowUpStatus;
   @ApiProperty({ format: 'uuid' }) followUpId!: string;
   @ApiProperty({ enum: FollowUpType }) type!: FollowUpType;
@@ -87,6 +93,12 @@ export class ReminderTimelineEventDto {
   @ApiProperty({ enum: [PatientTimelineEventKind.REMINDER] })
   kind!: PatientTimelineEventKind.REMINDER;
   @ApiProperty({ format: 'date-time' }) occurredAt!: string;
+  @ApiProperty() occurredAtIsApproximate!: boolean;
+  @ApiProperty({ format: 'date-time' }) createdAt!: string;
+  @ApiProperty({ format: 'date-time' }) updatedAt!: string;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ApiProperty({ nullable: true }) historicalLoadedByEmail!: string | null;
   @ApiProperty({ enum: ReminderStatus }) status!: ReminderStatus;
   @ApiProperty({ format: 'uuid', nullable: true, type: String })
   followUpId!: string | null;
@@ -100,6 +112,12 @@ export class PsychooncologyAppointmentTimelineEventDto {
   })
   kind!: PatientTimelineEventKind.PSYCHOONCOLOGY_APPOINTMENT;
   @ApiProperty({ format: 'date-time' }) occurredAt!: string;
+  @ApiProperty() occurredAtIsApproximate!: boolean;
+  @ApiProperty({ format: 'date-time' }) createdAt!: string;
+  @ApiProperty({ format: 'date-time' }) updatedAt!: string;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ApiProperty({ nullable: true }) historicalLoadedByEmail!: string | null;
   @ApiProperty({ enum: AppointmentStatus }) status!: AppointmentStatus;
   @ApiProperty({ format: 'uuid', nullable: true }) followUpId!: string | null;
   @ApiProperty({ enum: AppointmentModality }) modality!: AppointmentModality;
@@ -111,6 +129,12 @@ export class SocialNoteTimelineEventDto {
   @ApiProperty({ enum: [PatientTimelineEventKind.SOCIAL_NOTE] })
   kind!: PatientTimelineEventKind.SOCIAL_NOTE;
   @ApiProperty({ format: 'date-time' }) occurredAt!: string;
+  @ApiProperty() occurredAtIsApproximate!: boolean;
+  @ApiProperty({ format: 'date-time' }) createdAt!: string;
+  @ApiProperty({ format: 'date-time' }) updatedAt!: string;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ApiProperty({ nullable: true }) historicalLoadedByEmail!: string | null;
   @ApiProperty({ format: 'uuid' }) followUpId!: string;
   @ApiProperty({ enum: SocialNoteType }) type!: SocialNoteType;
   @ApiProperty() note!: string;

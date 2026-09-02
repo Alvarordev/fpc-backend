@@ -112,6 +112,7 @@ export class VolunteersController {
       completedSustainabilityModule: volunteer.completedSustainabilityModule,
       completedDesignThinkingModule: volunteer.completedDesignThinkingModule,
       isActive: volunteer.isActive,
+      isAnonymous: volunteer.isAnonymous,
       createdAt: volunteer.createdAt,
       updatedAt: volunteer.updatedAt,
     };

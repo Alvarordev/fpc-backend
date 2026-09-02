@@ -33,10 +33,14 @@ export class VolunteerCalendarService {
     const endExclusive = new Date(`${to}T00:00:00.000Z`);
     endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
     const [volunteers, availabilitySlots, appointments] = await Promise.all([
-      this.volunteers.find({ order: { firstName: 'ASC', lastName: 'ASC' } }),
+      this.volunteers.find({
+        where: { isAnonymous: false },
+        order: { firstName: 'ASC', lastName: 'ASC' },
+      }),
       this.availability
         .createQueryBuilder('availability')
         .where('availability.date BETWEEN :from AND :to', { from, to })
+        .andWhere('availability.is_historical = false')
         .orderBy('availability.date', 'ASC')
         .addOrderBy('availability.start_time', 'ASC')
         .getMany(),
@@ -46,6 +50,8 @@ export class VolunteerCalendarService {
         .where('appointment.status = :status', {
           status: AppointmentStatus.SCHEDULED,
         })
+        .andWhere('appointment.is_historical = false')
+        .andWhere('appointment.scheduled_at IS NOT NULL')
         .andWhere('appointment.scheduled_at >= :from', {
           from: new Date(`${from}T00:00:00.000Z`),
         })
@@ -63,8 +69,8 @@ export class VolunteerCalendarService {
       slots.push({
         id: slot.id,
         date: slot.date,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
+        startTime: slot.startTime!,
+        endTime: slot.endTime!,
         status: slot.status,
       });
       slotsByVolunteer.set(slot.volunteerId, slots);
@@ -83,7 +89,7 @@ export class VolunteerCalendarService {
         availabilityId: appointment.availabilityId,
         modality: appointment.modality,
         status: appointment.status,
-        scheduledAt: appointment.scheduledAt,
+        scheduledAt: appointment.scheduledAt!,
       });
       appointmentsByVolunteer.set(appointment.volunteerId, items);
     }

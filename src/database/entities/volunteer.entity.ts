@@ -72,6 +72,9 @@ export class Volunteer {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive!: boolean;
 
+  @Column({ name: 'is_anonymous', type: 'boolean', default: false })
+  isAnonymous!: boolean;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

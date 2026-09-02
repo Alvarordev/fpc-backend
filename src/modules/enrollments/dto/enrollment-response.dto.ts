@@ -5,6 +5,7 @@ export class EnrollmentResponseDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) patientId!: string;
   @ApiProperty({ format: 'uuid' }) followUpId!: string;
+  @ApiProperty({ format: 'date' }) enrolledOn!: string;
   @ApiProperty({ enum: AffiliationType }) affiliationType!: AffiliationType;
   @ApiProperty({ format: 'uuid', nullable: true }) companionId!: string | null;
   @ApiProperty({ nullable: true }) currentlyAttendingConsultations!:
@@ -25,5 +26,6 @@ export class EnrollmentResponseDto {
   callEndedAt!: Date | null;
   @ApiProperty({ nullable: true, minimum: 1, maximum: 5 })
   followUpQualityRating!: number | null;
+  @ApiProperty() isHistorical!: boolean;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
 }

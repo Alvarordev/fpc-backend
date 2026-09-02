@@ -15,6 +15,7 @@ import {
   FollowUpType,
 } from '../../database/entities/follow-up.enums';
 import { FollowUp } from '../../database/entities/follow-up.entity';
+import { Reminder } from '../../database/entities/reminder.entity';
 import { Patient } from '../../database/entities/patient.entity';
 import { CompanionPatient } from '../../database/entities/companion-patient.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
@@ -27,6 +28,25 @@ import { RemindersService } from '../reminders/reminders.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { PatientAccessService } from '../patients/access/patient-access.service';
 import { User } from '../../database/entities/user.entity';
+import {
+  dateOnlyInLima,
+  dateOnlyInLimaFromInput,
+  isDateOnlyRangeValid,
+} from '../../shared/date-only/date-only.util';
+
+export interface FollowUpCreateOptions {
+  isHistorical?: boolean;
+  historicalLoadedById?: string;
+  status?: FollowUpStatus;
+  scheduledOn?: string;
+  completedOn?: string;
+}
+
+export interface HistoricalFollowUpInput extends CreateFollowUpDto {
+  status: FollowUpStatus;
+  scheduledOn?: string;
+  completedOn?: string;
+}
 @Injectable()
 export class FollowUpsService {
   constructor(
@@ -34,6 +54,8 @@ export class FollowUpsService {
     private readonly followUps: Repository<FollowUp>,
     @InjectRepository(Patient) private readonly patients: Repository<Patient>,
     @InjectRepository(Agent) private readonly agents: Repository<Agent>,
+    @InjectRepository(Reminder)
+    private readonly reminders: Repository<Reminder>,
     private readonly dataSource: DataSource,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly access: PatientAccessService,
@@ -66,6 +88,9 @@ export class FollowUpsService {
         purpose: FollowUpPurpose.FOLLOW_UP,
         scheduledAt: null,
         completedAt: new Date(),
+        completedOn: dateOnlyInLima(new Date()),
+        scheduledOn: null,
+        isHistorical: false,
         notes: 'Cita registrada desde panel web',
         nextFollowUpId: null,
       }),
@@ -87,6 +112,7 @@ export class FollowUpsService {
     userId: string,
     userRole: string,
     manager?: EntityManager,
+    options: FollowUpCreateOptions = {},
   ) {
     await this.assertPatients(
       manager,
@@ -106,17 +132,89 @@ export class FollowUpsService {
       userRole,
       agents,
     );
+    const scheduledAt = input.scheduledAt ? new Date(input.scheduledAt) : null;
+    const completedAt = input.completedAt ? new Date(input.completedAt) : null;
+    const scheduledOn =
+      options.scheduledOn !== undefined
+        ? options.scheduledOn
+        : input.scheduledAt
+          ? dateOnlyInLimaFromInput(input.scheduledAt)
+          : null;
+    const completedOn =
+      options.completedOn !== undefined
+        ? options.completedOn
+        : input.completedAt
+          ? dateOnlyInLimaFromInput(input.completedAt)
+          : null;
+    if (scheduledAt && completedAt && completedAt < scheduledAt)
+      throw new BadRequestException('completedAt cannot be before scheduledAt');
+    if (
+      input.scheduledAt &&
+      scheduledOn &&
+      dateOnlyInLimaFromInput(input.scheduledAt) !== scheduledOn
+    )
+      throw new BadRequestException(
+        'scheduledAt must belong to scheduledOn in America/Lima',
+      );
+    if (
+      input.completedAt &&
+      completedOn &&
+      dateOnlyInLimaFromInput(input.completedAt) !== completedOn
+    )
+      throw new BadRequestException(
+        'completedAt must belong to completedOn in America/Lima',
+      );
+    if (!isDateOnlyRangeValid(scheduledOn, completedOn))
+      throw new BadRequestException('completedOn cannot be before scheduledOn');
     const followUp = await followUps.save(
       followUps.create({
         ...input,
         agentId,
-        status: this.inferStatus(input),
-        scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
-        completedAt: input.completedAt ? new Date(input.completedAt) : null,
+        status: options.status ?? this.inferStatus(input),
+        scheduledAt,
+        completedAt,
+        scheduledOn,
+        completedOn,
+        isHistorical: options.isHistorical ?? false,
+        historicalLoadedById: options.isHistorical
+          ? (options.historicalLoadedById ?? userId)
+          : null,
       }),
     );
     await this.invalidations.markDirty(followUp.subjectPatientId, manager);
     return followUp;
+  }
+
+  async createHistorical(
+    input: HistoricalFollowUpInput,
+    userId: string,
+    userRole: string,
+  ) {
+    const created = await this.dataSource.transaction((manager) =>
+      this.create(
+        {
+          subjectPatientId: input.subjectPatientId,
+          interlocutorId: input.interlocutorId,
+          agentId: input.agentId,
+          type: input.type,
+          purpose: input.purpose,
+          notes: input.notes,
+          scheduledAt: input.scheduledAt,
+          completedAt: input.completedAt,
+        },
+        userId,
+        userRole,
+        manager,
+        {
+          isHistorical: true,
+          historicalLoadedById: userId,
+          status: input.status,
+          scheduledOn: input.scheduledOn,
+          completedOn: input.completedOn,
+        },
+      ),
+    );
+    return this.findOne(created.id);
   }
   async createBatch(
     input: CreateFollowUpsBatchDto,
@@ -179,8 +277,19 @@ export class FollowUpsService {
     const query = this.followUps
       .createQueryBuilder('follow_up')
       .leftJoinAndSelect('follow_up.subjectPatient', 'subject_patient')
-      .orderBy('follow_up.scheduled_at', 'ASC')
-      .addOrderBy('follow_up.created_at', 'DESC');
+      .andWhere('follow_up.is_historical = false')
+      .orderBy(
+        'COALESCE(follow_up.completed_on, follow_up.scheduled_on)',
+        'ASC',
+        'NULLS LAST',
+      )
+      .addOrderBy(
+        'COALESCE(follow_up.completed_at, follow_up.scheduled_at)',
+        'ASC',
+        'NULLS LAST',
+      )
+      .addOrderBy('follow_up.created_at', 'DESC')
+      .addOrderBy('follow_up.id', 'DESC');
 
     if (user.role === UserRole.AGENT) {
       const agent = await this.agents.findOne({ where: { userId: user.id } });
@@ -254,6 +363,16 @@ export class FollowUpsService {
       input.scheduledAt ? { scheduledAt: new Date(input.scheduledAt) } : {},
       input.completedAt ? { completedAt: new Date(input.completedAt) } : {},
     );
+    if (input.scheduledAt !== undefined)
+      item.scheduledOn = input.scheduledAt
+        ? dateOnlyInLimaFromInput(input.scheduledAt)
+        : null;
+    if (input.completedAt !== undefined)
+      item.completedOn = input.completedAt
+        ? dateOnlyInLimaFromInput(input.completedAt)
+        : null;
+    if (!isDateOnlyRangeValid(item.scheduledOn, item.completedOn))
+      throw new BadRequestException('completedOn cannot be before scheduledOn');
     const followUp = await this.followUps.save(item);
     await this.invalidations.markDirty(followUp.subjectPatientId);
     return followUp;

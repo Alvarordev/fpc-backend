@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { Agent } from '../../database/entities/agent.entity';
 import { FollowUpStatus } from '../../database/entities/follow-up.enums';
 import { FollowUp } from '../../database/entities/follow-up.entity';
@@ -24,11 +24,15 @@ export class CallCenterService {
     const [agents, scheduledFollowUps, pendingReminders] = await Promise.all([
       this.agents.find({ order: { fullName: 'ASC' } }),
       this.followUps.find({
-        where: { status: FollowUpStatus.SCHEDULED },
-        order: { scheduledAt: 'ASC', createdAt: 'DESC' },
+        where: { status: FollowUpStatus.SCHEDULED, isHistorical: false },
+        order: { scheduledOn: 'ASC', scheduledAt: 'ASC', createdAt: 'DESC' },
       }),
       this.reminders.find({
-        where: { status: ReminderStatus.PENDING },
+        where: {
+          status: ReminderStatus.PENDING,
+          isHistorical: false,
+          dueAt: Not(IsNull()),
+        },
         order: { dueAt: 'ASC' },
       }),
     ]);
@@ -67,7 +71,7 @@ export class CallCenterService {
           patientNames.get(reminder.subjectPatientId) ?? 'Paciente desconocido',
         assignedAgentId: reminder.assignedAgentId,
         description: reminder.description,
-        dueAt: reminder.dueAt,
+        dueAt: reminder.dueAt!,
       })),
     };
   }

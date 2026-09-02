@@ -169,6 +169,9 @@ export class PsychooncologyAppointmentsController {
       companionId: item.companionId,
       companionFullName: item.companion?.fullName ?? null,
       volunteerId: item.volunteerId,
+      volunteerFullName: item.volunteer
+        ? `${item.volunteer.firstName} ${item.volunteer.lastName}`
+        : 'Voluntario no identificado',
       followUpId: item.followUpId,
       availabilityId: item.availabilityId,
       patientEmail: item.patientEmail,
@@ -178,7 +181,9 @@ export class PsychooncologyAppointmentsController {
       modality: item.modality,
       status: item.status,
       scheduledAt: item.scheduledAt,
+      scheduledOn: item.scheduledOn,
       completedAt: item.completedAt,
+      completedOn: item.completedOn,
       topicAddressed: item.topicAddressed,
       sessionDetails: item.sessionDetails,
       additionalObservations: item.additionalObservations,
@@ -190,6 +195,7 @@ export class PsychooncologyAppointmentsController {
       satisfactionComment: item.satisfactionComment,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
+      isHistorical: item.isHistorical,
     };
   }
 }

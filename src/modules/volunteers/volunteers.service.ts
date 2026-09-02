@@ -50,7 +50,9 @@ export class VolunteersService {
   findAll(user?: User): Promise<Volunteer[]> {
     return this.volunteersRepository.find({
       where:
-        user?.role === UserRole.VOLUNTEER ? { userId: user.id } : undefined,
+        user?.role === UserRole.VOLUNTEER
+          ? { userId: user.id, isAnonymous: false }
+          : { isAnonymous: false },
       relations: { user: true },
     });
   }

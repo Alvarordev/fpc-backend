@@ -72,7 +72,7 @@ export class VolunteerAvailabilityService {
   async findAll(volunteerId: string, user: User) {
     await this.assertScope(volunteerId, user);
     return this.availability.find({
-      where: { volunteerId },
+      where: { volunteerId, isHistorical: false },
       order: { date: 'ASC', startTime: 'ASC' },
     });
   }
@@ -80,7 +80,7 @@ export class VolunteerAvailabilityService {
   async remove(id: string, volunteerId: string, user: User) {
     await this.assertScope(volunteerId, user);
     const item = await this.availability.findOne({
-      where: { id, volunteerId },
+      where: { id, volunteerId, isHistorical: false },
     });
     if (!item) throw new NotFoundException('Availability slot not found');
     if (item.status === AvailabilityStatus.RESERVED)
@@ -93,6 +93,10 @@ export class VolunteerAvailabilityService {
       where: { id: volunteerId },
     });
     if (!volunteer) throw new NotFoundException('Volunteer not found');
+    if (volunteer.isAnonymous)
+      throw new BadRequestException(
+        'Anonymous volunteers cannot have availability',
+      );
     if (!volunteer.isActive)
       throw new ConflictException('Volunteer is inactive');
     if (user.role === UserRole.VOLUNTEER && volunteer.userId !== user.id)

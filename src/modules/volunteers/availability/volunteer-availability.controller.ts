@@ -109,6 +109,7 @@ export class VolunteerAvailabilityController {
       startTime: item.startTime,
       endTime: item.endTime,
       status: item.status,
+      isHistorical: item.isHistorical,
       createdAt: item.createdAt,
     };
   }

@@ -187,11 +187,14 @@ export class FollowUpsController {
       status: item.status,
       purpose: item.purpose,
       scheduledAt: item.scheduledAt,
+      scheduledOn: item.scheduledOn,
       completedAt: item.completedAt,
+      completedOn: item.completedOn,
       notes: item.notes,
       nextFollowUpId: item.nextFollowUpId,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
+      isHistorical: item.isHistorical,
     };
   }
 
@@ -203,6 +206,7 @@ export class FollowUpsController {
       createdFromFollowUpId: item.createdFromFollowUpId,
       assignedAgentId: item.assignedAgentId,
       dueAt: item.dueAt,
+      dueOn: item.dueOn,
       description: item.description,
       kind: item.kind,
       medicalAppointmentId: item.medicalAppointmentId,
@@ -220,8 +224,10 @@ export class FollowUpsController {
         : null,
       status: item.status,
       completedAt: item.completedAt,
+      completedOn: item.completedOn,
       resultingFollowUpId: item.resultingFollowUpId,
       createdAt: item.createdAt,
+      isHistorical: item.isHistorical,
     };
   }
 }

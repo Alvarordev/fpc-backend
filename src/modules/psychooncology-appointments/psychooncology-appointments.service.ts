@@ -25,9 +25,16 @@ import {
 } from '../../database/entities/volunteer-availability.entity';
 import { Volunteer } from '../../database/entities/volunteer.entity';
 import { PatientAccessService } from '../patients/access/patient-access.service';
+import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { CreatePsychooncologyAppointmentDto } from './dto/create-psychooncology-appointment.dto';
 import { FindPsychooncologyAppointmentsQueryDto } from './dto/list-psychooncology-appointments.dto';
 import { UpdatePsychooncologyAppointmentDto } from './dto/update-psychooncology-appointment.dto';
+import type { CreateHistoricalPsychooncologyAppointmentDto } from '../historical-records/dto/create-historical-psychooncology-appointment.dto';
+import {
+  dateOnlyInLima,
+  dateOnlyInLimaFromInput,
+  isDateOnlyRangeValid,
+} from '../../shared/date-only/date-only.util';
 
 @Injectable()
 export class PsychooncologyAppointmentsService {
@@ -36,12 +43,158 @@ export class PsychooncologyAppointmentsService {
     private readonly appointments: Repository<PsychooncologyAppointment>,
     private readonly dataSource: DataSource,
     private readonly access: PatientAccessService,
+    private readonly invalidations: PatientSummaryInvalidationService,
   ) {}
 
   async create(input: CreatePsychooncologyAppointmentDto, user: User) {
     return this.dataSource.transaction((manager) =>
       this.reserveAndCreate(manager, input, user),
     );
+  }
+
+  async createHistorical(
+    input: CreateHistoricalPsychooncologyAppointmentDto,
+    historicalLoadedById: string,
+  ) {
+    return this.dataSource.transaction(async (manager) => {
+      const patients = manager.getRepository(Patient);
+      const appointments = manager.getRepository(PsychooncologyAppointment);
+      const availabilities = manager.getRepository(VolunteerAvailability);
+      const volunteers = manager.getRepository(Volunteer);
+
+      const patient = await patients.findOne({
+        where: { id: input.patientId },
+      });
+      if (!patient) throw new NotFoundException('Patient not found');
+      if (patient.role !== PatientRole.PATIENT)
+        throw new ConflictException('Only a patient can have an appointment');
+
+      const followUp = input.followUpId
+        ? await manager.getRepository(FollowUp).findOne({
+            where: {
+              id: input.followUpId,
+              subjectPatientId: input.patientId,
+            },
+          })
+        : null;
+      if (input.followUpId && !followUp)
+        throw new BadRequestException(
+          'Follow-up does not belong to the patient',
+        );
+
+      if (!isDateOnlyRangeValid(input.scheduledOn, input.completedOn))
+        throw new BadRequestException(
+          'completedOn cannot be before scheduledOn',
+        );
+      if (
+        input.scheduledAt &&
+        input.completedAt &&
+        new Date(input.completedAt) < new Date(input.scheduledAt)
+      )
+        throw new BadRequestException(
+          'completedAt cannot be before scheduledAt',
+        );
+      if (
+        input.scheduledAt &&
+        dateOnlyInLimaFromInput(input.scheduledAt) !== input.scheduledOn
+      )
+        throw new BadRequestException(
+          'scheduledAt must belong to scheduledOn in America/Lima',
+        );
+      if (
+        input.completedAt &&
+        input.completedOn &&
+        dateOnlyInLimaFromInput(input.completedAt) !== input.completedOn
+      )
+        throw new BadRequestException(
+          'completedAt must belong to completedOn in America/Lima',
+        );
+      if (input.modality === AppointmentModality.CALL && input.zoomLink)
+        throw new BadRequestException(
+          'Zoom link is only allowed for video call appointments',
+        );
+
+      if (input.volunteerId && input.useAnonymousVolunteer)
+        throw new BadRequestException(
+          'Provide volunteerId or useAnonymousVolunteer, not both',
+        );
+      if (!input.volunteerId && input.useAnonymousVolunteer !== true)
+        throw new BadRequestException(
+          'Provide volunteerId or set useAnonymousVolunteer to true',
+        );
+      const volunteer = input.volunteerId
+        ? await volunteers.findOne({ where: { id: input.volunteerId } })
+        : await volunteers.findOne({ where: { isAnonymous: true } });
+      if (!volunteer) throw new NotFoundException('Volunteer not found');
+      if (input.volunteerId && volunteer.isAnonymous)
+        throw new BadRequestException(
+          'Anonymous volunteer must be selected with useAnonymousVolunteer',
+        );
+
+      const beneficiary = await this.resolveBeneficiary(
+        manager,
+        patient.id,
+        input.beneficiaryType,
+        input.companionId,
+      );
+      const availability = await availabilities.save(
+        availabilities.create({
+          volunteerId: volunteer.id,
+          date: input.scheduledOn,
+          startTime: null,
+          endTime: null,
+          status: AvailabilityStatus.RESERVED,
+          isHistorical: true,
+          historicalLoadedById,
+        }),
+      );
+      const appointment = await appointments.save(
+        appointments.create({
+          patientId: patient.id,
+          beneficiaryType: beneficiary.beneficiaryType,
+          companionId: beneficiary.companionId,
+          companion: beneficiary.companion,
+          volunteerId: volunteer.id,
+          followUpId: followUp?.id ?? null,
+          availabilityId: availability.id,
+          historicalLoadedById,
+          patientEmail: input.patientEmail ?? null,
+          zoomLink: input.zoomLink ?? null,
+          sessionNumber: input.sessionNumber,
+          isAdditionalSession: input.isAdditionalSession ?? false,
+          modality: input.modality,
+          status: input.status,
+          scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
+          scheduledOn: input.scheduledOn,
+          completedAt: input.completedAt ? new Date(input.completedAt) : null,
+          completedOn:
+            input.completedOn ??
+            (input.completedAt
+              ? dateOnlyInLimaFromInput(input.completedAt)
+              : null),
+          schedulingNotes: input.schedulingNotes ?? null,
+          noAnswerNote: input.noAnswerNote ?? null,
+          satisfactionRating: input.satisfactionRating ?? null,
+          satisfactionComment: input.satisfactionComment ?? null,
+          topicAddressed: input.topicAddressed ?? null,
+          sessionDetails: input.sessionDetails ?? null,
+          additionalObservations: input.additionalObservations ?? null,
+          recommendations: input.recommendations ?? null,
+          referral: input.referral ?? null,
+          isHistorical: true,
+        }),
+      );
+      await this.invalidations.markDirty(patient.id, manager);
+      return appointments.findOneOrFail({
+        where: { id: appointment.id },
+        relations: {
+          patient: true,
+          companion: true,
+          volunteer: true,
+          availability: true,
+        },
+      });
+    });
   }
 
   async findAll(
@@ -51,7 +204,10 @@ export class PsychooncologyAppointmentsService {
     const query = this.appointments
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.companion', 'companion')
-      .orderBy('appointment.scheduled_at', 'DESC')
+      .leftJoinAndSelect('appointment.volunteer', 'volunteer')
+      .andWhere('appointment.is_historical = false')
+      .orderBy('appointment.scheduled_on', 'DESC', 'NULLS LAST')
+      .addOrderBy('appointment.scheduled_at', 'DESC', 'NULLS LAST')
       .addOrderBy('appointment.id', 'DESC');
     const volunteerId = await this.access.volunteerIdFor(user);
     if (volunteerId) {
@@ -79,7 +235,7 @@ export class PsychooncologyAppointmentsService {
   async findOne(id: string, user: User) {
     const appointment = await this.appointments.findOne({
       where: { id },
-      relations: { companion: true },
+      relations: { companion: true, volunteer: true },
     });
     if (!appointment)
       throw new NotFoundException('Psycho-oncology appointment not found');
@@ -157,8 +313,10 @@ export class PsychooncologyAppointmentsService {
         appointment.zoomLink = null;
       }
 
-      if (input.status === AppointmentStatus.COMPLETED)
+      if (input.status === AppointmentStatus.COMPLETED) {
         appointment.completedAt = new Date();
+        appointment.completedOn = dateOnlyInLima(new Date());
+      }
 
       const saved = await manager
         .getRepository(PsychooncologyAppointment)
@@ -232,6 +390,10 @@ export class PsychooncologyAppointmentsService {
       manager,
       nextAvailabilityId,
     );
+    if (nextAvailability.isHistorical)
+      throw new ConflictException(
+        'Historical availability cannot be used for future appointments',
+      );
     if (nextAvailability.status !== AvailabilityStatus.AVAILABLE)
       throw new ConflictException('Availability slot is already reserved');
 
@@ -258,6 +420,7 @@ export class PsychooncologyAppointmentsService {
     appointment.availabilityId = nextAvailability.id;
     appointment.volunteerId = nextAvailability.volunteerId;
     appointment.scheduledAt = this.slotDate(nextAvailability);
+    appointment.scheduledOn = nextAvailability.date;
   }
 
   private async reserveAndCreate(
@@ -279,6 +442,10 @@ export class PsychooncologyAppointmentsService {
       manager,
       input.availabilityId,
     );
+    if (availability.isHistorical)
+      throw new ConflictException(
+        'Historical availability cannot be used for future appointments',
+      );
     if (availability.status !== AvailabilityStatus.AVAILABLE)
       throw new ConflictException('Availability slot is already reserved');
 
@@ -328,7 +495,10 @@ export class PsychooncologyAppointmentsService {
         modality: input.modality,
         status: AppointmentStatus.SCHEDULED,
         scheduledAt,
+        scheduledOn: availability.date,
         completedAt: null,
+        completedOn: null,
+        isHistorical: false,
         topicAddressed: null,
         sessionDetails: null,
         additionalObservations: null,

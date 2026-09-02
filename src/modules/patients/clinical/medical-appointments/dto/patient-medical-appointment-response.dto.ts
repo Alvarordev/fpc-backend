@@ -63,6 +63,9 @@ export class PatientMedicalAppointmentResponseDto {
   @ApiProperty()
   isCurrent!: boolean;
 
+  @ApiProperty()
+  isHistorical!: boolean;
+
   @ApiProperty({ nullable: true })
   changeReason!: string | null;
 
@@ -93,6 +96,7 @@ export class PatientMedicalAppointmentResponseDto {
       status: appointment.status,
       reminderId: appointment.reminderId,
       isCurrent: appointment.isCurrent,
+      isHistorical: appointment.isHistorical,
       changeReason: appointment.changeReason,
       createdAt: appointment.createdAt.toISOString(),
     };

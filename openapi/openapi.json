@@ -6873,6 +6873,251 @@
           "volunteer-calendar"
         ]
       }
+    },
+    "/historical-records/enrollments": {
+      "post": {
+        "operationId": "HistoricalRecordsController_createEnrollment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHistoricalEnrollmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Historical enrollment is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may load history"
+          },
+          "404": {
+            "description": "A referenced record was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a historical enrollment",
+        "tags": [
+          "historical-records"
+        ]
+      }
+    },
+    "/historical-records/follow-ups": {
+      "post": {
+        "operationId": "HistoricalRecordsController_createFollowUp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHistoricalFollowUpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowUpResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Historical follow-up is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may load history"
+          },
+          "404": {
+            "description": "A referenced record was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a historical follow-up",
+        "tags": [
+          "historical-records"
+        ]
+      }
+    },
+    "/historical-records/reminders": {
+      "post": {
+        "operationId": "HistoricalRecordsController_createReminder",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHistoricalReminderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Historical reminder is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may load history"
+          },
+          "404": {
+            "description": "A referenced record was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a historical reminder",
+        "tags": [
+          "historical-records"
+        ]
+      }
+    },
+    "/historical-records/medical-appointments": {
+      "post": {
+        "operationId": "HistoricalRecordsController_createMedicalAppointment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHistoricalMedicalAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientMedicalAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Historical appointment is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may load history"
+          },
+          "404": {
+            "description": "A referenced record was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a historical medical appointment",
+        "tags": [
+          "historical-records"
+        ]
+      }
+    },
+    "/historical-records/psychooncology-appointments": {
+      "post": {
+        "operationId": "HistoricalRecordsController_createPsychooncologyAppointment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHistoricalPsychooncologyAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PsychooncologyAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Historical appointment is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may load history"
+          },
+          "404": {
+            "description": "A referenced record was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a historical psycho-oncology appointment",
+        "tags": [
+          "historical-records"
+        ]
+      }
     }
   },
   "info": {
@@ -9468,6 +9713,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "enrolledOn": {
+            "type": "string",
+            "format": "date"
+          },
           "affiliationType": {
             "enum": [
               "SELF",
@@ -9538,6 +9787,9 @@
             "minimum": 1,
             "maximum": 5
           },
+          "isHistorical": {
+            "type": "boolean"
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string"
@@ -9547,6 +9799,7 @@
           "id",
           "patientId",
           "followUpId",
+          "enrolledOn",
           "affiliationType",
           "companionId",
           "currentlyAttendingConsultations",
@@ -9563,6 +9816,7 @@
           "callStartedAt",
           "callEndedAt",
           "followUpQualityRating",
+          "isHistorical",
           "createdAt"
         ]
       },
@@ -9757,10 +10011,20 @@
             "type": "string",
             "nullable": true
           },
+          "scheduledOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
           "completedAt": {
             "format": "date-time",
             "type": "string",
             "nullable": true
+          },
+          "completedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
           },
           "notes": {
             "type": "string",
@@ -9778,6 +10042,9 @@
           "updatedAt": {
             "format": "date-time",
             "type": "string"
+          },
+          "isHistorical": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -9790,11 +10057,14 @@
           "status",
           "purpose",
           "scheduledAt",
+          "scheduledOn",
           "completedAt",
+          "completedOn",
           "notes",
           "nextFollowUpId",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "isHistorical"
         ]
       },
       "CreateScheduledFollowUpDto": {
@@ -10020,7 +10290,13 @@
           },
           "dueAt": {
             "format": "date-time",
-            "type": "string"
+            "type": "string",
+            "nullable": true
+          },
+          "dueOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
           },
           "description": {
             "type": "string"
@@ -10059,6 +10335,11 @@
             "type": "string",
             "nullable": true
           },
+          "completedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
           "resultingFollowUpId": {
             "type": "string",
             "nullable": true,
@@ -10067,6 +10348,9 @@
           "createdAt": {
             "format": "date-time",
             "type": "string"
+          },
+          "isHistorical": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -10075,13 +10359,16 @@
           "createdFromFollowUpId",
           "assignedAgentId",
           "dueAt",
+          "dueOn",
           "description",
           "kind",
           "medicalAppointmentId",
           "status",
           "completedAt",
+          "completedOn",
           "resultingFollowUpId",
-          "createdAt"
+          "createdAt",
+          "isHistorical"
         ]
       },
       "CreateHealthCenterDto": {
@@ -10438,6 +10725,9 @@
           "isCurrent": {
             "type": "boolean"
           },
+          "isHistorical": {
+            "type": "boolean"
+          },
           "changeReason": {
             "type": "string",
             "nullable": true
@@ -10470,6 +10760,7 @@
           "status",
           "reminderId",
           "isCurrent",
+          "isHistorical",
           "changeReason",
           "createdAt"
         ]
@@ -10598,6 +10889,26 @@
             "type": "string",
             "format": "date-time"
           },
+          "occurredAtIsApproximate": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "historicalLoadedById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "historicalLoadedByEmail": {
+            "type": "string",
+            "nullable": true
+          },
           "status": {
             "enum": [
               "SCHEDULED",
@@ -10647,6 +10958,11 @@
           "id",
           "kind",
           "occurredAt",
+          "occurredAtIsApproximate",
+          "createdAt",
+          "updatedAt",
+          "historicalLoadedById",
+          "historicalLoadedByEmail",
           "status",
           "followUpId",
           "type",
@@ -10672,6 +10988,26 @@
             "type": "string",
             "format": "date-time"
           },
+          "occurredAtIsApproximate": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "historicalLoadedById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "historicalLoadedByEmail": {
+            "type": "string",
+            "nullable": true
+          },
           "status": {
             "enum": [
               "PENDING",
@@ -10693,6 +11029,11 @@
           "id",
           "kind",
           "occurredAt",
+          "occurredAtIsApproximate",
+          "createdAt",
+          "updatedAt",
+          "historicalLoadedById",
+          "historicalLoadedByEmail",
           "status",
           "followUpId",
           "description"
@@ -10714,6 +11055,26 @@
           "occurredAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "occurredAtIsApproximate": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "historicalLoadedById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "historicalLoadedByEmail": {
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "enum": [
@@ -10745,6 +11106,11 @@
           "id",
           "kind",
           "occurredAt",
+          "occurredAtIsApproximate",
+          "createdAt",
+          "updatedAt",
+          "historicalLoadedById",
+          "historicalLoadedByEmail",
           "status",
           "followUpId",
           "modality",
@@ -10767,6 +11133,26 @@
           "occurredAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "occurredAtIsApproximate": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "historicalLoadedById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "historicalLoadedByEmail": {
+            "type": "string",
+            "nullable": true
           },
           "followUpId": {
             "type": "string",
@@ -10792,6 +11178,11 @@
           "id",
           "kind",
           "occurredAt",
+          "occurredAtIsApproximate",
+          "createdAt",
+          "updatedAt",
+          "historicalLoadedById",
+          "historicalLoadedByEmail",
           "followUpId",
           "type",
           "note",
@@ -12233,6 +12624,9 @@
           "isCurrent": {
             "type": "boolean"
           },
+          "isHistorical": {
+            "type": "boolean"
+          },
           "changeReason": {
             "type": "string",
             "nullable": true
@@ -12262,6 +12656,7 @@
           "status",
           "reminderId",
           "isCurrent",
+          "isHistorical",
           "changeReason",
           "createdAt"
         ]
@@ -14255,6 +14650,9 @@
             "type": "string",
             "format": "uuid"
           },
+          "volunteerFullName": {
+            "type": "string"
+          },
           "followUpId": {
             "type": "string",
             "nullable": true,
@@ -14298,12 +14696,23 @@
           },
           "scheduledAt": {
             "format": "date-time",
-            "type": "string"
+            "type": "string",
+            "nullable": true
+          },
+          "scheduledOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
           },
           "completedAt": {
             "format": "date-time",
             "type": "string",
             "nullable": true
+          },
+          "completedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
           },
           "topicAddressed": {
             "type": "string",
@@ -14350,6 +14759,9 @@
           "updatedAt": {
             "format": "date-time",
             "type": "string"
+          },
+          "isHistorical": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -14359,6 +14771,7 @@
           "companionId",
           "companionFullName",
           "volunteerId",
+          "volunteerFullName",
           "followUpId",
           "availabilityId",
           "patientEmail",
@@ -14368,7 +14781,9 @@
           "modality",
           "status",
           "scheduledAt",
+          "scheduledOn",
           "completedAt",
+          "completedOn",
           "topicAddressed",
           "sessionDetails",
           "additionalObservations",
@@ -14379,7 +14794,8 @@
           "satisfactionRating",
           "satisfactionComment",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "isHistorical"
         ]
       },
       "UpdatePsychooncologyAppointmentDto": {
@@ -14663,10 +15079,12 @@
           },
           "startTime": {
             "type": "string",
+            "nullable": true,
             "example": "09:00:00"
           },
           "endTime": {
             "type": "string",
+            "nullable": true,
             "example": "10:00:00"
           },
           "status": {
@@ -14675,6 +15093,9 @@
               "RESERVED"
             ],
             "type": "string"
+          },
+          "isHistorical": {
+            "type": "boolean"
           },
           "createdAt": {
             "format": "date-time",
@@ -14688,6 +15109,7 @@
           "startTime",
           "endTime",
           "status",
+          "isHistorical",
           "createdAt"
         ]
       },
@@ -14811,6 +15233,9 @@
           "isActive": {
             "type": "boolean"
           },
+          "isAnonymous": {
+            "type": "boolean"
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string"
@@ -14836,6 +15261,7 @@
           "completedSustainabilityModule",
           "completedDesignThinkingModule",
           "isActive",
+          "isAnonymous",
           "createdAt",
           "updatedAt"
         ]
@@ -15029,6 +15455,538 @@
         },
         "required": [
           "volunteers"
+        ]
+      },
+      "HistoricalEnrollmentFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ],
+            "type": "string"
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scheduledOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "completedOn": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "type",
+          "agentId",
+          "status"
+        ]
+      },
+      "CreateHistoricalEnrollmentDto": {
+        "type": "object",
+        "properties": {
+          "healthPhase": {
+            "enum": [
+              "CANCER_DIAGNOSIS",
+              "SIGNS_AND_SYMPTOMS"
+            ],
+            "type": "string"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patient": {
+            "$ref": "#/components/schemas/CreatePatientDto"
+          },
+          "affiliationType": {
+            "enum": [
+              "SELF",
+              "FAMILY_FRIEND"
+            ],
+            "type": "string"
+          },
+          "companionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companion": {
+            "$ref": "#/components/schemas/CreateCompanionDto"
+          },
+          "contacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentContactInputDto"
+            }
+          },
+          "details": {
+            "$ref": "#/components/schemas/UpsertPatientDetailsDto"
+          },
+          "insurance": {
+            "$ref": "#/components/schemas/EnrollmentInsuranceDto"
+          },
+          "sisAffiliation": {
+            "$ref": "#/components/schemas/EnrollmentSisAffiliationDto"
+          },
+          "diagnosis": {
+            "$ref": "#/components/schemas/EnrollmentDiagnosisDto"
+          },
+          "diagnoses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentDiagnosisDto"
+            }
+          },
+          "treatments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentTreatmentDto"
+            }
+          },
+          "medicalAppointments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentMedicalAppointmentDto"
+            }
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentAddressDto"
+            }
+          },
+          "symptomReport": {
+            "$ref": "#/components/schemas/EnrollmentSymptomReportDto"
+          },
+          "healthBackgroundAssessment": {
+            "$ref": "#/components/schemas/EnrollmentHealthBackgroundAssessmentDto"
+          },
+          "psychooncologySupportAssessment": {
+            "$ref": "#/components/schemas/EnrollmentPsychooncologySupportAssessmentDto"
+          },
+          "currentlyAttendingConsultations": {
+            "type": "boolean"
+          },
+          "currentlyReceivingTreatment": {
+            "type": "boolean"
+          },
+          "entrySource": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "entrySubSource": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "consentToContact": {
+            "type": "boolean"
+          },
+          "consentToShareData": {
+            "type": "boolean"
+          },
+          "requiresTransportation": {
+            "type": "boolean"
+          },
+          "hasMobilityIssues": {
+            "type": "boolean"
+          },
+          "isOncologicalPatient": {
+            "type": "boolean"
+          },
+          "surveyAccepted": {
+            "type": "boolean"
+          },
+          "caseComments": {
+            "type": "string"
+          },
+          "callStartedAt": {
+            "type": "string"
+          },
+          "callEndedAt": {
+            "type": "string"
+          },
+          "familyPreventionTalkInterests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateEnrollmentFamilyTalkInterestDto"
+            }
+          },
+          "enrolledOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "followUp": {
+            "$ref": "#/components/schemas/HistoricalEnrollmentFollowUpDto"
+          }
+        },
+        "required": [
+          "healthPhase",
+          "affiliationType",
+          "enrolledOn",
+          "followUp"
+        ]
+      },
+      "CreateHistoricalFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "interlocutorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ],
+            "type": "string"
+          },
+          "purpose": {
+            "enum": [
+              "FIRST_CONTACT",
+              "ENROLLMENT",
+              "FOLLOW_UP",
+              "PSYCHOONCOLOGY_REFERRAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "scheduledOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "completedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "subjectPatientId",
+          "interlocutorId",
+          "agentId",
+          "type",
+          "purpose",
+          "status"
+        ]
+      },
+      "CreateHistoricalReminderDto": {
+        "type": "object",
+        "properties": {
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dueOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "completedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "assignedAgentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdFromFollowUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "resultingFollowUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "kind": {
+            "enum": [
+              "GENERIC",
+              "MEDICAL_APPOINTMENT"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "DONE",
+              "DISMISSED"
+            ],
+            "type": "string"
+          },
+          "medicalAppointmentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "subjectPatientId",
+          "assignedAgentId",
+          "description",
+          "status"
+        ]
+      },
+      "CreateHistoricalMedicalAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "appointmentDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "appointmentTime": {
+            "type": "string",
+            "description": "HH:mm or HH:mm:ss"
+          },
+          "nextAppointmentDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "nextAppointmentSpecialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          },
+          "referredTo": {
+            "type": "string"
+          },
+          "referralNotProvidedReason": {
+            "type": "string"
+          },
+          "difficulties": {
+            "type": "string"
+          },
+          "isFirstConsultation": {
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "attendedViaSepa": {
+            "type": "boolean"
+          },
+          "referredViaSepa": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "patientId",
+          "followUpId",
+          "specialty",
+          "status"
+        ]
+      },
+      "CreateHistoricalPsychooncologyAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "volunteerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "useAnonymousVolunteer": {
+            "type": "boolean",
+            "description": "Use the system profile when the original volunteer is unknown"
+          },
+          "beneficiaryType": {
+            "enum": [
+              "PATIENT",
+              "COMPANION"
+            ],
+            "type": "string"
+          },
+          "companionId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientEmail": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "zoomLink": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "sessionNumber": {
+            "type": "number",
+            "minimum": 1
+          },
+          "isAdditionalSession": {
+            "type": "boolean"
+          },
+          "modality": {
+            "enum": [
+              "CALL",
+              "VIDEO_CALL"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "scheduledOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "completedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "schedulingNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "noAnswerNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "satisfactionRating": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 5
+          },
+          "satisfactionComment": {
+            "type": "string",
+            "nullable": true
+          },
+          "topicAddressed": {
+            "type": "string",
+            "nullable": true
+          },
+          "sessionDetails": {
+            "type": "string",
+            "nullable": true
+          },
+          "additionalObservations": {
+            "type": "string",
+            "nullable": true
+          },
+          "recommendations": {
+            "type": "string",
+            "nullable": true
+          },
+          "referral": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "patientId",
+          "sessionNumber",
+          "modality",
+          "status",
+          "scheduledOn"
         ]
       }
     }

@@ -18,6 +18,11 @@ import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Patient } from '../../database/entities/patient.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { User } from '../../database/entities/user.entity';
+import {
+  dateOnlyInLima,
+  dateOnlyInLimaFromInput,
+  isDateOnlyRangeValid,
+} from '../../shared/date-only/date-only.util';
 import { FollowUpsService } from '../follow-ups/follow-ups.service';
 import { HistoryVersioningService } from '../patients/history-versioning/history-versioning.service';
 import { PatientAccessService } from '../patients/access/patient-access.service';
@@ -29,6 +34,7 @@ import {
 import { CreateReminderDto } from './dto/create-reminder.dto';
 import { ListRemindersDto } from './dto/list-reminders.dto';
 import { UpdateReminderDto } from './dto/update-reminder.dto';
+import type { CreateHistoricalReminderDto } from '../historical-records/dto/create-historical-reminder.dto';
 
 @Injectable()
 export class RemindersService {
@@ -76,10 +82,13 @@ export class RemindersService {
           createdFromFollowUpId: input.createdFromFollowUpId ?? null,
           assignedAgentId,
           dueAt: new Date(input.dueAt),
+          dueOn: dateOnlyInLimaFromInput(input.dueAt),
           description: input.description.trim(),
           kind: ReminderKind.GENERIC,
           medicalAppointmentId: null,
           status: ReminderStatus.PENDING,
+          completedOn: null,
+          isHistorical: false,
         }),
       );
     }
@@ -96,6 +105,90 @@ export class RemindersService {
     });
     if (!item) throw new NotFoundException('Reminder not found');
     return item;
+  }
+
+  async createHistorical(
+    input: CreateHistoricalReminderDto,
+    historicalLoadedById: string,
+  ) {
+    this.assertHistoricalDateRange(input.dueOn, input.completedOn);
+    if (!input.description.trim())
+      throw new BadRequestException('description is required');
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const patients = manager.getRepository(Patient);
+      const agents = manager.getRepository(Agent);
+      const followUps = manager.getRepository(FollowUp);
+      const appointments = manager.getRepository(PatientMedicalAppointment);
+
+      if (!(await patients.existsBy({ id: input.subjectPatientId })))
+        throw new NotFoundException('Patient not found');
+      if (!(await agents.existsBy({ id: input.assignedAgentId })))
+        throw new NotFoundException('Agent not found');
+      if (
+        input.createdFromFollowUpId &&
+        !(await followUps.existsBy({
+          id: input.createdFromFollowUpId,
+          subjectPatientId: input.subjectPatientId,
+        }))
+      )
+        throw new BadRequestException(
+          'Source follow-up must belong to the reminder patient',
+        );
+      if (
+        input.resultingFollowUpId &&
+        !(await followUps.existsBy({
+          id: input.resultingFollowUpId,
+          subjectPatientId: input.subjectPatientId,
+        }))
+      )
+        throw new BadRequestException(
+          'Resulting follow-up must belong to the reminder patient',
+        );
+      if (input.medicalAppointmentId) {
+        const appointment = await appointments.findOneBy({
+          id: input.medicalAppointmentId,
+          patientId: input.subjectPatientId,
+        });
+        if (!appointment)
+          throw new BadRequestException(
+            'Medical appointment must belong to the reminder patient',
+          );
+      }
+      if (
+        input.kind === ReminderKind.MEDICAL_APPOINTMENT &&
+        !input.medicalAppointmentId
+      )
+        throw new BadRequestException(
+          'Historical medical appointment reminders require medicalAppointmentId',
+        );
+      if (input.status !== ReminderStatus.DONE && input.completedOn)
+        throw new BadRequestException(
+          'completedOn is only allowed for DONE reminders',
+        );
+
+      const repository = manager.getRepository(Reminder);
+      const reminder = await repository.save(
+        repository.create({
+          subjectPatientId: input.subjectPatientId,
+          createdFromFollowUpId: input.createdFromFollowUpId ?? null,
+          assignedAgentId: input.assignedAgentId,
+          dueAt: null,
+          dueOn: input.dueOn ?? null,
+          description: input.description.trim(),
+          kind: input.kind ?? ReminderKind.GENERIC,
+          medicalAppointmentId: input.medicalAppointmentId ?? null,
+          status: input.status,
+          completedAt: null,
+          completedOn: input.completedOn ?? null,
+          resultingFollowUpId: input.resultingFollowUpId ?? null,
+          isHistorical: true,
+          historicalLoadedById,
+        }),
+      );
+      await this.invalidations.markDirty(input.subjectPatientId, manager);
+      return reminder;
+    });
+    return this.findOne(saved.id);
   }
 
   async complete(id: string, input: CompleteReminderDto, user: User) {
@@ -125,14 +218,12 @@ export class RemindersService {
           'Medical appointment reminder is missing its linked appointment',
         );
       }
-      await this.applyAppointmentCompletion(
-        item,
-        input.medicalAppointment,
-      );
+      await this.applyAppointmentCompletion(item, input.medicalAppointment);
     }
 
     item.status = ReminderStatus.DONE;
     item.completedAt = new Date();
+    item.completedOn = dateOnlyInLima(new Date());
     item.resultingFollowUpId = input.resultingFollowUpId ?? null;
     const saved = await this.repository.save(item);
     return this.findOne(saved.id);
@@ -148,10 +239,7 @@ export class RemindersService {
       item.kind === ReminderKind.MEDICAL_APPOINTMENT &&
       item.medicalAppointmentId
     ) {
-      await this.cancelLinkedAppointment(
-        item,
-        'Recordatorio descartado',
-      );
+      await this.cancelLinkedAppointment(item, 'Recordatorio descartado');
     }
 
     item.status = ReminderStatus.DISMISSED;
@@ -168,7 +256,10 @@ export class RemindersService {
       ? await this.resolveAgentId(input.assignedAgentId, user)
       : undefined;
 
-    if (input.dueAt) item.dueAt = new Date(input.dueAt);
+    if (input.dueAt) {
+      item.dueAt = new Date(input.dueAt);
+      item.dueOn = dateOnlyInLimaFromInput(input.dueAt);
+    }
     if (input.description !== undefined) item.description = input.description;
     if (assignedAgentId) item.assignedAgentId = assignedAgentId;
 
@@ -189,6 +280,12 @@ export class RemindersService {
       .createQueryBuilder('reminder')
       .leftJoinAndSelect('reminder.medicalAppointment', 'medicalAppointment')
       .leftJoinAndSelect('medicalAppointment.healthCenter', 'healthCenter');
+    query
+      .andWhere('reminder.is_historical = false')
+      .orderBy('reminder.due_on', 'ASC', 'NULLS LAST')
+      .addOrderBy('reminder.due_at', 'ASC', 'NULLS LAST')
+      .addOrderBy('reminder.created_at', 'DESC')
+      .addOrderBy('reminder.id', 'DESC');
     await this.access.scopeQuery(query, 'reminder.subject_patient_id', user);
     const agentId = await this.agentIdFor(user);
     if (agentId)
@@ -208,10 +305,9 @@ export class RemindersService {
   ) {
     const specialty = input.medicalAppointment!.specialty.trim();
     const dueAt = new Date(input.dueAt);
-    const appointmentDate = dueAt.toISOString().slice(0, 10);
+    const appointmentDate = dateOnlyInLimaFromInput(input.dueAt);
     const appointmentTime = dueAt.toISOString().slice(11, 16);
-    const description =
-      input.description?.trim() || `Cita: ${specialty}`;
+    const description = input.description?.trim() || `Cita: ${specialty}`;
 
     return this.dataSource.transaction(async (manager) => {
       const followUpId =
@@ -249,6 +345,7 @@ export class RemindersService {
           attendedViaSepa: null,
           referredViaSepa: null,
           changeReason: null,
+          isHistorical: false,
         },
         manager,
       );
@@ -259,19 +356,21 @@ export class RemindersService {
           createdFromFollowUpId: input.createdFromFollowUpId ?? null,
           assignedAgentId,
           dueAt,
+          dueOn: dateOnlyInLimaFromInput(input.dueAt),
           description,
           kind: ReminderKind.MEDICAL_APPOINTMENT,
           medicalAppointmentId: appointment.id,
           status: ReminderStatus.PENDING,
+          completedOn: null,
+          isHistorical: false,
         }),
       );
 
-      await manager.getRepository(PatientMedicalAppointment).update(
-        { id: appointment.id },
-        { reminderId: reminder.id },
-      );
+      await manager
+        .getRepository(PatientMedicalAppointment)
+        .update({ id: appointment.id }, { reminderId: reminder.id });
 
-      await this.invalidations.markDirty(input.subjectPatientId);
+      await this.invalidations.markDirty(input.subjectPatientId, manager);
       return manager.getRepository(Reminder).findOneOrFail({
         where: { id: reminder.id },
         relations: {
@@ -407,6 +506,10 @@ export class RemindersService {
     if (!existing) return;
 
     const dueAt = input.dueAt ? new Date(input.dueAt) : reminder.dueAt;
+    if (!dueAt)
+      throw new BadRequestException(
+        'A medical appointment reminder must have a due date',
+      );
     const appointment = await this.versioning.replaceCurrent(
       PatientMedicalAppointment,
       {
@@ -453,6 +556,14 @@ export class RemindersService {
       throw new BadRequestException(
         'Source follow-up must belong to the reminder patient',
       );
+  }
+
+  private assertHistoricalDateRange(
+    dueOn: string | undefined,
+    completedOn: string | undefined,
+  ) {
+    if (!isDateOnlyRangeValid(dueOn, completedOn))
+      throw new BadRequestException('completedOn cannot be before dueOn');
   }
 
   private async assertWriteScope(item: Reminder, user: User) {
