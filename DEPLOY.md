@@ -54,7 +54,8 @@ como obligatorios no tienen un valor seguro por defecto.
 | `JWT_SECRET`           | Sí             | Mínimo 32 caracteres.                                               |
 | `GEMINI_API_KEY`       | No             | Opcional para boot; necesaria al usar generación de resúmenes.      |
 | `N8N_WEBHOOK_URL`      | No             | Puede contener tokens; vacía desactiva n8n.                         |
-| `SEED_ADMIN_PASSWORD`  | Solo para seed | Contraseña del administrador creado por `seed:admin` o `seed:demo`. |
+| `SEED_ADMIN_PASSWORD`  | Solo para seed | Contraseña del administrador creado por `seed:admin`, `seed:demo` o `seed:staging`. |
+| `SEED_STAGING_FORCE`   | Solo seed staging | `true` permite el seed destructivo de marcha blanca con `NODE_ENV=production`. |
 | `R2_ACCESS_KEY_ID`     | Sí             | Token R2 limitado al bucket del entorno.                            |
 | `R2_SECRET_ACCESS_KEY` | Sí             | Secreto del token R2 del entorno.                                   |
 
@@ -81,6 +82,7 @@ como obligatorios no tienen un valor seguro por defecto.
 | `SEED_DEMO_SEED`                            | Solo para seed | Entero; default `20260805`.                                                                     |
 | `SEED_DEMO_NOW`                             | Solo para seed | Fecha opcional para fijar la fecha de referencia.                                               |
 | `SEED_DEMO_FORCE`                           | Solo para seed | `true` permite el seed demo destructivo con `NODE_ENV=production`. No configurarlo normalmente. |
+| `SEED_STAGING_FORCE`                        | Solo seed staging | `true` permite `seed:staging` destructivo con `NODE_ENV=production`. |
 
 `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` y las variables `SEED_DEMO_*` no son
 necesarias para que la API arranque. El archivo `.env.example` muestra
@@ -179,6 +181,35 @@ TypeORM no encuentra migraciones pendientes. No ejecutar dos comandos de
 migración concurrentemente desde varias réplicas: las migraciones actuales
 incluyen operaciones como `CREATE INDEX` sin `IF NOT EXISTS` y no tienen un
 lock de despliegue propio.
+
+## Reset de staging (marcha blanca)
+
+`npm run seed:staging` / `node dist/database/seeds/staging.seed.js` **borra
+todos los datos de dominio** y deja solo:
+
+- un usuario `ADMIN` (`SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`)
+- el voluntario anónimo de sistema (citas históricas de psicooncología)
+- ~50 hospitales de referencia
+- catálogos (`catalog_items`) y ubigeo
+
+**No** usar `seed:demo` en staging: carga pacientes y cuentas ficticias.
+
+Procedimiento manual en Dokploy (staging):
+
+1. Tomar backup de la base staging desde la UI de Dokploy.
+2. Ejecutar migraciones pendientes en el contenedor API (sección anterior).
+3. Confirmar que el entorno del contenedor tiene `SEED_ADMIN_EMAIL`,
+   `SEED_ADMIN_PASSWORD` y `DATABASE_URL`.
+4. Ejecutar **una sola vez**:
+
+```bash
+SEED_STAGING_FORCE=true node dist/database/seeds/staging.seed.js
+```
+
+Staging corre con `NODE_ENV=production` en Dokploy; sin
+`SEED_STAGING_FORCE=true` el script se niega a correr.
+
+Detalle del contrato de catálogos: [`spec/catalogs.md`](spec/catalogs.md).
 
 ## Healthcheck
 

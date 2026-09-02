@@ -2573,6 +2573,264 @@
         ]
       }
     },
+    "/catalogs": {
+      "get": {
+        "operationId": "CatalogsController_findAll",
+        "parameters": [
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "cancer_stage",
+                "education_level",
+                "insurance_type",
+                "eps_provider",
+                "native_language",
+                "medical_specialty",
+                "cancer_diagnosis",
+                "entry_source",
+                "entry_sub_source",
+                "zone_type",
+                "health_center_category",
+                "care_program",
+                "access_barrier",
+                "treatment_situation",
+                "sepa_shelter",
+                "sepa_transport",
+                "program_dropout_reason",
+                "patient_health_phase",
+                "patient_health_subcategory",
+                "treatment_type"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CatalogItemResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List catalog items",
+        "tags": [
+          "catalogs"
+        ]
+      },
+      "post": {
+        "operationId": "CatalogsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCatalogItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogItemResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a catalog item",
+        "tags": [
+          "catalogs"
+        ]
+      }
+    },
+    "/catalogs/ubigeo": {
+      "get": {
+        "operationId": "CatalogsController_getUbigeo",
+        "parameters": [
+          {
+            "name": "province",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UbigeoTreeResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ubigeo tree (departments → provinces; districts when department or province is filtered)",
+        "tags": [
+          "catalogs"
+        ]
+      }
+    },
+    "/catalogs/{id}": {
+      "patch": {
+        "operationId": "CatalogsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCatalogItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogItemResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          },
+          "404": {
+            "description": "Catalog item not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a catalog item",
+        "tags": [
+          "catalogs"
+        ]
+      }
+    },
+    "/catalogs/{id}/archive": {
+      "post": {
+        "operationId": "CatalogsController_archive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogItemResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          },
+          "404": {
+            "description": "Catalog item not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive (soft-deactivate) a non-system catalog item",
+        "tags": [
+          "catalogs"
+        ]
+      }
+    },
     "/health": {
       "get": {
         "operationId": "HealthController_check",
@@ -10571,6 +10829,245 @@
           },
           "isActive": {
             "type": "boolean"
+          }
+        }
+      },
+      "CatalogItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "parentCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "isSystem": {
+            "type": "boolean"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "code",
+          "label",
+          "parentCode",
+          "sortOrder",
+          "isActive",
+          "isSystem",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UbigeoDistrictResponseDto": {
+        "type": "object",
+        "properties": {
+          "ineiCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ineiCode",
+          "name",
+          "sortOrder",
+          "isActive"
+        ]
+      },
+      "UbigeoProvinceResponseDto": {
+        "type": "object",
+        "properties": {
+          "ineiCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "districts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UbigeoDistrictResponseDto"
+            }
+          }
+        },
+        "required": [
+          "ineiCode",
+          "name",
+          "sortOrder",
+          "isActive"
+        ]
+      },
+      "UbigeoDepartmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "ineiCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "provinces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UbigeoProvinceResponseDto"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "ineiCode",
+          "name",
+          "sortOrder",
+          "isActive",
+          "provinces"
+        ]
+      },
+      "UbigeoTreeResponseDto": {
+        "type": "object",
+        "properties": {
+          "departments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UbigeoDepartmentResponseDto"
+            }
+          }
+        },
+        "required": [
+          "departments"
+        ]
+      },
+      "CreateCatalogItemDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "cancer_stage",
+              "education_level",
+              "insurance_type",
+              "eps_provider",
+              "native_language",
+              "medical_specialty",
+              "cancer_diagnosis",
+              "entry_source",
+              "entry_sub_source",
+              "zone_type",
+              "health_center_category",
+              "care_program",
+              "access_barrier",
+              "treatment_situation",
+              "sepa_shelter",
+              "sepa_transport",
+              "program_dropout_reason",
+              "patient_health_phase",
+              "patient_health_subcategory",
+              "treatment_type"
+            ],
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "parentCode": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          },
+          "sortOrder": {
+            "type": "number",
+            "minimum": 0
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true
+          }
+        },
+        "required": [
+          "kind",
+          "code",
+          "label"
+        ]
+      },
+      "UpdateCatalogItemDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "parentCode": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          },
+          "sortOrder": {
+            "type": "number",
+            "minimum": 0
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true
           }
         }
       },

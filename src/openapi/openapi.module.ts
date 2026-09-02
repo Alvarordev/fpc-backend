@@ -21,6 +21,8 @@ import { FollowUpsController } from '../modules/follow-ups/follow-ups.controller
 import { FollowUpsService } from '../modules/follow-ups/follow-ups.service';
 import { HealthCentersController } from '../modules/health-centers/health-centers.controller';
 import { HealthCentersService } from '../modules/health-centers/health-centers.service';
+import { CatalogsController } from '../modules/catalogs/catalogs.controller';
+import { CatalogsService } from '../modules/catalogs/catalogs.service';
 import { HealthController } from '../modules/health/health.controller';
 import { MedicalAppointmentsController } from '../modules/patients/clinical/medical-appointments/medical-appointments.controller';
 import { MedicalAppointmentsService } from '../modules/patients/clinical/medical-appointments/medical-appointments.service';
@@ -85,6 +87,7 @@ import { HistoricalRecordsService } from '../modules/historical-records/historic
     FamilyTalkInterestsController,
     FollowUpsController,
     HealthCentersController,
+    CatalogsController,
     HealthController,
     MedicalAppointmentsController,
     PatientsController,
@@ -121,6 +124,7 @@ import { HistoricalRecordsService } from '../modules/historical-records/historic
     { provide: EnrollmentsService, useValue: {} },
     { provide: FollowUpsService, useValue: {} },
     { provide: HealthCentersService, useValue: {} },
+    { provide: CatalogsService, useValue: {} },
     { provide: HealthCheckService, useValue: {} },
     { provide: MedicalAppointmentsService, useValue: {} },
     { provide: UsersService, useValue: {} },

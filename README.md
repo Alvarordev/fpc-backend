@@ -70,6 +70,18 @@ Las credenciales del administrador se configuran mediante `SEED_ADMIN_EMAIL` y
 `SEED_ADMIN_PASSWORD` en `.env`. Las demás cuentas demo usan el dominio
 `@fpc.demo` y la contraseña `Demo1234!`.
 
+## Seed de staging (marcha blanca)
+
+Para un entorno limpio (admin + hospitales + catálogos + ubigeo, sin pacientes
+demo):
+
+```bash
+npm run seed:staging
+```
+
+En producción / Dokploy staging exige `SEED_STAGING_FORCE=true`. Ver
+[`DEPLOY.md`](DEPLOY.md) y [`spec/catalogs.md`](spec/catalogs.md).
+
 ## Variables de entorno
 
 `compose.local.yml` define los valores necesarios para desarrollo:

@@ -6,6 +6,7 @@ import { Foundation } from '../../entities/foundation.entity';
 import { User } from '../../entities/user.entity';
 import { UserRole } from '../../entities/user-role.enum';
 import { Volunteer } from '../../entities/volunteer.entity';
+import { ensureSystemVolunteer } from '../system-volunteer';
 
 /**
  * Shared password for every seeded account. The e2e suites clean up by email
@@ -14,7 +15,6 @@ import { Volunteer } from '../../entities/volunteer.entity';
  */
 export const DEMO_PASSWORD = 'Demo1234!';
 export const DEMO_EMAIL_DOMAIN = 'fpc.demo';
-const SYSTEM_VOLUNTEER_EMAIL = 'voluntario-no-identificado@fpc.system';
 
 interface AgentSeed {
   fullName: string;
@@ -149,26 +149,7 @@ export async function seedUsers(manager: EntityManager): Promise<SeededUsers> {
     ),
   );
 
-  const systemUser = await manager.save(
-    manager.create(User, {
-      email: SYSTEM_VOLUNTEER_EMAIL,
-      passwordHash: '!historical-system-volunteer-disabled!',
-      role: UserRole.VOLUNTEER,
-      isActive: false,
-    }),
-  );
-  await manager.save(
-    manager.create(Volunteer, {
-      userId: systemUser.id,
-      firstName: 'Voluntario',
-      lastName: 'no identificado',
-      specialty: 'Sistema',
-      email: SYSTEM_VOLUNTEER_EMAIL,
-      phone: 'N/A',
-      isActive: false,
-      isAnonymous: true,
-    }),
-  );
+  await ensureSystemVolunteer(manager);
 
   return {
     admin,

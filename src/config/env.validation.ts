@@ -22,6 +22,8 @@ export const envValidationSchema = Joi.object({
   // Only read by the standalone demo seed script, declared here so the app
   // still boots when it is present in the environment.
   SEED_DEMO_SEED: Joi.number().integer().optional(),
+  SEED_DEMO_FORCE: Joi.boolean().optional(),
+  SEED_STAGING_FORCE: Joi.boolean().optional(),
   GEMINI_API_KEY: Joi.string().trim().optional().allow(''),
   GEMINI_MODEL: Joi.string().trim().default('gemini-2.0-flash'),
   PATIENT_SUMMARY_RATE_LIMIT: Joi.number().integer().min(1).default(10),
