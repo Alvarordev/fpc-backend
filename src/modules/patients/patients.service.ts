@@ -411,7 +411,7 @@ export class PatientsService {
         })
         .orderBy('followUp.subject_patient_id', 'ASC')
         .addOrderBy(
-          "COALESCE(followUp.completed_on::timestamp AT TIME ZONE 'America/Lima', followUp.completed_at, followUp.scheduled_on::timestamp AT TIME ZONE 'America/Lima', followUp.scheduled_at, followUp.created_at)",
+          `COALESCE("followUp"."completed_on"::timestamp AT TIME ZONE 'America/Lima', "followUp"."completed_at", "followUp"."scheduled_on"::timestamp AT TIME ZONE 'America/Lima', "followUp"."scheduled_at", "followUp"."created_at")`,
           'DESC',
         )
         .addOrderBy('followUp.id', 'DESC')
