@@ -7224,7 +7224,65 @@
             "bearer": []
           }
         ],
-        "summary": "Create a historical follow-up",
+        "summary": "Create a historical follow-up with clinical data",
+        "tags": [
+          "historical-records"
+        ]
+      }
+    },
+    "/historical-records/follow-ups/{id}": {
+      "patch": {
+        "operationId": "HistoricalRecordsController_updateFollowUp",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHistoricalFollowUpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowUpResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Historical follow-up update is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may load history"
+          },
+          "404": {
+            "description": "Follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a historical follow-up and its clinical data",
         "tags": [
           "historical-records"
         ]
@@ -7274,6 +7332,64 @@
           }
         ],
         "summary": "Create a historical reminder",
+        "tags": [
+          "historical-records"
+        ]
+      }
+    },
+    "/historical-records/reminders/{id}": {
+      "patch": {
+        "operationId": "HistoricalRecordsController_updateReminder",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHistoricalReminderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Historical reminder update is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may load history"
+          },
+          "404": {
+            "description": "Reminder not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a historical reminder (including closed ones)",
         "tags": [
           "historical-records"
         ]
@@ -7372,6 +7488,64 @@
           }
         ],
         "summary": "Create a historical psycho-oncology appointment",
+        "tags": [
+          "historical-records"
+        ]
+      }
+    },
+    "/historical-records/psychooncology-appointments/{id}": {
+      "patch": {
+        "operationId": "HistoricalRecordsController_updatePsychooncologyAppointment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHistoricalPsychooncologyAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PsychooncologyAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Historical appointment update is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may load history"
+          },
+          "404": {
+            "description": "Appointment not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a historical psycho-oncology appointment",
         "tags": [
           "historical-records"
         ]
@@ -16151,6 +16325,173 @@
           "followUp"
         ]
       },
+      "HistoricalFollowUpTreatmentDto": {
+        "type": "object",
+        "properties": {
+          "seriesId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "treatmentType": {
+            "type": "string"
+          },
+          "treatmentFrequency": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "isReferred": {
+            "type": "boolean"
+          },
+          "sourceHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receivingHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "notReceivingReason": {
+            "type": "string"
+          },
+          "operationName": {
+            "type": "string"
+          },
+          "careProgram": {
+            "enum": [
+              "COPHOES",
+              "PADOMI"
+            ],
+            "type": "string"
+          },
+          "receivesTeleconsultation": {
+            "type": "boolean"
+          },
+          "teleconsultationNote": {
+            "type": "string"
+          },
+          "teleconsultationSpecialties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "treatmentSituation": {
+            "enum": [
+              "EN_CURSO",
+              "PENDIENTE_DE_INICIO",
+              "INTERRUMPIDO",
+              "FINALIZADO",
+              "SEARCHING",
+              "ABANDONED",
+              "DECEASED_DURING_TREATMENT",
+              "NOT_APPLICABLE",
+              "REMISSION"
+            ],
+            "type": "string"
+          },
+          "treatmentAbandonmentReason": {
+            "type": "string"
+          },
+          "interruptionReason": {
+            "enum": [
+              "ADVERSE_REACTION",
+              "THERAPEUTIC_OPTION_EVAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "interruptionReasonOther": {
+            "type": "string"
+          },
+          "treatmentViaSepa": {
+            "type": "boolean"
+          },
+          "scheduledSessions": {
+            "type": "number",
+            "minimum": 0
+          },
+          "completedSessions": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hormonalTreatmentCompleted": {
+            "type": "boolean"
+          },
+          "accessBarrierCode": {
+            "enum": [
+              "TRANSFER",
+              "LODGING",
+              "ALTERNATIVE_MEDICINE",
+              "EXCESSIVE_COST",
+              "DOES_NOT_WANT_TO_START",
+              "STOCKOUT",
+              "INFUSION_ROOM_INOPERATIVE",
+              "PATIENT_OVERLOAD",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "accessBarrierOther": {
+            "type": "string"
+          },
+          "orientedRegardingBarriers": {
+            "type": "boolean"
+          },
+          "hasLatestPrescription": {
+            "type": "boolean"
+          },
+          "latestPrescriptionDate": {
+            "type": "string"
+          },
+          "medications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateTreatmentMedicationDto"
+            }
+          },
+          "diagnosisRef": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Temporary clientRef of the diagnosis for this treatment; required when diagnoses[] is used and omitted only for the legacy diagnosis field"
+          },
+          "diagnosisId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Existing diagnosis id; use this or diagnosisRef, not both when diagnoses[] also creates new ones"
+          }
+        },
+        "required": [
+          "treatmentType"
+        ]
+      },
+      "HistoricalFollowUpSocialNoteDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "SOCIAL_WORKER",
+              "CONADIS",
+              "FISSAL"
+            ],
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "note"
+        ]
+      },
       "CreateHistoricalFollowUpDto": {
         "type": "object",
         "properties": {
@@ -16214,6 +16555,45 @@
           "completedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "details": {
+            "$ref": "#/components/schemas/UpsertPatientDetailsDto"
+          },
+          "diagnoses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentDiagnosisDto"
+            }
+          },
+          "treatments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoricalFollowUpTreatmentDto"
+            }
+          },
+          "symptomReport": {
+            "$ref": "#/components/schemas/EnrollmentSymptomReportDto"
+          },
+          "healthBackgroundAssessment": {
+            "$ref": "#/components/schemas/EnrollmentHealthBackgroundAssessmentDto"
+          },
+          "insurance": {
+            "$ref": "#/components/schemas/EnrollmentInsuranceDto"
+          },
+          "sisAffiliation": {
+            "$ref": "#/components/schemas/EnrollmentSisAffiliationDto"
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentAddressDto"
+            }
+          },
+          "socialNotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoricalFollowUpSocialNoteDto"
+            }
           }
         },
         "required": [
@@ -16222,6 +16602,705 @@
           "agentId",
           "type",
           "purpose",
+          "status"
+        ]
+      },
+      "UpdateHistoricalDiagnosisDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "enum": [
+              "PARALLEL",
+              "REPLACE"
+            ],
+            "type": "string",
+            "example": "PARALLEL"
+          },
+          "replacementDiagnosisId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required when mode is REPLACE; the active diagnosis to retire"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "cancerStage": {
+            "enum": [
+              "STAGE_1",
+              "STAGE_2",
+              "STAGE_3",
+              "STAGE_4",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "diagnosisDate": {
+            "type": "string"
+          },
+          "firstSymptomsDate": {
+            "type": "string"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "diagnosisSpecialty": {
+            "type": "string"
+          },
+          "symptomLeadingToCheckup": {
+            "type": "string"
+          },
+          "waitTimeForDiagnosis": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "hasMedicalReport": {
+            "type": "boolean"
+          },
+          "isSepaActiveReferral": {
+            "type": "boolean"
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "clientRef": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Temporary client reference used to associate enrollment treatments; required for diagnoses[] and omitted only by the legacy diagnosis field"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "mode",
+          "diagnosis"
+        ]
+      },
+      "UpdateHistoricalTreatmentDto": {
+        "type": "object",
+        "properties": {
+          "seriesId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "treatmentType": {
+            "type": "string"
+          },
+          "treatmentFrequency": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "isReferred": {
+            "type": "boolean"
+          },
+          "sourceHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receivingHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "notReceivingReason": {
+            "type": "string"
+          },
+          "operationName": {
+            "type": "string"
+          },
+          "careProgram": {
+            "enum": [
+              "COPHOES",
+              "PADOMI"
+            ],
+            "type": "string"
+          },
+          "receivesTeleconsultation": {
+            "type": "boolean"
+          },
+          "teleconsultationNote": {
+            "type": "string"
+          },
+          "teleconsultationSpecialties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "treatmentSituation": {
+            "enum": [
+              "EN_CURSO",
+              "PENDIENTE_DE_INICIO",
+              "INTERRUMPIDO",
+              "FINALIZADO",
+              "SEARCHING",
+              "ABANDONED",
+              "DECEASED_DURING_TREATMENT",
+              "NOT_APPLICABLE",
+              "REMISSION"
+            ],
+            "type": "string"
+          },
+          "treatmentAbandonmentReason": {
+            "type": "string"
+          },
+          "interruptionReason": {
+            "enum": [
+              "ADVERSE_REACTION",
+              "THERAPEUTIC_OPTION_EVAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "interruptionReasonOther": {
+            "type": "string"
+          },
+          "treatmentViaSepa": {
+            "type": "boolean"
+          },
+          "scheduledSessions": {
+            "type": "number",
+            "minimum": 0
+          },
+          "completedSessions": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hormonalTreatmentCompleted": {
+            "type": "boolean"
+          },
+          "accessBarrierCode": {
+            "enum": [
+              "TRANSFER",
+              "LODGING",
+              "ALTERNATIVE_MEDICINE",
+              "EXCESSIVE_COST",
+              "DOES_NOT_WANT_TO_START",
+              "STOCKOUT",
+              "INFUSION_ROOM_INOPERATIVE",
+              "PATIENT_OVERLOAD",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "accessBarrierOther": {
+            "type": "string"
+          },
+          "orientedRegardingBarriers": {
+            "type": "boolean"
+          },
+          "hasLatestPrescription": {
+            "type": "boolean"
+          },
+          "latestPrescriptionDate": {
+            "type": "string"
+          },
+          "medications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateTreatmentMedicationDto"
+            }
+          },
+          "diagnosisRef": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Temporary clientRef of the diagnosis for this treatment; required when diagnoses[] is used and omitted only for the legacy diagnosis field"
+          },
+          "diagnosisId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Existing diagnosis id; use this or diagnosisRef, not both when diagnoses[] also creates new ones"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "treatmentType"
+        ]
+      },
+      "UpdateHistoricalSymptomReportDto": {
+        "type": "object",
+        "properties": {
+          "discomfortSeverity": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "discomfortDescription": {
+            "type": "string"
+          },
+          "hasDiscomfort": {
+            "type": "boolean"
+          },
+          "checkupMotivation": {
+            "type": "string"
+          },
+          "signsAndSymptoms": {
+            "type": "string"
+          },
+          "indicationsReceived": {
+            "type": "string"
+          },
+          "symptomDuration": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "symptomFrequency": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "isPainPresent": {
+            "type": "boolean"
+          },
+          "painIntensity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "painLocation": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "painDescription": {
+            "type": "string"
+          },
+          "hasSoughtMedicalConsultation": {
+            "type": "boolean"
+          },
+          "hasRequestedMedicalConsultation": {
+            "type": "boolean"
+          },
+          "consultationStatus": {
+            "enum": [
+              "NOT_OBTAINED",
+              "SCHEDULED",
+              "ATTENDED"
+            ],
+            "type": "string"
+          },
+          "consultationNotObtainedReason": {
+            "type": "string"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "diagnosisSearchDuration": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "hasReceivedDiagnosis": {
+            "type": "boolean"
+          },
+          "reportedDiagnosis": {
+            "type": "string"
+          },
+          "isReceivingReportedTreatment": {
+            "type": "boolean"
+          },
+          "reportedTreatment": {
+            "type": "string"
+          },
+          "reportedTreatmentFrequency": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "notReceivingTreatmentReason": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "UpdateHistoricalHealthBackgroundDto": {
+        "type": "object",
+        "properties": {
+          "hasPsychiatry": {
+            "type": "boolean"
+          },
+          "activeComorbidities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePatientActiveComorbidityDto"
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePatientLimitationDto"
+            }
+          },
+          "familyCancerHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePatientFamilyCancerHistoryDto"
+            }
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "UpdateHistoricalInsuranceDto": {
+        "type": "object",
+        "properties": {
+          "insuranceType": {
+            "enum": [
+              "SIS",
+              "ESSALUD",
+              "EPS",
+              "FUERZAS_ARMADAS",
+              "SALUDPOL",
+              "NONE"
+            ],
+            "type": "string"
+          },
+          "epsProvider": {
+            "enum": [
+              "RIMAC",
+              "PACIFICO",
+              "MAPFRE",
+              "SANITAS",
+              "LA_POSITIVA",
+              "ONCOSALUD",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "affiliatedViaSepa": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "insuranceType"
+        ]
+      },
+      "UpdateHistoricalSisAffiliationDto": {
+        "type": "object",
+        "properties": {
+          "canAffiliate": {
+            "type": "boolean"
+          },
+          "affiliatedViaSepa": {
+            "type": "boolean"
+          },
+          "expectedDate": {
+            "type": "string"
+          },
+          "cantAffiliateReason": {
+            "type": "string"
+          },
+          "affiliatedAt": {
+            "type": "string"
+          },
+          "comments": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "canAffiliate"
+        ]
+      },
+      "UpdateHistoricalAddressDto": {
+        "type": "object",
+        "properties": {
+          "department": {
+            "enum": [
+              "AMAZONAS",
+              "ANCASH",
+              "APURIMAC",
+              "AREQUIPA",
+              "AYACUCHO",
+              "CAJAMARCA",
+              "CALLAO",
+              "CUSCO",
+              "HUANCAVELICA",
+              "HUANUCO",
+              "ICA",
+              "JUNIN",
+              "LA_LIBERTAD",
+              "LAMBAYEQUE",
+              "LIMA",
+              "LORETO",
+              "MADRE_DE_DIOS",
+              "MOQUEGUA",
+              "PASCO",
+              "PIURA",
+              "PUNO",
+              "SAN_MARTIN",
+              "TACNA",
+              "TUMBES",
+              "UCAYALI"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "PERMANENT",
+              "TEMPORARY"
+            ],
+            "type": "string"
+          },
+          "isPrimary": {
+            "type": "boolean"
+          },
+          "address": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "province": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "reference": {
+            "type": "string"
+          },
+          "locationUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "dniMatchesAddress": {
+            "type": "boolean"
+          },
+          "validFrom": {
+            "type": "string"
+          },
+          "validTo": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "UpdateHistoricalSocialNoteDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "SOCIAL_WORKER",
+              "CONADIS",
+              "FISSAL"
+            ],
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "type",
+          "note"
+        ]
+      },
+      "UpdateHistoricalFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "interlocutorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ],
+            "type": "string"
+          },
+          "purpose": {
+            "enum": [
+              "FIRST_CONTACT",
+              "ENROLLMENT",
+              "FOLLOW_UP",
+              "PSYCHOONCOLOGY_REFERRAL",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "scheduledOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "completedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "details": {
+            "$ref": "#/components/schemas/UpsertPatientDetailsDto"
+          },
+          "diagnoses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpdateHistoricalDiagnosisDto"
+            }
+          },
+          "treatments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpdateHistoricalTreatmentDto"
+            }
+          },
+          "symptomReport": {
+            "$ref": "#/components/schemas/UpdateHistoricalSymptomReportDto"
+          },
+          "healthBackgroundAssessment": {
+            "$ref": "#/components/schemas/UpdateHistoricalHealthBackgroundDto"
+          },
+          "insurance": {
+            "$ref": "#/components/schemas/UpdateHistoricalInsuranceDto"
+          },
+          "sisAffiliation": {
+            "$ref": "#/components/schemas/UpdateHistoricalSisAffiliationDto"
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpdateHistoricalAddressDto"
+            }
+          },
+          "socialNotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpdateHistoricalSocialNoteDto"
+            }
+          }
+        }
+      },
+      "HistoricalReminderMedicalAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "appointmentDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "appointmentTime": {
+            "type": "string",
+            "description": "HH:mm or HH:mm:ss"
+          },
+          "nextAppointmentDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "nextAppointmentSpecialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "hasReferralSheet": {
+            "type": "boolean"
+          },
+          "referredTo": {
+            "type": "string"
+          },
+          "referralNotProvidedReason": {
+            "type": "string"
+          },
+          "difficulties": {
+            "type": "string"
+          },
+          "isFirstConsultation": {
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "attendedViaSepa": {
+            "type": "boolean"
+          },
+          "referredViaSepa": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "specialty",
           "status"
         ]
       },
@@ -16274,6 +17353,9 @@
           "medicalAppointmentId": {
             "type": "string",
             "format": "uuid"
+          },
+          "medicalAppointment": {
+            "$ref": "#/components/schemas/HistoricalReminderMedicalAppointmentDto"
           }
         },
         "required": [
@@ -16282,6 +17364,50 @@
           "description",
           "status"
         ]
+      },
+      "UpdateHistoricalReminderDto": {
+        "type": "object",
+        "properties": {
+          "assignedAgentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dueOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "completedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "DONE",
+              "DISMISSED"
+            ],
+            "type": "string"
+          },
+          "createdFromFollowUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "resultingFollowUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "medicalAppointment": {
+            "$ref": "#/components/schemas/HistoricalReminderMedicalAppointmentDto"
+          }
+        }
       },
       "CreateHistoricalMedicalAppointmentDto": {
         "type": "object",
@@ -16485,6 +17611,122 @@
           "status",
           "scheduledOn"
         ]
+      },
+      "UpdateHistoricalPsychooncologyAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "volunteerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "useAnonymousVolunteer": {
+            "type": "boolean",
+            "description": "Use the system profile when the original volunteer is unknown"
+          },
+          "beneficiaryType": {
+            "enum": [
+              "PATIENT",
+              "COMPANION"
+            ],
+            "type": "string"
+          },
+          "companionId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientEmail": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "zoomLink": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "sessionNumber": {
+            "type": "number",
+            "minimum": 1
+          },
+          "isAdditionalSession": {
+            "type": "boolean"
+          },
+          "modality": {
+            "enum": [
+              "CALL",
+              "VIDEO_CALL"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "scheduledOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "completedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "schedulingNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "noAnswerNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "satisfactionRating": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 5
+          },
+          "satisfactionComment": {
+            "type": "string",
+            "nullable": true
+          },
+          "topicAddressed": {
+            "type": "string",
+            "nullable": true
+          },
+          "sessionDetails": {
+            "type": "string",
+            "nullable": true
+          },
+          "additionalObservations": {
+            "type": "string",
+            "nullable": true
+          },
+          "recommendations": {
+            "type": "string",
+            "nullable": true
+          },
+          "referral": {
+            "type": "string",
+            "nullable": true
+          }
+        }
       }
     }
   }

@@ -34,7 +34,12 @@ import {
 import { CreateReminderDto } from './dto/create-reminder.dto';
 import { ListRemindersDto } from './dto/list-reminders.dto';
 import { UpdateReminderDto } from './dto/update-reminder.dto';
-import type { CreateHistoricalReminderDto } from '../historical-records/dto/create-historical-reminder.dto';
+import type {
+  CreateHistoricalReminderDto,
+  UpdateHistoricalReminderDto,
+} from '../historical-records/dto/create-historical-reminder.dto';
+import { normalizeReferralFields } from '../patients/clinical/medical-appointments/referral-fields';
+import { HealthCenter } from '../../database/entities/health-center.entity';
 
 @Injectable()
 export class RemindersService {
@@ -112,8 +117,22 @@ export class RemindersService {
     historicalLoadedById: string,
   ) {
     this.assertHistoricalDateRange(input.dueOn, input.completedOn);
-    if (!input.description.trim())
+    const kind = input.kind ?? ReminderKind.GENERIC;
+    if (kind === ReminderKind.GENERIC && !input.description.trim())
       throw new BadRequestException('description is required');
+    if (
+      kind === ReminderKind.MEDICAL_APPOINTMENT &&
+      !input.medicalAppointmentId &&
+      !input.medicalAppointment?.specialty?.trim()
+    )
+      throw new BadRequestException(
+        'Historical medical appointment reminders require medicalAppointment or medicalAppointmentId',
+      );
+    if (input.status !== ReminderStatus.DONE && input.completedOn)
+      throw new BadRequestException(
+        'completedOn is only allowed for DONE reminders',
+      );
+
     const saved = await this.dataSource.transaction(async (manager) => {
       const patients = manager.getRepository(Patient);
       const agents = manager.getRepository(Agent);
@@ -144,6 +163,8 @@ export class RemindersService {
         throw new BadRequestException(
           'Resulting follow-up must belong to the reminder patient',
         );
+
+      let medicalAppointmentId = input.medicalAppointmentId ?? null;
       if (input.medicalAppointmentId) {
         const appointment = await appointments.findOneBy({
           id: input.medicalAppointmentId,
@@ -154,17 +175,67 @@ export class RemindersService {
             'Medical appointment must belong to the reminder patient',
           );
       }
+
       if (
-        input.kind === ReminderKind.MEDICAL_APPOINTMENT &&
-        !input.medicalAppointmentId
-      )
-        throw new BadRequestException(
-          'Historical medical appointment reminders require medicalAppointmentId',
+        kind === ReminderKind.MEDICAL_APPOINTMENT &&
+        input.medicalAppointment &&
+        !medicalAppointmentId
+      ) {
+        const appt = input.medicalAppointment;
+        if (
+          appt.healthCenterId &&
+          !(await manager
+            .getRepository(HealthCenter)
+            .existsBy({ id: appt.healthCenterId }))
+        )
+          throw new NotFoundException('Health center not found');
+        const followUpId =
+          input.createdFromFollowUpId ??
+          (await this.followUpsService.resolveOrCreateForPatient(
+            input.subjectPatientId,
+            input.assignedAgentId,
+            manager,
+          ));
+        const referral = normalizeReferralFields(appt);
+        const appointment = await appointments.save(
+          appointments.create({
+            patientId: input.subjectPatientId,
+            followUpId,
+            healthCenterId: appt.healthCenterId ?? null,
+            specialty: appt.specialty.trim(),
+            appointmentDate: appt.appointmentDate ?? input.dueOn ?? null,
+            appointmentTime: appt.appointmentTime ?? null,
+            nextAppointmentDate: appt.nextAppointmentDate ?? null,
+            nextAppointmentSpecialty: appt.nextAppointmentSpecialty ?? null,
+            hasReferralSheet: referral.hasReferralSheet ?? null,
+            referredTo: referral.referredTo ?? null,
+            referralNotProvidedReason:
+              referral.referralNotProvidedReason ?? null,
+            difficulties: appt.difficulties ?? null,
+            isFirstConsultation: appt.isFirstConsultation ?? false,
+            status: appt.status,
+            reminderId: null,
+            attendedViaSepa: appt.attendedViaSepa ?? null,
+            referredViaSepa: appt.referredViaSepa ?? null,
+            isCurrent: false,
+            isHistorical: true,
+            historicalLoadedById,
+            changeReason: appt.changeReason ?? null,
+          }),
         );
-      if (input.status !== ReminderStatus.DONE && input.completedOn)
-        throw new BadRequestException(
-          'completedOn is only allowed for DONE reminders',
-        );
+        medicalAppointmentId = appointment.id;
+      }
+
+      const specialty =
+        input.medicalAppointment?.specialty?.trim() ??
+        (medicalAppointmentId
+          ? (
+              await appointments.findOneBy({ id: medicalAppointmentId })
+            )?.specialty
+          : undefined);
+      const description =
+        input.description.trim() ||
+        (specialty ? `Cita: ${specialty}` : 'Recordatorio histórico');
 
       const repository = manager.getRepository(Reminder);
       const reminder = await repository.save(
@@ -174,9 +245,9 @@ export class RemindersService {
           assignedAgentId: input.assignedAgentId,
           dueAt: null,
           dueOn: input.dueOn ?? null,
-          description: input.description.trim(),
-          kind: input.kind ?? ReminderKind.GENERIC,
-          medicalAppointmentId: input.medicalAppointmentId ?? null,
+          description,
+          kind,
+          medicalAppointmentId,
           status: input.status,
           completedAt: null,
           completedOn: input.completedOn ?? null,
@@ -185,7 +256,146 @@ export class RemindersService {
           historicalLoadedById,
         }),
       );
+
+      if (medicalAppointmentId) {
+        await appointments.update(
+          { id: medicalAppointmentId },
+          { reminderId: reminder.id },
+        );
+      }
+
       await this.invalidations.markDirty(input.subjectPatientId, manager);
+      return reminder;
+    });
+    return this.findOne(saved.id);
+  }
+
+  async updateHistorical(
+    id: string,
+    input: UpdateHistoricalReminderDto,
+    _userId: string,
+  ) {
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const repository = manager.getRepository(Reminder);
+      const appointments = manager.getRepository(PatientMedicalAppointment);
+      const item = await repository.findOne({
+        where: { id },
+        relations: { medicalAppointment: true },
+      });
+      if (!item) throw new NotFoundException('Reminder not found');
+      if (!item.isHistorical)
+        throw new BadRequestException(
+          'Only historical reminders can be updated via historical-records',
+        );
+
+      if (input.assignedAgentId !== undefined) {
+        if (
+          !(await manager
+            .getRepository(Agent)
+            .existsBy({ id: input.assignedAgentId }))
+        )
+          throw new NotFoundException('Agent not found');
+        item.assignedAgentId = input.assignedAgentId;
+      }
+      if (input.dueOn !== undefined) item.dueOn = input.dueOn;
+      if (input.completedOn !== undefined) item.completedOn = input.completedOn;
+      if (input.description !== undefined)
+        item.description = input.description.trim();
+      if (input.status !== undefined) item.status = input.status;
+      if (input.createdFromFollowUpId !== undefined)
+        item.createdFromFollowUpId = input.createdFromFollowUpId;
+      if (input.resultingFollowUpId !== undefined)
+        item.resultingFollowUpId = input.resultingFollowUpId;
+
+      if (item.status !== ReminderStatus.DONE && item.completedOn)
+        throw new BadRequestException(
+          'completedOn is only allowed for DONE reminders',
+        );
+      this.assertHistoricalDateRange(
+        item.dueOn ?? undefined,
+        item.completedOn ?? undefined,
+      );
+
+      if (input.medicalAppointment && item.medicalAppointmentId) {
+        const appointment = await appointments.findOne({
+          where: {
+            id: item.medicalAppointmentId,
+            patientId: item.subjectPatientId,
+          },
+        });
+        if (!appointment)
+          throw new NotFoundException('Linked medical appointment not found');
+        const referral = normalizeReferralFields(input.medicalAppointment);
+        Object.assign(appointment, {
+          specialty:
+            input.medicalAppointment.specialty?.trim() ?? appointment.specialty,
+          healthCenterId:
+            input.medicalAppointment.healthCenterId !== undefined
+              ? input.medicalAppointment.healthCenterId
+              : appointment.healthCenterId,
+          appointmentDate:
+            input.medicalAppointment.appointmentDate !== undefined
+              ? input.medicalAppointment.appointmentDate
+              : appointment.appointmentDate,
+          appointmentTime:
+            input.medicalAppointment.appointmentTime !== undefined
+              ? input.medicalAppointment.appointmentTime
+              : appointment.appointmentTime,
+          nextAppointmentDate:
+            input.medicalAppointment.nextAppointmentDate !== undefined
+              ? input.medicalAppointment.nextAppointmentDate
+              : appointment.nextAppointmentDate,
+          nextAppointmentSpecialty:
+            input.medicalAppointment.nextAppointmentSpecialty !== undefined
+              ? input.medicalAppointment.nextAppointmentSpecialty
+              : appointment.nextAppointmentSpecialty,
+          hasReferralSheet:
+            referral.hasReferralSheet !== undefined
+              ? referral.hasReferralSheet
+              : appointment.hasReferralSheet,
+          referredTo:
+            referral.referredTo !== undefined
+              ? referral.referredTo
+              : appointment.referredTo,
+          referralNotProvidedReason:
+            referral.referralNotProvidedReason !== undefined
+              ? referral.referralNotProvidedReason
+              : appointment.referralNotProvidedReason,
+          difficulties:
+            input.medicalAppointment.difficulties !== undefined
+              ? input.medicalAppointment.difficulties
+              : appointment.difficulties,
+          isFirstConsultation:
+            input.medicalAppointment.isFirstConsultation !== undefined
+              ? input.medicalAppointment.isFirstConsultation
+              : appointment.isFirstConsultation,
+          status: input.medicalAppointment.status ?? appointment.status,
+          attendedViaSepa:
+            input.medicalAppointment.attendedViaSepa !== undefined
+              ? input.medicalAppointment.attendedViaSepa
+              : appointment.attendedViaSepa,
+          referredViaSepa:
+            input.medicalAppointment.referredViaSepa !== undefined
+              ? input.medicalAppointment.referredViaSepa
+              : appointment.referredViaSepa,
+          changeReason:
+            input.medicalAppointment.changeReason !== undefined
+              ? input.medicalAppointment.changeReason
+              : appointment.changeReason,
+        });
+        await appointments.save(appointment);
+      } else if (
+        input.medicalAppointment &&
+        item.kind === ReminderKind.MEDICAL_APPOINTMENT &&
+        !item.medicalAppointmentId
+      ) {
+        throw new BadRequestException(
+          'Historical medical reminder is missing its appointment link',
+        );
+      }
+
+      const reminder = await repository.save(item);
+      await this.invalidations.markDirty(reminder.subjectPatientId, manager);
       return reminder;
     });
     return this.findOne(saved.id);

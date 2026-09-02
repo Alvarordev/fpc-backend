@@ -30,6 +30,7 @@ import { CreatePsychooncologyAppointmentDto } from './dto/create-psychooncology-
 import { FindPsychooncologyAppointmentsQueryDto } from './dto/list-psychooncology-appointments.dto';
 import { UpdatePsychooncologyAppointmentDto } from './dto/update-psychooncology-appointment.dto';
 import type { CreateHistoricalPsychooncologyAppointmentDto } from '../historical-records/dto/create-historical-psychooncology-appointment.dto';
+import type { UpdateHistoricalPsychooncologyAppointmentDto } from '../historical-records/dto/update-historical-psychooncology-appointment.dto';
 import {
   dateOnlyInLima,
   dateOnlyInLimaFromInput,
@@ -185,6 +186,157 @@ export class PsychooncologyAppointmentsService {
         }),
       );
       await this.invalidations.markDirty(patient.id, manager);
+      return appointments.findOneOrFail({
+        where: { id: appointment.id },
+        relations: {
+          patient: true,
+          companion: true,
+          volunteer: true,
+          availability: true,
+        },
+      });
+    });
+  }
+
+  async updateHistorical(
+    id: string,
+    input: UpdateHistoricalPsychooncologyAppointmentDto,
+    historicalLoadedById: string,
+  ) {
+    return this.dataSource.transaction(async (manager) => {
+      const appointments = manager.getRepository(PsychooncologyAppointment);
+      const availabilities = manager.getRepository(VolunteerAvailability);
+      const volunteers = manager.getRepository(Volunteer);
+
+      const appointment = await appointments.findOne({
+        where: { id },
+        relations: { volunteer: true, availability: true },
+      });
+      if (!appointment)
+        throw new NotFoundException('Psycho-oncology appointment not found');
+      if (!appointment.isHistorical)
+        throw new BadRequestException(
+          'Only historical psycho-oncology appointments can be updated via historical-records',
+        );
+
+      if (input.volunteerId && input.useAnonymousVolunteer)
+        throw new BadRequestException(
+          'Provide volunteerId or useAnonymousVolunteer, not both',
+        );
+      if (input.volunteerId || input.useAnonymousVolunteer === true) {
+        const volunteer = input.volunteerId
+          ? await volunteers.findOne({ where: { id: input.volunteerId } })
+          : await volunteers.findOne({ where: { isAnonymous: true } });
+        if (!volunteer) throw new NotFoundException('Volunteer not found');
+        if (input.volunteerId && volunteer.isAnonymous)
+          throw new BadRequestException(
+            'Anonymous volunteer must be selected with useAnonymousVolunteer',
+          );
+        appointment.volunteerId = volunteer.id;
+        const availability = await availabilities.findOne({
+          where: { id: appointment.availabilityId },
+        });
+        if (availability) {
+          availability.volunteerId = volunteer.id;
+          availability.historicalLoadedById = historicalLoadedById;
+          if (input.scheduledOn) availability.date = input.scheduledOn;
+          await availabilities.save(availability);
+        }
+      } else if (input.scheduledOn) {
+        const availability = await availabilities.findOne({
+          where: { id: appointment.availabilityId },
+        });
+        if (availability) {
+          availability.date = input.scheduledOn;
+          await availabilities.save(availability);
+        }
+      }
+
+      if (input.followUpId !== undefined) {
+        if (input.followUpId) {
+          const followUp = await manager.getRepository(FollowUp).findOne({
+            where: {
+              id: input.followUpId,
+              subjectPatientId: appointment.patientId,
+            },
+          });
+          if (!followUp)
+            throw new BadRequestException(
+              'Follow-up does not belong to the patient',
+            );
+          appointment.followUpId = followUp.id;
+        } else {
+          appointment.followUpId = null;
+        }
+      }
+
+      if (
+        input.beneficiaryType !== undefined ||
+        input.companionId !== undefined
+      ) {
+        const beneficiary = await this.resolveBeneficiary(
+          manager,
+          appointment.patientId,
+          input.beneficiaryType ?? appointment.beneficiaryType,
+          input.companionId !== undefined
+            ? input.companionId
+            : appointment.companionId,
+        );
+        appointment.beneficiaryType = beneficiary.beneficiaryType;
+        appointment.companionId = beneficiary.companionId;
+        appointment.companion = beneficiary.companion;
+      }
+
+      if (input.sessionNumber !== undefined)
+        appointment.sessionNumber = input.sessionNumber;
+      if (input.isAdditionalSession !== undefined)
+        appointment.isAdditionalSession = input.isAdditionalSession;
+      if (input.modality !== undefined) appointment.modality = input.modality;
+      if (input.status !== undefined) appointment.status = input.status;
+      if (input.scheduledOn !== undefined)
+        appointment.scheduledOn = input.scheduledOn;
+      if (input.completedOn !== undefined)
+        appointment.completedOn = input.completedOn ?? null;
+      if (input.scheduledAt !== undefined)
+        appointment.scheduledAt = input.scheduledAt
+          ? new Date(input.scheduledAt)
+          : null;
+      if (input.completedAt !== undefined)
+        appointment.completedAt = input.completedAt
+          ? new Date(input.completedAt)
+          : null;
+      if (input.patientEmail !== undefined)
+        appointment.patientEmail = input.patientEmail;
+      if (input.zoomLink !== undefined) appointment.zoomLink = input.zoomLink;
+      if (input.schedulingNotes !== undefined)
+        appointment.schedulingNotes = input.schedulingNotes;
+      if (input.noAnswerNote !== undefined)
+        appointment.noAnswerNote = input.noAnswerNote;
+      if (input.satisfactionRating !== undefined)
+        appointment.satisfactionRating = input.satisfactionRating;
+      if (input.satisfactionComment !== undefined)
+        appointment.satisfactionComment = input.satisfactionComment;
+      if (input.topicAddressed !== undefined)
+        appointment.topicAddressed = input.topicAddressed;
+      if (input.sessionDetails !== undefined)
+        appointment.sessionDetails = input.sessionDetails;
+      if (input.additionalObservations !== undefined)
+        appointment.additionalObservations = input.additionalObservations;
+      if (input.recommendations !== undefined)
+        appointment.recommendations = input.recommendations;
+      if (input.referral !== undefined) appointment.referral = input.referral;
+
+      if (appointment.modality === AppointmentModality.CALL)
+        appointment.zoomLink = null;
+      if (
+        !isDateOnlyRangeValid(appointment.scheduledOn, appointment.completedOn)
+      )
+        throw new BadRequestException(
+          'completedOn cannot be before scheduledOn',
+        );
+
+      await appointments.save(appointment);
+      await this.invalidations.markDirty(appointment.patientId, manager);
       return appointments.findOneOrFail({
         where: { id: appointment.id },
         relations: {

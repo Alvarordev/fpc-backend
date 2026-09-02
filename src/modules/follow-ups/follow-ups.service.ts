@@ -189,8 +189,9 @@ export class FollowUpsService {
     input: HistoricalFollowUpInput,
     userId: string,
     userRole: string,
+    manager?: EntityManager,
   ) {
-    const created = await this.dataSource.transaction((manager) =>
+    const run = (entityManager: EntityManager) =>
       this.create(
         {
           subjectPatientId: input.subjectPatientId,
@@ -204,7 +205,7 @@ export class FollowUpsService {
         },
         userId,
         userRole,
-        manager,
+        entityManager,
         {
           isHistorical: true,
           historicalLoadedById: userId,
@@ -212,9 +213,71 @@ export class FollowUpsService {
           scheduledOn: input.scheduledOn,
           completedOn: input.completedOn,
         },
-      ),
-    );
-    return this.findOne(created.id);
+      );
+
+    const created = manager
+      ? await run(manager)
+      : await this.dataSource.transaction((entityManager) => run(entityManager));
+    return this.findOne(created.id, manager);
+  }
+
+  async updateHistoricalMetadata(
+    id: string,
+    input: {
+      interlocutorId?: string;
+      agentId?: string;
+      type?: FollowUpType;
+      purpose?: FollowUpPurpose;
+      status?: FollowUpStatus;
+      notes?: string;
+      scheduledOn?: string | null;
+      completedOn?: string | null;
+      scheduledAt?: string | null;
+      completedAt?: string | null;
+    },
+    manager?: EntityManager,
+  ) {
+    const followUps = manager?.getRepository(FollowUp) ?? this.followUps;
+    const item = await this.findOne(id, manager);
+    if (!item.isHistorical)
+      throw new BadRequestException(
+        'Only historical follow-ups can be updated via historical-records',
+      );
+    if (input.interlocutorId) {
+      await this.assertInterlocutor(
+        item.subjectPatientId,
+        input.interlocutorId,
+        manager,
+      );
+      item.interlocutorId = input.interlocutorId;
+    }
+    if (input.agentId !== undefined) {
+      const agents = manager?.getRepository(Agent) ?? this.agents;
+      if (!(await agents.existsBy({ id: input.agentId })))
+        throw new NotFoundException('Agent not found');
+      item.agentId = input.agentId;
+    }
+    if (input.type !== undefined) item.type = input.type;
+    if (input.purpose !== undefined) item.purpose = input.purpose;
+    if (input.status !== undefined) item.status = input.status;
+    if (input.notes !== undefined) item.notes = input.notes;
+    if (input.scheduledOn !== undefined) item.scheduledOn = input.scheduledOn;
+    if (input.completedOn !== undefined) item.completedOn = input.completedOn;
+    if (input.scheduledAt !== undefined)
+      item.scheduledAt = input.scheduledAt ? new Date(input.scheduledAt) : null;
+    if (input.completedAt !== undefined)
+      item.completedAt = input.completedAt ? new Date(input.completedAt) : null;
+    if (
+      item.scheduledAt &&
+      item.completedAt &&
+      item.completedAt < item.scheduledAt
+    )
+      throw new BadRequestException('completedAt cannot be before scheduledAt');
+    if (!isDateOnlyRangeValid(item.scheduledOn, item.completedOn))
+      throw new BadRequestException('completedOn cannot be before scheduledOn');
+    const saved = await followUps.save(item);
+    await this.invalidations.markDirty(saved.subjectPatientId, manager);
+    return saved;
   }
   async createBatch(
     input: CreateFollowUpsBatchDto,

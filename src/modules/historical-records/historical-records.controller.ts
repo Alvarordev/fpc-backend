@@ -1,10 +1,11 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -26,10 +27,17 @@ import {
 import { PatientMedicalAppointmentResponseDto } from '../patients/clinical/medical-appointments/dto/patient-medical-appointment-response.dto';
 import { PsychooncologyAppointmentResponseDto } from '../psychooncology-appointments/dto/psychooncology-appointment-response.dto';
 import { CreateHistoricalEnrollmentDto } from './dto/create-historical-enrollment.dto';
-import { CreateHistoricalFollowUpDto } from './dto/create-historical-follow-up.dto';
+import {
+  CreateHistoricalFollowUpDto,
+  UpdateHistoricalFollowUpDto,
+} from './dto/create-historical-follow-up.dto';
 import { CreateHistoricalMedicalAppointmentDto } from './dto/create-historical-medical-appointment.dto';
 import { CreateHistoricalPsychooncologyAppointmentDto } from './dto/create-historical-psychooncology-appointment.dto';
-import { CreateHistoricalReminderDto } from './dto/create-historical-reminder.dto';
+import {
+  CreateHistoricalReminderDto,
+  UpdateHistoricalReminderDto,
+} from './dto/create-historical-reminder.dto';
+import { UpdateHistoricalPsychooncologyAppointmentDto } from './dto/update-historical-psychooncology-appointment.dto';
 import { HistoricalRecordsService } from './historical-records.service';
 
 @Controller('historical-records')
@@ -56,7 +64,7 @@ export class HistoricalRecordsController {
   }
 
   @Post('follow-ups')
-  @ApiOperation({ summary: 'Create a historical follow-up' })
+  @ApiOperation({ summary: 'Create a historical follow-up with clinical data' })
   @ApiCreatedResponse({ type: FollowUpResponseDto })
   @ApiBadRequestResponse({ description: 'Historical follow-up is invalid' })
   @ApiForbiddenResponse({ description: 'Only administrators may load history' })
@@ -67,6 +75,22 @@ export class HistoricalRecordsController {
   ) {
     return this.service
       .createFollowUp(input, user)
+      .then(this.toFollowUpResponse);
+  }
+
+  @Patch('follow-ups/:id')
+  @ApiOperation({ summary: 'Update a historical follow-up and its clinical data' })
+  @ApiOkResponse({ type: FollowUpResponseDto })
+  @ApiBadRequestResponse({ description: 'Historical follow-up update is invalid' })
+  @ApiForbiddenResponse({ description: 'Only administrators may load history' })
+  @ApiNotFoundResponse({ description: 'Follow-up not found' })
+  updateFollowUp(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() input: UpdateHistoricalFollowUpDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.service
+      .updateFollowUp(id, input, user)
       .then(this.toFollowUpResponse);
   }
 
@@ -82,6 +106,22 @@ export class HistoricalRecordsController {
   ) {
     return this.service
       .createReminder(input, user)
+      .then(this.toReminderResponse);
+  }
+
+  @Patch('reminders/:id')
+  @ApiOperation({ summary: 'Update a historical reminder (including closed ones)' })
+  @ApiOkResponse({ type: ReminderResponseDto })
+  @ApiBadRequestResponse({ description: 'Historical reminder update is invalid' })
+  @ApiForbiddenResponse({ description: 'Only administrators may load history' })
+  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  updateReminder(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() input: UpdateHistoricalReminderDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.service
+      .updateReminder(id, input, user)
       .then(this.toReminderResponse);
   }
 
@@ -112,6 +152,26 @@ export class HistoricalRecordsController {
   ) {
     return this.service
       .createPsychooncologyAppointment(input, user)
+      .then(this.toPsychooncologyResponse);
+  }
+
+  @Patch('psychooncology-appointments/:id')
+  @ApiOperation({
+    summary: 'Update a historical psycho-oncology appointment',
+  })
+  @ApiOkResponse({ type: PsychooncologyAppointmentResponseDto })
+  @ApiBadRequestResponse({
+    description: 'Historical appointment update is invalid',
+  })
+  @ApiForbiddenResponse({ description: 'Only administrators may load history' })
+  @ApiNotFoundResponse({ description: 'Appointment not found' })
+  updatePsychooncologyAppointment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() input: UpdateHistoricalPsychooncologyAppointmentDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.service
+      .updatePsychooncologyAppointment(id, input, user)
       .then(this.toPsychooncologyResponse);
   }
 
