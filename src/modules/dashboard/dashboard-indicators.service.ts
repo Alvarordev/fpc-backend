@@ -141,12 +141,6 @@ export class DashboardIndicatorsService {
   ): Promise<DashboardManagementResponseDto> {
     const bounds = this.getBounds(query);
     const populationParameters = [bounds.fromAt, bounds.toAt];
-    const eventParameters = [
-      bounds.fromAt,
-      bounds.toAt,
-      bounds.fromDate,
-      bounds.toDate,
-    ];
     const [populationRows, metricRows, distributionRows] = await Promise.all([
       this.dataSource.query<PopulationRow[]>(
         this.populationQuery(),
@@ -154,7 +148,7 @@ export class DashboardIndicatorsService {
       ),
       this.dataSource.query<MetricRow[]>(
         this.managementMetricsQuery(),
-        eventParameters,
+        populationParameters,
       ),
       this.dataSource.query<DistributionRow[]>(
         this.managementDistributionsQuery(),
@@ -194,16 +188,11 @@ export class DashboardIndicatorsService {
     query: DashboardIndicatorQueryDto,
   ): Promise<DashboardProductivityResponseDto> {
     const bounds = this.getBounds(query);
-    const parameters = [
-      bounds.fromAt,
-      bounds.toAt,
-      bounds.fromDate,
-      bounds.toDate,
-    ];
+    const parameters = [bounds.fromAt, bounds.toAt];
     const [populationRows, metricRows] = await Promise.all([
       this.dataSource.query<PopulationRow[]>(
         this.populationQuery(),
-        parameters.slice(0, 2),
+        parameters,
       ),
       this.dataSource.query<MetricRow[]>(
         this.productivityMetricsQuery(),
@@ -928,7 +917,10 @@ export class DashboardIndicatorsService {
         SELECT 'chemoRadioCompliancePct' AS metric,
           CASE
             WHEN session_totals.scheduled = 0 THEN 0
-            ELSE ROUND((session_totals.completed / session_totals.scheduled) * 100.0, 2)
+            ELSE ROUND(
+              ((session_totals.completed / session_totals.scheduled) * 100.0)::numeric,
+              2
+            )::float
           END AS value
         FROM session_totals
         UNION ALL

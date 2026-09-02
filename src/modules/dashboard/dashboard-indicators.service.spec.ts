@@ -122,6 +122,68 @@ describe('DashboardIndicatorsService', () => {
     });
   });
 
+  it('passes only the parameters used by the productivity query', async () => {
+    const query = jest
+      .fn()
+      .mockResolvedValueOnce([{ count: '0' }])
+      .mockResolvedValueOnce([]);
+    const service = new DashboardIndicatorsService({
+      query,
+    } as unknown as DataSource);
+
+    await service.getProductivity({
+      from: '2026-01-01',
+      to: '2027-01-01',
+    });
+
+    expect(query).toHaveBeenNthCalledWith(2, expect.any(String), [
+      '2026-01-01T05:00:00.000Z',
+      '2027-01-01T05:00:00.000Z',
+    ]);
+  });
+
+  it('passes only the parameters used by the management metrics query', async () => {
+    const query = jest
+      .fn()
+      .mockResolvedValueOnce([{ count: '0' }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    const service = new DashboardIndicatorsService({
+      query,
+    } as unknown as DataSource);
+
+    await service.getManagement({
+      from: '2026-01-01',
+      to: '2027-01-01',
+    });
+
+    expect(query).toHaveBeenNthCalledWith(2, expect.any(String), [
+      '2026-01-01T05:00:00.000Z',
+      '2027-01-01T05:00:00.000Z',
+    ]);
+  });
+
+  it('casts the adherence percentage before PostgreSQL rounds it', async () => {
+    const query = jest
+      .fn()
+      .mockResolvedValueOnce([{ count: '0' }])
+      .mockResolvedValueOnce([]);
+    const service = new DashboardIndicatorsService({
+      query,
+    } as unknown as DataSource);
+
+    await service.getAdherence({
+      from: '2026-01-01',
+      to: '2027-01-01',
+    });
+
+    expect(query).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining(')::numeric'),
+      ['2026-01-01T05:00:00.000Z', '2027-01-01T05:00:00.000Z'],
+    );
+  });
+
   it('rejects incomplete or mixed indicator periods', async () => {
     const service = new DashboardIndicatorsService({
       query: jest.fn(),
