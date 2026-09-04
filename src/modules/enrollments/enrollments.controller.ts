@@ -96,6 +96,8 @@ export class EnrollmentsController {
       companionId: item.companionId,
       currentlyAttendingConsultations: item.currentlyAttendingConsultations,
       currentlyReceivingTreatment: item.currentlyReceivingTreatment,
+      notAttendingConsultationsNote: item.notAttendingConsultationsNote,
+      notReceivingTreatmentReason: item.notReceivingTreatmentReason,
       entrySource: item.entrySource,
       entrySubSource: item.entrySubSource,
       consentToContact: item.consentToContact,

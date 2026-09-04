@@ -39,6 +39,14 @@ export class CreatePatientDiagnosisDto {
   @IsOptional() @IsDateString() diagnosisDate?: string;
   @IsOptional() @IsDateString() firstSymptomsDate?: string;
   @IsOptional() @IsUUID() healthCenterId?: string;
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  @IsOptional()
+  @IsUUID()
+  referredHealthCenterId?: string;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  hasReferral?: boolean;
   @IsOptional() @IsString() diagnosisSpecialty?: string;
   @IsOptional() @IsString() symptomLeadingToCheckup?: string;
   @IsOptional()

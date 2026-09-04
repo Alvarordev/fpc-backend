@@ -62,6 +62,18 @@ export class Enrollment {
     nullable: true,
   })
   currentlyReceivingTreatment!: boolean | null;
+  @Column({
+    name: 'not_attending_consultations_note',
+    type: 'text',
+    nullable: true,
+  })
+  notAttendingConsultationsNote!: string | null;
+  @Column({
+    name: 'not_receiving_treatment_reason',
+    type: 'text',
+    nullable: true,
+  })
+  notReceivingTreatmentReason!: string | null;
   @Column({ name: 'entry_source', type: 'varchar', length: 50, nullable: true })
   entrySource!: string | null;
   @Column({

@@ -63,7 +63,10 @@ export class FoundationsController {
     return this.foundationsService.update(id, input).then(this.toResponse);
   }
 
-  private toResponse(this: void, foundation: Foundation): FoundationResponseDto {
+  private toResponse(
+    this: void,
+    foundation: Foundation,
+  ): FoundationResponseDto {
     return {
       id: foundation.id,
       userId: foundation.userId,

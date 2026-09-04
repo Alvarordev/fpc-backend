@@ -7737,7 +7737,8 @@
             "nullable": true
           },
           "patientPhone": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "title": {
             "type": "string"
@@ -9454,6 +9455,15 @@
             "format": "uuid",
             "description": "Required when mode is REPLACE; the active diagnosis to retire"
           },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true
+          },
           "diagnosis": {
             "type": "string"
           },
@@ -10060,6 +10070,16 @@
             ],
             "type": "string"
           },
+          "notAttendingConsultationsNote": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          },
+          "notReceivingTreatmentReason": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          },
           "patientId": {
             "type": "string",
             "format": "uuid"
@@ -10228,6 +10248,14 @@
             "type": "boolean",
             "nullable": true
           },
+          "notAttendingConsultationsNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "notReceivingTreatmentReason": {
+            "type": "string",
+            "nullable": true
+          },
           "entrySource": {
             "type": "string",
             "nullable": true
@@ -10295,6 +10323,8 @@
           "companionId",
           "currentlyAttendingConsultations",
           "currentlyReceivingTreatment",
+          "notAttendingConsultationsNote",
+          "notReceivingTreatmentReason",
           "entrySource",
           "entrySubSource",
           "consentToContact",
@@ -11948,7 +11978,8 @@
             "nullable": true
           },
           "primaryPhone": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "secondaryPhone": {
             "type": "string",
@@ -12266,7 +12297,8 @@
             "nullable": true
           },
           "primaryPhone": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "secondaryPhone": {
             "type": "string",
@@ -12852,6 +12884,19 @@
             "type": "string",
             "nullable": true
           },
+          "referredHealthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "referredHealthCenterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true
+          },
           "diagnosisSpecialty": {
             "type": "string",
             "nullable": true
@@ -12905,6 +12950,8 @@
           "diagnosisDate",
           "firstSymptomsDate",
           "healthCenterId",
+          "referredHealthCenterId",
+          "hasReferral",
           "diagnosisSpecialty",
           "symptomLeadingToCheckup",
           "waitTimeSource",
@@ -13836,7 +13883,8 @@
             "nullable": true
           },
           "primaryPhone": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "secondaryPhone": {
             "type": "string",
@@ -14077,6 +14125,15 @@
             "type": "string",
             "format": "uuid",
             "description": "Required when mode is REPLACE; the active diagnosis to retire"
+          },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true
           },
           "followUpId": {
             "type": "string",
@@ -15097,6 +15154,15 @@
             "type": "string",
             "format": "uuid",
             "description": "Required when mode is REPLACE; the active diagnosis to retire"
+          },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true
           },
           "diagnosis": {
             "type": "string"
@@ -16205,6 +16271,46 @@
           "volunteers"
         ]
       },
+      "CreateHistoricalPatientDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "dni": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "birthDate": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "maxLength": 10
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email"
+          },
+          "primaryPhone": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "fullName"
+        ]
+      },
       "HistoricalEnrollmentFollowUpDto": {
         "type": "object",
         "properties": {
@@ -16268,12 +16374,19 @@
             ],
             "type": "string"
           },
+          "notAttendingConsultationsNote": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          },
+          "notReceivingTreatmentReason": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          },
           "patientId": {
             "type": "string",
             "format": "uuid"
-          },
-          "patient": {
-            "$ref": "#/components/schemas/CreatePatientDto"
           },
           "affiliationType": {
             "enum": [
@@ -16386,6 +16499,9 @@
             "items": {
               "$ref": "#/components/schemas/CreateEnrollmentFamilyTalkInterestDto"
             }
+          },
+          "patient": {
+            "$ref": "#/components/schemas/CreateHistoricalPatientDto"
           },
           "enrolledOn": {
             "type": "string",
@@ -16697,6 +16813,15 @@
             "type": "string",
             "format": "uuid",
             "description": "Required when mode is REPLACE; the active diagnosis to retire"
+          },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true
           },
           "diagnosis": {
             "type": "string"

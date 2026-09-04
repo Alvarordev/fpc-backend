@@ -155,4 +155,17 @@ describe('n8n webhook payload builders', () => {
     expect(envelope.query.condicion).toBe('acompañante');
     expect(envelope.query.correo).toBe('luis@example.test');
   });
+
+  it('sends an empty webhook phone when the patient phone is unknown', () => {
+    const envelope = buildRegistroEnvelope({
+      fullName: 'Paciente Histórico',
+      dni: '',
+      phone: null,
+      email: null,
+      diagnosis: 'En evaluación',
+      condition: 'paciente',
+    });
+
+    expect(envelope.query.celular).toBe('');
+  });
 });

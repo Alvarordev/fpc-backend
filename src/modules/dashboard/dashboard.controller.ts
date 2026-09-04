@@ -50,7 +50,6 @@ export class DashboardController {
     return this.indicators.getDemographics(query);
   }
 
-
   @Get('indicators/management')
   @Roles(UserRole.ADMIN, UserRole.FOUNDATION)
   @ApiOperation({ summary: 'Get SEPA management dashboard indicators' })

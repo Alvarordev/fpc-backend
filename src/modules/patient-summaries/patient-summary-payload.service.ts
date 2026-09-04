@@ -59,10 +59,16 @@ export class PatientSummaryPayloadService {
       primaryAddress,
       primaryHealthCenter,
     ] = await Promise.all([
-      this.diagnoses.find({ where: { patientId, isCurrent: true } }),
+      this.diagnoses.find({
+        where: { patientId, isCurrent: true },
+        relations: { healthCenter: true, referredHealthCenter: true },
+      }),
       this.insurance.find({ where: { patientId, isCurrent: true } }),
       this.treatments.find({ where: { patientId, isCurrent: true } }),
-      this.appointments.find({ where: { patientId, isCurrent: true } }),
+      this.appointments.find({
+        where: { patientId, isCurrent: true },
+        relations: { healthCenter: true },
+      }),
       this.sisAffiliations.find({
         where: { patientId },
         order: { createdAt: 'DESC' },
@@ -117,7 +123,11 @@ export class PatientSummaryPayloadService {
         ? {
             attendingConsultations:
               enrollment[0].currentlyAttendingConsultations,
+            notAttendingConsultationsNote:
+              enrollment[0].notAttendingConsultationsNote,
             receivingTreatment: enrollment[0].currentlyReceivingTreatment,
+            notReceivingTreatmentReason:
+              enrollment[0].notReceivingTreatmentReason,
             requiresTransportation: enrollment[0].requiresTransportation,
             mobilityIssues: enrollment[0].hasMobilityIssues,
             oncologicalPatient: enrollment[0].isOncologicalPatient,
@@ -127,6 +137,10 @@ export class PatientSummaryPayloadService {
         diagnosis: item.diagnosis,
         stage: item.cancerStage,
         date: item.diagnosisDate,
+        firstSymptomsDate: item.firstSymptomsDate,
+        healthCenter: item.healthCenter?.name ?? null,
+        referredHealthCenter: item.referredHealthCenter?.name ?? null,
+        hasReferral: item.hasReferral,
         specialty: item.diagnosisSpecialty,
         symptoms: item.symptomLeadingToCheckup,
         sepaActiveReferral: item.isSepaActiveReferral,
@@ -149,6 +163,7 @@ export class PatientSummaryPayloadService {
         treatmentAbandonmentReason: item.treatmentAbandonmentReason,
       })),
       appointments: appointments.map((item) => ({
+        healthCenter: item.healthCenter?.name ?? null,
         specialty: item.specialty,
         date: item.appointmentDate,
         nextDate: item.nextAppointmentDate,

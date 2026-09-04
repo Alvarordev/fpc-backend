@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsDateString,
   IsEmail,
+  IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
@@ -16,6 +17,7 @@ export class CreatePatientDto {
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(50)
   primaryPhone!: string;
 
@@ -53,3 +55,7 @@ export class CreatePatientDto {
   @MaxLength(255)
   email?: string;
 }
+
+export type PatientCreationInput = Omit<CreatePatientDto, 'primaryPhone'> & {
+  primaryPhone?: string | null;
+};

@@ -241,8 +241,8 @@ export class PatientResponseDto {
   @ApiProperty({ nullable: true })
   gender!: string | null;
 
-  @ApiProperty()
-  primaryPhone!: string;
+  @ApiProperty({ nullable: true })
+  primaryPhone!: string | null;
 
   @ApiProperty({ nullable: true })
   secondaryPhone!: string | null;

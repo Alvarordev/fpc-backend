@@ -1,4 +1,4 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -205,6 +205,16 @@ export class CreateEnrollmentDto {
   psychooncologySupportAssessment?: EnrollmentPsychooncologySupportAssessmentDto;
   @IsOptional() @IsBoolean() currentlyAttendingConsultations?: boolean;
   @IsOptional() @IsBoolean() currentlyReceivingTreatment?: boolean;
+  @ApiPropertyOptional({ maxLength: 2000, nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  notAttendingConsultationsNote?: string;
+  @ApiPropertyOptional({ maxLength: 2000, nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  notReceivingTreatmentReason?: string;
   @IsOptional() @IsString() @MaxLength(50) entrySource?: string;
   @IsOptional() @IsString() @MaxLength(50) entrySubSource?: string;
   @IsOptional() @IsBoolean() consentToContact?: boolean;

@@ -40,4 +40,17 @@ describe('CreatePatientDiagnosisDto', () => {
 
     expect(errors).toHaveLength(0);
   });
+
+  it('accepts referral answers for a diagnosis', async () => {
+    const errors = await validate(
+      plainToInstance(CreatePatientDiagnosisDto, {
+        ...base,
+        mode: PatientDiagnosisMode.PARALLEL,
+        referredHealthCenterId: '22222222-2222-4222-8222-222222222222',
+        hasReferral: true,
+      }),
+    );
+
+    expect(errors).toHaveLength(0);
+  });
 });

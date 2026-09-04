@@ -26,8 +26,7 @@ export class CreateReminderDto {
   @IsOptional() @IsUUID() createdFromFollowUpId?: string;
   @IsOptional() @IsEnum(ReminderKind) kind?: ReminderKind;
   @ValidateIf(
-    (dto: CreateReminderDto) =>
-      dto.kind === ReminderKind.MEDICAL_APPOINTMENT,
+    (dto: CreateReminderDto) => dto.kind === ReminderKind.MEDICAL_APPOINTMENT,
   )
   @ValidateNested()
   @Type(() => CreateReminderMedicalAppointmentDto)

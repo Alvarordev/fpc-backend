@@ -11,6 +11,9 @@ export class EnrollmentResponseDto {
   @ApiProperty({ nullable: true }) currentlyAttendingConsultations!:
     boolean | null;
   @ApiProperty({ nullable: true }) currentlyReceivingTreatment!: boolean | null;
+  @ApiProperty({ nullable: true }) notAttendingConsultationsNote!:
+    string | null;
+  @ApiProperty({ nullable: true }) notReceivingTreatmentReason!: string | null;
   @ApiProperty({ nullable: true }) entrySource!: string | null;
   @ApiProperty({ nullable: true }) entrySubSource!: string | null;
   @ApiProperty({ nullable: true }) consentToContact!: boolean | null;

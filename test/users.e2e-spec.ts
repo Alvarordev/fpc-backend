@@ -45,7 +45,9 @@ describe('Users update (e2e)', () => {
       .getRepository(User)
       .createQueryBuilder()
       .delete()
-      .where('email LIKE :emailPrefix', { emailPrefix: 'e2e-upd-%@example.test' })
+      .where('email LIKE :emailPrefix', {
+        emailPrefix: 'e2e-upd-%@example.test',
+      })
       .execute();
   });
 

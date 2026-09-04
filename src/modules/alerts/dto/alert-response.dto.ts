@@ -21,7 +21,7 @@ export class AlertResponseDto {
   @ApiProperty({ format: 'uuid' }) patientId!: string;
   @ApiProperty() patientFullName!: string;
   @ApiProperty({ nullable: true }) patientDni!: string | null;
-  @ApiProperty() patientPhone!: string;
+  @ApiProperty({ nullable: true }) patientPhone!: string | null;
   @ApiProperty() title!: string;
   @ApiProperty() description!: string;
   @ApiProperty({ enum: AlertStatus }) status!: AlertStatus;

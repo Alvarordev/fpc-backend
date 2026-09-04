@@ -62,7 +62,9 @@ export class UsersController {
     @Query() query: ListUsersDto,
     @CurrentUser() user: User,
   ): Promise<UserListResponseDto> {
-    return UserListResponseDto.from(await this.usersService.findAll(query, user));
+    return UserListResponseDto.from(
+      await this.usersService.findAll(query, user),
+    );
   }
 
   @Get('me')

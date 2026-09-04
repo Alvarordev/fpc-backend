@@ -17,24 +17,26 @@ export class FoundationsService {
   ) {}
 
   create(input: CreateFoundationDto): Promise<Foundation> {
-    return this.dataSource.transaction(async (manager) => {
-      const user = await this.usersService.createWithManager(
-        {
-          email: input.email,
-          password: input.password,
-          role: UserRole.FOUNDATION,
-        },
-        manager,
-      );
-      return manager.getRepository(Foundation).save(
-        manager.getRepository(Foundation).create({
-          userId: user.id,
-          firstName: input.firstName,
-          lastName: input.lastName,
-          phone: input.phone,
-        }),
-      );
-    }).then((foundation) => this.findById(foundation.id));
+    return this.dataSource
+      .transaction(async (manager) => {
+        const user = await this.usersService.createWithManager(
+          {
+            email: input.email,
+            password: input.password,
+            role: UserRole.FOUNDATION,
+          },
+          manager,
+        );
+        return manager.getRepository(Foundation).save(
+          manager.getRepository(Foundation).create({
+            userId: user.id,
+            firstName: input.firstName,
+            lastName: input.lastName,
+            phone: input.phone,
+          }),
+        );
+      })
+      .then((foundation) => this.findById(foundation.id));
   }
 
   findAll(): Promise<Foundation[]> {
@@ -49,7 +51,8 @@ export class FoundationsService {
       where: { id },
       relations: { user: true },
     });
-    if (!foundation) throw new NotFoundException('Foundation profile not found');
+    if (!foundation)
+      throw new NotFoundException('Foundation profile not found');
     return foundation;
   }
 

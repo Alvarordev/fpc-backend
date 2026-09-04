@@ -229,9 +229,8 @@ export class RemindersService {
       const specialty =
         input.medicalAppointment?.specialty?.trim() ??
         (medicalAppointmentId
-          ? (
-              await appointments.findOneBy({ id: medicalAppointmentId })
-            )?.specialty
+          ? (await appointments.findOneBy({ id: medicalAppointmentId }))
+              ?.specialty
           : undefined);
       const description =
         input.description.trim() ||

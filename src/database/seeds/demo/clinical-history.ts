@@ -391,7 +391,7 @@ async function seedTreatments(
           treatmentFrequency: normalizeDuration(
             rng.pick(TREATMENT_FREQUENCY_DURATIONS),
           ),
-           ...treatmentHospitals,
+          ...treatmentHospitals,
           startDate: toDateOnly(startedAt),
           endDate: toDateOnly(addDays(startedAt, rng.int(40, 120))),
           isCurrent: false,

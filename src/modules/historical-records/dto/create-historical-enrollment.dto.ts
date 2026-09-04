@@ -15,6 +15,7 @@ import {
 } from '../../../database/entities/follow-up.enums';
 import { CreateEnrollmentDto } from '../../enrollments/dto/create-enrollment.dto';
 import { DATE_ONLY_PATTERN } from '../../../shared/date-only/date-only.util';
+import { CreateHistoricalPatientDto } from './create-historical-patient.dto';
 
 export class HistoricalEnrollmentFollowUpDto {
   @ApiProperty({ enum: FollowUpType })
@@ -59,8 +60,14 @@ export class HistoricalEnrollmentFollowUpDto {
 
 export class CreateHistoricalEnrollmentDto extends OmitType(
   CreateEnrollmentDto,
-  ['followUp'] as const,
+  ['followUp', 'patient'] as const,
 ) {
+  @ApiPropertyOptional({ type: CreateHistoricalPatientDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateHistoricalPatientDto)
+  patient?: CreateHistoricalPatientDto;
+
   @ApiProperty({ format: 'date' })
   @IsDateString()
   @Matches(DATE_ONLY_PATTERN)
@@ -74,7 +81,7 @@ export class CreateHistoricalEnrollmentDto extends OmitType(
 
 export type HistoricalEnrollmentInput = CreateHistoricalEnrollmentDto & {
   patientId?: string;
-  patient?: CreateEnrollmentDto['patient'];
+  patient?: CreateHistoricalPatientDto;
   enrolledOn: string;
   followUp: HistoricalEnrollmentFollowUpDto;
 };

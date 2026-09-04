@@ -34,6 +34,15 @@ export class PatientDiagnosisResponseDto {
   @ApiPropertyOptional({ nullable: true })
   healthCenterName?: string | null;
 
+  @ApiProperty({ format: 'uuid', nullable: true })
+  referredHealthCenterId!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  referredHealthCenterName?: string | null;
+
+  @ApiProperty({ nullable: true })
+  hasReferral!: boolean | null;
+
   @ApiProperty({ nullable: true })
   diagnosisSpecialty!: string | null;
 
@@ -72,6 +81,9 @@ export class PatientDiagnosisResponseDto {
       firstSymptomsDate: diagnosis.firstSymptomsDate,
       healthCenterId: diagnosis.healthCenterId,
       healthCenterName: diagnosis.healthCenter?.name ?? null,
+      referredHealthCenterId: diagnosis.referredHealthCenterId ?? null,
+      referredHealthCenterName: diagnosis.referredHealthCenter?.name ?? null,
+      hasReferral: diagnosis.hasReferral ?? null,
       diagnosisSpecialty: diagnosis.diagnosisSpecialty,
       symptomLeadingToCheckup: diagnosis.symptomLeadingToCheckup,
       waitTimeSource: diagnosis.waitTimeSource,

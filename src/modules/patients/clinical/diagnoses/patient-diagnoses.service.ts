@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { FollowUp } from '../../../../database/entities/follow-up.entity';
+import { HealthCenter } from '../../../../database/entities/health-center.entity';
 import { PatientDiagnosis } from '../../../../database/entities/patient-diagnosis.entity';
 import { PatientDiagnosisMode } from '../../../../database/entities/patient-diagnosis-mode.enum';
 import { PatientRole } from '../../../../database/entities/patient-role.enum';
@@ -27,6 +28,8 @@ export class PatientDiagnosesService {
     private readonly repository: Repository<PatientDiagnosis>,
     @InjectRepository(FollowUp)
     private readonly followUps: Repository<FollowUp>,
+    @InjectRepository(HealthCenter)
+    private readonly healthCenters: Repository<HealthCenter>,
     private readonly patients: PatientsService,
     private readonly versioning: HistoryVersioningService,
     private readonly invalidations: PatientSummaryInvalidationService,
@@ -65,6 +68,13 @@ export class PatientDiagnosesService {
       throw new BadRequestException(
         'Diagnosis creation mode must be PARALLEL or REPLACE',
       );
+    if (
+      input.referredHealthCenterId &&
+      !(await (
+        manager?.getRepository(HealthCenter) ?? this.healthCenters
+      ).existsBy({ id: input.referredHealthCenterId, isActive: true }))
+    )
+      throw new NotFoundException('Referred health center not found');
     if (
       mode === PatientDiagnosisMode.PARALLEL &&
       replacementDiagnosisId !== undefined
@@ -154,6 +164,7 @@ export class PatientDiagnosesService {
     await this.patients.assertCanRead(patientId, user);
     return this.repository.find({
       where: { patientId },
+      relations: { healthCenter: true, referredHealthCenter: true },
       order: { createdAt: 'DESC', id: 'DESC' },
     });
   }

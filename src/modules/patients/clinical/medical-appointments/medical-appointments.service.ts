@@ -56,7 +56,11 @@ export class MedicalAppointmentsService {
         specialty: input.specialty,
         isCurrent: true,
       },
-        { ...normalizeReferralFields(input), followUpId, status: MedicalAppointmentStatus.SCHEDULED },
+      {
+        ...normalizeReferralFields(input),
+        followUpId,
+        status: MedicalAppointmentStatus.SCHEDULED,
+      },
     );
     await this.invalidations.markDirty(input.patientId);
     await this.webhooks.enqueue(citaEnvelopeFor(patient, appointment));

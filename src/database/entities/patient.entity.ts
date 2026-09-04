@@ -52,8 +52,13 @@ export class Patient {
   @Column({ type: 'varchar', length: 10, nullable: true })
   gender!: string | null;
 
-  @Column({ name: 'primary_phone', type: 'varchar', length: 50 })
-  primaryPhone!: string;
+  @Column({
+    name: 'primary_phone',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
+  primaryPhone!: string | null;
 
   @Column({
     name: 'secondary_phone',

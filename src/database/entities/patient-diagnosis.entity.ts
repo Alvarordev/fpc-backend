@@ -35,6 +35,9 @@ export enum CancerStage {
 @Index('IDX_patient_diagnoses_patient_id', ['patientId'])
 @Index('IDX_patient_diagnoses_follow_up_id', ['followUpId'])
 @Index('IDX_patient_diagnoses_health_center_id', ['healthCenterId'])
+@Index('IDX_patient_diagnoses_referred_health_center_id', [
+  'referredHealthCenterId',
+])
 export class PatientDiagnosis {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'patient_id', type: 'uuid' }) patientId!: string;
@@ -55,6 +58,13 @@ export class PatientDiagnosis {
   @ManyToOne(() => HealthCenter)
   @JoinColumn({ name: 'health_center_id' })
   healthCenter!: HealthCenter | null;
+  @Column({ name: 'referred_health_center_id', type: 'uuid', nullable: true })
+  referredHealthCenterId!: string | null;
+  @ManyToOne(() => HealthCenter)
+  @JoinColumn({ name: 'referred_health_center_id' })
+  referredHealthCenter!: HealthCenter | null;
+  @Column({ name: 'has_referral', type: 'boolean', nullable: true })
+  hasReferral!: boolean | null;
   @Column({
     name: 'diagnosis_specialty',
     type: 'varchar',

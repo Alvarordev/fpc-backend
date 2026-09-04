@@ -127,9 +127,113 @@ describe('EnrollmentsService phase-one validation', () => {
             mode: PatientDiagnosisMode.PARALLEL,
           },
           psychooncologySupportAssessment: {},
+          currentlyAttendingConsultations: false,
+          notAttendingConsultationsNote: 'No ha podido asistir',
+          currentlyReceivingTreatment: true,
         },
         PatientHealthPhase.CANCER_DIAGNOSIS,
       ),
     ).not.toThrow();
+  });
+
+  it('requires the consultation and treatment answers for a cancer diagnosis', () => {
+    expect(
+      validateClinical(
+        {
+          diagnosis: {
+            diagnosis: 'Breast cancer',
+            mode: PatientDiagnosisMode.PARALLEL,
+          },
+        },
+        PatientHealthPhase.CANCER_DIAGNOSIS,
+      ),
+    ).toThrow(
+      'Cancer diagnosis enrollment requires a consultation attendance answer',
+    );
+
+    expect(
+      validateClinical(
+        {
+          diagnosis: {
+            diagnosis: 'Breast cancer',
+            mode: PatientDiagnosisMode.PARALLEL,
+          },
+          currentlyAttendingConsultations: false,
+          notAttendingConsultationsNote: 'No ha podido asistir',
+        },
+        PatientHealthPhase.CANCER_DIAGNOSIS,
+      ),
+    ).toThrow(
+      'Cancer diagnosis enrollment requires a current treatment answer',
+    );
+  });
+
+  it('requires a consultation center when the patient attends consultations', () => {
+    expect(
+      validateClinical(
+        {
+          diagnosis: {
+            diagnosis: 'Breast cancer',
+            mode: PatientDiagnosisMode.PARALLEL,
+          },
+          currentlyAttendingConsultations: true,
+          currentlyReceivingTreatment: true,
+          medicalAppointments: [{ specialty: 'Oncología' }],
+        },
+        PatientHealthPhase.CANCER_DIAGNOSIS,
+      ),
+    ).toThrow('Attending consultations requires a health center');
+  });
+
+  it('requires a note when the patient does not attend consultations', () => {
+    expect(
+      validateClinical(
+        {
+          diagnosis: {
+            diagnosis: 'Breast cancer',
+            mode: PatientDiagnosisMode.PARALLEL,
+          },
+          currentlyAttendingConsultations: false,
+          currentlyReceivingTreatment: true,
+        },
+        PatientHealthPhase.CANCER_DIAGNOSIS,
+      ),
+    ).toThrow('Not attending consultations requires a note');
+  });
+
+  it('requires a reason when the patient is not receiving treatment', () => {
+    expect(
+      validateClinical(
+        {
+          diagnosis: {
+            diagnosis: 'Breast cancer',
+            mode: PatientDiagnosisMode.PARALLEL,
+          },
+          currentlyAttendingConsultations: false,
+          notAttendingConsultationsNote: 'No ha podido asistir',
+          currentlyReceivingTreatment: false,
+        },
+        PatientHealthPhase.CANCER_DIAGNOSIS,
+      ),
+    ).toThrow('Not receiving treatment requires a reason');
+  });
+
+  it('does not accept detailed treatments when the patient is not receiving treatment', () => {
+    expect(
+      validateClinical(
+        {
+          diagnosis: {
+            diagnosis: 'Breast cancer',
+            mode: PatientDiagnosisMode.PARALLEL,
+          },
+          currentlyAttendingConsultations: false,
+          notAttendingConsultationsNote: 'No ha podido asistir',
+          currentlyReceivingTreatment: false,
+          notReceivingTreatmentReason: 'Tratamiento no iniciado',
+          treatments: [{ treatmentType: 'Chemotherapy' }],
+        },
+        PatientHealthPhase.CANCER_DIAGNOSIS,
+      ),
+    ).toThrow('A patient not receiving treatment cannot include treatments');
   });
 });

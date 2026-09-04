@@ -8,7 +8,7 @@ export interface AlertWebhookSnapshot {
   ticketNumber: string;
   patientFullName: string;
   patientDni: string;
-  patientPhone: string;
+  patientPhone: string | null;
   title: string;
   description: string;
   healthCenterName: string;
@@ -23,7 +23,7 @@ export function buildAlertaEnvelope(
     query: {
       nombre: s.patientFullName,
       DNI: s.patientDni,
-      celular: s.patientPhone,
+      celular: s.patientPhone ?? '',
       titulo: s.title,
       descripcion: s.description,
       centro_salud: s.healthCenterName,
@@ -41,7 +41,7 @@ export function buildAlertaResueltaEnvelope(
     query: {
       nombre: s.patientFullName,
       DNI: s.patientDni,
-      celular: s.patientPhone,
+      celular: s.patientPhone ?? '',
       titulo: `Alerta resuelta: ${s.title}`,
       descripcion: s.description,
       centro_salud: s.healthCenterName,
@@ -55,7 +55,7 @@ export interface AlertDerivationWebhookSnapshot {
   ticketNumber: string;
   patientFullName: string;
   patientDni: string;
-  patientPhone: string;
+  patientPhone: string | null;
   title: string;
   derivedTo: string;
   healthCenterName: string;
@@ -70,7 +70,7 @@ export function buildAlertaDerivarEnvelope(
     query: {
       nombre: s.patientFullName,
       DNI: s.patientDni,
-      celular: s.patientPhone,
+      celular: s.patientPhone ?? '',
       titulo: `Alerta derivada: ${s.title}`,
       descripcion: `Alerta derivada a: ${s.derivedTo}`,
       centro_salud: s.healthCenterName,
@@ -83,7 +83,7 @@ export function buildAlertaDerivarEnvelope(
 export interface AppointmentWebhookSnapshot {
   patientFullName: string;
   patientDni: string;
-  patientPhone: string;
+  patientPhone: string | null;
   patientEmail: string | null;
   difficulties: string | null;
   appointmentDate: string | null;
@@ -99,7 +99,7 @@ export function buildCitaEnvelope(
     query: {
       nombre: s.patientFullName,
       DNI: s.patientDni,
-      celular: s.patientPhone,
+      celular: s.patientPhone ?? '',
       // Deviation from fpc-back (which always sent ''): this backend's
       // Patient entity actually has an email column, so use it.
       correo: s.patientEmail ?? '',
@@ -114,7 +114,7 @@ export function buildCitaEnvelope(
 export interface PatientRegisteredWebhookSnapshot {
   fullName: string;
   dni: string;
-  phone: string;
+  phone: string | null;
   email: string | null;
   diagnosis: string;
   condition: 'acompañante' | 'paciente';
@@ -128,7 +128,7 @@ export function buildRegistroEnvelope(
     query: {
       nombre: s.fullName,
       DNI: s.dni,
-      celular: s.phone,
+      celular: s.phone ?? '',
       correo: s.email ?? '',
       diagnostico: s.diagnosis,
       condicion: s.condition,

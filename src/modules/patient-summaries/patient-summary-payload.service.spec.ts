@@ -78,6 +78,7 @@ describe('PatientSummaryPayloadService', () => {
     const emptyFind = jest.fn().mockResolvedValue([]);
     const appointmentsFind = jest.fn().mockResolvedValue([
       {
+        healthCenter: { name: 'Instituto Nacional' },
         specialty: 'Oncologia',
         appointmentDate: '2026-01-10',
         nextAppointmentDate: '2026-02-10',
@@ -92,7 +93,9 @@ describe('PatientSummaryPayloadService', () => {
       { find: emptyFind } as unknown as Repository<PatientDiagnosis>,
       { find: emptyFind } as unknown as Repository<PatientInsurance>,
       { find: emptyFind } as unknown as Repository<PatientTreatment>,
-      { find: appointmentsFind } as unknown as Repository<PatientMedicalAppointment>,
+      {
+        find: appointmentsFind,
+      } as unknown as Repository<PatientMedicalAppointment>,
       { find: emptyFind } as unknown as Repository<PatientSisAffiliation>,
       { find: emptyFind } as unknown as Repository<PatientSymptomReport>,
       { find: emptyFind } as unknown as Repository<Enrollment>,
@@ -108,8 +111,73 @@ describe('PatientSummaryPayloadService', () => {
     const prompt = await service.buildPrompt('patient-id');
 
     expect(prompt).toContain('Oncologia');
+    expect(prompt).toContain('Instituto Nacional');
     expect(prompt).toContain('Falta de transporte');
     expect(prompt).toContain('citas medicas');
     expect(prompt).toContain('appointments.difficulties');
+  });
+
+  it('includes the historical diagnosis and enrollment answers', async () => {
+    const patient = {
+      id: 'patient-id',
+      birthDate: null,
+      gender: null,
+      role: 'PATIENT',
+      status: 'ENROLLED',
+      activityStatus: 'ACTIVE',
+      details: null,
+    } as unknown as Patient;
+    const emptyFind = jest.fn().mockResolvedValue([]);
+    const diagnosesFind = jest.fn().mockResolvedValue([
+      {
+        diagnosis: 'Cáncer de mama',
+        cancerStage: 'STAGE_2',
+        diagnosisDate: null,
+        firstSymptomsDate: null,
+        healthCenter: { name: 'Hospital de origen' },
+        referredHealthCenter: { name: 'Hospital derivado' },
+        hasReferral: true,
+        diagnosisSpecialty: null,
+        symptomLeadingToCheckup: null,
+        isSepaActiveReferral: null,
+      },
+    ]);
+    const enrollmentFind = jest.fn().mockResolvedValue([
+      {
+        currentlyAttendingConsultations: false,
+        notAttendingConsultationsNote: 'No pudo continuar sus controles',
+        currentlyReceivingTreatment: false,
+        notReceivingTreatmentReason: 'Tratamiento no iniciado',
+        requiresTransportation: null,
+        hasMobilityIssues: null,
+        isOncologicalPatient: true,
+      },
+    ]);
+    const service = new PatientSummaryPayloadService(
+      {
+        findOne: jest.fn().mockResolvedValue(patient),
+      } as unknown as Repository<Patient>,
+      { find: diagnosesFind } as unknown as Repository<PatientDiagnosis>,
+      { find: emptyFind } as unknown as Repository<PatientInsurance>,
+      { find: emptyFind } as unknown as Repository<PatientTreatment>,
+      { find: emptyFind } as unknown as Repository<PatientMedicalAppointment>,
+      { find: emptyFind } as unknown as Repository<PatientSisAffiliation>,
+      { find: emptyFind } as unknown as Repository<PatientSymptomReport>,
+      { find: enrollmentFind } as unknown as Repository<Enrollment>,
+      { find: emptyFind } as unknown as Repository<FollowUp>,
+      {
+        findOne: jest.fn().mockResolvedValue(null),
+      } as unknown as Repository<PatientAddress>,
+      {
+        findOneBy: jest.fn().mockResolvedValue(null),
+      } as unknown as Repository<HealthCenter>,
+    );
+
+    const prompt = await service.buildPrompt('patient-id');
+
+    expect(prompt).toContain('Hospital derivado');
+    expect(prompt).toContain('"hasReferral":true');
+    expect(prompt).toContain('No pudo continuar sus controles');
+    expect(prompt).toContain('Tratamiento no iniciado');
   });
 });

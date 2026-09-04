@@ -1,6 +1,7 @@
 import { ConflictException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { FollowUp } from '../../../database/entities/follow-up.entity';
+import { HealthCenter } from '../../../database/entities/health-center.entity';
 import { PatientDiagnosis } from '../../../database/entities/patient-diagnosis.entity';
 import { PatientDiagnosisMode } from '../../../database/entities/patient-diagnosis-mode.enum';
 import {
@@ -34,6 +35,7 @@ describe('clinical history services', () => {
   const followUps = {
     existsBy: jest.fn(),
   } as unknown as Repository<FollowUp>;
+  const healthCenters = {} as Repository<HealthCenter>;
   const webhooks = {
     enqueue: jest.fn(),
   } as unknown as N8nTransactionalDispatchService;
@@ -123,6 +125,7 @@ describe('clinical history services', () => {
     const service = new PatientDiagnosesService(
       diagnoses,
       followUps,
+      healthCenters,
       patients,
       versioning,
       invalidations,
@@ -168,6 +171,7 @@ describe('clinical history services', () => {
     const service = new PatientDiagnosesService(
       diagnoses,
       followUps,
+      healthCenters,
       patients,
       versioning,
       invalidations,
@@ -217,6 +221,7 @@ describe('clinical history services', () => {
     const service = new PatientDiagnosesService(
       diagnoses,
       followUps,
+      healthCenters,
       patients,
       versioning,
       invalidations,
@@ -260,6 +265,7 @@ describe('clinical history services', () => {
     const service = new PatientDiagnosesService(
       diagnoses,
       followUps,
+      healthCenters,
       patients,
       versioning,
       invalidations,
@@ -298,6 +304,7 @@ describe('clinical history services', () => {
     const service = new PatientDiagnosesService(
       diagnoses,
       followUps,
+      healthCenters,
       patients,
       versioning,
       invalidations,
@@ -326,6 +333,7 @@ describe('clinical history services', () => {
     const service = new PatientDiagnosesService(
       diagnoses,
       followUps,
+      healthCenters,
       patients,
       versioning,
       invalidations,

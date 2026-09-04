@@ -53,7 +53,7 @@ import { PatientPsychooncologySupportAssessmentsService } from '../patients/clin
 import { dateOnlyInLima } from '../../shared/date-only/date-only.util';
 import type { HistoricalEnrollmentInput } from '../historical-records/dto/create-historical-enrollment.dto';
 
-type EnrollmentInput = CreateEnrollmentDto & {
+type EnrollmentInput = (CreateEnrollmentDto | HistoricalEnrollmentInput) & {
   enrolledOn?: string;
   followUp: CreateEnrollmentDto['followUp'] & {
     status?: import('../../database/entities/follow-up.enums').FollowUpStatus;
@@ -124,7 +124,7 @@ export class EnrollmentsService {
       } = input;
       const followUpValues = {
         ...followUpInput,
-      } as EnrollmentInput['followUp'];
+      };
       const historicalScheduledOn = followUpValues.scheduledOn;
       const historicalCompletedOn = followUpValues.completedOn;
       const historicalStatus = followUpValues.status;
@@ -326,9 +326,20 @@ export class EnrollmentsService {
         },
       );
       const enrollmentRepository = manager.getRepository(Enrollment);
+      const enrollmentMetadata = {
+        ...metadata,
+        notAttendingConsultationsNote:
+          metadata.currentlyAttendingConsultations === false
+            ? metadata.notAttendingConsultationsNote?.trim() || null
+            : null,
+        notReceivingTreatmentReason:
+          metadata.currentlyReceivingTreatment === false
+            ? metadata.notReceivingTreatmentReason?.trim() || null
+            : null,
+      };
       const enrollment = await enrollmentRepository.save(
         enrollmentRepository.create({
-          ...metadata,
+          ...enrollmentMetadata,
           callStartedAt: metadata.callStartedAt
             ? new Date(metadata.callStartedAt)
             : null,
@@ -625,6 +636,10 @@ export class EnrollmentsService {
       (contact) => contact.role === CompanionContactRole.PRIMARY,
     )!;
     if (primary.source !== EnrollmentContactSource.PATIENT) return;
+    if (!patient.primaryPhone?.trim())
+      throw new BadRequestException(
+        'PATIENT cannot be the primary contact without a phone number',
+      );
     if (!patient.birthDate || this.isMinor(patient.birthDate))
       throw new BadRequestException(
         'PATIENT can only be the primary contact for an adult patient',
@@ -644,7 +659,9 @@ export class EnrollmentsService {
     return age < 18;
   }
 
-  private validateClinicalBranches(input: CreateEnrollmentDto) {
+  private validateClinicalBranches(
+    input: CreateEnrollmentDto | HistoricalEnrollmentInput,
+  ) {
     const { symptomReport, medicalAppointments, healthPhase } = input;
     if (
       input.psychooncologySupportAssessment &&
@@ -720,6 +737,49 @@ export class EnrollmentsService {
       throw new BadRequestException(
         'Signs and symptoms enrollment cannot create formal diagnoses or treatments',
       );
+    if (healthPhase === PatientHealthPhase.CANCER_DIAGNOSIS) {
+      if (typeof input.currentlyAttendingConsultations !== 'boolean')
+        throw new BadRequestException(
+          'Cancer diagnosis enrollment requires a consultation attendance answer',
+        );
+      if (typeof input.currentlyReceivingTreatment !== 'boolean')
+        throw new BadRequestException(
+          'Cancer diagnosis enrollment requires a current treatment answer',
+        );
+      if (input.currentlyAttendingConsultations === true) {
+        if (medicalAppointments?.length !== 1)
+          throw new BadRequestException(
+            'Attending consultations requires exactly one appointment',
+          );
+        if (!medicalAppointments[0].healthCenterId)
+          throw new BadRequestException(
+            'Attending consultations requires a health center',
+          );
+      } else if (input.currentlyAttendingConsultations === false) {
+        if (medicalAppointments?.length)
+          throw new BadRequestException(
+            'No appointment is allowed when the patient does not attend consultations',
+          );
+        if (!input.notAttendingConsultationsNote?.trim())
+          throw new BadRequestException(
+            'Not attending consultations requires a note',
+          );
+      }
+      if (
+        input.currentlyReceivingTreatment === false &&
+        !input.notReceivingTreatmentReason?.trim()
+      )
+        throw new BadRequestException(
+          'Not receiving treatment requires a reason',
+        );
+      if (
+        input.currentlyReceivingTreatment === false &&
+        input.treatments?.length
+      )
+        throw new BadRequestException(
+          'A patient not receiving treatment cannot include treatments',
+        );
+    }
     if (symptomReport?.hasRequestedMedicalConsultation === false) {
       if (medicalAppointments?.length)
         throw new BadRequestException(

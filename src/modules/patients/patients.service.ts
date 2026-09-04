@@ -31,7 +31,7 @@ import { PatientHealthBackgroundAssessment } from '../../database/entities/patie
 import { Patient } from '../../database/entities/patient.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CreateCompanionDto } from './dto/create-companion.dto';
-import { CreatePatientDto } from './dto/create-patient.dto';
+import { type PatientCreationInput } from './dto/create-patient.dto';
 import { DeactivatePatientDto } from './dto/deactivate-patient.dto';
 import {
   ListPatientsDto,
@@ -129,7 +129,7 @@ export class PatientsService {
   }
 
   async create(
-    input: CreatePatientDto,
+    input: PatientCreationInput,
     manager?: EntityManager,
   ): Promise<Patient> {
     const repository =
@@ -527,7 +527,7 @@ export class PatientsService {
       this.summaries.findOneBy({ patientId: id }),
       this.diagnosesRepository.find({
         where: { patientId: id },
-        relations: { healthCenter: true },
+        relations: { healthCenter: true, referredHealthCenter: true },
         order: { createdAt: 'DESC', id: 'DESC' },
       }),
       this.treatmentsRepository.find({

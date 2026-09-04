@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddSepaFollowUpCaptureFields1784896000000
-  implements MigrationInterface
-{
+export class AddSepaFollowUpCaptureFields1784896000000 implements MigrationInterface {
   name = 'AddSepaFollowUpCaptureFields1784896000000';
 
   async up(queryRunner: QueryRunner): Promise<void> {

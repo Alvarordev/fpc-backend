@@ -1,4 +1,11 @@
-import { Body, Controller, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -79,9 +86,13 @@ export class HistoricalRecordsController {
   }
 
   @Patch('follow-ups/:id')
-  @ApiOperation({ summary: 'Update a historical follow-up and its clinical data' })
+  @ApiOperation({
+    summary: 'Update a historical follow-up and its clinical data',
+  })
   @ApiOkResponse({ type: FollowUpResponseDto })
-  @ApiBadRequestResponse({ description: 'Historical follow-up update is invalid' })
+  @ApiBadRequestResponse({
+    description: 'Historical follow-up update is invalid',
+  })
   @ApiForbiddenResponse({ description: 'Only administrators may load history' })
   @ApiNotFoundResponse({ description: 'Follow-up not found' })
   updateFollowUp(
@@ -110,9 +121,13 @@ export class HistoricalRecordsController {
   }
 
   @Patch('reminders/:id')
-  @ApiOperation({ summary: 'Update a historical reminder (including closed ones)' })
+  @ApiOperation({
+    summary: 'Update a historical reminder (including closed ones)',
+  })
   @ApiOkResponse({ type: ReminderResponseDto })
-  @ApiBadRequestResponse({ description: 'Historical reminder update is invalid' })
+  @ApiBadRequestResponse({
+    description: 'Historical reminder update is invalid',
+  })
   @ApiForbiddenResponse({ description: 'Only administrators may load history' })
   @ApiNotFoundResponse({ description: 'Reminder not found' })
   updateReminder(
@@ -188,6 +203,8 @@ export class HistoricalRecordsController {
       companionId: item.companionId,
       currentlyAttendingConsultations: item.currentlyAttendingConsultations,
       currentlyReceivingTreatment: item.currentlyReceivingTreatment,
+      notAttendingConsultationsNote: item.notAttendingConsultationsNote,
+      notReceivingTreatmentReason: item.notReceivingTreatmentReason,
       entrySource: item.entrySource,
       entrySubSource: item.entrySubSource,
       consentToContact: item.consentToContact,

@@ -217,7 +217,9 @@ export class FollowUpsService {
 
     const created = manager
       ? await run(manager)
-      : await this.dataSource.transaction((entityManager) => run(entityManager));
+      : await this.dataSource.transaction((entityManager) =>
+          run(entityManager),
+        );
     return this.findOne(created.id, manager);
   }
 

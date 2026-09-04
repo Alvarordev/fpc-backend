@@ -39,7 +39,9 @@ export class FamilyTalkInterestsController {
   ): Promise<FamilyTalkInterestListResponseDto> {
     const { data, total } = await this.service.findFamilyTalkInterests(filters);
     return {
-      data: data.map((interest) => FamilyTalkInterestResponseDto.from(interest)),
+      data: data.map((interest) =>
+        FamilyTalkInterestResponseDto.from(interest),
+      ),
       total,
     };
   }

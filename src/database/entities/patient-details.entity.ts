@@ -172,7 +172,6 @@ export class PatientDetails {
   @Column({ name: 'program_dropout_date', type: 'date', nullable: true })
   programDropoutDate!: string | null;
 
-
   @Column({ name: 'transportation_via_sepa', type: 'boolean', nullable: true })
   transportationViaSepa!: boolean | null;
 
@@ -205,10 +204,18 @@ export class PatientDetails {
   @Column({ name: 'shelter_sepa_provider_other', type: 'text', nullable: true })
   shelterSepaProviderOther!: string | null;
 
-  @Column({ name: 'attended_educational_talk', type: 'boolean', nullable: true })
+  @Column({
+    name: 'attended_educational_talk',
+    type: 'boolean',
+    nullable: true,
+  })
   attendedEducationalTalk!: boolean | null;
 
-  @Column({ name: 'attended_educational_talk_at', type: 'date', nullable: true })
+  @Column({
+    name: 'attended_educational_talk_at',
+    type: 'date',
+    nullable: true,
+  })
   attendedEducationalTalkAt!: string | null;
 
   @Column({

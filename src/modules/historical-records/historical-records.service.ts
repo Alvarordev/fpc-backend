@@ -191,10 +191,6 @@ export class HistoricalRecordsService {
     input: UpdateHistoricalPsychooncologyAppointmentDto,
     user: User,
   ) {
-    return this.psychooncologyAppointments.updateHistorical(
-      id,
-      input,
-      user.id,
-    );
+    return this.psychooncologyAppointments.updateHistorical(id, input, user.id);
   }
 }

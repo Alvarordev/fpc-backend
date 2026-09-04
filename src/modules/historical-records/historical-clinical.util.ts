@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { PatientAddress } from '../../database/entities/patient-address.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
