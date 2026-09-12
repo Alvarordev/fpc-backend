@@ -100,6 +100,9 @@ export class PatientDetailsResponseDto {
   @ApiProperty({ nullable: true })
   nativeLanguage!: string | null;
 
+  @ApiProperty({ nullable: true })
+  childrenCount!: number | null;
+
   @ApiProperty()
   requiresTranslation!: boolean;
 
@@ -196,6 +199,7 @@ export class PatientDetailsResponseDto {
       emergencyContactGender: details.emergencyContactGender,
       educationLevel: details.educationLevel,
       nativeLanguage: details.nativeLanguage,
+      childrenCount: details.childrenCount,
       requiresTranslation: details.requiresTranslation,
       referredToSocialWorker: details.referredToSocialWorker,
       evidenceOfDomesticViolence: details.evidenceOfDomesticViolence,

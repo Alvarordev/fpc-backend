@@ -44,6 +44,10 @@ import { HealthCenter } from './health-center.entity';
   'CHK_patient_details_program_dropout_reason_code',
   "\"program_dropout_reason_code\" IS NULL OR \"program_dropout_reason_code\" IN ('VOLUNTARY','UNLOCATABLE','DECEASED','OTHER')",
 )
+@Check(
+  'CHK_patient_details_children_count_non_negative',
+  '"children_count" IS NULL OR "children_count" >= 0',
+)
 @Index('IDX_patient_details_health_phase', ['healthPhase'])
 @Index('IDX_patient_details_health_subcategory', ['healthSubcategory'])
 export class PatientDetails {
@@ -130,6 +134,9 @@ export class PatientDetails {
     nullable: true,
   })
   nativeLanguage!: string | null;
+
+  @Column({ name: 'children_count', type: 'int', nullable: true })
+  childrenCount!: number | null;
 
   @Column({ name: 'requires_translation', type: 'boolean', default: false })
   requiresTranslation!: boolean;

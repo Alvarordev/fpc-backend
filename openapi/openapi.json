@@ -9475,6 +9475,10 @@
             "type": "string",
             "maxLength": 100
           },
+          "childrenCount": {
+            "type": "number",
+            "minimum": 0
+          },
           "requiresTranslation": {
             "type": "boolean"
           },
@@ -12975,6 +12979,10 @@
             "type": "string",
             "nullable": true
           },
+          "childrenCount": {
+            "type": "number",
+            "nullable": true
+          },
           "requiresTranslation": {
             "type": "boolean"
           },
@@ -13100,6 +13108,7 @@
           "emergencyContactGender",
           "educationLevel",
           "nativeLanguage",
+          "childrenCount",
           "requiresTranslation",
           "referredToSocialWorker",
           "evidenceOfDomesticViolence",

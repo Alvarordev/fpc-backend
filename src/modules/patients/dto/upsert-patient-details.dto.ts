@@ -2,10 +2,12 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsDateString,
+  IsInt,
   IsIn,
   IsOptional,
   IsString,
   IsUUID,
+  Min,
   MaxLength,
   ValidateNested,
 } from 'class-validator';
@@ -80,6 +82,12 @@ export class UpsertPatientDetailsDto {
   @IsString()
   @MaxLength(100)
   nativeLanguage?: string;
+
+  @ApiPropertyOptional({ type: Number, minimum: 0 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  childrenCount?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
