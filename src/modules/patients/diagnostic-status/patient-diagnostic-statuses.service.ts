@@ -11,6 +11,7 @@ import { Patient } from '../../../database/entities/patient.entity';
 import { PatientDiagnosticStatusEvent } from '../../../database/entities/patient-diagnostic-status-event.entity';
 import { PatientDiagnosticStatus } from '../../../database/entities/patient-diagnostic-status.enum';
 import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
+import { PatientHealthSubcategory } from '../../../database/entities/patient-health-subcategory.enum';
 import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { User } from '../../../database/entities/user.entity';
 import { CreatePatientDiagnosisDto } from '../clinical/diagnoses/dto/create-patient-diagnosis.dto';
@@ -146,6 +147,14 @@ export class PatientDiagnosticStatusesService {
         await this.patients.upsertDetails(
           patientId,
           { healthPhase: PatientHealthPhase.CANCER_DIAGNOSIS },
+          manager,
+        );
+      } else {
+        await this.patients.upsertDetails(
+          patientId,
+          {
+            healthSubcategory: PatientHealthSubcategory.CANCER_RULED_OUT,
+          },
           manager,
         );
       }

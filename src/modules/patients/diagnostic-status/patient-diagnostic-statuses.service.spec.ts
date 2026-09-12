@@ -3,6 +3,7 @@ import { FollowUp } from '../../../database/entities/follow-up.entity';
 import { PatientDiagnosticStatusEvent } from '../../../database/entities/patient-diagnostic-status-event.entity';
 import { PatientDiagnosticStatus } from '../../../database/entities/patient-diagnostic-status.enum';
 import { PatientRole } from '../../../database/entities/patient-role.enum';
+import { PatientHealthSubcategory } from '../../../database/entities/patient-health-subcategory.enum';
 import { Patient } from '../../../database/entities/patient.entity';
 import { PatientSummaryInvalidationService } from '../../patient-summaries/patient-summary-invalidation.service';
 import { PatientDiagnosesService } from '../clinical/diagnoses/patient-diagnoses.service';
@@ -91,6 +92,7 @@ describe('PatientDiagnosticStatusesService', () => {
         return events;
       }),
     } as unknown as EntityManager;
+    const patients = { upsertDetails: jest.fn() };
     const service = new PatientDiagnosticStatusesService(
       events as unknown as Repository<PatientDiagnosticStatusEvent>,
       {
@@ -98,7 +100,7 @@ describe('PatientDiagnosticStatusesService', () => {
           callback(manager),
         ),
       } as unknown as DataSource,
-      {} as PatientsService,
+      patients as unknown as PatientsService,
       { create: jest.fn() } as unknown as PatientDiagnosesService,
       {
         markDirty: jest.fn().mockResolvedValue(undefined),
@@ -118,6 +120,11 @@ describe('PatientDiagnosticStatusesService', () => {
         status: PatientDiagnosticStatus.RULED_OUT,
         diagnosisId: null,
       }),
+    );
+    expect(patients.upsertDetails).toHaveBeenCalledWith(
+      'patient-id',
+      { healthSubcategory: PatientHealthSubcategory.CANCER_RULED_OUT },
+      manager,
     );
   });
 });
