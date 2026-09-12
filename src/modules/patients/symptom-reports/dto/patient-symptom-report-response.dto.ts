@@ -58,6 +58,30 @@ export class PatientSymptomReportResponseDto {
   @ApiProperty({ nullable: true })
   hasRequestedMedicalConsultation!: boolean | null;
 
+  @ApiProperty({ nullable: true })
+  hasMedicalConsultation!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  noMedicalConsultationReason!: string | null;
+
+  @ApiProperty({ format: 'date', nullable: true })
+  firstConsultationDate!: string | null;
+
+  @ApiProperty({ nullable: true })
+  isAwaitingDiagnosis!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  hasReferral!: boolean | null;
+
+  @ApiProperty({ format: 'uuid', nullable: true })
+  referredHealthCenterId!: string | null;
+
+  @ApiProperty({ nullable: true })
+  referralNotProvidedReason!: string | null;
+
+  @ApiProperty({ format: 'date', nullable: true })
+  nextConsultationDate!: string | null;
+
   @ApiProperty({ enum: MedicalConsultationStatus, nullable: true })
   consultationStatus!: MedicalConsultationStatus | null;
 
@@ -114,6 +138,14 @@ export class PatientSymptomReportResponseDto {
       painDescription: report.painDescription,
       hasSoughtMedicalConsultation: report.hasSoughtMedicalConsultation,
       hasRequestedMedicalConsultation: report.hasRequestedMedicalConsultation,
+      hasMedicalConsultation: report.hasMedicalConsultation,
+      noMedicalConsultationReason: report.noMedicalConsultationReason,
+      firstConsultationDate: report.firstConsultationDate,
+      isAwaitingDiagnosis: report.isAwaitingDiagnosis,
+      hasReferral: report.hasReferral,
+      referredHealthCenterId: report.referredHealthCenterId,
+      referralNotProvidedReason: report.referralNotProvidedReason,
+      nextConsultationDate: report.nextConsultationDate,
       consultationStatus: report.consultationStatus,
       consultationNotObtainedReason: report.consultationNotObtainedReason,
       healthCenterId: report.healthCenterId,

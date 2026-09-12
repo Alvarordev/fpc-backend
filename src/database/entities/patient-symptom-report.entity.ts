@@ -82,6 +82,33 @@ export class PatientSymptomReport {
     nullable: true,
   })
   hasRequestedMedicalConsultation!: boolean | null;
+  @Column({ name: 'has_medical_consultation', type: 'boolean', nullable: true })
+  hasMedicalConsultation!: boolean | null;
+  @Column({
+    name: 'no_medical_consultation_reason',
+    type: 'text',
+    nullable: true,
+  })
+  noMedicalConsultationReason!: string | null;
+  @Column({ name: 'first_consultation_date', type: 'date', nullable: true })
+  firstConsultationDate!: string | null;
+  @Column({ name: 'is_awaiting_diagnosis', type: 'boolean', nullable: true })
+  isAwaitingDiagnosis!: boolean | null;
+  @Column({ name: 'has_referral', type: 'boolean', nullable: true })
+  hasReferral!: boolean | null;
+  @Column({ name: 'referred_health_center_id', type: 'uuid', nullable: true })
+  referredHealthCenterId!: string | null;
+  @ManyToOne(() => HealthCenter)
+  @JoinColumn({ name: 'referred_health_center_id' })
+  referredHealthCenter!: HealthCenter | null;
+  @Column({
+    name: 'referral_not_provided_reason',
+    type: 'text',
+    nullable: true,
+  })
+  referralNotProvidedReason!: string | null;
+  @Column({ name: 'next_consultation_date', type: 'date', nullable: true })
+  nextConsultationDate!: string | null;
   @Column({
     name: 'consultation_status',
     type: 'varchar',

@@ -8,8 +8,10 @@ import { PatientDiagnosesService } from '../patients/clinical/diagnoses/patient-
 import { PatientHealthBackgroundAssessmentsService } from '../patients/clinical/health-background/patient-health-background-assessments.service';
 import { PatientInsuranceService } from '../patients/clinical/insurance/patient-insurance.service';
 import { PatientMedicalAppointmentsService } from '../patients/clinical/medical-appointments/patient-medical-appointments.service';
+import { PatientNonOncologicalFollowUpsService } from '../patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 import { PatientSisAffiliationService } from '../patients/clinical/sis-affiliation/patient-sis-affiliation.service';
 import { PatientTreatmentsService } from '../patients/clinical/treatments/patient-treatments.service';
+import { PatientDiagnosticStatusesService } from '../patients/diagnostic-status/patient-diagnostic-statuses.service';
 import { PatientsService } from '../patients/patients.service';
 import { PatientSocialNotesService } from '../patients/social-notes/patient-social-notes.service';
 import { PatientSymptomReportsService } from '../patients/symptom-reports/patient-symptom-reports.service';
@@ -50,6 +52,8 @@ export class HistoricalRecordsService {
     insurance: PatientInsuranceService,
     sisAffiliations: PatientSisAffiliationService,
     symptomReports: PatientSymptomReportsService,
+    nonOncologicalFollowUps: PatientNonOncologicalFollowUpsService,
+    diagnosticStatuses: PatientDiagnosticStatusesService,
     addresses: PatientAddressesService,
     healthBackgroundAssessments: PatientHealthBackgroundAssessmentsService,
     socialNotes: PatientSocialNotesService,
@@ -61,6 +65,8 @@ export class HistoricalRecordsService {
       insurance,
       sisAffiliations,
       symptomReports,
+      nonOncologicalFollowUps,
+      diagnosticStatuses,
       addresses,
       healthBackgroundAssessments,
       socialNotes,
@@ -78,6 +84,7 @@ export class HistoricalRecordsService {
         diagnoses,
         treatments,
         symptomReport,
+        nonOncologicalFollowUp,
         healthBackgroundAssessment,
         insurance,
         sisAffiliation,
@@ -103,6 +110,7 @@ export class HistoricalRecordsService {
           diagnoses,
           treatments,
           symptomReport,
+          nonOncologicalFollowUp,
           healthBackgroundAssessment,
           insurance,
           sisAffiliation,
@@ -127,6 +135,7 @@ export class HistoricalRecordsService {
         diagnoses,
         treatments,
         symptomReport,
+        nonOncologicalFollowUp,
         healthBackgroundAssessment,
         insurance,
         sisAffiliation,
@@ -151,6 +160,7 @@ export class HistoricalRecordsService {
           diagnoses,
           treatments,
           symptomReport,
+          nonOncologicalFollowUp,
           healthBackgroundAssessment,
           insurance,
           sisAffiliation,

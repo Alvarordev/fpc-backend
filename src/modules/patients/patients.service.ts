@@ -50,6 +50,7 @@ import { HealthCenter } from '../../database/entities/health-center.entity';
 import { normalizeDuration } from '../../shared/duration/duration.util';
 import { CompanionContactRole } from '../../database/entities/companion-contact-role.enum';
 import { PatientPsychooncologySupportAssessment } from '../../database/entities/patient-psychooncology-support-assessment.entity';
+import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-non-oncological-follow-up.entity';
 
 function resolveContactRole(
   contactRole: CompanionContactRole | null | undefined,
@@ -99,6 +100,8 @@ export class PatientsService {
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly access: PatientAccessService,
     private readonly webhooks: N8nTransactionalDispatchService,
+    @InjectRepository(PatientNonOncologicalFollowUp)
+    private readonly nonOncologicalFollowUpsRepository: Repository<PatientNonOncologicalFollowUp>,
   ) {}
 
   assertCanRead(patientId: string, user: User): Promise<void> {
@@ -501,6 +504,7 @@ export class PatientsService {
       symptomReports: PatientSymptomReport[];
       healthBackgroundAssessments: PatientHealthBackgroundAssessment[];
       psychooncologySupportAssessments: PatientPsychooncologySupportAssessment[];
+      nonOncologicalFollowUps: PatientNonOncologicalFollowUp[];
       companions: CompanionPatient[];
       healthPhaseHistory: PatientHealthPhaseHistory[];
     }
@@ -517,6 +521,7 @@ export class PatientsService {
       symptomReports,
       healthBackgroundAssessments,
       psychooncologySupportAssessments,
+      nonOncologicalFollowUps,
       companions,
       healthPhaseHistory,
     ] = await Promise.all([
@@ -569,6 +574,10 @@ export class PatientsService {
         where: { patientId: id },
         order: { createdAt: 'DESC' },
       }),
+      this.nonOncologicalFollowUpsRepository.find({
+        where: { patientId: id },
+        order: { occurredOn: 'DESC', createdAt: 'DESC', id: 'DESC' },
+      }),
       this.companionPatientsRepository.find({
         where: { patientId: id },
         relations: { companion: true },
@@ -590,6 +599,7 @@ export class PatientsService {
       symptomReports,
       healthBackgroundAssessments,
       psychooncologySupportAssessments,
+      nonOncologicalFollowUps,
       companions,
       healthPhaseHistory,
     });

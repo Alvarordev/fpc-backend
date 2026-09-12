@@ -656,6 +656,16 @@ export class DashboardIndicatorsService {
             enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
             enrollment.created_at
           ) < $2
+      ), latest_statuses AS (
+        SELECT DISTINCT ON (event.patient_id)
+          event.patient_id,
+          event.status,
+          event.supported_by_sepa,
+          event.diagnosis_id,
+          event.occurred_at
+        FROM patient_diagnostic_status_events event
+        JOIN cohort ON cohort.patient_id = event.patient_id
+        ORDER BY event.patient_id, event.occurred_at DESC, event.created_at DESC, event.id DESC
       )
       SELECT metric, value FROM (
         SELECT 'sisAffiliatedViaSepa' AS metric,
@@ -689,18 +699,19 @@ export class DashboardIndicatorsService {
           AND appointment.referred_via_sepa = true
         UNION ALL
         SELECT 'diagnosticRuledOutViaSepa',
-          COUNT(DISTINCT event.patient_id)::float
-        FROM patient_diagnostic_status_events event
-        WHERE event.status = 'RULED_OUT'
-          AND event.supported_by_sepa = true
-          AND event.occurred_at >= $1 AND event.occurred_at < $2
+          COUNT(DISTINCT status.patient_id)::float
+        FROM latest_statuses status
+        WHERE status.status = 'RULED_OUT'
+          AND status.supported_by_sepa = true
+          AND status.occurred_at >= $1 AND status.occurred_at < $2
         UNION ALL
         SELECT 'diagnosticConfirmedViaSepa',
-          COUNT(DISTINCT event.patient_id)::float
-        FROM patient_diagnostic_status_events event
-        WHERE event.status = 'CONFIRMED'
-          AND event.supported_by_sepa = true
-          AND event.occurred_at >= $1 AND event.occurred_at < $2
+          COUNT(DISTINCT status.patient_id)::float
+        FROM latest_statuses status
+        JOIN patient_diagnoses diagnosis ON diagnosis.id = status.diagnosis_id
+        WHERE status.status = 'CONFIRMED'
+          AND status.supported_by_sepa = true
+          AND status.occurred_at >= $1 AND status.occurred_at < $2
         UNION ALL
         SELECT 'treatmentViaSepa',
           COUNT(DISTINCT treatment.patient_id)::float

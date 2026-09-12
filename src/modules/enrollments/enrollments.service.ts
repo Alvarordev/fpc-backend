@@ -50,6 +50,7 @@ import { buildRegistroEnvelope } from '../../integrations/n8n/n8n-webhook.payloa
 import { EnrollmentContactSource } from './enrollment-contact-source.enum';
 import { PatientDiagnosticStatusesService } from '../patients/diagnostic-status/patient-diagnostic-statuses.service';
 import { PatientPsychooncologySupportAssessmentsService } from '../patients/clinical/psychooncology-support/patient-psychooncology-support-assessments.service';
+import { PatientNonOncologicalFollowUpsService } from '../patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 import { dateOnlyInLima } from '../../shared/date-only/date-only.util';
 import type { HistoricalEnrollmentInput } from '../historical-records/dto/create-historical-enrollment.dto';
 
@@ -87,6 +88,7 @@ export class EnrollmentsService {
     private readonly addresses: PatientAddressesService,
     private readonly healthBackgroundAssessments: PatientHealthBackgroundAssessmentsService,
     private readonly psychooncologySupportAssessments: PatientPsychooncologySupportAssessmentsService,
+    private readonly nonOncologicalFollowUps: PatientNonOncologicalFollowUpsService,
     private readonly diagnosticStatuses: PatientDiagnosticStatusesService,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly webhooks: N8nTransactionalDispatchService,
@@ -116,6 +118,7 @@ export class EnrollmentsService {
         symptomReport,
         healthBackgroundAssessment,
         psychooncologySupportAssessment,
+        nonOncologicalFollowUp,
         familyPreventionTalkInterests,
         healthPhase,
         addresses,
@@ -473,6 +476,16 @@ export class EnrollmentsService {
           { ...psychooncologySupportAssessment, followUpId: followUp.id },
           manager,
         );
+      if (nonOncologicalFollowUp)
+        await this.nonOncologicalFollowUps.create(
+          patient.id,
+          {
+            ...nonOncologicalFollowUp,
+            followUpId: followUp.id,
+            enrollmentId: enrollment.id,
+          },
+          manager,
+        );
       if (healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS)
         await this.diagnosticStatuses.recordSearching(
           patient.id,
@@ -713,22 +726,37 @@ export class EnrollmentsService {
         throw new BadRequestException(
           'Signs and symptoms enrollment requires a symptom report',
         );
-      if (typeof symptomReport.hasDiscomfort !== 'boolean')
+      if (symptomReport.hasDiscomfort === undefined)
         throw new BadRequestException(
           'Signs and symptoms enrollment requires a discomfort answer',
         );
-      if (typeof symptomReport.hasRequestedMedicalConsultation !== 'boolean')
-        throw new BadRequestException(
-          'Signs and symptoms enrollment requires a consultation request answer',
-        );
-      if (typeof symptomReport.hasReceivedDiagnosis !== 'boolean')
-        throw new BadRequestException(
-          'Signs and symptoms enrollment requires a diagnosis answer',
-        );
-      if (typeof symptomReport.isReceivingReportedTreatment !== 'boolean')
-        throw new BadRequestException(
-          'Signs and symptoms enrollment requires a treatment answer',
-        );
+      if (symptomReport.hasMedicalConsultation !== undefined) {
+        if (typeof symptomReport.hasMedicalConsultation !== 'boolean')
+          throw new BadRequestException(
+            'Signs and symptoms enrollment requires a medical consultation answer',
+          );
+        if (
+          symptomReport.hasMedicalConsultation === true &&
+          (symptomReport.hasReferral === undefined ||
+            typeof symptomReport.hasReceivedDiagnosis !== 'boolean')
+        )
+          throw new BadRequestException(
+            'A completed consultation requires referral and diagnosis answers',
+          );
+      } else {
+        if (typeof symptomReport.hasRequestedMedicalConsultation !== 'boolean')
+          throw new BadRequestException(
+            'Signs and symptoms enrollment requires a consultation request answer',
+          );
+        if (typeof symptomReport.hasReceivedDiagnosis !== 'boolean')
+          throw new BadRequestException(
+            'Signs and symptoms enrollment requires a diagnosis answer',
+          );
+        if (typeof symptomReport.isReceivingReportedTreatment !== 'boolean')
+          throw new BadRequestException(
+            'Signs and symptoms enrollment requires a treatment answer',
+          );
+      }
     }
     if (
       healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS &&
@@ -779,6 +807,16 @@ export class EnrollmentsService {
         throw new BadRequestException(
           'A patient not receiving treatment cannot include treatments',
         );
+    }
+    if (symptomReport?.hasMedicalConsultation !== undefined) {
+      if (
+        symptomReport.hasMedicalConsultation === false &&
+        medicalAppointments?.length
+      )
+        throw new BadRequestException(
+          'A patient without a medical consultation cannot include an appointment',
+        );
+      return;
     }
     if (symptomReport?.hasRequestedMedicalConsultation === false) {
       if (medicalAppointments?.length)

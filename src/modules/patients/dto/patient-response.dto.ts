@@ -33,6 +33,8 @@ import { DurationResponseDto } from '../../../shared/duration/duration-response.
 import { CompanionContactRole } from '../../../database/entities/companion-contact-role.enum';
 import { PatientPsychooncologySupportAssessment } from '../../../database/entities/patient-psychooncology-support-assessment.entity';
 import { PatientPsychooncologySupportAssessmentResponseDto } from '../clinical/psychooncology-support/dto/patient-psychooncology-support-assessment-response.dto';
+import { PatientNonOncologicalFollowUp } from '../../../database/entities/patient-non-oncological-follow-up.entity';
+import { PatientNonOncologicalFollowUpResponseDto } from '../clinical/non-oncological-follow-up/dto/patient-non-oncological-follow-up-response.dto';
 
 export class PatientHealthPhaseHistoryResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -338,6 +340,12 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
   })
   psychooncologySupportAssessments!: PatientPsychooncologySupportAssessmentResponseDto[];
 
+  @ApiProperty({
+    type: PatientNonOncologicalFollowUpResponseDto,
+    isArray: true,
+  })
+  nonOncologicalFollowUps!: PatientNonOncologicalFollowUpResponseDto[];
+
   @ApiProperty({ type: () => CompanionPatientResponseDto, isArray: true })
   companions!: CompanionPatientResponseDto[];
 
@@ -352,6 +360,7 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
       symptomReports: PatientSymptomReport[];
       healthBackgroundAssessments: PatientHealthBackgroundAssessment[];
       psychooncologySupportAssessments: PatientPsychooncologySupportAssessment[];
+      nonOncologicalFollowUps: PatientNonOncologicalFollowUp[];
       companions: CompanionPatient[];
       healthPhaseHistory: PatientHealthPhaseHistory[];
     },
@@ -391,6 +400,9 @@ export class PatientDetailsWithSummaryResponseDto extends PatientResponseDto {
         patient.psychooncologySupportAssessments.map((assessment) =>
           PatientPsychooncologySupportAssessmentResponseDto.from(assessment),
         ),
+      nonOncologicalFollowUps: patient.nonOncologicalFollowUps.map((record) =>
+        PatientNonOncologicalFollowUpResponseDto.from(record),
+      ),
       companions: patient.companions.map((companion) =>
         CompanionPatientResponseDto.from(companion),
       ),

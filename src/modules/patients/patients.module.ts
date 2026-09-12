@@ -60,6 +60,9 @@ import { PatientDocumentStorageModule } from '../../integrations/storage/patient
 import { PatientPsychooncologySupportAssessment } from '../../database/entities/patient-psychooncology-support-assessment.entity';
 import { PatientPsychooncologySupportAssessmentsController } from './clinical/psychooncology-support/patient-psychooncology-support-assessments.controller';
 import { PatientPsychooncologySupportAssessmentsService } from './clinical/psychooncology-support/patient-psychooncology-support-assessments.service';
+import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-non-oncological-follow-up.entity';
+import { PatientNonOncologicalFollowUpsController } from './clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.controller';
+import { PatientNonOncologicalFollowUpsService } from './clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 
 @Module({
   imports: [
@@ -88,6 +91,7 @@ import { PatientPsychooncologySupportAssessmentsService } from './clinical/psych
       PatientDiagnosticStatusEvent,
       PatientDocument,
       PatientPsychooncologySupportAssessment,
+      PatientNonOncologicalFollowUp,
     ]),
     PatientSummariesModule,
     PatientAccessModule,
@@ -109,6 +113,7 @@ import { PatientPsychooncologySupportAssessmentsService } from './clinical/psych
     PatientDiagnosticStatusesController,
     PatientDocumentsController,
     PatientPsychooncologySupportAssessmentsController,
+    PatientNonOncologicalFollowUpsController,
   ],
   providers: [
     PatientsService,
@@ -127,6 +132,7 @@ import { PatientPsychooncologySupportAssessmentsService } from './clinical/psych
     PatientDiagnosticStatusesService,
     PatientDocumentsService,
     PatientPsychooncologySupportAssessmentsService,
+    PatientNonOncologicalFollowUpsService,
   ],
   exports: [
     PatientsService,
@@ -144,6 +150,7 @@ import { PatientPsychooncologySupportAssessmentsService } from './clinical/psych
     PatientDiagnosticStatusesService,
     PatientDocumentsService,
     PatientPsychooncologySupportAssessmentsService,
+    PatientNonOncologicalFollowUpsService,
   ],
 })
 export class PatientsModule {}

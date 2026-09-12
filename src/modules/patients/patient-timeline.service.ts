@@ -60,6 +60,9 @@ const OUTCOME_LABELS: Record<PatientTimelineOutcomeType, string> = {
   [PatientTimelineOutcomeType.PSYCHOONCOLOGY_APPOINTMENT]:
     'Cita de psicooncología',
   [PatientTimelineOutcomeType.MEDICAL_APPOINTMENT]: 'Cita médica',
+  [PatientTimelineOutcomeType.NON_ONCOLOGICAL_FOLLOW_UP]:
+    'Seguimiento no oncológico',
+  [PatientTimelineOutcomeType.DIAGNOSTIC_STATUS]: 'Estado diagnóstico',
   [PatientTimelineOutcomeType.ALERT]: 'Alerta',
 };
 
@@ -509,18 +512,29 @@ export class PatientTimelineService {
         symptom.id AS record_id,
         COALESCE(follow_up.occurred_at, symptom.created_at) AS occurred_at,
         jsonb_build_object(
-          'discomfortSeverity', symptom.discomfort_severity,
-          'discomfortDescription', symptom.discomfort_description,
-          'hasDiscomfort', symptom.has_discomfort,
-          'signsAndSymptoms', symptom.signs_and_symptoms,
+           'discomfortSeverity', symptom.discomfort_severity,
+           'discomfortDescription', symptom.discomfort_description,
+           'hasDiscomfort', symptom.has_discomfort,
+           'checkupMotivation', symptom.checkup_motivation,
+           'signsAndSymptoms', symptom.signs_and_symptoms,
           'indicationsReceived', symptom.indications_received,
           'isPainPresent', symptom.is_pain_present,
-          'painIntensity', symptom.pain_intensity,
-          'painLocation', symptom.pain_location,
-          'painDescription', symptom.pain_description,
-          'hasSoughtMedicalConsultation', symptom.has_sought_medical_consultation,
-          'specialty', symptom.specialty
-        ) AS data
+           'painIntensity', symptom.pain_intensity,
+           'painLocation', symptom.pain_location,
+           'painDescription', symptom.pain_description,
+           'hasSoughtMedicalConsultation', symptom.has_sought_medical_consultation,
+           'hasMedicalConsultation', symptom.has_medical_consultation,
+           'noMedicalConsultationReason', symptom.no_medical_consultation_reason,
+           'firstConsultationDate', symptom.first_consultation_date,
+           'isAwaitingDiagnosis', symptom.is_awaiting_diagnosis,
+           'hasReferral', symptom.has_referral,
+           'referralNotProvidedReason', symptom.referral_not_provided_reason,
+           'nextConsultationDate', symptom.next_consultation_date,
+           'hasReceivedDiagnosis', symptom.has_received_diagnosis,
+           'reportedDiagnosis', symptom.reported_diagnosis,
+           'healthCenterId', symptom.health_center_id,
+           'specialty', symptom.specialty
+         ) AS data
       FROM patient_symptom_reports symptom
       LEFT JOIN (
         SELECT
@@ -535,6 +549,63 @@ export class PatientTimelineService {
         FROM follow_ups
       ) follow_up ON follow_up.id = symptom.follow_up_id
       WHERE symptom.follow_up_id = ANY($1::uuid[])
+
+      UNION ALL
+
+      SELECT
+        non_oncological.follow_up_id,
+        'NON_ONCOLOGICAL_FOLLOW_UP'::text AS outcome_type,
+        non_oncological.id AS record_id,
+        COALESCE(
+          non_oncological.occurred_on::timestamp AT TIME ZONE 'America/Lima',
+          follow_up.occurred_at,
+          non_oncological.created_at
+        ) AS occurred_at,
+        jsonb_build_object(
+          'diagnosis', non_oncological.diagnosis,
+          'occurredOn', non_oncological.occurred_on,
+          'receivesTreatment', non_oncological.receives_treatment,
+          'treatmentName', non_oncological.treatment_name,
+          'medication', non_oncological.medication,
+          'treatmentFrequencyLabel', non_oncological.treatment_frequency_label,
+          'hasControls', non_oncological.has_controls,
+          'controlSpecialty', non_oncological.control_specialty,
+          'controlPeriodicityLabel', non_oncological.control_periodicity_label,
+          'status', non_oncological.status,
+          'dischargedOn', non_oncological.discharged_on,
+          'dischargeReason', non_oncological.discharge_reason
+        ) AS data
+      FROM patient_non_oncological_follow_ups non_oncological
+      LEFT JOIN (
+        SELECT
+          id,
+          COALESCE(
+            completed_at,
+            completed_on::timestamp AT TIME ZONE 'America/Lima',
+            scheduled_at,
+            scheduled_on::timestamp AT TIME ZONE 'America/Lima',
+            created_at
+          ) AS occurred_at
+        FROM follow_ups
+      ) follow_up ON follow_up.id = non_oncological.follow_up_id
+      WHERE non_oncological.follow_up_id = ANY($1::uuid[])
+
+      UNION ALL
+
+      SELECT
+        diagnostic_status.follow_up_id,
+        'DIAGNOSTIC_STATUS'::text AS outcome_type,
+        diagnostic_status.id AS record_id,
+        diagnostic_status.occurred_at,
+        jsonb_build_object(
+          'status', diagnostic_status.status,
+          'occurredAt', diagnostic_status.occurred_at,
+          'reportedDiagnosis', diagnostic_status.reported_diagnosis,
+          'supportedBySepa', diagnostic_status.supported_by_sepa,
+          'notes', diagnostic_status.notes
+        ) AS data
+      FROM patient_diagnostic_status_events diagnostic_status
+      WHERE diagnostic_status.follow_up_id = ANY($1::uuid[])
 
       UNION ALL
 
@@ -925,18 +996,49 @@ export class PatientTimelineService {
           : pain === false
             ? 'ausente'
             : null;
+        const consultation =
+          bool(data, 'hasMedicalConsultation') ??
+          bool(data, 'hasSoughtMedicalConsultation');
         const parts = [
           `Síntomas reportados: ${description}`,
           optionalPart('Severidad', text(data, 'discomfortSeverity')),
           optionalPart('Dolor', painDetails),
           optionalPart(
             'Consulta médica',
-            boolLabel(
-              data,
-              'hasSoughtMedicalConsultation',
-              'realizada',
-              'no registrada',
-            ),
+            consultation === null
+              ? null
+              : consultation
+                ? 'realizada'
+                : 'no realizada',
+          ),
+          optionalPart(
+            'Motivo sin consulta',
+            text(data, 'noMedicalConsultationReason'),
+          ),
+          optionalPart('Motivo del examen', text(data, 'checkupMotivation')),
+          optionalPart(
+            'Primera consulta',
+            dateOnly(data, 'firstConsultationDate'),
+          ),
+          optionalPart(
+            'Espera diagnóstico',
+            boolLabel(data, 'isAwaitingDiagnosis', 'sí', 'no'),
+          ),
+          optionalPart(
+            'Ficha de remisión',
+            boolLabel(data, 'hasReferral', 'sí', 'no'),
+          ),
+          optionalPart(
+            'Motivo sin remisión',
+            text(data, 'referralNotProvidedReason'),
+          ),
+          optionalPart(
+            'Diagnóstico informado',
+            text(data, 'reportedDiagnosis'),
+          ),
+          optionalPart(
+            'Próxima consulta',
+            dateOnly(data, 'nextConsultationDate'),
           ),
           optionalPart('Especialidad', text(data, 'specialty')),
           optionalPart('Indicaciones', text(data, 'indicationsReceived')),
@@ -1048,6 +1150,40 @@ export class PatientTimelineService {
           bool(data, 'isFirstConsultation')
             ? 'Primera consulta oncológica'
             : null,
+        ]);
+        break;
+      }
+      case PatientTimelineOutcomeType.NON_ONCOLOGICAL_FOLLOW_UP: {
+        const parts = [
+          `Seguimiento no oncológico: ${text(data, 'diagnosis') ?? 'sin diagnóstico'}`,
+          optionalPart('Fecha', dateOnly(data, 'occurredOn')),
+          optionalPart(
+            'Tratamiento',
+            boolLabel(data, 'receivesTreatment', 'recibe', 'no recibe'),
+          ),
+          optionalPart('Nombre del tratamiento', text(data, 'treatmentName')),
+          optionalPart('Medicación', text(data, 'medication')),
+          optionalPart('Control', text(data, 'controlSpecialty')),
+          optionalPart('Estado', text(data, 'status')),
+          optionalPart('Alta', dateOnly(data, 'dischargedOn')),
+          optionalPart('Motivo del alta', text(data, 'dischargeReason')),
+        ];
+        summary = sentence(parts);
+        break;
+      }
+      case PatientTimelineOutcomeType.DIAGNOSTIC_STATUS: {
+        summary = sentence([
+          `Estado diagnóstico: ${text(data, 'status') ?? 'sin estado'}`,
+          optionalPart('Fecha', dateTime(data, 'occurredAt')),
+          optionalPart(
+            'Diagnóstico informado',
+            text(data, 'reportedDiagnosis'),
+          ),
+          optionalPart(
+            'Soporte SEPA',
+            boolLabel(data, 'supportedBySepa', 'sí', 'no'),
+          ),
+          optionalPart('Notas', text(data, 'notes')),
         ]);
         break;
       }

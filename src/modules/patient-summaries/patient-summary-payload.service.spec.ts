@@ -10,6 +10,8 @@ import { PatientTreatment } from '../../database/entities/patient-treatment.enti
 import { Patient } from '../../database/entities/patient.entity';
 import { PatientAddress } from '../../database/entities/patient-address.entity';
 import { HealthCenter } from '../../database/entities/health-center.entity';
+import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-non-oncological-follow-up.entity';
+import { PatientDiagnosticStatusEvent } from '../../database/entities/patient-diagnostic-status-event.entity';
 import { PatientSummaryPayloadService } from './patient-summary-payload.service';
 
 describe('PatientSummaryPayloadService', () => {
@@ -51,6 +53,10 @@ describe('PatientSummaryPayloadService', () => {
       {
         findOneBy: jest.fn().mockResolvedValue(null),
       } as unknown as Repository<HealthCenter>,
+      { find } as unknown as Repository<PatientNonOncologicalFollowUp>,
+      {
+        findOne: jest.fn().mockResolvedValue(null),
+      } as unknown as Repository<PatientDiagnosticStatusEvent>,
     );
 
     const prompt = await service.buildPrompt('patient-id');
@@ -106,6 +112,12 @@ describe('PatientSummaryPayloadService', () => {
       {
         findOneBy: jest.fn().mockResolvedValue(null),
       } as unknown as Repository<HealthCenter>,
+      {
+        find: emptyFind,
+      } as unknown as Repository<PatientNonOncologicalFollowUp>,
+      {
+        findOne: jest.fn().mockResolvedValue(null),
+      } as unknown as Repository<PatientDiagnosticStatusEvent>,
     );
 
     const prompt = await service.buildPrompt('patient-id');
@@ -171,6 +183,12 @@ describe('PatientSummaryPayloadService', () => {
       {
         findOneBy: jest.fn().mockResolvedValue(null),
       } as unknown as Repository<HealthCenter>,
+      {
+        find: emptyFind,
+      } as unknown as Repository<PatientNonOncologicalFollowUp>,
+      {
+        findOne: jest.fn().mockResolvedValue(null),
+      } as unknown as Repository<PatientDiagnosticStatusEvent>,
     );
 
     const prompt = await service.buildPrompt('patient-id');

@@ -32,6 +32,7 @@ import {
 import { CompanionContactRole } from '../../../database/entities/companion-contact-role.enum';
 import { EnrollmentContactSource } from '../enrollment-contact-source.enum';
 import { CreatePatientPsychooncologySupportAssessmentDto } from '../../patients/clinical/psychooncology-support/dto/create-patient-psychooncology-support-assessment.dto';
+import { CreatePatientNonOncologicalFollowUpDto } from '../../patients/clinical/non-oncological-follow-up/dto/create-patient-non-oncological-follow-up.dto';
 
 export class EnrollmentContactPersonDto extends OmitType(CreateCompanionDto, [
   'email',
@@ -131,6 +132,10 @@ export class EnrollmentPsychooncologySupportAssessmentDto extends OmitType(
   CreatePatientPsychooncologySupportAssessmentDto,
   ['followUpId'] as const,
 ) {}
+export class EnrollmentNonOncologicalFollowUpDto extends OmitType(
+  CreatePatientNonOncologicalFollowUpDto,
+  ['followUpId', 'enrollmentId'] as const,
+) {}
 
 export class CreateEnrollmentDto {
   @IsOptional() @IsUUID() patientId?: string;
@@ -203,6 +208,10 @@ export class CreateEnrollmentDto {
   @ValidateNested()
   @Type(() => EnrollmentPsychooncologySupportAssessmentDto)
   psychooncologySupportAssessment?: EnrollmentPsychooncologySupportAssessmentDto;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentNonOncologicalFollowUpDto)
+  nonOncologicalFollowUp?: EnrollmentNonOncologicalFollowUpDto;
   @IsOptional() @IsBoolean() currentlyAttendingConsultations?: boolean;
   @IsOptional() @IsBoolean() currentlyReceivingTreatment?: boolean;
   @ApiPropertyOptional({ maxLength: 2000, nullable: true })

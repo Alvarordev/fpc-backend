@@ -23,6 +23,7 @@ import {
   EnrollmentDiagnosisDto,
   EnrollmentHealthBackgroundAssessmentDto,
   EnrollmentInsuranceDto,
+  EnrollmentNonOncologicalFollowUpDto,
   EnrollmentSisAffiliationDto,
   EnrollmentSymptomReportDto,
   EnrollmentTreatmentDto,
@@ -50,6 +51,24 @@ export class HistoricalFollowUpTreatmentDto extends EnrollmentTreatmentDto {
   @IsOptional()
   @IsUUID()
   diagnosisId?: string;
+}
+
+export class HistoricalNonOncologicalFollowUpDto extends EnrollmentNonOncologicalFollowUpDto {
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  id?: string;
+
+  @ApiPropertyOptional({ format: 'date' })
+  @IsOptional()
+  @IsDateString()
+  @Matches(DATE_ONLY_PATTERN)
+  dischargedOn?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  dischargeReason?: string | null;
 }
 
 export class CreateHistoricalFollowUpDto {
@@ -129,6 +148,12 @@ export class CreateHistoricalFollowUpDto {
   @ValidateNested()
   @Type(() => EnrollmentSymptomReportDto)
   symptomReport?: EnrollmentSymptomReportDto;
+
+  @ApiPropertyOptional({ type: HistoricalNonOncologicalFollowUpDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => HistoricalNonOncologicalFollowUpDto)
+  nonOncologicalFollowUp?: HistoricalNonOncologicalFollowUpDto;
 
   @ApiPropertyOptional({ type: EnrollmentHealthBackgroundAssessmentDto })
   @IsOptional()
@@ -297,6 +322,12 @@ export class UpdateHistoricalFollowUpDto {
   @ValidateNested()
   @Type(() => UpdateHistoricalSymptomReportDto)
   symptomReport?: UpdateHistoricalSymptomReportDto;
+
+  @ApiPropertyOptional({ type: HistoricalNonOncologicalFollowUpDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => HistoricalNonOncologicalFollowUpDto)
+  nonOncologicalFollowUp?: HistoricalNonOncologicalFollowUpDto;
 
   @ApiPropertyOptional({ type: UpdateHistoricalHealthBackgroundDto })
   @IsOptional()

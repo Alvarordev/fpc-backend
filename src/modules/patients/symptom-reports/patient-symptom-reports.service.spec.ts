@@ -106,6 +106,31 @@ describe('PatientSymptomReportsService', () => {
     ).rejects.toThrow('checkupMotivation is required');
   });
 
+  it('preserves an explicit unknown consultation answer without dependent fields', async () => {
+    const { service, manager, savedReports } = buildService();
+
+    await service.create(
+      'patient-id',
+      {
+        followUpId: 'follow-up-id',
+        hasMedicalConsultation: null,
+        firstConsultationDate: null,
+        isAwaitingDiagnosis: null,
+        hasReferral: null,
+      },
+      manager,
+    );
+
+    expect(savedReports[0]).toEqual(
+      expect.objectContaining({
+        hasMedicalConsultation: null,
+        firstConsultationDate: null,
+        isAwaitingDiagnosis: null,
+        hasReferral: null,
+      }),
+    );
+  });
+
   it('requires a consultation status when a consultation was requested', async () => {
     const { service, manager } = buildService();
 

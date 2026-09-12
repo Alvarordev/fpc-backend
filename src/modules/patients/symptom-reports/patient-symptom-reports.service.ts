@@ -123,6 +123,70 @@ export class PatientSymptomReportsService {
       }
     }
 
+    if (input.hasMedicalConsultation === false) {
+      normalized.noMedicalConsultationReason =
+        input.noMedicalConsultationReason?.trim();
+      if (!normalized.noMedicalConsultationReason)
+        throw new BadRequestException(
+          'noMedicalConsultationReason is required when no consultation was made',
+        );
+      normalized.firstConsultationDate = undefined;
+      normalized.isAwaitingDiagnosis = undefined;
+      normalized.hasReferral = undefined;
+      normalized.referredHealthCenterId = undefined;
+      normalized.referralNotProvidedReason = undefined;
+      normalized.nextConsultationDate = undefined;
+      normalized.hasReceivedDiagnosis = undefined;
+      normalized.reportedDiagnosis = undefined;
+    } else if (input.hasMedicalConsultation === true) {
+      normalized.noMedicalConsultationReason = undefined;
+      if (!input.healthCenterId || !present(input.specialty))
+        throw new BadRequestException(
+          'healthCenterId and specialty are required when a consultation was made',
+        );
+      if (!input.firstConsultationDate)
+        throw new BadRequestException(
+          'firstConsultationDate is required when a consultation was made',
+        );
+      if (typeof input.isAwaitingDiagnosis !== 'boolean')
+        throw new BadRequestException(
+          'isAwaitingDiagnosis is required when a consultation was made',
+        );
+      if (input.hasReferral === undefined)
+        throw new BadRequestException(
+          'hasReferral is required when a consultation was made',
+        );
+      if (input.hasReferral === true && !input.referredHealthCenterId)
+        throw new BadRequestException(
+          'referredHealthCenterId is required when a referral exists',
+        );
+      if (
+        input.hasReferral === false &&
+        !present(input.referralNotProvidedReason)
+      )
+        throw new BadRequestException(
+          'referralNotProvidedReason is required when there is no referral',
+        );
+      if (input.hasReferral !== true)
+        normalized.referredHealthCenterId = undefined;
+      if (input.hasReferral !== false)
+        normalized.referralNotProvidedReason = undefined;
+      if (typeof input.hasReceivedDiagnosis !== 'boolean')
+        throw new BadRequestException(
+          'hasReceivedDiagnosis is required when a consultation was made',
+        );
+    } else if (
+      (input.hasReferral !== undefined && input.hasReferral !== null) ||
+      (input.firstConsultationDate !== undefined &&
+        input.firstConsultationDate !== null) ||
+      (input.isAwaitingDiagnosis !== undefined &&
+        input.isAwaitingDiagnosis !== null)
+    ) {
+      throw new BadRequestException(
+        'hasMedicalConsultation is required with the consultation details',
+      );
+    }
+
     if (
       input.hasReceivedDiagnosis === true &&
       !present(input.reportedDiagnosis)

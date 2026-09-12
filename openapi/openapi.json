@@ -7609,6 +7609,177 @@
           "historical-records"
         ]
       }
+    },
+    "/patients/{patientId}/non-oncological-follow-ups": {
+      "get": {
+        "operationId": "PatientNonOncologicalFollowUpsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientNonOncologicalFollowUpResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patient non-oncological follow-ups",
+        "tags": [
+          "Patient non-oncological follow-ups"
+        ]
+      },
+      "post": {
+        "operationId": "PatientNonOncologicalFollowUpsController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientNonOncologicalFollowUpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientNonOncologicalFollowUpResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid non-oncological follow-up"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient, follow-up, or enrollment not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a non-oncological follow-up",
+        "tags": [
+          "Patient non-oncological follow-ups"
+        ]
+      }
+    },
+    "/patients/{patientId}/non-oncological-follow-ups/{id}": {
+      "patch": {
+        "operationId": "PatientNonOncologicalFollowUpsController_update",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePatientNonOncologicalFollowUpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientNonOncologicalFollowUpResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid non-oncological follow-up"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Non-oncological follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update or discharge a non-oncological follow-up",
+        "tags": [
+          "Patient non-oncological follow-ups"
+        ]
+      }
     }
   },
   "info": {
@@ -9740,7 +9911,8 @@
             "maxLength": 255
           },
           "hasReferralSheet": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "referredTo": {
             "type": "string"
@@ -9854,7 +10026,8 @@
             "type": "string"
           },
           "hasDiscomfort": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "checkupMotivation": {
             "type": "string"
@@ -9890,7 +10063,36 @@
             "type": "boolean"
           },
           "hasRequestedMedicalConsultation": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
+          },
+          "hasMedicalConsultation": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "noMedicalConsultationReason": {
+            "type": "string"
+          },
+          "firstConsultationDate": {
+            "type": "string"
+          },
+          "isAwaitingDiagnosis": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "referralNotProvidedReason": {
+            "type": "string"
+          },
+          "nextConsultationDate": {
+            "type": "string"
           },
           "consultationStatus": {
             "enum": [
@@ -9915,13 +10117,15 @@
             "$ref": "#/components/schemas/DurationDto"
           },
           "hasReceivedDiagnosis": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "reportedDiagnosis": {
             "type": "string"
           },
           "isReceivingReportedTreatment": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "reportedTreatment": {
             "type": "string"
@@ -10034,6 +10238,71 @@
             "type": "string"
           }
         }
+      },
+      "EnrollmentNonOncologicalFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "diagnosticStatusEventId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "receivesTreatment": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "treatmentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "medication": {
+            "type": "string",
+            "nullable": true
+          },
+          "treatmentFrequency": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "hasControls": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "controlSpecialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "controlPeriodicity": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "DISCHARGED"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "diagnosis"
+        ]
       },
       "CreateEnrollmentFamilyTalkInterestDto": {
         "type": "object",
@@ -10154,6 +10423,9 @@
           },
           "psychooncologySupportAssessment": {
             "$ref": "#/components/schemas/EnrollmentPsychooncologySupportAssessmentDto"
+          },
+          "nonOncologicalFollowUp": {
+            "$ref": "#/components/schemas/EnrollmentNonOncologicalFollowUpDto"
           },
           "currentlyAttendingConsultations": {
             "type": "boolean"
@@ -11608,6 +11880,8 @@
               "REMINDER",
               "PSYCHOONCOLOGY_APPOINTMENT",
               "MEDICAL_APPOINTMENT",
+              "NON_ONCOLOGICAL_FOLLOW_UP",
+              "DIAGNOSTIC_STATUS",
               "ALERT"
             ],
             "type": "string"
@@ -13583,6 +13857,41 @@
             "type": "boolean",
             "nullable": true
           },
+          "hasMedicalConsultation": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "noMedicalConsultationReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstConsultationDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "isAwaitingDiagnosis": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "referredHealthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "referralNotProvidedReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "nextConsultationDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
           "consultationStatus": {
             "nullable": true,
             "enum": [
@@ -13667,6 +13976,14 @@
           "painDescription",
           "hasSoughtMedicalConsultation",
           "hasRequestedMedicalConsultation",
+          "hasMedicalConsultation",
+          "noMedicalConsultationReason",
+          "firstConsultationDate",
+          "isAwaitingDiagnosis",
+          "hasReferral",
+          "referredHealthCenterId",
+          "referralNotProvidedReason",
+          "nextConsultationDate",
           "consultationStatus",
           "consultationNotObtainedReason",
           "healthCenterId",
@@ -13854,6 +14171,124 @@
           "createdAt"
         ]
       },
+      "PatientNonOncologicalFollowUpResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "diagnosticStatusEventId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "receivesTreatment": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "treatmentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "medication": {
+            "type": "string",
+            "nullable": true
+          },
+          "treatmentFrequency": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationResponseDto"
+              }
+            ]
+          },
+          "hasControls": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "controlSpecialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "controlPeriodicity": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationResponseDto"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "DISCHARGED"
+            ],
+            "type": "string"
+          },
+          "dischargedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "dischargeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "followUpId",
+          "enrollmentId",
+          "diagnosticStatusEventId",
+          "diagnosis",
+          "occurredOn",
+          "receivesTreatment",
+          "treatmentName",
+          "medication",
+          "treatmentFrequency",
+          "hasControls",
+          "controlSpecialty",
+          "controlPeriodicity",
+          "status",
+          "dischargedOn",
+          "dischargeReason",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "PatientDetailsWithSummaryResponseDto": {
         "type": "object",
         "properties": {
@@ -14010,6 +14445,12 @@
               "$ref": "#/components/schemas/PatientPsychooncologySupportAssessmentResponseDto"
             }
           },
+          "nonOncologicalFollowUps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientNonOncologicalFollowUpResponseDto"
+            }
+          },
           "companions": {
             "type": "array",
             "items": {
@@ -14046,6 +14487,7 @@
           "symptomReports",
           "healthBackgroundAssessments",
           "psychooncologySupportAssessments",
+          "nonOncologicalFollowUps",
           "companions"
         ]
       },
@@ -14263,7 +14705,8 @@
             "maxLength": 255
           },
           "hasReferralSheet": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "referredTo": {
             "type": "string"
@@ -14890,7 +15333,8 @@
             "type": "string"
           },
           "hasDiscomfort": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "checkupMotivation": {
             "type": "string"
@@ -14926,7 +15370,36 @@
             "type": "boolean"
           },
           "hasRequestedMedicalConsultation": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
+          },
+          "hasMedicalConsultation": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "noMedicalConsultationReason": {
+            "type": "string"
+          },
+          "firstConsultationDate": {
+            "type": "string"
+          },
+          "isAwaitingDiagnosis": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "referralNotProvidedReason": {
+            "type": "string"
+          },
+          "nextConsultationDate": {
+            "type": "string"
           },
           "consultationStatus": {
             "type": "string",
@@ -14951,13 +15424,15 @@
             "$ref": "#/components/schemas/DurationDto"
           },
           "hasReceivedDiagnosis": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "reportedDiagnosis": {
             "type": "string"
           },
           "isReceivingReportedTreatment": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "reportedTreatment": {
             "type": "string"
@@ -16453,6 +16928,9 @@
           "psychooncologySupportAssessment": {
             "$ref": "#/components/schemas/EnrollmentPsychooncologySupportAssessmentDto"
           },
+          "nonOncologicalFollowUp": {
+            "$ref": "#/components/schemas/EnrollmentNonOncologicalFollowUpDto"
+          },
           "currentlyAttendingConsultations": {
             "type": "boolean"
           },
@@ -16665,6 +17143,84 @@
           "treatmentType"
         ]
       },
+      "HistoricalNonOncologicalFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "diagnosticStatusEventId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "receivesTreatment": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "treatmentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "medication": {
+            "type": "string",
+            "nullable": true
+          },
+          "treatmentFrequency": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "hasControls": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "controlSpecialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "controlPeriodicity": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "DISCHARGED"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dischargedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "dischargeReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "diagnosis"
+        ]
+      },
       "HistoricalFollowUpSocialNoteDto": {
         "type": "object",
         "properties": {
@@ -16766,6 +17322,9 @@
           },
           "symptomReport": {
             "$ref": "#/components/schemas/EnrollmentSymptomReportDto"
+          },
+          "nonOncologicalFollowUp": {
+            "$ref": "#/components/schemas/HistoricalNonOncologicalFollowUpDto"
           },
           "healthBackgroundAssessment": {
             "$ref": "#/components/schemas/EnrollmentHealthBackgroundAssessmentDto"
@@ -17041,7 +17600,8 @@
             "type": "string"
           },
           "hasDiscomfort": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "checkupMotivation": {
             "type": "string"
@@ -17077,7 +17637,36 @@
             "type": "boolean"
           },
           "hasRequestedMedicalConsultation": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
+          },
+          "hasMedicalConsultation": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "noMedicalConsultationReason": {
+            "type": "string"
+          },
+          "firstConsultationDate": {
+            "type": "string"
+          },
+          "isAwaitingDiagnosis": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "referralNotProvidedReason": {
+            "type": "string"
+          },
+          "nextConsultationDate": {
+            "type": "string"
           },
           "consultationStatus": {
             "enum": [
@@ -17102,13 +17691,15 @@
             "$ref": "#/components/schemas/DurationDto"
           },
           "hasReceivedDiagnosis": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "reportedDiagnosis": {
             "type": "string"
           },
           "isReceivingReportedTreatment": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "reportedTreatment": {
             "type": "string"
@@ -17417,6 +18008,9 @@
           "symptomReport": {
             "$ref": "#/components/schemas/UpdateHistoricalSymptomReportDto"
           },
+          "nonOncologicalFollowUp": {
+            "$ref": "#/components/schemas/HistoricalNonOncologicalFollowUpDto"
+          },
           "healthBackgroundAssessment": {
             "$ref": "#/components/schemas/UpdateHistoricalHealthBackgroundDto"
           },
@@ -17468,7 +18062,8 @@
             "maxLength": 255
           },
           "hasReferralSheet": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "referredTo": {
             "type": "string"
@@ -17647,7 +18242,8 @@
             "maxLength": 255
           },
           "hasReferralSheet": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "referredTo": {
             "type": "string"
@@ -17925,6 +18521,152 @@
             "nullable": true
           },
           "referral": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreatePatientNonOncologicalFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "diagnosticStatusEventId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "receivesTreatment": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "treatmentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "medication": {
+            "type": "string",
+            "nullable": true
+          },
+          "treatmentFrequency": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "hasControls": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "controlSpecialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "controlPeriodicity": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "DISCHARGED"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "diagnosis"
+        ]
+      },
+      "UpdatePatientNonOncologicalFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "diagnosticStatusEventId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "receivesTreatment": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "treatmentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "medication": {
+            "type": "string",
+            "nullable": true
+          },
+          "treatmentFrequency": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "hasControls": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "controlSpecialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "controlPeriodicity": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "DISCHARGED"
+            ],
+            "type": "string"
+          },
+          "dischargedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "dischargeReason": {
             "type": "string",
             "nullable": true
           }

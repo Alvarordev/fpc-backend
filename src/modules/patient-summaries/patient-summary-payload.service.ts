@@ -13,6 +13,8 @@ import { Patient } from '../../database/entities/patient.entity';
 import { PatientActivityStatus } from '../../database/entities/patient-activity-status.enum';
 import { PatientAddress } from '../../database/entities/patient-address.entity';
 import { HealthCenter } from '../../database/entities/health-center.entity';
+import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-non-oncological-follow-up.entity';
+import { PatientDiagnosticStatusEvent } from '../../database/entities/patient-diagnostic-status-event.entity';
 
 @Injectable()
 export class PatientSummaryPayloadService {
@@ -38,6 +40,10 @@ export class PatientSummaryPayloadService {
     private readonly addresses: Repository<PatientAddress>,
     @InjectRepository(HealthCenter)
     private readonly healthCenters: Repository<HealthCenter>,
+    @InjectRepository(PatientNonOncologicalFollowUp)
+    private readonly nonOncologicalFollowUps: Repository<PatientNonOncologicalFollowUp>,
+    @InjectRepository(PatientDiagnosticStatusEvent)
+    private readonly diagnosticStatusEvents: Repository<PatientDiagnosticStatusEvent>,
   ) {}
 
   async buildPrompt(patientId: string): Promise<string> {
@@ -58,6 +64,8 @@ export class PatientSummaryPayloadService {
       followUps,
       primaryAddress,
       primaryHealthCenter,
+      nonOncologicalFollowUps,
+      diagnosticStatus,
     ] = await Promise.all([
       this.diagnoses.find({
         where: { patientId, isCurrent: true },
@@ -97,6 +105,15 @@ export class PatientSummaryPayloadService {
             id: patient.details.primaryHealthCenterId,
           })
         : null,
+      this.nonOncologicalFollowUps.find({
+        where: { patientId },
+        order: { occurredOn: 'DESC', createdAt: 'DESC', id: 'DESC' },
+        take: 10,
+      }),
+      this.diagnosticStatusEvents.findOne({
+        where: { patientId },
+        order: { occurredAt: 'DESC', createdAt: 'DESC', id: 'DESC' },
+      }),
     ]);
 
     // Deliberately exclude direct identifiers and contact information from the provider payload.
@@ -145,6 +162,13 @@ export class PatientSummaryPayloadService {
         symptoms: item.symptomLeadingToCheckup,
         sepaActiveReferral: item.isSepaActiveReferral,
       })),
+      diagnosticStatus: diagnosticStatus
+        ? {
+            status: diagnosticStatus.status,
+            occurredAt: diagnosticStatus.occurredAt,
+            supportedBySepa: diagnosticStatus.supportedBySepa,
+          }
+        : null,
       insurance: insurance.map((item) => ({
         type: item.insuranceType,
         affiliatedViaSepa: item.affiliatedViaSepa,
@@ -177,6 +201,10 @@ export class PatientSummaryPayloadService {
         reason: item.cantAffiliateReason,
       })),
       symptomReports: symptoms.map((item) => ({
+        hasDiscomfort: item.hasDiscomfort,
+        checkupMotivation: item.checkupMotivation,
+        signsAndSymptoms: item.signsAndSymptoms,
+        indicationsReceived: item.indicationsReceived,
         severity: item.discomfortSeverity,
         description: item.discomfortDescription,
         duration: item.symptomDuration?.label ?? null,
@@ -185,7 +213,33 @@ export class PatientSummaryPayloadService {
         painIntensity: item.painIntensity,
         painLocation: item.painLocation,
         painDescription: item.painDescription,
-        soughtMedicalConsultation: item.hasSoughtMedicalConsultation,
+        hasMedicalConsultation:
+          item.hasMedicalConsultation ?? item.hasSoughtMedicalConsultation,
+        noMedicalConsultationReason: item.noMedicalConsultationReason,
+        firstConsultationDate: item.firstConsultationDate,
+        awaitingDiagnosis: item.isAwaitingDiagnosis,
+        hasReferral: item.hasReferral,
+        referredHealthCenterId: item.referredHealthCenterId,
+        referralNotProvidedReason: item.referralNotProvidedReason,
+        specialty: item.specialty,
+        nextConsultationDate: item.nextConsultationDate,
+        hasReceivedDiagnosis: item.hasReceivedDiagnosis,
+        reportedDiagnosis: item.reportedDiagnosis,
+        treatmentReported: item.reportedTreatment,
+      })),
+      nonOncologicalFollowUps: nonOncologicalFollowUps.map((item) => ({
+        diagnosis: item.diagnosis,
+        occurredOn: item.occurredOn,
+        receivesTreatment: item.receivesTreatment,
+        treatmentName: item.treatmentName,
+        medication: item.medication,
+        treatmentFrequency: item.treatmentFrequency?.label ?? null,
+        hasControls: item.hasControls,
+        controlSpecialty: item.controlSpecialty,
+        controlPeriodicity: item.controlPeriodicity?.label ?? null,
+        status: item.status,
+        dischargedOn: item.dischargedOn,
+        dischargeReason: item.dischargeReason,
       })),
       recentFollowUps: followUps.map((item) => ({
         type: item.type,

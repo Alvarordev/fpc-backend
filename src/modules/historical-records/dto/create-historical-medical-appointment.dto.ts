@@ -58,7 +58,7 @@ export class CreateHistoricalMedicalAppointmentDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
-  hasReferralSheet?: boolean;
+  hasReferralSheet?: boolean | null;
 
   @ApiPropertyOptional()
   @IsOptional()

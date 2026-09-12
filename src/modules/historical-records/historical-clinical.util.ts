@@ -1,5 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
+import { FollowUp } from '../../database/entities/follow-up.entity';
 import { PatientAddress } from '../../database/entities/patient-address.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
 import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
@@ -21,6 +22,8 @@ import { PatientSymptomReportsService } from '../patients/symptom-reports/patien
 import { PatientAddressesService } from '../patients/addresses/patient-addresses.service';
 import { PatientHealthBackgroundAssessmentsService } from '../patients/clinical/health-background/patient-health-background-assessments.service';
 import { PatientSocialNotesService } from '../patients/social-notes/patient-social-notes.service';
+import { PatientNonOncologicalFollowUpsService } from '../patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
+import { PatientDiagnosticStatusesService } from '../patients/diagnostic-status/patient-diagnostic-statuses.service';
 import { PatientsService } from '../patients/patients.service';
 import type {
   CreateHistoricalFollowUpDto,
@@ -34,6 +37,7 @@ type ClinicalCreateInput = Pick<
   | 'diagnoses'
   | 'treatments'
   | 'symptomReport'
+  | 'nonOncologicalFollowUp'
   | 'healthBackgroundAssessment'
   | 'insurance'
   | 'sisAffiliation'
@@ -47,6 +51,7 @@ type ClinicalUpdateInput = Pick<
   | 'diagnoses'
   | 'treatments'
   | 'symptomReport'
+  | 'nonOncologicalFollowUp'
   | 'healthBackgroundAssessment'
   | 'insurance'
   | 'sisAffiliation'
@@ -61,6 +66,8 @@ export interface HistoricalClinicalServices {
   insurance: PatientInsuranceService;
   sisAffiliations: PatientSisAffiliationService;
   symptomReports: PatientSymptomReportsService;
+  nonOncologicalFollowUps: PatientNonOncologicalFollowUpsService;
+  diagnosticStatuses: PatientDiagnosticStatusesService;
   addresses: PatientAddressesService;
   healthBackgroundAssessments: PatientHealthBackgroundAssessmentsService;
   socialNotes: PatientSocialNotesService;
@@ -115,6 +122,20 @@ export async function attachHistoricalClinicalData(
       { ...input.symptomReport, followUpId },
       manager,
     );
+  await recordHistoricalDiagnosticSearch(
+    services,
+    manager,
+    patientId,
+    followUpId,
+    input.symptomReport,
+  );
+  if (input.nonOncologicalFollowUp)
+    await services.nonOncologicalFollowUps.upsertHistorical(
+      patientId,
+      followUpId,
+      input.nonOncologicalFollowUp,
+      manager,
+    );
   if (input.healthBackgroundAssessment)
     await services.healthBackgroundAssessments.create(
       patientId,
@@ -159,11 +180,11 @@ export async function upsertHistoricalClinicalData(
         throw new NotFoundException(
           'Diagnosis not found for this historical follow-up',
         );
-      const {
-        mode: _mode,
-        replacementDiagnosisId: _replacement,
-        ...updatable
-      } = values;
+      const updatable = Object.fromEntries(
+        Object.entries(values).filter(
+          ([key]) => key !== 'mode' && key !== 'replacementDiagnosisId',
+        ),
+      );
       await repository.save(Object.assign(existing, updatable));
       if (clientRef) createdDiagnoses.set(clientRef, existing);
       continue;
@@ -265,6 +286,21 @@ export async function upsertHistoricalClinicalData(
       );
     }
   }
+  await recordHistoricalDiagnosticSearch(
+    services,
+    manager,
+    patientId,
+    followUpId,
+    input.symptomReport,
+  );
+
+  if (input.nonOncologicalFollowUp)
+    await services.nonOncologicalFollowUps.upsertHistorical(
+      patientId,
+      followUpId,
+      input.nonOncologicalFollowUp,
+      manager,
+    );
 
   if (input.healthBackgroundAssessment) {
     const {
@@ -382,6 +418,48 @@ export async function upsertHistoricalClinicalData(
       );
     }
   }
+}
+
+async function recordHistoricalDiagnosticSearch(
+  services: HistoricalClinicalServices,
+  manager: EntityManager,
+  patientId: string,
+  followUpId: string,
+  symptomReport: ClinicalCreateInput['symptomReport'] | undefined,
+) {
+  // A historical symptom report from the canonical flow starts the same
+  // diagnostic-search history as a new signs-and-symptoms enrollment. Do not
+  // infer a confirmed or ruled-out result from a preliminary report.
+  if (
+    !symptomReport ||
+    !Object.prototype.hasOwnProperty.call(
+      symptomReport,
+      'hasMedicalConsultation',
+    )
+  )
+    return;
+
+  const followUp = await manager.getRepository(FollowUp).findOne({
+    where: { id: followUpId, subjectPatientId: patientId },
+  });
+  if (!followUp) return;
+
+  const occurredAt =
+    followUp.completedAt ??
+    followUp.scheduledAt ??
+    (followUp.completedOn
+      ? new Date(`${followUp.completedOn}T12:00:00-05:00`)
+      : followUp.scheduledOn
+        ? new Date(`${followUp.scheduledOn}T12:00:00-05:00`)
+        : null);
+  if (!occurredAt) return;
+
+  await services.diagnosticStatuses.recordSearching(
+    patientId,
+    followUpId,
+    manager,
+    occurredAt,
+  );
 }
 
 async function persistTreatments(

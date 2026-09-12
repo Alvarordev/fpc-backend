@@ -71,6 +71,8 @@ import { PatientPsychooncologySupportAssessmentsController } from '../modules/pa
 import { PatientPsychooncologySupportAssessmentsService } from '../modules/patients/clinical/psychooncology-support/patient-psychooncology-support-assessments.service';
 import { HistoricalRecordsController } from '../modules/historical-records/historical-records.controller';
 import { HistoricalRecordsService } from '../modules/historical-records/historical-records.service';
+import { PatientNonOncologicalFollowUpsController } from '../modules/patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.controller';
+import { PatientNonOncologicalFollowUpsService } from '../modules/patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 
 // Controllers only need their route metadata to build the OpenAPI document.
 // Empty providers keep generation independent from infrastructure services.
@@ -111,6 +113,7 @@ import { HistoricalRecordsService } from '../modules/historical-records/historic
     VolunteersController,
     VolunteerCalendarController,
     HistoricalRecordsController,
+    PatientNonOncologicalFollowUpsController,
   ],
   providers: [
     { provide: AgentsService, useValue: {} },
@@ -151,6 +154,7 @@ import { HistoricalRecordsService } from '../modules/historical-records/historic
     { provide: VolunteersService, useValue: {} },
     { provide: VolunteerCalendarService, useValue: {} },
     { provide: HistoricalRecordsService, useValue: {} },
+    { provide: PatientNonOncologicalFollowUpsService, useValue: {} },
   ],
 })
 export class OpenApiModule {}
