@@ -5596,7 +5596,14 @@
                   "documentType": {
                     "enum": [
                       "MEDICAL_REPORT",
+                      "CLINICAL_HISTORY",
                       "PRESCRIPTION",
+                      "APPOINTMENT_SCHEDULE",
+                      "MEDICAL_ORDER",
+                      "EXAM_RESULTS",
+                      "REFERRAL_OR_COUNTERREFERRAL",
+                      "IDENTITY_DOCUMENT",
+                      "CONADIS_DISABILITY_DOCUMENT",
                       "OTHER"
                     ]
                   },
@@ -5676,7 +5683,14 @@
             "schema": {
               "enum": [
                 "MEDICAL_REPORT",
+                "CLINICAL_HISTORY",
                 "PRESCRIPTION",
+                "APPOINTMENT_SCHEDULE",
+                "MEDICAL_ORDER",
+                "EXAM_RESULTS",
+                "REFERRAL_OR_COUNTERREFERRAL",
+                "IDENTITY_DOCUMENT",
+                "CONADIS_DISABILITY_DOCUMENT",
                 "OTHER"
               ],
               "type": "string"
@@ -15734,7 +15748,14 @@
           "documentType": {
             "enum": [
               "MEDICAL_REPORT",
+              "CLINICAL_HISTORY",
               "PRESCRIPTION",
+              "APPOINTMENT_SCHEDULE",
+              "MEDICAL_ORDER",
+              "EXAM_RESULTS",
+              "REFERRAL_OR_COUNTERREFERRAL",
+              "IDENTITY_DOCUMENT",
+              "CONADIS_DISABILITY_DOCUMENT",
               "OTHER"
             ],
             "type": "string"

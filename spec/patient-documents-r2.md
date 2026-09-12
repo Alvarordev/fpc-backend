@@ -40,7 +40,9 @@ un bucket público. Si se utiliza un cliente compatible con la API S3, será
 - Carga de un archivo por solicitud.
 - Tamaño máximo de 10 MiB, equivalente a `10_485_760` bytes.
 - Formatos PDF, DOC, DOCX, JPG, PNG y WEBP.
-- Clasificación en `MEDICAL_REPORT`, `PRESCRIPTION` y `OTHER`.
+- Clasificación en diez tipos documentales para informes, historia clínica,
+  recetas, citas, órdenes, exámenes, referencias, identidad, discapacidad y
+  otros documentos.
 - Asociación exclusiva a un diagnóstico, a un tratamiento o directamente al
   paciente.
 - Descripción para documentos generales.
@@ -77,8 +79,15 @@ archivo sí es obligatoria en el MVP.
 | Tipo API | Etiqueta UI | Asociación requerida | Descripción |
 | --- | --- | --- | --- |
 | `MEDICAL_REPORT` | Informe médico | `diagnosisId` obligatorio | Opcional |
-| `PRESCRIPTION` | Receta | `treatmentId` obligatorio | Opcional |
-| `OTHER` | Otro | Ninguna | Obligatoria |
+| `CLINICAL_HISTORY` | Historia clínica | Ninguna | Opcional |
+| `PRESCRIPTION` | Receta médica | `treatmentId` obligatorio | Opcional |
+| `APPOINTMENT_SCHEDULE` | Programación de Cita | Ninguna | Opcional |
+| `MEDICAL_ORDER` | Orden médica (laboratorio, imágenes, biopsia, anatomía patológica, etc.) | Ninguna | Opcional |
+| `EXAM_RESULTS` | Resultados de exámenes | Ninguna | Opcional |
+| `REFERRAL_OR_COUNTERREFERRAL` | Referencia o contrarreferencia | Ninguna | Opcional |
+| `IDENTITY_DOCUMENT` | Documento de identidad | Ninguna | Opcional |
+| `CONADIS_DISABILITY_DOCUMENT` | Documento de discapacidad (certificado/carné CONADIS) | Ninguna | Opcional |
+| `OTHER` | Otros | Ninguna | Obligatoria |
 
 Reglas:
 
@@ -86,6 +95,10 @@ Reglas:
 - Un archivo puede tener como máximo una asociación clínica.
 - `MEDICAL_REPORT` no puede recibir `treatmentId`.
 - `PRESCRIPTION` no puede recibir `diagnosisId`.
+- `CLINICAL_HISTORY`, `APPOINTMENT_SCHEDULE`, `MEDICAL_ORDER`, `EXAM_RESULTS`,
+  `REFERRAL_OR_COUNTERREFERRAL`, `IDENTITY_DOCUMENT` y
+  `CONADIS_DISABILITY_DOCUMENT` no pueden recibir `diagnosisId` ni
+  `treatmentId`.
 - `OTHER` no puede recibir `diagnosisId` ni `treatmentId`.
 - El diagnóstico o tratamiento asociado debe pertenecer al paciente indicado en
   la URL.
@@ -284,7 +297,7 @@ Tabla: `patient_documents`.
 | --- | --- | --- | --- |
 | `id` | UUID | No | PK, generado por la aplicación o la base |
 | `patient_id` | UUID | No | FK a `patients.id` |
-| `document_type` | VARCHAR(32) | No | `MEDICAL_REPORT`, `PRESCRIPTION`, `OTHER` |
+| `document_type` | VARCHAR(32) | No | Enum de los diez tipos documentales definidos en la sección 4.1 |
 | `diagnosis_id` | UUID | Sí | FK a `patient_diagnoses.id` |
 | `treatment_id` | UUID | Sí | FK a `patient_treatments.id` |
 | `description` | TEXT | Sí | Obligatoria para `OTHER` |
@@ -317,6 +330,18 @@ CHECK (
   (document_type = 'PRESCRIPTION'
     AND diagnosis_id IS NULL
     AND treatment_id IS NOT NULL)
+  OR
+  (document_type IN (
+      'CLINICAL_HISTORY',
+      'APPOINTMENT_SCHEDULE',
+      'MEDICAL_ORDER',
+      'EXAM_RESULTS',
+      'REFERRAL_OR_COUNTERREFERRAL',
+      'IDENTITY_DOCUMENT',
+      'CONADIS_DISABILITY_DOCUMENT'
+    )
+    AND diagnosis_id IS NULL
+    AND treatment_id IS NULL)
   OR
   (document_type = 'OTHER'
     AND diagnosis_id IS NULL

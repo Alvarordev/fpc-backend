@@ -15,7 +15,14 @@ import { User } from './user.entity';
 
 export enum PatientDocumentType {
   MEDICAL_REPORT = 'MEDICAL_REPORT',
+  CLINICAL_HISTORY = 'CLINICAL_HISTORY',
   PRESCRIPTION = 'PRESCRIPTION',
+  APPOINTMENT_SCHEDULE = 'APPOINTMENT_SCHEDULE',
+  MEDICAL_ORDER = 'MEDICAL_ORDER',
+  EXAM_RESULTS = 'EXAM_RESULTS',
+  REFERRAL_OR_COUNTERREFERRAL = 'REFERRAL_OR_COUNTERREFERRAL',
+  IDENTITY_DOCUMENT = 'IDENTITY_DOCUMENT',
+  CONADIS_DISABILITY_DOCUMENT = 'CONADIS_DISABILITY_DOCUMENT',
   OTHER = 'OTHER',
 }
 
@@ -26,12 +33,36 @@ export enum PatientDocumentStatus {
 }
 
 @Entity('patient_documents')
-@Check("\"document_type\" IN ('MEDICAL_REPORT', 'PRESCRIPTION', 'OTHER')")
+@Check(
+  `"document_type" IN (
+    'MEDICAL_REPORT',
+    'CLINICAL_HISTORY',
+    'PRESCRIPTION',
+    'APPOINTMENT_SCHEDULE',
+    'MEDICAL_ORDER',
+    'EXAM_RESULTS',
+    'REFERRAL_OR_COUNTERREFERRAL',
+    'IDENTITY_DOCUMENT',
+    'CONADIS_DISABILITY_DOCUMENT',
+    'OTHER'
+  )`,
+)
 @Check("\"status\" IN ('PENDING', 'ACTIVE', 'ARCHIVED')")
 @Check('"size_bytes" > 0 AND "size_bytes" <= 10485760')
 @Check('length("sha256") = 64 AND "sha256" ~ \'^[0-9a-fA-F]{64}$\'')
 @Check(
-  '(("document_type" = \'MEDICAL_REPORT\' AND "diagnosis_id" IS NOT NULL AND "treatment_id" IS NULL) OR ("document_type" = \'PRESCRIPTION\' AND "diagnosis_id" IS NULL AND "treatment_id" IS NOT NULL) OR ("document_type" = \'OTHER\' AND "diagnosis_id" IS NULL AND "treatment_id" IS NULL AND "description" IS NOT NULL AND length(btrim("description")) > 0))',
+  `(("document_type" = 'MEDICAL_REPORT' AND "diagnosis_id" IS NOT NULL AND "treatment_id" IS NULL)
+    OR ("document_type" = 'PRESCRIPTION' AND "diagnosis_id" IS NULL AND "treatment_id" IS NOT NULL)
+    OR ("document_type" IN (
+      'CLINICAL_HISTORY',
+      'APPOINTMENT_SCHEDULE',
+      'MEDICAL_ORDER',
+      'EXAM_RESULTS',
+      'REFERRAL_OR_COUNTERREFERRAL',
+      'IDENTITY_DOCUMENT',
+      'CONADIS_DISABILITY_DOCUMENT'
+    ) AND "diagnosis_id" IS NULL AND "treatment_id" IS NULL)
+    OR ("document_type" = 'OTHER' AND "diagnosis_id" IS NULL AND "treatment_id" IS NULL AND "description" IS NOT NULL AND length(btrim("description")) > 0))`,
 )
 @Check(
   '(("archived_at" IS NULL AND "archived_by_id" IS NULL) OR ("archived_at" IS NOT NULL AND "archived_by_id" IS NOT NULL))',

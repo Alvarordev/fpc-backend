@@ -156,6 +156,41 @@ describe('PatientDocumentsService', () => {
     expect(repositorySaveMock).not.toHaveBeenCalled();
   });
 
+  it.each([
+    PatientDocumentType.CLINICAL_HISTORY,
+    PatientDocumentType.APPOINTMENT_SCHEDULE,
+    PatientDocumentType.MEDICAL_ORDER,
+    PatientDocumentType.EXAM_RESULTS,
+    PatientDocumentType.REFERRAL_OR_COUNTERREFERRAL,
+    PatientDocumentType.IDENTITY_DOCUMENT,
+    PatientDocumentType.CONADIS_DISABILITY_DOCUMENT,
+  ])('allows %s without a clinical association', async (documentType) => {
+    await service.create('patient-id', { documentType }, pdf, user);
+
+    expect(repositoryCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentType,
+        diagnosisId: null,
+        treatmentId: null,
+      }),
+    );
+  });
+
+  it('rejects clinical associations for patient-level document types', async () => {
+    await expect(
+      service.create(
+        'patient-id',
+        {
+          documentType: PatientDocumentType.CLINICAL_HISTORY,
+          diagnosisId: 'diagnosis-id',
+        },
+        pdf,
+        user,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(repositorySaveMock).not.toHaveBeenCalled();
+  });
+
   it('rejects an association that belongs to another patient', async () => {
     (diagnoses.existsBy as jest.Mock).mockResolvedValue(false);
 

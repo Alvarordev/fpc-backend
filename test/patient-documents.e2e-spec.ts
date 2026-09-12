@@ -180,5 +180,22 @@ describe('Patient documents (e2e)', () => {
         contentType: 'application/pdf',
       })
       .expect(201);
+
+    const historyUpload = await request(server)
+      .post(endpoint)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .field('documentType', PatientDocumentType.CLINICAL_HISTORY)
+      .attach('file', content, {
+        filename: 'historia-clinica.pdf',
+        contentType: 'application/pdf',
+      })
+      .expect(201);
+
+    expect(historyUpload.body).toMatchObject({
+      patientId: patient.id,
+      documentType: PatientDocumentType.CLINICAL_HISTORY,
+      diagnosisId: null,
+      treatmentId: null,
+    });
   });
 });

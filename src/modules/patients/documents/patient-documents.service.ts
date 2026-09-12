@@ -45,6 +45,15 @@ import { Readable } from 'node:stream';
 
 const DOCUMENT_ROLES = new Set(['ADMIN', 'FOUNDATION', 'AGENT']);
 const PENDING_DOCUMENT_TTL_MS = 60 * 60 * 1000;
+const PATIENT_LEVEL_DOCUMENT_TYPES = new Set<PatientDocumentType>([
+  PatientDocumentType.CLINICAL_HISTORY,
+  PatientDocumentType.APPOINTMENT_SCHEDULE,
+  PatientDocumentType.MEDICAL_ORDER,
+  PatientDocumentType.EXAM_RESULTS,
+  PatientDocumentType.REFERRAL_OR_COUNTERREFERRAL,
+  PatientDocumentType.IDENTITY_DOCUMENT,
+  PatientDocumentType.CONADIS_DISABILITY_DOCUMENT,
+]);
 
 export interface PatientDocumentContent {
   document: PatientDocument;
@@ -311,6 +320,15 @@ export class PatientDocumentsService {
         }))
       ) {
         throw new NotFoundException('Treatment not found');
+      }
+      return;
+    }
+
+    if (PATIENT_LEVEL_DOCUMENT_TYPES.has(input.documentType)) {
+      if (input.diagnosisId || input.treatmentId) {
+        throw new BadRequestException(
+          'Patient-level documents cannot have a clinical association',
+        );
       }
       return;
     }
