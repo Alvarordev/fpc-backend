@@ -33,8 +33,18 @@ export class PatientDiagnosticStatusEventResponseDto {
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
 
+  @ApiProperty({ format: 'date-time', nullable: true })
+  searchStartedAt!: string | null;
+
+  @ApiProperty({ nullable: true })
+  searchDurationMinutes!: number | null;
+
   static from(
     event: PatientDiagnosticStatusEvent,
+    timing: {
+      searchStartedAt: Date | null;
+      searchDurationMinutes: number | null;
+    } = { searchStartedAt: null, searchDurationMinutes: null },
   ): PatientDiagnosticStatusEventResponseDto {
     return {
       id: event.id,
@@ -47,6 +57,8 @@ export class PatientDiagnosticStatusEventResponseDto {
       supportedBySepa: event.supportedBySepa,
       notes: event.notes,
       createdAt: event.createdAt.toISOString(),
+      searchStartedAt: timing.searchStartedAt?.toISOString() ?? null,
+      searchDurationMinutes: timing.searchDurationMinutes,
     };
   }
 }

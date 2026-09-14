@@ -5504,6 +5504,7 @@
     },
     "/patients/{patientId}/diagnostic-status/transition": {
       "post": {
+        "description": "Appends a diagnostic result event. A previously recorded result can be corrected without removing its history.",
         "operationId": "PatientDiagnosticStatusesController_transition",
         "parameters": [
           {
@@ -5550,7 +5551,7 @@
             "description": "Patient or follow-up not found"
           },
           "409": {
-            "description": "Patient is not searching for diagnosis"
+            "description": "Diagnostic search has not been started"
           }
         },
         "security": [
@@ -5558,7 +5559,7 @@
             "bearer": []
           }
         ],
-        "summary": "Transition patient diagnostic status",
+        "summary": "Record a patient diagnostic status result",
         "tags": [
           "Patient diagnostic status"
         ]
@@ -15622,6 +15623,15 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "searchStartedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "searchDurationMinutes": {
+            "type": "number",
+            "nullable": true
           }
         },
         "required": [
@@ -15634,7 +15644,9 @@
           "diagnosisId",
           "supportedBySepa",
           "notes",
-          "createdAt"
+          "createdAt",
+          "searchStartedAt",
+          "searchDurationMinutes"
         ]
       },
       "DiagnosticStatusDiagnosisDto": {

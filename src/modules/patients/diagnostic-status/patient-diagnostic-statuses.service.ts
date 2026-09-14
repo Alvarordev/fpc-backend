@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { FollowUp } from '../../../database/entities/follow-up.entity';
 import { Patient } from '../../../database/entities/patient.entity';
+import { PatientDiagnosis } from '../../../database/entities/patient-diagnosis.entity';
 import { PatientDiagnosticStatusEvent } from '../../../database/entities/patient-diagnostic-status-event.entity';
 import { PatientDiagnosticStatus } from '../../../database/entities/patient-diagnostic-status.enum';
 import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
@@ -109,17 +110,15 @@ export class PatientDiagnosticStatusesService {
         where: { patientId },
         order: { occurredAt: 'DESC', createdAt: 'DESC', id: 'DESC' },
       });
-      if (!current || current.status !== PatientDiagnosticStatus.SEARCHING)
-        throw new ConflictException(
-          'Diagnostic status can only transition from SEARCHING',
-        );
+      if (!current)
+        throw new ConflictException('A diagnostic search has not been started');
 
       if (
         input.status !== PatientDiagnosticStatus.CONFIRMED &&
         input.status !== PatientDiagnosticStatus.RULED_OUT
       )
         throw new BadRequestException(
-          'A diagnostic search can only transition to CONFIRMED or RULED_OUT',
+          'A diagnostic status can only be CONFIRMED or RULED_OUT',
         );
       if (
         input.status === PatientDiagnosticStatus.CONFIRMED &&
@@ -135,21 +134,46 @@ export class PatientDiagnosticStatusesService {
 
       let diagnosisId: string | null = null;
       if (input.status === PatientDiagnosticStatus.CONFIRMED) {
-        const diagnosis = await this.diagnoses.create(
-          patientId,
-          {
-            ...(input.diagnosis as CreatePatientDiagnosisDto),
-            followUpId: input.followUpId,
-          },
-          manager,
-        );
-        diagnosisId = diagnosis.id;
+        const diagnosisRepository = manager.getRepository(PatientDiagnosis);
+        const currentDiagnosis = current.diagnosisId
+          ? await diagnosisRepository.findOne({
+              where: {
+                id: current.diagnosisId,
+                patientId,
+                isCurrent: true,
+              },
+            })
+          : null;
+        if (currentDiagnosis) diagnosisId = currentDiagnosis.id;
+        else {
+          const diagnosis = await this.diagnoses.create(
+            patientId,
+            {
+              ...(input.diagnosis as CreatePatientDiagnosisDto),
+              followUpId: input.followUpId,
+            },
+            manager,
+          );
+          diagnosisId = diagnosis.id;
+        }
         await this.patients.upsertDetails(
           patientId,
           { healthPhase: PatientHealthPhase.CANCER_DIAGNOSIS },
           manager,
         );
       } else {
+        if (
+          current.status === PatientDiagnosticStatus.CONFIRMED &&
+          current.diagnosisId
+        )
+          await manager.getRepository(PatientDiagnosis).update(
+            {
+              id: current.diagnosisId,
+              patientId,
+              isCurrent: true,
+            },
+            { isCurrent: false },
+          );
         await this.patients.upsertDetails(
           patientId,
           {
@@ -183,7 +207,31 @@ export class PatientDiagnosticStatusesService {
     user: User,
   ): Promise<PatientDiagnosticStatusEventResponseDto | null> {
     const event = await this.findCurrent(patientId, user);
-    return event ? PatientDiagnosticStatusEventResponseDto.from(event) : null;
+    if (!event) return null;
+
+    const searchingEvent = await this.events.findOne({
+      where: {
+        patientId,
+        status: PatientDiagnosticStatus.SEARCHING,
+      },
+      order: { occurredAt: 'ASC', createdAt: 'ASC', id: 'ASC' },
+    });
+    const searchStartedAt = searchingEvent?.occurredAt ?? null;
+    const endAt =
+      event.status === PatientDiagnosticStatus.SEARCHING
+        ? new Date()
+        : event.occurredAt;
+    const elapsedMilliseconds = searchStartedAt
+      ? endAt.getTime() - searchStartedAt.getTime()
+      : null;
+
+    return PatientDiagnosticStatusEventResponseDto.from(event, {
+      searchStartedAt,
+      searchDurationMinutes:
+        elapsedMilliseconds === null || elapsedMilliseconds < 0
+          ? null
+          : Math.round(elapsedMilliseconds / 60000),
+    });
   }
 
   private async assertFollowUp(

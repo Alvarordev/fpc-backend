@@ -72,12 +72,16 @@ export class PatientDiagnosticStatusesController {
 
   @Post('transition')
   @Roles(...WRITE)
-  @ApiOperation({ summary: 'Transition patient diagnostic status' })
+  @ApiOperation({
+    summary: 'Record a patient diagnostic status result',
+    description:
+      'Appends a diagnostic result event. A previously recorded result can be corrected without removing its history.',
+  })
   @ApiParam({ name: 'patientId', format: 'uuid' })
   @ApiCreatedResponse({ type: PatientDiagnosticStatusEventResponseDto })
   @ApiBadRequestResponse({ description: 'Invalid diagnostic transition' })
   @ApiConflictResponse({
-    description: 'Patient is not searching for diagnosis',
+    description: 'Diagnostic search has not been started',
   })
   @ApiNotFoundResponse({ description: 'Patient or follow-up not found' })
   @ApiUnauthorizedResponse()
