@@ -19,6 +19,7 @@ import { User } from '../../../../database/entities/user.entity';
 import { normalizeDuration } from '../../../../shared/duration/duration.util';
 import { TreatmentMedicationsService } from './medications/treatment-medications.service';
 import { HealthCenter } from '../../../../database/entities/health-center.entity';
+import { CatalogValueService } from '../../../catalogs/catalog-value.service';
 
 @Injectable()
 export class PatientTreatmentsService {
@@ -34,6 +35,7 @@ export class PatientTreatmentsService {
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly medications: TreatmentMedicationsService,
     private readonly dataSource: DataSource,
+    private readonly catalogValues: CatalogValueService,
   ) {}
 
   async create(
@@ -117,9 +119,22 @@ export class PatientTreatmentsService {
           throw new NotFoundException('Health center not found or inactive');
       }
 
-      const { medications: medicationInputs, ...rest } = input;
+      const { medications: medicationInputs, treatmentTypeOther, ...rest } = input;
+      const resolvedType = await this.catalogValues.resolve(
+        'treatment_type',
+        input.treatmentType,
+        { otherText: treatmentTypeOther, manager: entityManager },
+      );
+      const teleconsultationSpecialties = await this.catalogValues.resolveMany(
+        'medical_specialty',
+        input.teleconsultationSpecialties,
+        { manager: entityManager },
+      );
       const values = {
         ...rest,
+        treatmentType: resolvedType.code,
+        treatmentTypeOther: resolvedType.other,
+        teleconsultationSpecialties,
         patientId,
         seriesId,
         treatmentAbandonmentReason:

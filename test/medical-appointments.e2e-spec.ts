@@ -144,7 +144,7 @@ describe('Global medical appointments (e2e)', () => {
     const firstAppointment = first.body as MedicalAppointmentResponseDto;
     expect(firstAppointment).toMatchObject({
       nextAppointmentDate: '2030-02-01',
-      nextAppointmentSpecialty: 'Radioterapia',
+      nextAppointmentSpecialty: 'RADIOTERAPIA',
     });
 
     const second = await request(server)

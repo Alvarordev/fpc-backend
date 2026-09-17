@@ -421,6 +421,12 @@ export class EnrollmentsService {
           manager,
         );
       }
+      if (healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS)
+        await this.diagnosticStatuses.recordSearching(
+          patient.id,
+          followUp.id,
+          manager,
+        );
       for (const appointment of medicalAppointments ?? []) {
         const appointmentInput = {
           ...appointment,
@@ -463,6 +469,7 @@ export class EnrollmentsService {
             enrollmentId: enrollment.id,
           },
           manager,
+          { skipAppointmentFanOut: Boolean(medicalAppointments?.length) },
         );
       if (healthBackgroundAssessment)
         await this.healthBackgroundAssessments.create(
@@ -484,12 +491,6 @@ export class EnrollmentsService {
             followUpId: followUp.id,
             enrollmentId: enrollment.id,
           },
-          manager,
-        );
-      if (healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS)
-        await this.diagnosticStatuses.recordSearching(
-          patient.id,
-          followUp.id,
           manager,
         );
       for (const address of addresses ?? [])
@@ -841,7 +842,8 @@ export class EnrollmentsService {
       symptomReport?.consultationStatus !== MedicalConsultationStatus.ATTENDED
     )
       return;
-    if (medicalAppointments?.length !== 1)
+    if (!medicalAppointments?.length) return;
+    if (medicalAppointments.length !== 1)
       throw new BadRequestException(
         'Scheduled or attended consultation requires exactly one appointment',
       );

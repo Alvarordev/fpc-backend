@@ -26,6 +26,7 @@ import { TreatmentMedication } from '../../database/entities/treatment-medicatio
 import { HealthCenter } from '../../database/entities/health-center.entity';
 import { PatientDetails } from '../../database/entities/patient-details.entity';
 import { PatientHealthPhaseHistory } from '../../database/entities/patient-health-phase-history.entity';
+import { PatientHealthSubcategoryHistory } from '../../database/entities/patient-health-subcategory-history.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
 import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
@@ -57,12 +58,14 @@ import { PatientDocument } from '../../database/entities/patient-document.entity
 import { PatientDocumentsController } from './documents/patient-documents.controller';
 import { PatientDocumentsService } from './documents/patient-documents.service';
 import { PatientDocumentStorageModule } from '../../integrations/storage/patient-document-storage.module';
+import { CatalogsModule } from '../catalogs/catalogs.module';
 import { PatientPsychooncologySupportAssessment } from '../../database/entities/patient-psychooncology-support-assessment.entity';
 import { PatientPsychooncologySupportAssessmentsController } from './clinical/psychooncology-support/patient-psychooncology-support-assessments.controller';
 import { PatientPsychooncologySupportAssessmentsService } from './clinical/psychooncology-support/patient-psychooncology-support-assessments.service';
 import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-non-oncological-follow-up.entity';
 import { PatientNonOncologicalFollowUpsController } from './clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.controller';
 import { PatientNonOncologicalFollowUpsService } from './clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
+import { ClinicalOwnershipService } from './clinical-ownership.service';
 
 @Module({
   imports: [
@@ -70,6 +73,7 @@ import { PatientNonOncologicalFollowUpsService } from './clinical/non-oncologica
       Patient,
       PatientDetails,
       PatientHealthPhaseHistory,
+      PatientHealthSubcategoryHistory,
       PatientAddress,
       CompanionPatient,
       PatientDiagnosis,
@@ -97,6 +101,7 @@ import { PatientNonOncologicalFollowUpsService } from './clinical/non-oncologica
     PatientAccessModule,
     N8nModule,
     PatientDocumentStorageModule,
+    CatalogsModule,
   ],
   controllers: [
     PatientsController,
@@ -133,6 +138,7 @@ import { PatientNonOncologicalFollowUpsService } from './clinical/non-oncologica
     PatientDocumentsService,
     PatientPsychooncologySupportAssessmentsService,
     PatientNonOncologicalFollowUpsService,
+    ClinicalOwnershipService,
   ],
   exports: [
     PatientsService,
@@ -151,6 +157,7 @@ import { PatientNonOncologicalFollowUpsService } from './clinical/non-oncologica
     PatientDocumentsService,
     PatientPsychooncologySupportAssessmentsService,
     PatientNonOncologicalFollowUpsService,
+    ClinicalOwnershipService,
   ],
 })
 export class PatientsModule {}

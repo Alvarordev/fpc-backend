@@ -2672,7 +2672,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator role required"
+            "description": "Administrator, foundation, or agent role required; non-admins limited to open kinds"
           }
         },
         "security": [
@@ -2680,7 +2680,7 @@
             "bearer": []
           }
         ],
-        "summary": "Create a catalog item",
+        "summary": "Create a catalog item (agents/foundation: open kinds only)",
         "tags": [
           "catalogs"
         ]
@@ -8545,6 +8545,11 @@
             "type": "number",
             "nullable": true
           },
+          "avgDaysSymptomsToDiagnosis": {
+            "type": "number",
+            "nullable": true,
+            "description": "Average days from symptom onset to oncological confirmation or rule-out."
+          },
           "activePatients": {
             "type": "number"
           },
@@ -8566,6 +8571,7 @@
           "avgDaysEnrollmentToSis",
           "avgDaysPrimaryCareToDiagnosis",
           "avgDaysDiagnosisToTreatment",
+          "avgDaysSymptomsToDiagnosis",
           "activePatients",
           "benefitSupport",
           "benefitPsychooncology",
@@ -9632,6 +9638,10 @@
       "EnrollmentDiagnosisDto": {
         "type": "object",
         "properties": {
+          "diagnosisOther": {
+            "type": "string",
+            "nullable": true
+          },
           "mode": {
             "enum": [
               "PARALLEL",
@@ -9653,6 +9663,15 @@
           "hasReferral": {
             "type": "boolean",
             "nullable": true
+          },
+          "diagnosisSpecialtyOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "symptomLeadingToCheckup": {
+            "type": "string",
+            "deprecated": true,
+            "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
           "diagnosis": {
             "type": "string"
@@ -9678,9 +9697,6 @@
             "format": "uuid"
           },
           "diagnosisSpecialty": {
-            "type": "string"
-          },
-          "symptomLeadingToCheckup": {
             "type": "string"
           },
           "waitTimeForDiagnosis": {
@@ -9756,6 +9772,10 @@
           "isActive": {
             "type": "boolean"
           },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "notes": {
             "type": "string"
           }
@@ -9772,6 +9792,9 @@
             "format": "uuid"
           },
           "treatmentType": {
+            "type": "string"
+          },
+          "treatmentTypeOther": {
             "type": "string"
           },
           "treatmentFrequency": {
@@ -9913,7 +9936,14 @@
             "type": "string",
             "format": "uuid"
           },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "specialty": {
+            "type": "string"
+          },
+          "specialtyOther": {
             "type": "string"
           },
           "appointmentDate": {
@@ -9928,6 +9958,9 @@
           "nextAppointmentSpecialty": {
             "type": "string",
             "maxLength": 255
+          },
+          "nextAppointmentSpecialtyOther": {
+            "type": "string"
           },
           "hasReferralSheet": {
             "type": "boolean",
@@ -9953,6 +9986,15 @@
           },
           "referredViaSepa": {
             "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ],
+            "type": "string"
           }
         },
         "required": [
@@ -10037,6 +10079,74 @@
       "EnrollmentSymptomReportDto": {
         "type": "object",
         "properties": {
+          "firstConsultationDate": {
+            "type": "string",
+            "deprecated": true
+          },
+          "isAwaitingDiagnosis": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid",
+            "deprecated": true
+          },
+          "referralNotProvidedReason": {
+            "type": "string",
+            "deprecated": true
+          },
+          "nextConsultationDate": {
+            "type": "string",
+            "deprecated": true
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid",
+            "deprecated": true
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255,
+            "deprecated": true,
+            "description": "Legacy owner field. Persist on patient_medical_appointments instead."
+          },
+          "hasReceivedDiagnosis": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "reportedDiagnosis": {
+            "type": "string",
+            "deprecated": true
+          },
+          "isReceivingReportedTreatment": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "reportedTreatment": {
+            "type": "string",
+            "deprecated": true
+          },
+          "reportedTreatmentFrequency": {
+            "deprecated": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "notReceivingTreatmentReason": {
+            "type": "string",
+            "deprecated": true
+          },
           "discomfortSeverity": {
             "type": "string",
             "maxLength": 20
@@ -10092,27 +10202,6 @@
           "noMedicalConsultationReason": {
             "type": "string"
           },
-          "firstConsultationDate": {
-            "type": "string"
-          },
-          "isAwaitingDiagnosis": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "hasReferral": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "referredHealthCenterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "referralNotProvidedReason": {
-            "type": "string"
-          },
-          "nextConsultationDate": {
-            "type": "string"
-          },
           "consultationStatus": {
             "enum": [
               "NOT_OBTAINED",
@@ -10124,36 +10213,8 @@
           "consultationNotObtainedReason": {
             "type": "string"
           },
-          "healthCenterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "specialty": {
-            "type": "string",
-            "maxLength": 255
-          },
           "diagnosisSearchDuration": {
             "$ref": "#/components/schemas/DurationDto"
-          },
-          "hasReceivedDiagnosis": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "reportedDiagnosis": {
-            "type": "string"
-          },
-          "isReceivingReportedTreatment": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "reportedTreatment": {
-            "type": "string"
-          },
-          "reportedTreatmentFrequency": {
-            "$ref": "#/components/schemas/DurationDto"
-          },
-          "notReceivingTreatmentReason": {
-            "type": "string"
           }
         }
       },
@@ -10358,6 +10419,10 @@
             ],
             "type": "string"
           },
+          "currentlyAttendingConsultations": {
+            "type": "boolean",
+            "description": "Enrollment snapshot only. Current consultation status is owned by patient_medical_appointments, not this flag."
+          },
           "notAttendingConsultationsNote": {
             "type": "string",
             "maxLength": 2000,
@@ -10445,9 +10510,6 @@
           },
           "nonOncologicalFollowUp": {
             "$ref": "#/components/schemas/EnrollmentNonOncologicalFollowUpDto"
-          },
-          "currentlyAttendingConsultations": {
-            "type": "boolean"
           },
           "currentlyReceivingTreatment": {
             "type": "boolean"
@@ -11636,7 +11698,14 @@
             "type": "string",
             "format": "uuid"
           },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "specialty": {
+            "type": "string"
+          },
+          "specialtyOther": {
             "type": "string"
           },
           "appointmentDate": {
@@ -11651,6 +11720,9 @@
           "nextAppointmentSpecialty": {
             "type": "string",
             "maxLength": 255
+          },
+          "nextAppointmentSpecialtyOther": {
+            "type": "string"
           },
           "hasReferralSheet": {
             "type": "boolean"
@@ -13892,29 +13964,35 @@
           "firstConsultationDate": {
             "type": "string",
             "nullable": true,
-            "format": "date"
+            "format": "date",
+            "deprecated": true
           },
           "isAwaitingDiagnosis": {
             "type": "boolean",
-            "nullable": true
+            "nullable": true,
+            "deprecated": true
           },
           "hasReferral": {
             "type": "boolean",
-            "nullable": true
+            "nullable": true,
+            "deprecated": true
           },
           "referredHealthCenterId": {
             "type": "string",
             "nullable": true,
-            "format": "uuid"
+            "format": "uuid",
+            "deprecated": true
           },
           "referralNotProvidedReason": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "deprecated": true
           },
           "nextConsultationDate": {
             "type": "string",
             "nullable": true,
-            "format": "date"
+            "format": "date",
+            "deprecated": true
           },
           "consultationStatus": {
             "nullable": true,
@@ -13932,11 +14010,13 @@
           "healthCenterId": {
             "type": "string",
             "nullable": true,
-            "format": "uuid"
+            "format": "uuid",
+            "deprecated": true
           },
           "specialty": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "deprecated": true
           },
           "diagnosisSearchDuration": {
             "nullable": true,
@@ -13949,22 +14029,27 @@
           },
           "hasReceivedDiagnosis": {
             "type": "boolean",
-            "nullable": true
+            "nullable": true,
+            "deprecated": true
           },
           "reportedDiagnosis": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "deprecated": true
           },
           "isReceivingReportedTreatment": {
             "type": "boolean",
-            "nullable": true
+            "nullable": true,
+            "deprecated": true
           },
           "reportedTreatment": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "deprecated": true
           },
           "reportedTreatmentFrequency": {
             "nullable": true,
+            "deprecated": true,
             "type": "object",
             "allOf": [
               {
@@ -13974,7 +14059,8 @@
           },
           "notReceivingTreatmentReason": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "deprecated": true
           },
           "createdAt": {
             "type": "string",
@@ -14579,6 +14665,10 @@
       "CreatePatientDiagnosisDto": {
         "type": "object",
         "properties": {
+          "diagnosisOther": {
+            "type": "string",
+            "nullable": true
+          },
           "mode": {
             "enum": [
               "PARALLEL",
@@ -14600,6 +14690,15 @@
           "hasReferral": {
             "type": "boolean",
             "nullable": true
+          },
+          "diagnosisSpecialtyOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "symptomLeadingToCheckup": {
+            "type": "string",
+            "deprecated": true,
+            "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
           "followUpId": {
             "type": "string",
@@ -14629,9 +14728,6 @@
             "format": "uuid"
           },
           "diagnosisSpecialty": {
-            "type": "string"
-          },
-          "symptomLeadingToCheckup": {
             "type": "string"
           },
           "waitTimeForDiagnosis": {
@@ -14712,7 +14808,14 @@
             "type": "string",
             "format": "uuid"
           },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "specialty": {
+            "type": "string"
+          },
+          "specialtyOther": {
             "type": "string"
           },
           "appointmentDate": {
@@ -14727,6 +14830,9 @@
           "nextAppointmentSpecialty": {
             "type": "string",
             "maxLength": 255
+          },
+          "nextAppointmentSpecialtyOther": {
+            "type": "string"
           },
           "hasReferralSheet": {
             "type": "boolean",
@@ -14752,6 +14858,15 @@
           },
           "referredViaSepa": {
             "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED",
+              "NO_ANSWER"
+            ]
           }
         },
         "required": [
@@ -14806,6 +14921,9 @@
             "format": "uuid"
           },
           "treatmentType": {
+            "type": "string"
+          },
+          "treatmentTypeOther": {
             "type": "string"
           },
           "treatmentFrequency": {
@@ -15086,6 +15204,10 @@
           "isActive": {
             "type": "boolean"
           },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "notes": {
             "type": "string"
           }
@@ -15341,6 +15463,74 @@
       "CreatePatientSymptomReportDto": {
         "type": "object",
         "properties": {
+          "firstConsultationDate": {
+            "type": "string",
+            "deprecated": true
+          },
+          "isAwaitingDiagnosis": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid",
+            "deprecated": true
+          },
+          "referralNotProvidedReason": {
+            "type": "string",
+            "deprecated": true
+          },
+          "nextConsultationDate": {
+            "type": "string",
+            "deprecated": true
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid",
+            "deprecated": true
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255,
+            "deprecated": true,
+            "description": "Legacy owner field. Persist on patient_medical_appointments instead."
+          },
+          "hasReceivedDiagnosis": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "reportedDiagnosis": {
+            "type": "string",
+            "deprecated": true
+          },
+          "isReceivingReportedTreatment": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "reportedTreatment": {
+            "type": "string",
+            "deprecated": true
+          },
+          "reportedTreatmentFrequency": {
+            "deprecated": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "notReceivingTreatmentReason": {
+            "type": "string",
+            "deprecated": true
+          },
           "followUpId": {
             "type": "string",
             "format": "uuid"
@@ -15404,27 +15594,6 @@
           "noMedicalConsultationReason": {
             "type": "string"
           },
-          "firstConsultationDate": {
-            "type": "string"
-          },
-          "isAwaitingDiagnosis": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "hasReferral": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "referredHealthCenterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "referralNotProvidedReason": {
-            "type": "string"
-          },
-          "nextConsultationDate": {
-            "type": "string"
-          },
           "consultationStatus": {
             "type": "string",
             "enum": [
@@ -15436,36 +15605,8 @@
           "consultationNotObtainedReason": {
             "type": "string"
           },
-          "healthCenterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "specialty": {
-            "type": "string",
-            "maxLength": 255
-          },
           "diagnosisSearchDuration": {
             "$ref": "#/components/schemas/DurationDto"
-          },
-          "hasReceivedDiagnosis": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "reportedDiagnosis": {
-            "type": "string"
-          },
-          "isReceivingReportedTreatment": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "reportedTreatment": {
-            "type": "string"
-          },
-          "reportedTreatmentFrequency": {
-            "$ref": "#/components/schemas/DurationDto"
-          },
-          "notReceivingTreatmentReason": {
-            "type": "string"
           }
         },
         "required": [
@@ -15652,6 +15793,10 @@
       "DiagnosticStatusDiagnosisDto": {
         "type": "object",
         "properties": {
+          "diagnosisOther": {
+            "type": "string",
+            "nullable": true
+          },
           "mode": {
             "enum": [
               "PARALLEL",
@@ -15673,6 +15818,15 @@
           "hasReferral": {
             "type": "boolean",
             "nullable": true
+          },
+          "diagnosisSpecialtyOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "symptomLeadingToCheckup": {
+            "type": "string",
+            "deprecated": true,
+            "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
           "diagnosis": {
             "type": "string"
@@ -15698,9 +15852,6 @@
             "format": "uuid"
           },
           "diagnosisSpecialty": {
-            "type": "string"
-          },
-          "symptomLeadingToCheckup": {
             "type": "string"
           },
           "waitTimeForDiagnosis": {
@@ -16891,6 +17042,10 @@
             ],
             "type": "string"
           },
+          "currentlyAttendingConsultations": {
+            "type": "boolean",
+            "description": "Enrollment snapshot only. Current consultation status is owned by patient_medical_appointments, not this flag."
+          },
           "notAttendingConsultationsNote": {
             "type": "string",
             "maxLength": 2000,
@@ -16973,9 +17128,6 @@
           "nonOncologicalFollowUp": {
             "$ref": "#/components/schemas/EnrollmentNonOncologicalFollowUpDto"
           },
-          "currentlyAttendingConsultations": {
-            "type": "boolean"
-          },
           "currentlyReceivingTreatment": {
             "type": "boolean"
           },
@@ -17046,6 +17198,9 @@
             "format": "uuid"
           },
           "treatmentType": {
+            "type": "string"
+          },
+          "treatmentTypeOther": {
             "type": "string"
           },
           "treatmentFrequency": {
@@ -17402,6 +17557,10 @@
       "UpdateHistoricalDiagnosisDto": {
         "type": "object",
         "properties": {
+          "diagnosisOther": {
+            "type": "string",
+            "nullable": true
+          },
           "mode": {
             "enum": [
               "PARALLEL",
@@ -17423,6 +17582,15 @@
           "hasReferral": {
             "type": "boolean",
             "nullable": true
+          },
+          "diagnosisSpecialtyOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "symptomLeadingToCheckup": {
+            "type": "string",
+            "deprecated": true,
+            "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
           "diagnosis": {
             "type": "string"
@@ -17448,9 +17616,6 @@
             "format": "uuid"
           },
           "diagnosisSpecialty": {
-            "type": "string"
-          },
-          "symptomLeadingToCheckup": {
             "type": "string"
           },
           "waitTimeForDiagnosis": {
@@ -17488,6 +17653,9 @@
             "format": "uuid"
           },
           "treatmentType": {
+            "type": "string"
+          },
+          "treatmentTypeOther": {
             "type": "string"
           },
           "treatmentFrequency": {
@@ -17634,6 +17802,74 @@
       "UpdateHistoricalSymptomReportDto": {
         "type": "object",
         "properties": {
+          "firstConsultationDate": {
+            "type": "string",
+            "deprecated": true
+          },
+          "isAwaitingDiagnosis": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid",
+            "deprecated": true
+          },
+          "referralNotProvidedReason": {
+            "type": "string",
+            "deprecated": true
+          },
+          "nextConsultationDate": {
+            "type": "string",
+            "deprecated": true
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid",
+            "deprecated": true
+          },
+          "specialty": {
+            "type": "string",
+            "maxLength": 255,
+            "deprecated": true,
+            "description": "Legacy owner field. Persist on patient_medical_appointments instead."
+          },
+          "hasReceivedDiagnosis": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "reportedDiagnosis": {
+            "type": "string",
+            "deprecated": true
+          },
+          "isReceivingReportedTreatment": {
+            "type": "boolean",
+            "nullable": true,
+            "deprecated": true
+          },
+          "reportedTreatment": {
+            "type": "string",
+            "deprecated": true
+          },
+          "reportedTreatmentFrequency": {
+            "deprecated": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "notReceivingTreatmentReason": {
+            "type": "string",
+            "deprecated": true
+          },
           "discomfortSeverity": {
             "type": "string",
             "maxLength": 20
@@ -17689,27 +17925,6 @@
           "noMedicalConsultationReason": {
             "type": "string"
           },
-          "firstConsultationDate": {
-            "type": "string"
-          },
-          "isAwaitingDiagnosis": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "hasReferral": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "referredHealthCenterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "referralNotProvidedReason": {
-            "type": "string"
-          },
-          "nextConsultationDate": {
-            "type": "string"
-          },
           "consultationStatus": {
             "enum": [
               "NOT_OBTAINED",
@@ -17721,36 +17936,8 @@
           "consultationNotObtainedReason": {
             "type": "string"
           },
-          "healthCenterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "specialty": {
-            "type": "string",
-            "maxLength": 255
-          },
           "diagnosisSearchDuration": {
             "$ref": "#/components/schemas/DurationDto"
-          },
-          "hasReceivedDiagnosis": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "reportedDiagnosis": {
-            "type": "string"
-          },
-          "isReceivingReportedTreatment": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "reportedTreatment": {
-            "type": "string"
-          },
-          "reportedTreatmentFrequency": {
-            "$ref": "#/components/schemas/DurationDto"
-          },
-          "notReceivingTreatmentReason": {
-            "type": "string"
           },
           "id": {
             "type": "string",
@@ -18083,6 +18270,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "referredHealthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "specialty": {
             "type": "string",
             "maxLength": 255
@@ -18260,6 +18451,10 @@
             "format": "uuid"
           },
           "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "referredHealthCenterId": {
             "type": "string",
             "format": "uuid"
           },

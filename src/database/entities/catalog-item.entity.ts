@@ -32,6 +32,24 @@ export const CATALOG_KINDS = [
 
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
 
+/** Kinds AGENT/FOUNDATION may create via POST /catalogs (same idea as hospitals). */
+export const OPEN_CATALOG_KINDS = [
+  'cancer_diagnosis',
+  'medical_specialty',
+  'treatment_type',
+  'native_language',
+  'entry_source',
+  'entry_sub_source',
+] as const satisfies readonly CatalogKind[];
+
+export type OpenCatalogKind = (typeof OPEN_CATALOG_KINDS)[number];
+
+export function isOpenCatalogKind(kind: CatalogKind): kind is OpenCatalogKind {
+  return (OPEN_CATALOG_KINDS as readonly CatalogKind[]).includes(kind);
+}
+
+export const RESERVED_CATALOG_CODE = 'OTRO';
+
 @Entity('catalog_items')
 @Index('UQ_catalog_items_kind_code', ['kind', 'code'], { unique: true })
 @Index('IDX_catalog_items_kind_active', ['kind', 'isActive'])

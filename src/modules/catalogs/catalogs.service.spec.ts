@@ -1,8 +1,10 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { UserRole } from '../../database/entities/user-role.enum';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CatalogItem } from '../../database/entities/catalog-item.entity';
@@ -64,6 +66,46 @@ describe('CatalogsService', () => {
     expect(created.code).toBe('WAMPIS');
     expect(created.isSystem).toBe(false);
     expect(catalogItems.save).toHaveBeenCalled();
+  });
+
+  it('allows an agent to create an item in an open kind', async () => {
+    catalogItems.findOne.mockResolvedValue(null);
+
+    const created = await service.create(
+      {
+        kind: 'medical_specialty',
+        code: 'GENETICA_ONCOLOGICA',
+        label: 'Genética oncológica',
+      },
+      UserRole.AGENT,
+    );
+
+    expect(created.code).toBe('GENETICA_ONCOLOGICA');
+  });
+
+  it('forbids non-admins from creating closed kinds', async () => {
+    await expect(
+      service.create(
+        {
+          kind: 'cancer_stage',
+          code: 'STAGE_CUSTOM',
+          label: 'Custom stage',
+        },
+        UserRole.AGENT,
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(catalogItems.save).not.toHaveBeenCalled();
+  });
+
+  it('rejects reserved OTRO code', async () => {
+    await expect(
+      service.create({
+        kind: 'cancer_diagnosis',
+        code: 'OTRO',
+        label: 'Otro',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(catalogItems.save).not.toHaveBeenCalled();
   });
 
   it('rejects duplicate kind+code', async () => {

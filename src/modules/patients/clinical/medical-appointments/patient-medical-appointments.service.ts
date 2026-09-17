@@ -19,6 +19,7 @@ import { N8nTransactionalDispatchService } from '../../../../integrations/n8n/tr
 import { citaEnvelopeFor } from './cita-envelope';
 import { normalizeReferralFields } from './referral-fields';
 import type { CreateHistoricalMedicalAppointmentDto } from '../../../historical-records/dto/create-historical-medical-appointment.dto';
+import { CatalogValueService } from '../../../catalogs/catalog-value.service';
 @Injectable()
 export class PatientMedicalAppointmentsService {
   constructor(
@@ -30,6 +31,7 @@ export class PatientMedicalAppointmentsService {
     private readonly versioning: HistoryVersioningService,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly webhooks: N8nTransactionalDispatchService,
+    private readonly catalogValues: CatalogValueService,
   ) {}
   async create(
     patientId: string,
@@ -50,27 +52,37 @@ export class PatientMedicalAppointmentsService {
       }))
     )
       throw new NotFoundException('Follow-up not found');
+    const specialty = await this.catalogValues.resolve(
+      'medical_specialty',
+      input.specialty,
+      { otherText: input.specialtyOther, manager },
+    );
+    const nextSpecialty = await this.catalogValues.resolveOptional(
+      'medical_specialty',
+      input.nextAppointmentSpecialty,
+      { otherText: input.nextAppointmentSpecialtyOther, manager },
+    );
+    const catalogued = {
+      ...normalizeReferralFields(input),
+      specialty: specialty.code,
+      specialtyOther: specialty.other,
+      nextAppointmentSpecialty: nextSpecialty?.code ?? null,
+      nextAppointmentSpecialtyOther: nextSpecialty?.other ?? null,
+      patientId,
+      status: input.status ?? MedicalAppointmentStatus.SCHEDULED,
+      isHistorical: false,
+    };
     const appointment = await (manager
       ? this.versioning.replaceCurrent(
           PatientMedicalAppointment,
-          { patientId, specialty: input.specialty, isCurrent: true },
-          {
-            ...normalizeReferralFields(input),
-            patientId,
-            status: MedicalAppointmentStatus.SCHEDULED,
-            isHistorical: false,
-          },
+          { patientId, specialty: specialty.code, isCurrent: true },
+          catalogued,
           manager,
         )
       : this.versioning.replaceCurrent(
           PatientMedicalAppointment,
-          { patientId, specialty: input.specialty, isCurrent: true },
-          {
-            ...normalizeReferralFields(input),
-            patientId,
-            status: MedicalAppointmentStatus.SCHEDULED,
-            isHistorical: false,
-          },
+          { patientId, specialty: specialty.code, isCurrent: true },
+          catalogued,
         ));
     await this.invalidations.markDirty(patientId, manager);
     if (dispatchWebhook)
@@ -122,6 +134,16 @@ export class PatientMedicalAppointmentsService {
           .existsBy({ id: input.healthCenterId }))
       )
         throw new NotFoundException('Health center not found');
+      const specialty = await this.catalogValues.resolve(
+        'medical_specialty',
+        input.specialty,
+        { otherText: undefined, manager: transactionManager },
+      );
+      const nextSpecialty = await this.catalogValues.resolveOptional(
+        'medical_specialty',
+        input.nextAppointmentSpecialty,
+        { manager: transactionManager },
+      );
       const referral = normalizeReferralFields(input);
 
       const repository = transactionManager.getRepository(
@@ -132,11 +154,14 @@ export class PatientMedicalAppointmentsService {
           patientId: patient.id,
           followUpId: input.followUpId,
           healthCenterId: input.healthCenterId ?? null,
-          specialty: input.specialty,
+          referredHealthCenterId: input.referredHealthCenterId ?? null,
+          specialty: specialty.code,
+          specialtyOther: specialty.other ?? null,
           appointmentDate: input.appointmentDate ?? null,
           appointmentTime: input.appointmentTime ?? null,
           nextAppointmentDate: input.nextAppointmentDate ?? null,
-          nextAppointmentSpecialty: input.nextAppointmentSpecialty ?? null,
+          nextAppointmentSpecialty: nextSpecialty?.code ?? null,
+          nextAppointmentSpecialtyOther: nextSpecialty?.other ?? null,
           hasReferralSheet: referral.hasReferralSheet ?? null,
           referredTo: referral.referredTo ?? null,
           referralNotProvidedReason: referral.referralNotProvidedReason ?? null,

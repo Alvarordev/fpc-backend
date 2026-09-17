@@ -49,6 +49,8 @@ export class PatientDiagnosis {
   @JoinColumn({ name: 'follow_up_id' })
   followUp!: FollowUp;
   @Column({ type: 'text' }) diagnosis!: string;
+  @Column({ name: 'diagnosis_other', type: 'text', nullable: true })
+  diagnosisOther!: string | null;
   @Column({ name: 'cancer_stage', type: 'varchar', length: 20, nullable: true })
   cancerStage!: CancerStage | null;
   @Column({ name: 'diagnosis_date', type: 'date', nullable: true })
@@ -72,6 +74,12 @@ export class PatientDiagnosis {
     nullable: true,
   })
   diagnosisSpecialty!: string | null;
+  @Column({
+    name: 'diagnosis_specialty_other',
+    type: 'text',
+    nullable: true,
+  })
+  diagnosisSpecialtyOther!: string | null;
   @Column({ name: 'symptom_leading_to_checkup', type: 'text', nullable: true })
   symptomLeadingToCheckup!: string | null;
   @Column({ name: 'first_symptoms_date', type: 'date', nullable: true })

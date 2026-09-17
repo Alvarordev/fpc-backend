@@ -7,6 +7,7 @@ import { FollowUpsModule } from '../../../follow-ups/follow-ups.module';
 import { PatientSummariesModule } from '../../../patient-summaries/patient-summaries.module';
 import { PatientAccessModule } from '../../access/patient-access.module';
 import { N8nModule } from '../../../../integrations/n8n/n8n.module';
+import { CatalogsModule } from '../../../catalogs/catalogs.module';
 import { MedicalAppointmentsController } from './medical-appointments.controller';
 import { MedicalAppointmentsService } from './medical-appointments.service';
 
@@ -18,6 +19,7 @@ import { MedicalAppointmentsService } from './medical-appointments.service';
     PatientSummariesModule,
     PatientAccessModule,
     N8nModule,
+    CatalogsModule,
   ],
   controllers: [MedicalAppointmentsController],
   providers: [MedicalAppointmentsService],

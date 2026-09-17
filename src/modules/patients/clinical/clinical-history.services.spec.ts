@@ -39,6 +39,20 @@ describe('clinical history services', () => {
   const webhooks = {
     enqueue: jest.fn(),
   } as unknown as N8nTransactionalDispatchService;
+  const catalogValues = {
+    resolve: jest.fn(async (_kind: string, value: string) => ({
+      code: value,
+      label: value,
+      other: null,
+    })),
+    resolveOptional: jest.fn(
+      async (_kind: string, value: string | null | undefined) =>
+        value
+          ? { code: value, label: value, other: null }
+          : null,
+    ),
+    resolveMany: jest.fn(async (_kind: string, values: string[] | null) => values),
+  } as never;
 
   beforeEach(() => {
     jest.resetAllMocks();
@@ -48,6 +62,20 @@ describe('clinical history services', () => {
       primaryPhone: '999999999',
       email: null,
     });
+    (catalogValues.resolve as jest.Mock).mockImplementation(
+      async (_kind: string, value: string) => ({
+        code: value,
+        label: value,
+        other: null,
+      }),
+    );
+    (catalogValues.resolveOptional as jest.Mock).mockImplementation(
+      async (_kind: string, value: string | null | undefined) =>
+        value ? { code: value, label: value, other: null } : null,
+    );
+    (catalogValues.resolveMany as jest.Mock).mockImplementation(
+      async (_kind: string, values: string[] | null) => values,
+    );
   });
 
   it('versions insurance by patient', async () => {
@@ -95,6 +123,7 @@ describe('clinical history services', () => {
       versioning,
       invalidations,
       webhooks,
+      catalogValues,
     );
 
     await service.create('patient-id', {
@@ -129,6 +158,7 @@ describe('clinical history services', () => {
       patients,
       versioning,
       invalidations,
+      catalogValues,
     );
 
     await service.create('patient-id', {
@@ -175,6 +205,7 @@ describe('clinical history services', () => {
       patients,
       versioning,
       invalidations,
+      catalogValues,
     );
 
     await service.create('patient-id', {
@@ -225,6 +256,7 @@ describe('clinical history services', () => {
       patients,
       versioning,
       invalidations,
+      catalogValues,
     );
 
     await expect(
@@ -269,6 +301,7 @@ describe('clinical history services', () => {
       patients,
       versioning,
       invalidations,
+      catalogValues,
     );
 
     await service.create('patient-id', {
@@ -308,6 +341,7 @@ describe('clinical history services', () => {
       patients,
       versioning,
       invalidations,
+      catalogValues,
     );
 
     await expect(
@@ -337,6 +371,7 @@ describe('clinical history services', () => {
       patients,
       versioning,
       invalidations,
+      catalogValues,
     );
 
     await expect(
@@ -377,6 +412,7 @@ describe('clinical history services', () => {
       invalidations,
       medications,
       dataSource,
+      catalogValues,
     );
 
     await expect(

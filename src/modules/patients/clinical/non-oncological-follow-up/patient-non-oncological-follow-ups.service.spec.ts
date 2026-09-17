@@ -5,6 +5,7 @@ import { PatientNonOncologicalFollowUp } from '../../../../database/entities/pat
 import { PatientNonOncologicalFollowUpStatus } from '../../../../database/entities/patient-non-oncological-follow-up-status.enum';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
 import { PatientsService } from '../../patients.service';
+import { CatalogValueService } from '../../../catalogs/catalog-value.service';
 import { PatientNonOncologicalFollowUpsService } from './patient-non-oncological-follow-ups.service';
 
 describe('PatientNonOncologicalFollowUpsService', () => {
@@ -26,6 +27,12 @@ describe('PatientNonOncologicalFollowUpsService', () => {
     const invalidations = {
       markDirty: jest.fn().mockResolvedValue(undefined),
     } as unknown as PatientSummaryInvalidationService;
+    const catalogValues = {
+      resolveOptional: jest.fn(
+        async (_kind: string, value: string | null | undefined) =>
+          value ? { code: value, label: value, other: null } : null,
+      ),
+    } as unknown as CatalogValueService;
     const manager = {
       getRepository: jest.fn((entity: unknown) => {
         if (entity === FollowUp) return followUps;
@@ -45,6 +52,7 @@ describe('PatientNonOncologicalFollowUpsService', () => {
       dataSource,
       patients,
       invalidations,
+      catalogValues,
     );
     return { service, manager, repository, savedRecords };
   }

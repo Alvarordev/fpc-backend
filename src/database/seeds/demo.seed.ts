@@ -6,6 +6,7 @@ import type { DemoContext } from './demo/context';
 import { seedEnrollments } from './demo/enrollments';
 import { seedFollowUps } from './demo/follow-ups';
 import { seedHealthCenters } from './demo/health-centers';
+import { seedCatalogItems } from './staging/seed-reference-data';
 import { seedPatients } from './demo/patients';
 import { seedPsychooncology } from './demo/psychooncology';
 import { seedReminders } from './demo/reminders';
@@ -86,6 +87,7 @@ async function seedDemo(): Promise<void> {
       };
 
       await resetDomainTables(manager);
+      await seedCatalogItems(manager);
 
       const users = await seedUsers(manager);
       const healthCenters = await seedHealthCenters(ctx);

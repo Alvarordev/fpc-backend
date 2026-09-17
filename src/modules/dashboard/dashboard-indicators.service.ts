@@ -217,6 +217,9 @@ export class DashboardIndicatorsService {
       avgDaysDiagnosisToTreatment: this.toNullableNumber(
         metrics.avgDaysDiagnosisToTreatment,
       ),
+      avgDaysSymptomsToDiagnosis: this.toNullableNumber(
+        metrics.avgDaysSymptomsToDiagnosis,
+      ),
       activePatients: metrics.activePatients ?? 0,
       benefitSupport: metrics.benefitSupport ?? 0,
       benefitPsychooncology: metrics.benefitPsychooncology ?? 0,
@@ -821,31 +824,37 @@ export class DashboardIndicatorsService {
           AND sis.affiliated_at IS NOT NULL
       ), primary_care_days AS (
         SELECT AVG(
-          (diagnosis.diagnosis_date::date - appointment.appointment_date::date)
+          (confirmed.occurred_on::date - first_care.occurred_on::date)
         ) AS avg_days
         FROM cohort
-        JOIN patient_medical_appointments appointment
-          ON appointment.patient_id = cohort.patient_id
-         AND appointment.is_current = true
-         AND appointment.attended_via_sepa = true
-         AND appointment.appointment_date IS NOT NULL
-        JOIN patient_diagnoses diagnosis
-          ON diagnosis.patient_id = cohort.patient_id
-         AND diagnosis.is_current = true
-         AND diagnosis.diagnosis_date IS NOT NULL
+        JOIN patient_clinical_milestones first_care
+          ON first_care.patient_id = cohort.patient_id
+         AND first_care.milestone_type = 'FIRST_PRIMARY_CARE'
+        JOIN patient_clinical_milestones confirmed
+          ON confirmed.patient_id = cohort.patient_id
+         AND confirmed.milestone_type = 'DIAGNOSIS_CONFIRMED'
       ), treatment_days AS (
         SELECT AVG(
-          (treatment.start_date::date - diagnosis.diagnosis_date::date)
+          (started.occurred_on::date - confirmed.occurred_on::date)
         ) AS avg_days
         FROM cohort
-        JOIN patient_treatments treatment
-          ON treatment.patient_id = cohort.patient_id
-         AND treatment.is_current = true
-         AND treatment.treatment_via_sepa = true
-         AND treatment.start_date IS NOT NULL
-        JOIN patient_diagnoses diagnosis
-          ON diagnosis.id = treatment.diagnosis_id
-         AND diagnosis.diagnosis_date IS NOT NULL
+        JOIN patient_clinical_milestones confirmed
+          ON confirmed.patient_id = cohort.patient_id
+         AND confirmed.milestone_type = 'DIAGNOSIS_CONFIRMED'
+        JOIN patient_clinical_milestones started
+          ON started.patient_id = cohort.patient_id
+         AND started.milestone_type = 'TREATMENT_STARTED'
+      ), symptoms_days AS (
+        SELECT AVG(
+          (outcome.occurred_on::date - onset.occurred_on::date)
+        ) AS avg_days
+        FROM cohort
+        JOIN patient_clinical_milestones onset
+          ON onset.patient_id = cohort.patient_id
+         AND onset.milestone_type = 'SYMPTOMS_ONSET'
+        JOIN patient_clinical_milestones outcome
+          ON outcome.patient_id = cohort.patient_id
+         AND outcome.milestone_type IN ('DIAGNOSIS_CONFIRMED', 'DIAGNOSIS_RULED_OUT')
       ), benefits AS (
         SELECT
           cohort.patient_id,
@@ -867,6 +876,8 @@ export class DashboardIndicatorsService {
         SELECT 'avgDaysPrimaryCareToDiagnosis', primary_care_days.avg_days FROM primary_care_days
         UNION ALL
         SELECT 'avgDaysDiagnosisToTreatment', treatment_days.avg_days FROM treatment_days
+        UNION ALL
+        SELECT 'avgDaysSymptomsToDiagnosis', symptoms_days.avg_days FROM symptoms_days
         UNION ALL
         SELECT 'activePatients',
           COUNT(DISTINCT patient.id)::float
@@ -919,7 +930,8 @@ export class DashboardIndicatorsService {
           AND scheduled_sessions IS NOT NULL
           AND scheduled_sessions > 0
           AND (
-            treatment_type ILIKE '%quimio%'
+            treatment_type IN ('QUIMIOTERAPIA', 'RADIOTERAPIA')
+            OR treatment_type ILIKE '%quimio%'
             OR treatment_type ILIKE '%radio%'
             OR treatment_type ILIKE '%chemo%'
           )
@@ -943,7 +955,8 @@ export class DashboardIndicatorsService {
         SELECT 'hormonalPatients',
           COUNT(DISTINCT patient_id)::float
         FROM current_treatments
-        WHERE treatment_type ILIKE '%hormona%'
+        WHERE treatment_type IN ('HORMONOTERAPIA')
+           OR treatment_type ILIKE '%hormona%'
            OR hormonal_treatment_completed IS NOT NULL
         UNION ALL
         SELECT 'withAccessBarriers',

@@ -42,7 +42,7 @@ export async function seedCatalogItems(
       sortOrder: seed.sortOrder ?? 0,
       isActive: true,
       isSystem: seed.isSystem ?? false,
-      metadata: null,
+      metadata: seed.metadata ?? null,
     }),
   );
   await manager.save(items);

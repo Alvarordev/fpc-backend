@@ -63,6 +63,8 @@ export class PatientTreatment {
   @Column({ name: 'series_id', type: 'uuid' }) seriesId!: string;
   @Column({ name: 'treatment_type', type: 'varchar', length: 255 })
   treatmentType!: string;
+  @Column({ name: 'treatment_type_other', type: 'text', nullable: true })
+  treatmentTypeOther!: string | null;
   @Column(() => Duration, { prefix: 'treatment_frequency' })
   treatmentFrequency!: Duration;
   @Column({ name: 'is_referred', type: 'boolean', default: false })

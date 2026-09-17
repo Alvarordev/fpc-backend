@@ -525,15 +525,8 @@ export class PatientTimelineService {
            'hasSoughtMedicalConsultation', symptom.has_sought_medical_consultation,
            'hasMedicalConsultation', symptom.has_medical_consultation,
            'noMedicalConsultationReason', symptom.no_medical_consultation_reason,
-           'firstConsultationDate', symptom.first_consultation_date,
-           'isAwaitingDiagnosis', symptom.is_awaiting_diagnosis,
-           'hasReferral', symptom.has_referral,
-           'referralNotProvidedReason', symptom.referral_not_provided_reason,
-           'nextConsultationDate', symptom.next_consultation_date,
-           'hasReceivedDiagnosis', symptom.has_received_diagnosis,
-           'reportedDiagnosis', symptom.reported_diagnosis,
-           'healthCenterId', symptom.health_center_id,
-           'specialty', symptom.specialty
+           'consultationStatus', symptom.consultation_status,
+           'hasRequestedMedicalConsultation', symptom.has_requested_medical_consultation
          ) AS data
       FROM patient_symptom_reports symptom
       LEFT JOIN (
@@ -1016,31 +1009,6 @@ export class PatientTimelineService {
             text(data, 'noMedicalConsultationReason'),
           ),
           optionalPart('Motivo del examen', text(data, 'checkupMotivation')),
-          optionalPart(
-            'Primera consulta',
-            dateOnly(data, 'firstConsultationDate'),
-          ),
-          optionalPart(
-            'Espera diagnóstico',
-            boolLabel(data, 'isAwaitingDiagnosis', 'sí', 'no'),
-          ),
-          optionalPart(
-            'Ficha de remisión',
-            boolLabel(data, 'hasReferral', 'sí', 'no'),
-          ),
-          optionalPart(
-            'Motivo sin remisión',
-            text(data, 'referralNotProvidedReason'),
-          ),
-          optionalPart(
-            'Diagnóstico informado',
-            text(data, 'reportedDiagnosis'),
-          ),
-          optionalPart(
-            'Próxima consulta',
-            dateOnly(data, 'nextConsultationDate'),
-          ),
-          optionalPart('Especialidad', text(data, 'specialty')),
           optionalPart('Indicaciones', text(data, 'indicationsReceived')),
         ];
         summary = sentence(parts);

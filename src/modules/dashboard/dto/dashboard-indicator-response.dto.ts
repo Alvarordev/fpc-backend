@@ -184,6 +184,13 @@ export class DashboardProductivityResponseDto {
   @ApiProperty({ nullable: true })
   avgDaysDiagnosisToTreatment!: number | null;
 
+  @ApiProperty({
+    description:
+      'Average days from symptom onset to oncological confirmation or rule-out.',
+    nullable: true,
+  })
+  avgDaysSymptomsToDiagnosis!: number | null;
+
   @ApiProperty()
   activePatients!: number;
 

@@ -21,6 +21,7 @@ import { UpdateMedicalAppointmentDto } from './dto/update-medical-appointment.dt
 import { N8nTransactionalDispatchService } from '../../../../integrations/n8n/transactional-dispatch.service';
 import { citaEnvelopeFor } from './cita-envelope';
 import { normalizeReferralFields } from './referral-fields';
+import { CatalogValueService } from '../../../catalogs/catalog-value.service';
 
 @Injectable()
 export class MedicalAppointmentsService {
@@ -34,6 +35,7 @@ export class MedicalAppointmentsService {
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly access: PatientAccessService,
     private readonly webhooks: N8nTransactionalDispatchService,
+    private readonly catalogValues: CatalogValueService,
   ) {}
 
   async create(input: CreateMedicalAppointmentDto, user: User) {
@@ -49,16 +51,31 @@ export class MedicalAppointmentsService {
       agent.id,
     );
 
+    const specialty = await this.catalogValues.resolve(
+      'medical_specialty',
+      input.specialty,
+      { otherText: input.specialtyOther },
+    );
+    const nextSpecialty = await this.catalogValues.resolveOptional(
+      'medical_specialty',
+      input.nextAppointmentSpecialty,
+      { otherText: input.nextAppointmentSpecialtyOther },
+    );
+
     const appointment = await this.versioning.replaceCurrent(
       PatientMedicalAppointment,
       {
         patientId: input.patientId,
-        specialty: input.specialty,
+        specialty: specialty.code,
         isCurrent: true,
       },
       {
         ...normalizeReferralFields(input),
         followUpId,
+        specialty: specialty.code,
+        specialtyOther: specialty.other,
+        nextAppointmentSpecialty: nextSpecialty?.code ?? null,
+        nextAppointmentSpecialtyOther: nextSpecialty?.other ?? null,
         status: MedicalAppointmentStatus.SCHEDULED,
       },
     );

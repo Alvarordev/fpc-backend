@@ -212,7 +212,13 @@ export class CreateEnrollmentDto {
   @ValidateNested()
   @Type(() => EnrollmentNonOncologicalFollowUpDto)
   nonOncologicalFollowUp?: EnrollmentNonOncologicalFollowUpDto;
-  @IsOptional() @IsBoolean() currentlyAttendingConsultations?: boolean;
+  @ApiPropertyOptional({
+    description:
+      'Enrollment snapshot only. Current consultation status is owned by patient_medical_appointments, not this flag.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  currentlyAttendingConsultations?: boolean;
   @IsOptional() @IsBoolean() currentlyReceivingTreatment?: boolean;
   @ApiPropertyOptional({ maxLength: 2000, nullable: true })
   @IsOptional()

@@ -135,7 +135,7 @@ Constraint: `UNIQUE (kind, code)`.
 ```
 GET    /catalogs?kind=&includeInactive=
 GET    /catalogs/ubigeo?department=&province=
-POST   /catalogs                 (ADMIN)
+POST   /catalogs                 (ADMIN; AGENT/FOUNDATION only for open kinds)
 PATCH  /catalogs/:id             (ADMIN)
 POST   /catalogs/:id/archive     (ADMIN)
 ```
@@ -189,11 +189,16 @@ Sin query: todos los departamentos con provincias (distritos opcionales vía
 ### 6.3 Escritura
 
 - `POST`: crea ítem no-system. `code` obligatorio, único por kind.
+  `code=OTRO` está reservado. AGENT y FOUNDATION solo pueden crear kinds
+  abiertos (`cancer_diagnosis`, `medical_specialty`, `treatment_type`,
+  `native_language`, `entry_source`, `entry_sub_source`) — mismo patrón
+  que `POST /health-centers`.
 - `PATCH`: `label`, `sortOrder`, `isActive`, `metadata`, `parentCode`.
   No cambia `code` ni `kind`. Ítems system permiten cambiar label/orden/activo.
 - `POST .../archive`: `isActive = false`. Rechaza si `isSystem = true`.
 
-Lectura: autenticada (cualquier rol del CRM). Escritura: solo `ADMIN`.
+Lectura: autenticada (cualquier rol del CRM). Escritura de PATCH/archive:
+solo `ADMIN`. POST: ADMIN siempre; AGENT/FOUNDATION en kinds abiertos.
 
 ## 7. Seed de staging (`npm run seed:staging`)
 

@@ -15,6 +15,7 @@ import { CreatePatientSymptomReportDto } from './dto/create-patient-symptom-repo
 import { User } from '../../../database/entities/user.entity';
 import { normalizeDuration } from '../../../shared/duration/duration.util';
 import { MedicalConsultationStatus } from '../../../database/entities/medical-consultation-status.enum';
+import { ClinicalOwnershipService } from '../clinical-ownership.service';
 
 @Injectable()
 export class PatientSymptomReportsService {
@@ -27,13 +28,20 @@ export class PatientSymptomReportsService {
     private readonly enrollments: Repository<Enrollment>,
     private readonly patients: PatientsService,
     private readonly invalidations: PatientSummaryInvalidationService,
+    private readonly ownership: ClinicalOwnershipService,
   ) {}
 
   async create(
     patientId: string,
     input: CreatePatientSymptomReportDto,
     manager?: EntityManager,
-  ) {
+    options: { skipAppointmentFanOut?: boolean } = {},
+  ): Promise<PatientSymptomReport> {
+    if (!manager) {
+      return this.repository.manager.transaction((transactionManager) =>
+        this.create(patientId, input, transactionManager, options),
+      );
+    }
     await this.patients.assertPatientRole(
       patientId,
       PatientRole.PATIENT,
@@ -57,18 +65,25 @@ export class PatientSymptomReportsService {
     const repository =
       manager?.getRepository(PatientSymptomReport) ?? this.repository;
     const normalized = this.validateAndNormalize(input);
+    await this.ownership.fanOutFromSymptomReport(
+      patientId,
+      input.followUpId,
+      input.enrollmentId ?? null,
+      normalized,
+      manager,
+      { skipAppointment: options.skipAppointmentFanOut },
+    );
+    const persistable = this.ownership.stripOwnershipFields(normalized);
     const symptom = await repository.save(
       repository.create({
-        ...normalized,
+        ...persistable,
         patientId,
-        symptomDuration: normalizeDuration(normalized.symptomDuration),
-        symptomFrequency: normalizeDuration(normalized.symptomFrequency),
+        symptomDuration: normalizeDuration(persistable.symptomDuration),
+        symptomFrequency: normalizeDuration(persistable.symptomFrequency),
         diagnosisSearchDuration: normalizeDuration(
-          normalized.diagnosisSearchDuration,
+          persistable.diagnosisSearchDuration,
         ),
-        reportedTreatmentFrequency: normalizeDuration(
-          normalized.reportedTreatmentFrequency,
-        ),
+        reportedTreatmentFrequency: normalizeDuration(null),
       }),
     );
     await this.invalidations.markDirty(patientId, manager);

@@ -8,6 +8,7 @@ import { PatientHealthPhase } from '../../database/entities/patient-health-phase
 import { PatientHealthSubcategory } from '../../database/entities/patient-health-subcategory.enum';
 import { PatientDetails } from '../../database/entities/patient-details.entity';
 import { PatientHealthPhaseHistory } from '../../database/entities/patient-health-phase-history.entity';
+import { PatientHealthSubcategoryHistory } from '../../database/entities/patient-health-subcategory-history.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
 import { PatientRole } from '../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../database/entities/patient-status.enum';
@@ -88,12 +89,18 @@ describe('PatientsService.upsertDetails health phase history', () => {
       save: jest.fn((value: unknown) => Promise.resolve(value)),
       create: jest.fn((value: unknown) => value),
     };
+    const subcategoryHistory = {
+      save: jest.fn((value: unknown) => Promise.resolve(value)),
+      create: jest.fn((value: unknown) => value),
+    };
     const healthCentersRepository = { findOne: jest.fn() };
     const invalidations = { markDirty: jest.fn().mockResolvedValue(undefined) };
     const transactionManager = {
       getRepository: jest.fn((entity: unknown) => {
         if (entity === PatientDetails) return detailsRepository;
         if (entity === PatientHealthPhaseHistory) return historyRepository;
+        if (entity === PatientHealthSubcategoryHistory)
+          return subcategoryHistory;
         if (entity === HealthCenter) return healthCentersRepository;
         return { findOne: jest.fn() };
       }),
@@ -164,6 +171,10 @@ describe('PatientsService.upsertDetails health subcategory', () => {
       save: jest.fn((value: unknown) => Promise.resolve(value)),
       create: jest.fn((value: unknown) => value),
     };
+    const subcategoryHistory = {
+      save: jest.fn((value: unknown) => Promise.resolve(value)),
+      create: jest.fn((value: unknown) => value),
+    };
     const diagnosisRepository = {
       existsBy: jest.fn().mockResolvedValue(hasActiveDiagnosis),
     };
@@ -173,6 +184,8 @@ describe('PatientsService.upsertDetails health subcategory', () => {
         if (entity === Patient) return patientRepository;
         if (entity === PatientDetails) return detailsRepository;
         if (entity === PatientHealthPhaseHistory) return historyRepository;
+        if (entity === PatientHealthSubcategoryHistory)
+          return subcategoryHistory;
         if (entity === PatientDiagnosis) return diagnosisRepository;
         if (entity === HealthCenter) return healthCentersRepository;
         return {};

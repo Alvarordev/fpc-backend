@@ -26,7 +26,9 @@ import {
   CATALOG_KINDS,
   type CatalogKind,
 } from '../../database/entities/catalog-item.entity';
+import { User } from '../../database/entities/user.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
+import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { CatalogsService } from './catalogs.service';
 import { CatalogItemResponseDto } from './dto/catalog-item-response.dto';
@@ -95,12 +97,18 @@ export class CatalogsController {
   }
 
   @Post()
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Create a catalog item' })
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT)
+  @ApiOperation({
+    summary:
+      'Create a catalog item (agents/foundation: open kinds only)',
+  })
   @ApiCreatedResponse({ type: CatalogItemResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  create(@Body() input: CreateCatalogItemDto) {
-    return this.service.create(input).then(this.toResponse);
+  @ApiForbiddenResponse({
+    description:
+      'Administrator, foundation, or agent role required; non-admins limited to open kinds',
+  })
+  create(@Body() input: CreateCatalogItemDto, @CurrentUser() user: User) {
+    return this.service.create(input, user.role).then(this.toResponse);
   }
 
   @Patch(':id')

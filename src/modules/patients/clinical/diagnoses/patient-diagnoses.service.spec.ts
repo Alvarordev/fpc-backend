@@ -17,6 +17,14 @@ describe('PatientDiagnosesService', () => {
       { assertPatientRole: jest.fn() } as never,
       {} as never,
       {} as never,
+      {
+        resolve: jest.fn(async (_kind: string, value: string) => ({
+          code: value,
+          label: value,
+          other: null,
+        })),
+        resolveOptional: jest.fn(),
+      } as never,
     );
 
     await expect(
