@@ -46,6 +46,7 @@ export class CreatePatientTreatmentDto {
   @IsUUID() diagnosisId!: string;
   @IsOptional() @IsUUID() seriesId?: string;
   @IsString() treatmentType!: string;
+  @IsOptional() @IsString() treatmentTypeOther?: string;
   @IsOptional()
   @ValidateNested()
   @Type(() => DurationDto)

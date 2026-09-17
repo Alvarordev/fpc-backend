@@ -25,6 +25,9 @@ import { User } from './user.entity';
 @Index('IDX_patient_medical_appointments_patient_id', ['patientId'])
 @Index('IDX_patient_medical_appointments_follow_up_id', ['followUpId'])
 @Index('IDX_patient_medical_appointments_health_center_id', ['healthCenterId'])
+@Index('IDX_patient_medical_appointments_referred_health_center_id', [
+  'referredHealthCenterId',
+])
 @Index('IDX_patient_medical_appointments_reminder_id', ['reminderId'])
 @Index('IDX_patient_medical_appointments_historical_loaded_by_id', [
   'historicalLoadedById',
@@ -44,7 +47,14 @@ export class PatientMedicalAppointment {
   @ManyToOne(() => HealthCenter)
   @JoinColumn({ name: 'health_center_id' })
   healthCenter!: HealthCenter | null;
+  @Column({ name: 'referred_health_center_id', type: 'uuid', nullable: true })
+  referredHealthCenterId!: string | null;
+  @ManyToOne(() => HealthCenter)
+  @JoinColumn({ name: 'referred_health_center_id' })
+  referredHealthCenter!: HealthCenter | null;
   @Column({ type: 'varchar', length: 255 }) specialty!: string;
+  @Column({ name: 'specialty_other', type: 'text', nullable: true })
+  specialtyOther!: string | null;
   @Column({ name: 'appointment_date', type: 'date', nullable: true })
   appointmentDate!: string | null;
   @Column({ name: 'appointment_time', type: 'time', nullable: true })
@@ -58,6 +68,12 @@ export class PatientMedicalAppointment {
     nullable: true,
   })
   nextAppointmentSpecialty!: string | null;
+  @Column({
+    name: 'next_appointment_specialty_other',
+    type: 'text',
+    nullable: true,
+  })
+  nextAppointmentSpecialtyOther!: string | null;
   @Column({ name: 'has_referral_sheet', type: 'boolean', nullable: true })
   hasReferralSheet!: boolean | null;
   @Column({ name: 'referred_to', type: 'varchar', length: 255, nullable: true })

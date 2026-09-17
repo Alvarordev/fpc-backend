@@ -16,6 +16,7 @@ import { DurationDto } from '../../../../shared/duration/duration.dto';
 import { MedicalConsultationStatus } from '../../../../database/entities/medical-consultation-status.enum';
 import { IsIn } from 'class-validator';
 import { DATE_ONLY_PATTERN } from '../../../../shared/date-only/date-only.util';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreatePatientSymptomReportDto {
   @IsUUID() followUpId!: string;
@@ -42,11 +43,27 @@ export class CreatePatientSymptomReportDto {
   @IsOptional() @IsBoolean() hasRequestedMedicalConsultation?: boolean | null;
   @IsOptional() @IsBoolean() hasMedicalConsultation?: boolean | null;
   @IsOptional() @IsString() noMedicalConsultationReason?: string;
-  @IsOptional() @IsDateString() firstConsultationDate?: string;
-  @IsOptional() @IsBoolean() isAwaitingDiagnosis?: boolean | null;
-  @IsOptional() @IsBoolean() hasReferral?: boolean | null;
-  @IsOptional() @IsUUID() referredHealthCenterId?: string;
-  @IsOptional() @IsString() referralNotProvidedReason?: string;
+  @ApiPropertyOptional({ deprecated: true })
+  @IsOptional()
+  @IsDateString()
+  firstConsultationDate?: string;
+  @ApiPropertyOptional({ deprecated: true })
+  @IsOptional()
+  @IsBoolean()
+  isAwaitingDiagnosis?: boolean | null;
+  @ApiPropertyOptional({ deprecated: true })
+  @IsOptional()
+  @IsBoolean()
+  hasReferral?: boolean | null;
+  @ApiPropertyOptional({ deprecated: true })
+  @IsOptional()
+  @IsUUID()
+  referredHealthCenterId?: string;
+  @ApiPropertyOptional({ deprecated: true })
+  @IsOptional()
+  @IsString()
+  referralNotProvidedReason?: string;
+  @ApiPropertyOptional({ deprecated: true })
   @IsOptional()
   @IsDateString()
   @Matches(DATE_ONLY_PATTERN)
@@ -55,19 +72,46 @@ export class CreatePatientSymptomReportDto {
   @IsIn(Object.values(MedicalConsultationStatus))
   consultationStatus?: MedicalConsultationStatus;
   @IsOptional() @IsString() consultationNotObtainedReason?: string;
-  @IsOptional() @IsUUID() healthCenterId?: string;
-  @IsOptional() @IsString() @MaxLength(255) specialty?: string;
+  @ApiPropertyOptional({ deprecated: true })
+  @IsOptional()
+  @IsUUID()
+  healthCenterId?: string;
+  @ApiPropertyOptional({
+    deprecated: true,
+    description:
+      'Legacy owner field. Persist on patient_medical_appointments instead.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  specialty?: string;
   @IsOptional()
   @ValidateNested()
   @Type(() => DurationDto)
   diagnosisSearchDuration?: DurationDto;
-  @IsOptional() @IsBoolean() hasReceivedDiagnosis?: boolean | null;
-  @IsOptional() @IsString() reportedDiagnosis?: string;
-  @IsOptional() @IsBoolean() isReceivingReportedTreatment?: boolean | null;
-  @IsOptional() @IsString() reportedTreatment?: string;
+  @ApiPropertyOptional({ deprecated: true })
+  @IsOptional()
+  @IsBoolean()
+  hasReceivedDiagnosis?: boolean | null;
+  @ApiPropertyOptional({ deprecated: true })
+  @IsOptional()
+  @IsString()
+  reportedDiagnosis?: string;
+  @ApiPropertyOptional({ deprecated: true })
+  @IsOptional()
+  @IsBoolean()
+  isReceivingReportedTreatment?: boolean | null;
+  @ApiPropertyOptional({ deprecated: true })
+  @IsOptional()
+  @IsString()
+  reportedTreatment?: string;
+  @ApiPropertyOptional({ deprecated: true })
   @IsOptional()
   @ValidateNested()
   @Type(() => DurationDto)
   reportedTreatmentFrequency?: DurationDto;
-  @IsOptional() @IsString() notReceivingTreatmentReason?: string;
+  @ApiPropertyOptional({ deprecated: true })
+  @IsOptional()
+  @IsString()
+  notReceivingTreatmentReason?: string;
 }

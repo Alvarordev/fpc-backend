@@ -7,6 +7,7 @@ export interface CatalogItemSeed {
   parentCode?: string | null;
   sortOrder?: number;
   isSystem?: boolean;
+  metadata?: Record<string, unknown> | null;
 }
 
 export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
@@ -633,12 +634,14 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'ONCOLOGIA_MEDICA',
     label: 'Oncología médica',
     sortOrder: 10,
+    metadata: { aliases: ['Oncología', 'ONCOLOGY', 'Oncologia'] },
   },
   {
     kind: 'medical_specialty',
     code: 'ONCOLOGIA_QUIRURGICA',
     label: 'Oncología quirúrgica',
     sortOrder: 20,
+    metadata: { aliases: ['Cirugía oncológica', 'Oncología quirúrgica'] },
   },
   {
     kind: 'medical_specialty',
@@ -712,12 +715,32 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     label: 'Endocrinología oncológica',
     sortOrder: 140,
   },
+  {
+    kind: 'medical_specialty',
+    code: 'MEDICINA_GENERAL',
+    label: 'Medicina general',
+    sortOrder: 150,
+    metadata: { aliases: ['Medicina General'] },
+  },
+  {
+    kind: 'medical_specialty',
+    code: 'MEDICINA_FAMILIAR',
+    label: 'Medicina familiar',
+    sortOrder: 160,
+  },
+  {
+    kind: 'medical_specialty',
+    code: 'OTRO',
+    label: 'Otra especialidad',
+    sortOrder: 900,
+  },
 
   {
     kind: 'cancer_diagnosis',
     code: 'MAMA_DUCTAL',
     label: 'Cáncer de mama ductal infiltrante',
     sortOrder: 10,
+    metadata: { aliases: ['Cáncer de mama', 'Cancer de mama', 'Breast cancer'] },
   },
   {
     kind: 'cancer_diagnosis',
@@ -730,6 +753,9 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'GASTRICO',
     label: 'Cáncer gástrico',
     sortOrder: 30,
+    metadata: {
+      aliases: ['Cáncer de estómago', 'Cáncer de estómago avanzado', 'Cancer gastrico'],
+    },
   },
   {
     kind: 'cancer_diagnosis',
@@ -742,6 +768,7 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'COLON',
     label: 'Cáncer de colon',
     sortOrder: 50,
+    metadata: { aliases: ['Cáncer de colon y recto'] },
   },
   {
     kind: 'cancer_diagnosis',
@@ -754,6 +781,7 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'PULMON_NO_MICROCITICO',
     label: 'Cáncer de pulmón no microcítico',
     sortOrder: 70,
+    metadata: { aliases: ['Cáncer de pulmón', 'Cancer de pulmon'] },
   },
   {
     kind: 'cancer_diagnosis',
@@ -766,6 +794,9 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'TIROIDES_PAPILAR',
     label: 'Cáncer de tiroides papilar',
     sortOrder: 90,
+    metadata: {
+      aliases: ['Cáncer de tiroides', 'Thyroid cancer'],
+    },
   },
   {
     kind: 'cancer_diagnosis',
@@ -784,6 +815,7 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'LINFOMANH',
     label: 'Linfoma no Hodgkin',
     sortOrder: 120,
+    metadata: { aliases: ['Linfoma'] },
   },
   {
     kind: 'cancer_diagnosis',
@@ -796,6 +828,7 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'LMA',
     label: 'Leucemia mieloide aguda',
     sortOrder: 140,
+    metadata: { aliases: ['Leucemia'] },
   },
   {
     kind: 'cancer_diagnosis',
@@ -820,6 +853,7 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'PIEL_NO_MELANOMA',
     label: 'Cáncer de piel no melanoma',
     sortOrder: 180,
+    metadata: { aliases: ['Cáncer de piel'] },
   },
   {
     kind: 'cancer_diagnosis',
@@ -850,6 +884,21 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'OTRO',
     label: 'Otro diagnóstico oncológico',
     sortOrder: 900,
+    metadata: {
+      aliases: ['Cancer diagnosis', 'Rollback diagnosis'],
+    },
+  },
+  {
+    kind: 'cancer_diagnosis',
+    code: 'SARCOMA',
+    label: 'Sarcoma',
+    sortOrder: 230,
+  },
+  {
+    kind: 'cancer_diagnosis',
+    code: 'ESOFAGO',
+    label: 'Cáncer de esófago',
+    sortOrder: 240,
   },
 
   {
@@ -857,14 +906,35 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'QUIMIOTERAPIA',
     label: 'Quimioterapia',
     sortOrder: 10,
+    metadata: {
+      aliases: [
+        'Chemotherapy',
+        'Quimioterapia neoadyuvante',
+        'Quimioterapia adyuvante',
+        'Quimioterapia FOLFOX',
+        'Quimioterapia R-CHOP',
+        'Quimioterapia de inducción',
+        'Quimioterapia con platino',
+        'Quimioterapia paliativa',
+        'Quimiorradioterapia',
+      ],
+    },
   },
   {
     kind: 'treatment_type',
     code: 'RADIOTERAPIA',
     label: 'Radioterapia',
     sortOrder: 20,
+    metadata: {
+      aliases: [
+        'Radiotherapy',
+        'Radioterapia externa',
+        'Radioterapia paliativa',
+        'Yodo radiactivo',
+      ],
+    },
   },
-  { kind: 'treatment_type', code: 'CIRUGIA', label: 'Cirugía', sortOrder: 30 },
+  { kind: 'treatment_type', code: 'CIRUGIA', label: 'Cirugía', sortOrder: 30, metadata: { aliases: ['Surgery', 'Mastectomía', 'Histerectomía radical', 'Gastrectomía subtotal', 'Prostatectomía', 'Hemicolectomía', 'Tiroidectomía total'] } },
   {
     kind: 'treatment_type',
     code: 'HORMONOTERAPIA',

@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { PatientTreatment } from './patient-treatment.entity';
 import { Patient } from './patient.entity';
+import { FollowUp } from './follow-up.entity';
 import { Duration } from './embedded/duration.embedded';
 import { DoseUnit } from './dose-unit.enum';
 import { MedicationRoute } from './medication-route.enum';
@@ -23,6 +24,7 @@ import { MedicationRoute } from './medication-route.enum';
 )
 @Index('IDX_treatment_medications_treatment_id', ['treatmentId'])
 @Index('IDX_treatment_medications_patient_id', ['patientId'])
+@Index('IDX_treatment_medications_follow_up_id', ['followUpId'])
 export class TreatmentMedication {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'treatment_id', type: 'uuid' }) treatmentId!: string;
@@ -33,6 +35,11 @@ export class TreatmentMedication {
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'patient_id' })
   patient!: Patient;
+  @Column({ name: 'follow_up_id', type: 'uuid', nullable: true })
+  followUpId!: string | null;
+  @ManyToOne(() => FollowUp)
+  @JoinColumn({ name: 'follow_up_id' })
+  followUp!: FollowUp | null;
   @Column({ type: 'varchar', length: 255 }) name!: string;
   @Column({
     name: 'dose_amount',
@@ -61,6 +68,8 @@ export class TreatmentMedication {
   endDate!: string | null;
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive!: boolean;
+  @Column({ name: 'is_current', type: 'boolean', default: true })
+  isCurrent!: boolean;
   @Column({ type: 'text', nullable: true }) notes!: string | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

@@ -15,6 +15,7 @@ import { PatientActivityStatus } from '../../database/entities/patient-activity-
 import { PatientDetails } from '../../database/entities/patient-details.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
 import { PatientHealthPhaseHistory } from '../../database/entities/patient-health-phase-history.entity';
+import { PatientHealthSubcategoryHistory } from '../../database/entities/patient-health-subcategory-history.entity';
 import {
   HEALTH_SUBCATEGORY_PHASE,
   ONCOLOGICAL_HEALTH_SUBCATEGORIES,
@@ -721,6 +722,17 @@ export class PatientsService {
         historyRepository.create({
           patientId: id,
           healthPhase,
+        }),
+      );
+    }
+    if (healthSubcategory && healthSubcategory !== previousHealthSubcategory) {
+      const subcategoryHistory = manager.getRepository(
+        PatientHealthSubcategoryHistory,
+      );
+      await subcategoryHistory.save(
+        subcategoryHistory.create({
+          patientId: id,
+          healthSubcategory,
         }),
       );
     }

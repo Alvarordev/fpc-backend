@@ -35,12 +35,15 @@ export class TreatmentMedicationsService {
     if (!treatment) throw new NotFoundException('Treatment not found');
     const repository =
       manager?.getRepository(TreatmentMedication) ?? this.repository;
-    const { frequency, ...rest } = input;
+    const { frequency, followUpId, ...rest } = input;
     const medication = await repository.save(
       repository.create({
         ...rest,
         treatmentId,
         patientId,
+        followUpId: followUpId ?? treatment.followUpId,
+        isCurrent: true,
+        isActive: input.isActive ?? true,
         doseAmount:
           input.doseAmount === undefined ? null : String(input.doseAmount),
         frequency: normalizeDuration(frequency),
@@ -60,12 +63,23 @@ export class TreatmentMedicationsService {
       where: { id: medicationId, treatmentId, patientId },
     });
     if (!medication) throw new NotFoundException('Medication not found');
-    const { frequency, doseAmount, ...rest } = input;
-    Object.assign(medication, rest);
+    medication.isActive = false;
+    medication.isCurrent = false;
+    const { frequency, doseAmount, followUpId, ...rest } = input;
+    const next = this.repository.create({
+      ...medication,
+      id: undefined as unknown as string,
+      createdAt: undefined as unknown as Date,
+      isActive: input.isActive ?? true,
+      isCurrent: true,
+      followUpId: followUpId ?? medication.followUpId,
+      ...rest,
+    });
     if (frequency !== undefined)
-      medication.frequency = normalizeDuration(frequency);
-    if (doseAmount !== undefined) medication.doseAmount = String(doseAmount);
-    const saved = await this.repository.save(medication);
+      next.frequency = normalizeDuration(frequency);
+    if (doseAmount !== undefined) next.doseAmount = String(doseAmount);
+    await this.repository.save(medication);
+    const saved = await this.repository.save(next);
     await this.invalidations.markDirty(patientId);
     return saved;
   }
@@ -80,6 +94,7 @@ export class TreatmentMedicationsService {
     });
     if (!medication) throw new NotFoundException('Medication not found');
     medication.isActive = false;
+    medication.isCurrent = false;
     await this.repository.save(medication);
     await this.invalidations.markDirty(patientId);
   }
@@ -107,12 +122,17 @@ export class TreatmentMedicationsService {
       where: { treatmentId: fromTreatmentId, patientId, isActive: true },
     });
     if (!active.length) return;
+    const treatment = await manager.getRepository(PatientTreatment).findOneBy({
+      id: toTreatmentId,
+    });
     await repository.save(
       active.map((medication) =>
         repository.create({
           ...medication,
           id: undefined,
           treatmentId: toTreatmentId,
+          followUpId: treatment?.followUpId ?? medication.followUpId,
+          isCurrent: true,
           createdAt: undefined,
         }),
       ),

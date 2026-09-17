@@ -35,12 +35,33 @@ describe('PatientSymptomReportsService', () => {
         return reportRepository;
       }),
     } as unknown as EntityManager;
+    const ownership = {
+      fanOutFromSymptomReport: jest.fn().mockResolvedValue(undefined),
+      stripOwnershipFields: (input: Record<string, unknown>) => ({
+        ...input,
+        healthCenterId: undefined,
+        specialty: undefined,
+        firstConsultationDate: undefined,
+        nextConsultationDate: undefined,
+        hasReferral: undefined,
+        referredHealthCenterId: undefined,
+        referralNotProvidedReason: undefined,
+        reportedDiagnosis: undefined,
+        reportedTreatment: undefined,
+        reportedTreatmentFrequency: undefined,
+        isReceivingReportedTreatment: undefined,
+        notReceivingTreatmentReason: undefined,
+        isAwaitingDiagnosis: undefined,
+        hasReceivedDiagnosis: undefined,
+      }),
+    };
     const service = new PatientSymptomReportsService(
       reportRepository as unknown as Repository<PatientSymptomReport>,
       followUps as unknown as Repository<FollowUp>,
       enrollments as unknown as Repository<Enrollment>,
       patients,
       invalidations,
+      ownership as never,
     );
     return { service, reportRepository, manager, savedReports };
   }
@@ -124,9 +145,9 @@ describe('PatientSymptomReportsService', () => {
     expect(savedReports[0]).toEqual(
       expect.objectContaining({
         hasMedicalConsultation: null,
-        firstConsultationDate: null,
-        isAwaitingDiagnosis: null,
-        hasReferral: null,
+        firstConsultationDate: undefined,
+        isAwaitingDiagnosis: undefined,
+        hasReferral: undefined,
       }),
     );
   });

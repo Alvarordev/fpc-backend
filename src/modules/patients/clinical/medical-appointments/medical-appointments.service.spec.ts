@@ -54,6 +54,14 @@ describe('MedicalAppointmentsService', () => {
       { markDirty: jest.fn() } as unknown as PatientSummaryInvalidationService,
       access,
       webhooksStub,
+      {
+        resolve: jest.fn(async (_kind: string, value: string) => ({
+          code: value,
+          label: value,
+          other: null,
+        })),
+        resolveOptional: jest.fn(),
+      } as never,
     );
     return { service, queryBuilder };
   }
@@ -97,6 +105,14 @@ describe('MedicalAppointmentsService', () => {
       { markDirty: jest.fn() } as unknown as PatientSummaryInvalidationService,
       access,
       webhooksStub,
+      {
+        resolve: jest.fn(async (_kind: string, value: string) => ({
+          code: value,
+          label: value,
+          other: null,
+        })),
+        resolveOptional: jest.fn(),
+      } as never,
     );
 
     await service2.findAll({} as FindMedicalAppointmentsDto, adminUser);
@@ -159,6 +175,14 @@ describe('MedicalAppointmentsService', () => {
       { markDirty: jest.fn() } as unknown as PatientSummaryInvalidationService,
       { scopeQuery: jest.fn() } as unknown as PatientAccessService,
       webhooksStub,
+      {
+        resolve: jest.fn(async (_kind: string, value: string) => ({
+          code: value,
+          label: value,
+          other: null,
+        })),
+        resolveOptional: jest.fn(),
+      } as never,
     );
 
     const dto: UpdateMedicalAppointmentDto = {

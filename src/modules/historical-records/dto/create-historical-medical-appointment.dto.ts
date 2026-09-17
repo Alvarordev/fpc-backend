@@ -27,6 +27,11 @@ export class CreateHistoricalMedicalAppointmentDto {
   @IsUUID()
   healthCenterId?: string;
 
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  referredHealthCenterId?: string;
+
   @ApiProperty()
   @IsString()
   @MaxLength(255)

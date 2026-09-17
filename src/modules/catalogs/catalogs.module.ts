@@ -8,6 +8,7 @@ import {
 } from '../../database/entities/ubigeo.entity';
 import { CatalogsController } from './catalogs.controller';
 import { CatalogsService } from './catalogs.service';
+import { CatalogValueService } from './catalog-value.service';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { CatalogsService } from './catalogs.service';
     ]),
   ],
   controllers: [CatalogsController],
-  providers: [CatalogsService],
-  exports: [CatalogsService],
+  providers: [CatalogsService, CatalogValueService],
+  exports: [CatalogsService, CatalogValueService],
 })
 export class CatalogsModule {}

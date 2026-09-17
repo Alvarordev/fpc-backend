@@ -21,6 +21,8 @@ import {
   durationFromElapsedDays,
   normalizeDuration,
 } from '../../../../shared/duration/duration.util';
+import { CatalogValueService } from '../../../catalogs/catalog-value.service';
+import { PatientSymptomReport } from '../../../../database/entities/patient-symptom-report.entity';
 @Injectable()
 export class PatientDiagnosesService {
   constructor(
@@ -33,6 +35,7 @@ export class PatientDiagnosesService {
     private readonly patients: PatientsService,
     private readonly versioning: HistoryVersioningService,
     private readonly invalidations: PatientSummaryInvalidationService,
+    private readonly catalogValues: CatalogValueService,
   ) {}
   async create(
     patientId: string,
@@ -59,6 +62,8 @@ export class PatientDiagnosesService {
       waitTimeForDiagnosis,
       firstSymptomsDate,
       diagnosisDate,
+      diagnosisOther,
+      diagnosisSpecialtyOther,
       ...rest
     } = input;
     if (
@@ -124,8 +129,36 @@ export class PatientDiagnosesService {
       }
     }
 
+    const resolvedDiagnosis = await this.catalogValues.resolve(
+      'cancer_diagnosis',
+      input.diagnosis,
+      { otherText: diagnosisOther, manager },
+    );
+    const resolvedSpecialty = await this.catalogValues.resolveOptional(
+      'medical_specialty',
+      input.diagnosisSpecialty,
+      { otherText: diagnosisSpecialtyOther, manager },
+    );
+
+    const symptomReports =
+      manager?.getRepository(PatientSymptomReport) ??
+      this.repository.manager?.getRepository(PatientSymptomReport);
+    const hasSymptomReport = symptomReports
+      ? await symptomReports.existsBy({
+          patientId,
+          followUpId: input.followUpId,
+        })
+      : false;
+
     const values = {
       ...rest,
+      diagnosis: resolvedDiagnosis.code,
+      diagnosisOther: resolvedDiagnosis.other,
+      diagnosisSpecialty: resolvedSpecialty?.code ?? null,
+      diagnosisSpecialtyOther: resolvedSpecialty?.other ?? null,
+      symptomLeadingToCheckup: hasSymptomReport
+        ? null
+        : (rest.symptomLeadingToCheckup ?? null),
       firstSymptomsDate,
       diagnosisDate,
       patientId,

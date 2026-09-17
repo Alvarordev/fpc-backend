@@ -17,6 +17,10 @@ import { DurationDto } from '../../../../../shared/duration/duration.dto';
 export class CreatePatientDiagnosisDto {
   @IsUUID() followUpId!: string;
   @IsString() diagnosis!: string;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  diagnosisOther?: string;
   @ApiProperty({
     enum: PatientDiagnosisMode,
     example: PatientDiagnosisMode.PARALLEL,
@@ -48,7 +52,18 @@ export class CreatePatientDiagnosisDto {
   @IsBoolean()
   hasReferral?: boolean;
   @IsOptional() @IsString() diagnosisSpecialty?: string;
-  @IsOptional() @IsString() symptomLeadingToCheckup?: string;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  diagnosisSpecialtyOther?: string;
+  @ApiPropertyOptional({
+    deprecated: true,
+    description:
+      'Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists.',
+  })
+  @IsOptional()
+  @IsString()
+  symptomLeadingToCheckup?: string;
   @IsOptional()
   @ValidateNested()
   @Type(() => DurationDto)

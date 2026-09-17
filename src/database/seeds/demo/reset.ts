@@ -28,6 +28,7 @@ export const DOMAIN_TABLES = [
   'patient_diagnoses',
   'companion_patient',
   'patient_health_phase_history',
+  'patient_health_subcategory_history',
   'patient_family_cancer_history',
   'patient_limitations',
   'patient_active_comorbidities',

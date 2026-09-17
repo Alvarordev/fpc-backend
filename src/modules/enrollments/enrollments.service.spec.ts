@@ -236,4 +236,21 @@ describe('EnrollmentsService phase-one validation', () => {
       ),
     ).toThrow('A patient not receiving treatment cannot include treatments');
   });
+
+  it('allows a scheduled signs consultation without a client medicalAppointments array', () => {
+    expect(
+      validateClinical({
+        symptomReport: {
+          hasDiscomfort: true,
+          hasRequestedMedicalConsultation: true,
+          consultationStatus: 'SCHEDULED',
+          healthCenterId: '11111111-1111-1111-1111-111111111111',
+          specialty: 'MEDICINA_GENERAL',
+          hasReceivedDiagnosis: false,
+          isReceivingReportedTreatment: false,
+          notReceivingTreatmentReason: 'Aún no inicia',
+        },
+      }),
+    ).not.toThrow();
+  });
 });

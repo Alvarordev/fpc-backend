@@ -15,6 +15,7 @@ import { dateOnlyInLima } from '../../../../shared/date-only/date-only.util';
 import { normalizeDuration } from '../../../../shared/duration/duration.util';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
 import { PatientsService } from '../../patients.service';
+import { CatalogValueService } from '../../../catalogs/catalog-value.service';
 import {
   CreatePatientNonOncologicalFollowUpDto,
   UpdatePatientNonOncologicalFollowUpDto,
@@ -36,6 +37,7 @@ export class PatientNonOncologicalFollowUpsService {
     private readonly dataSource: DataSource,
     private readonly patients: PatientsService,
     private readonly invalidations: PatientSummaryInvalidationService,
+    private readonly catalogValues: CatalogValueService,
   ) {}
 
   async create(
@@ -55,7 +57,15 @@ export class PatientNonOncologicalFollowUpsService {
       manager,
     );
     await this.assertRelations(patientId, input, manager);
-    const normalized = this.normalize(input);
+    const specialty = await this.catalogValues.resolveOptional(
+      'medical_specialty',
+      input.controlSpecialty,
+      { manager },
+    );
+    const normalized = this.normalize({
+      ...input,
+      controlSpecialty: specialty?.code ?? input.controlSpecialty,
+    });
     const repository = manager.getRepository(PatientNonOncologicalFollowUp);
     const record = await repository.save(
       repository.create({

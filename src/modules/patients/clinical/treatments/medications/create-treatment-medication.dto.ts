@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Min,
   MaxLength,
   ValidateNested,
@@ -27,5 +28,6 @@ export class CreateTreatmentMedicationDto {
   @IsOptional() @IsDateString() startDate?: string;
   @IsOptional() @IsDateString() endDate?: string;
   @IsOptional() @IsBoolean() isActive?: boolean;
+  @IsOptional() @IsUUID() followUpId?: string;
   @IsOptional() @IsString() notes?: string;
 }

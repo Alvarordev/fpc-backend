@@ -64,22 +64,22 @@ export class PatientSymptomReportResponseDto {
   @ApiProperty({ nullable: true })
   noMedicalConsultationReason!: string | null;
 
-  @ApiProperty({ format: 'date', nullable: true })
+  @ApiProperty({ format: 'date', nullable: true, deprecated: true })
   firstConsultationDate!: string | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, deprecated: true })
   isAwaitingDiagnosis!: boolean | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, deprecated: true })
   hasReferral!: boolean | null;
 
-  @ApiProperty({ format: 'uuid', nullable: true })
+  @ApiProperty({ format: 'uuid', nullable: true, deprecated: true })
   referredHealthCenterId!: string | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, deprecated: true })
   referralNotProvidedReason!: string | null;
 
-  @ApiProperty({ format: 'date', nullable: true })
+  @ApiProperty({ format: 'date', nullable: true, deprecated: true })
   nextConsultationDate!: string | null;
 
   @ApiProperty({ enum: MedicalConsultationStatus, nullable: true })
@@ -88,31 +88,31 @@ export class PatientSymptomReportResponseDto {
   @ApiProperty({ nullable: true })
   consultationNotObtainedReason!: string | null;
 
-  @ApiProperty({ format: 'uuid', nullable: true })
+  @ApiProperty({ format: 'uuid', nullable: true, deprecated: true })
   healthCenterId!: string | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, deprecated: true })
   specialty!: string | null;
 
   @ApiProperty({ type: DurationResponseDto, nullable: true })
   diagnosisSearchDuration!: DurationResponseDto | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, deprecated: true })
   hasReceivedDiagnosis!: boolean | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, deprecated: true })
   reportedDiagnosis!: string | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, deprecated: true })
   isReceivingReportedTreatment!: boolean | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, deprecated: true })
   reportedTreatment!: string | null;
 
-  @ApiProperty({ type: DurationResponseDto, nullable: true })
+  @ApiProperty({ type: DurationResponseDto, nullable: true, deprecated: true })
   reportedTreatmentFrequency!: DurationResponseDto | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, deprecated: true })
   notReceivingTreatmentReason!: string | null;
 
   @ApiProperty({ format: 'date-time' })
