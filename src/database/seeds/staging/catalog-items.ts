@@ -641,19 +641,55 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'ONCOLOGIA_QUIRURGICA',
     label: 'Oncología quirúrgica',
     sortOrder: 20,
-    metadata: { aliases: ['Cirugía oncológica', 'Oncología quirúrgica'] },
+    metadata: {
+      aliases: [
+        'Cirugía oncológica',
+        'Oncología quirúrgica',
+        'Cirugia oncologica',
+        'Cirugía oncologica',
+      ],
+    },
+  },
+  {
+    kind: 'medical_specialty',
+    code: 'MASTOLOGIA',
+    label: 'Mastología',
+    sortOrder: 25,
+    metadata: { aliases: ['Mastologia', 'Mastología'] },
+  },
+  {
+    kind: 'medical_specialty',
+    code: 'CIRUGIA_CABEZA_CUELLO',
+    label: 'Cirugía de cabeza y cuello',
+    sortOrder: 26,
+    metadata: {
+      aliases: ['Cirugía cabeza y cuello', 'Cirugia cabeza y cuello'],
+    },
+  },
+  {
+    kind: 'medical_specialty',
+    code: 'ONCOLOGIA_PEDIATRICA',
+    label: 'Oncología pediátrica',
+    sortOrder: 27,
+    metadata: {
+      aliases: ['Oncología Pediátrica', 'Oncologia pediatrica'],
+    },
   },
   {
     kind: 'medical_specialty',
     code: 'GINECOLOGIA_ONCOLOGICA',
     label: 'Ginecología oncológica',
     sortOrder: 30,
+    metadata: {
+      aliases: ['Gineco-oncologia', 'Gineco oncologia', 'Ginecología oncológica'],
+    },
   },
   {
     kind: 'medical_specialty',
     code: 'UROLOGIA_ONCOLOGICA',
     label: 'Urología oncológica',
     sortOrder: 40,
+    metadata: { aliases: ['Urología', 'Urologia', 'Urología oncológica'] },
   },
   {
     kind: 'medical_specialty',
@@ -727,6 +763,21 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'MEDICINA_FAMILIAR',
     label: 'Medicina familiar',
     sortOrder: 160,
+  },
+  {
+    kind: 'medical_specialty',
+    code: 'EMERGENCIA',
+    label: 'Emergencia',
+    sortOrder: 170,
+    metadata: { aliases: ['Emergencias'] },
+  },
+  {
+    kind: 'medical_specialty',
+    code: 'DESCONOCIDO',
+    label: 'Desconoce',
+    sortOrder: 895,
+    isSystem: true,
+    metadata: { aliases: ['Desconocido', 'No sabe', 'Unknown'] },
   },
   {
     kind: 'medical_specialty',

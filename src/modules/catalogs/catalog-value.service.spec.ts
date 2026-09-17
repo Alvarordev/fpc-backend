@@ -20,6 +20,19 @@ describe('CatalogValueService', () => {
     {
       id: '2',
       kind: 'medical_specialty',
+      code: 'MASTOLOGIA',
+      label: 'Mastología',
+      parentCode: null,
+      sortOrder: 25,
+      isActive: true,
+      isSystem: false,
+      metadata: { aliases: ['Mastologia', 'Mastología'] },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: '3',
+      kind: 'medical_specialty',
       code: 'OTRO',
       label: 'Otra especialidad',
       parentCode: null,
@@ -46,6 +59,9 @@ describe('CatalogValueService', () => {
     await expect(
       service.resolve('medical_specialty', 'ONCOLOGY'),
     ).resolves.toMatchObject({ code: 'ONCOLOGIA_MEDICA' });
+    await expect(
+      service.resolve('medical_specialty', 'Mastologia'),
+    ).resolves.toMatchObject({ code: 'MASTOLOGIA', other: null });
   });
 
   it('requires extra text for OTRO', async () => {
