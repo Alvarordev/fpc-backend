@@ -2672,7 +2672,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator role required"
+            "description": "Administrator, foundation, or agent role required; non-admins limited to open kinds"
           }
         },
         "security": [
@@ -2680,7 +2680,7 @@
             "bearer": []
           }
         ],
-        "summary": "Create a catalog item",
+        "summary": "Create a catalog item (agents/foundation: open kinds only)",
         "tags": [
           "catalogs"
         ]

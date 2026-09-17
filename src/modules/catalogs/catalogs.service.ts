@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,8 +9,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   CatalogItem,
+  isOpenCatalogKind,
+  RESERVED_CATALOG_CODE,
   type CatalogKind,
 } from '../../database/entities/catalog-item.entity';
+import { UserRole } from '../../database/entities/user-role.enum';
 import {
   UbigeoDepartment,
   UbigeoDistrict,
@@ -51,9 +55,22 @@ export class CatalogsService {
     return item;
   }
 
-  async create(input: CreateCatalogItemDto): Promise<CatalogItem> {
+  async create(
+    input: CreateCatalogItemDto,
+    role: UserRole = UserRole.ADMIN,
+  ): Promise<CatalogItem> {
     const code = input.code.trim();
     if (!code) throw new BadRequestException('code is required');
+    if (code.toUpperCase() === RESERVED_CATALOG_CODE) {
+      throw new BadRequestException(
+        `code ${RESERVED_CATALOG_CODE} is reserved and cannot be created`,
+      );
+    }
+    if (role !== UserRole.ADMIN && !isOpenCatalogKind(input.kind)) {
+      throw new ForbiddenException(
+        'Only administrators can create items for this catalog kind',
+      );
+    }
 
     const existing = await this.catalogItems.findOne({
       where: { kind: input.kind, code },

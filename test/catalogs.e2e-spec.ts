@@ -18,6 +18,7 @@ describe('Catalogs (e2e)', () => {
   let usersService: UsersService;
   let dataSource: DataSource;
   let adminToken: string;
+  let agentToken: string;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -51,6 +52,19 @@ describe('Catalogs (e2e)', () => {
 
     adminToken = (login.body as { accessToken: string }).accessToken;
 
+    await usersService.create({
+      email: 'e2e-catalogs-agent@example.test',
+      password,
+      role: UserRole.AGENT,
+    });
+
+    const agentLogin = await request(httpServer)
+      .post('/auth/login')
+      .send({ email: 'e2e-catalogs-agent@example.test', password })
+      .expect(201);
+
+    agentToken = (agentLogin.body as { accessToken: string }).accessToken;
+
     await dataSource.getRepository(CatalogItem).save(
       dataSource.getRepository(CatalogItem).create({
         kind: 'cancer_stage',
@@ -76,10 +90,14 @@ describe('Catalogs (e2e)', () => {
   afterAll(async () => {
     await dataSource.getRepository(CatalogItem).delete({ code: 'STAGE_1' });
     await dataSource.getRepository(CatalogItem).delete({ code: 'E2E_LANG' });
+    await dataSource.getRepository(CatalogItem).delete({ code: 'E2E_AGENT_DX' });
     await dataSource.getRepository(UbigeoDepartment).delete({ code: 'LIMA' });
     await dataSource
       .getRepository(User)
       .delete({ email: 'e2e-catalogs-admin@example.test' });
+    await dataSource
+      .getRepository(User)
+      .delete({ email: 'e2e-catalogs-agent@example.test' });
     await app.close();
   });
 
@@ -131,6 +149,40 @@ describe('Catalogs (e2e)', () => {
       .expect(201);
 
     expect((archived.body as { isActive: boolean }).isActive).toBe(false);
+  });
+
+  it('allows an agent to create an open-kind item and forbids closed kinds', async () => {
+    const created = await request(httpServer)
+      .post('/catalogs')
+      .set('Authorization', `Bearer ${agentToken}`)
+      .send({
+        kind: 'cancer_diagnosis',
+        code: 'E2E_AGENT_DX',
+        label: 'Diagnóstico e2e agente',
+      })
+      .expect(201);
+
+    expect((created.body as { code: string }).code).toBe('E2E_AGENT_DX');
+
+    await request(httpServer)
+      .post('/catalogs')
+      .set('Authorization', `Bearer ${agentToken}`)
+      .send({
+        kind: 'cancer_stage',
+        code: 'STAGE_E2E',
+        label: 'Estadio e2e',
+      })
+      .expect(403);
+
+    await request(httpServer)
+      .post('/catalogs')
+      .set('Authorization', `Bearer ${agentToken}`)
+      .send({
+        kind: 'cancer_diagnosis',
+        code: 'OTRO',
+        label: 'Otro',
+      })
+      .expect(400);
   });
 
   it('rejects archiving system items', async () => {

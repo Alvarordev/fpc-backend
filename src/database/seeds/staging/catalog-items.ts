@@ -733,6 +733,7 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'OTRO',
     label: 'Otra especialidad',
     sortOrder: 900,
+    isSystem: true,
   },
 
   {
@@ -884,6 +885,7 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'OTRO',
     label: 'Otro diagnóstico oncológico',
     sortOrder: 900,
+    isSystem: true,
     metadata: {
       aliases: ['Cancer diagnosis', 'Rollback diagnosis'],
     },
@@ -965,7 +967,13 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     label: 'Cuidados paliativos',
     sortOrder: 80,
   },
-  { kind: 'treatment_type', code: 'OTRO', label: 'Otro', sortOrder: 90 },
+  {
+    kind: 'treatment_type',
+    code: 'OTRO',
+    label: 'Otro',
+    sortOrder: 90,
+    isSystem: true,
+  },
 
   // Entry sources
   {
