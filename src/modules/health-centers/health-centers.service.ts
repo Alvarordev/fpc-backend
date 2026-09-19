@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HealthCenter } from '../../database/entities/health-center.entity';
+import { CatalogValueService } from '../catalogs/catalog-value.service';
 import { CreateHealthCenterDto } from './dto/create-health-center.dto';
 import { UpdateHealthCenterDto } from './dto/update-health-center.dto';
 @Injectable()
@@ -9,6 +10,7 @@ export class HealthCentersService {
   constructor(
     @InjectRepository(HealthCenter)
     private readonly repository: Repository<HealthCenter>,
+    private readonly catalogValues: CatalogValueService,
   ) {}
   private slug(value: string) {
     return value
@@ -18,9 +20,17 @@ export class HealthCentersService {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
   }
-  create(input: CreateHealthCenterDto) {
+  async create(input: CreateHealthCenterDto) {
+    const category = await this.catalogValues.resolve(
+      'health_center_category',
+      input.category,
+    );
     return this.repository.save(
-      this.repository.create({ ...input, slug: this.slug(input.name) }),
+      this.repository.create({
+        ...input,
+        category: category.code,
+        slug: this.slug(input.name),
+      }),
     );
   }
   findAll(department?: string, isActive?: boolean) {
@@ -44,7 +54,15 @@ export class HealthCentersService {
   }
   async update(id: string, input: UpdateHealthCenterDto) {
     const item = await this.findOne(id);
-    Object.assign(item, input);
+    const category = input.category
+      ? (
+          await this.catalogValues.resolve(
+            'health_center_category',
+            input.category,
+          )
+        ).code
+      : input.category;
+    Object.assign(item, { ...input, ...(category !== undefined ? { category } : {}) });
     if (input.name) item.slug = this.slug(input.name);
     await this.repository.save(item);
     return this.findOne(id);

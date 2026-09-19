@@ -82,6 +82,14 @@ export class PatientDetails {
   })
   birthDepartment!: string | null;
 
+  @Column({
+    name: 'birth_country',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  birthCountry!: string | null;
+
   @Column(() => Duration, { prefix: 'travel_time_to_hospital' })
   travelTimeToHospital!: Duration;
 

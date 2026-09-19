@@ -2610,7 +2610,10 @@
                 "program_dropout_reason",
                 "patient_health_phase",
                 "patient_health_subcategory",
-                "treatment_type"
+                "treatment_type",
+                "country",
+                "chemotherapy_route",
+                "surgical_procedure"
               ],
               "type": "string"
             }
@@ -9438,7 +9441,13 @@
           },
           "birthDepartment": {
             "type": "string",
+            "nullable": true,
             "maxLength": 255
+          },
+          "birthCountry": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
           },
           "primaryHealthCenterId": {
             "type": "string",
@@ -9673,6 +9682,15 @@
             "deprecated": true,
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
+          "waitTimeForDiagnosis": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
           "diagnosis": {
             "type": "string"
           },
@@ -9698,9 +9716,6 @@
           },
           "diagnosisSpecialty": {
             "type": "string"
-          },
-          "waitTimeForDiagnosis": {
-            "$ref": "#/components/schemas/DurationDto"
           },
           "hasMedicalReport": {
             "type": "boolean"
@@ -9824,6 +9839,9 @@
             "type": "string"
           },
           "operationName": {
+            "type": "string"
+          },
+          "chemotherapyRoute": {
             "type": "string"
           },
           "careProgram": {
@@ -11284,18 +11302,7 @@
           },
           "category": {
             "type": "string",
-            "enum": [
-              "I-1",
-              "I-2",
-              "I-3",
-              "I-4",
-              "II-1",
-              "II-2",
-              "II-E",
-              "III-1",
-              "III-E",
-              "III-2"
-            ]
+            "maxLength": 50
           }
         },
         "required": [
@@ -11348,20 +11355,8 @@
             "type": "string"
           },
           "category": {
-            "nullable": true,
-            "enum": [
-              "I-1",
-              "I-2",
-              "I-3",
-              "I-4",
-              "II-1",
-              "II-2",
-              "II-E",
-              "III-1",
-              "III-E",
-              "III-2"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isActive": {
             "type": "boolean"
@@ -11430,18 +11425,7 @@
           },
           "category": {
             "type": "string",
-            "enum": [
-              "I-1",
-              "I-2",
-              "I-3",
-              "I-4",
-              "II-1",
-              "II-2",
-              "II-E",
-              "III-1",
-              "III-E",
-              "III-2"
-            ]
+            "maxLength": 50
           },
           "isActive": {
             "type": "boolean"
@@ -11628,7 +11612,10 @@
               "program_dropout_reason",
               "patient_health_phase",
               "patient_health_subcategory",
-              "treatment_type"
+              "treatment_type",
+              "country",
+              "chemotherapy_route",
+              "surgical_procedure"
             ],
             "type": "string"
           },
@@ -12998,6 +12985,10 @@
             "type": "string",
             "nullable": true
           },
+          "birthCountry": {
+            "type": "string",
+            "nullable": true
+          },
           "primaryHealthCenterId": {
             "type": "string",
             "nullable": true,
@@ -13173,6 +13164,7 @@
           "healthPhase",
           "healthSubcategory",
           "birthDepartment",
+          "birthCountry",
           "primaryHealthCenterId",
           "travelTimeToHospital",
           "emergencyContactName",
@@ -13457,6 +13449,10 @@
             "type": "string",
             "nullable": true
           },
+          "chemotherapyRoute": {
+            "type": "string",
+            "nullable": true
+          },
           "careProgram": {
             "nullable": true,
             "enum": [
@@ -13582,6 +13578,7 @@
           "changeReason",
           "notReceivingReason",
           "operationName",
+          "chemotherapyRoute",
           "careProgram",
           "receivesTeleconsultation",
           "teleconsultationNote",
@@ -14700,6 +14697,15 @@
             "deprecated": true,
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
+          "waitTimeForDiagnosis": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
           "followUpId": {
             "type": "string",
             "format": "uuid"
@@ -14729,9 +14735,6 @@
           },
           "diagnosisSpecialty": {
             "type": "string"
-          },
-          "waitTimeForDiagnosis": {
-            "$ref": "#/components/schemas/DurationDto"
           },
           "hasMedicalReport": {
             "type": "boolean"
@@ -14953,6 +14956,9 @@
             "type": "string"
           },
           "operationName": {
+            "type": "string"
+          },
+          "chemotherapyRoute": {
             "type": "string"
           },
           "careProgram": {
@@ -15828,6 +15834,15 @@
             "deprecated": true,
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
+          "waitTimeForDiagnosis": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
           "diagnosis": {
             "type": "string"
           },
@@ -15853,9 +15868,6 @@
           },
           "diagnosisSpecialty": {
             "type": "string"
-          },
-          "waitTimeForDiagnosis": {
-            "$ref": "#/components/schemas/DurationDto"
           },
           "hasMedicalReport": {
             "type": "boolean"
@@ -17232,6 +17244,9 @@
           "operationName": {
             "type": "string"
           },
+          "chemotherapyRoute": {
+            "type": "string"
+          },
           "careProgram": {
             "enum": [
               "COPHOES",
@@ -17592,6 +17607,15 @@
             "deprecated": true,
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
+          "waitTimeForDiagnosis": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
           "diagnosis": {
             "type": "string"
           },
@@ -17617,9 +17641,6 @@
           },
           "diagnosisSpecialty": {
             "type": "string"
-          },
-          "waitTimeForDiagnosis": {
-            "$ref": "#/components/schemas/DurationDto"
           },
           "hasMedicalReport": {
             "type": "boolean"
@@ -17685,6 +17706,9 @@
             "type": "string"
           },
           "operationName": {
+            "type": "string"
+          },
+          "chemotherapyRoute": {
             "type": "string"
           },
           "careProgram": {

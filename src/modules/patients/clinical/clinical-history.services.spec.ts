@@ -52,6 +52,10 @@ describe('clinical history services', () => {
           : null,
     ),
     resolveMany: jest.fn(async (_kind: string, values: string[] | null) => values),
+    tryResolve: jest.fn(
+      async (_kind: string, value: string | null | undefined) =>
+        value ? { code: value, label: value, other: null } : null,
+    ),
   } as never;
 
   beforeEach(() => {
@@ -75,6 +79,10 @@ describe('clinical history services', () => {
     );
     (catalogValues.resolveMany as jest.Mock).mockImplementation(
       async (_kind: string, values: string[] | null) => values,
+    );
+    (catalogValues.tryResolve as jest.Mock).mockImplementation(
+      async (_kind: string, value: string | null | undefined) =>
+        value ? { code: value, label: value, other: null } : null,
     );
   });
 
@@ -185,6 +193,53 @@ describe('clinical history services', () => {
     expect(values.waitTimeForDiagnosis).toMatchObject({
       valueMin: '2',
       unit: 'MONTH',
+    });
+  });
+
+  it('does not compute diagnosis wait when waitTimeForDiagnosis is explicitly null', async () => {
+    (followUps.existsBy as jest.Mock).mockResolvedValue(true);
+    replaceCurrent.mockResolvedValue({ id: 'diagnosis-id' });
+    const diagnoses = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 'replacement-id',
+        patientId: 'patient-id',
+        isCurrent: true,
+      }),
+    } as unknown as Repository<PatientDiagnosis>;
+    const service = new PatientDiagnosesService(
+      diagnoses,
+      followUps,
+      healthCenters,
+      patients,
+      versioning,
+      invalidations,
+      catalogValues,
+    );
+
+    await service.create('patient-id', {
+      followUpId: 'followUp-id',
+      diagnosis: 'Breast cancer',
+      mode: PatientDiagnosisMode.REPLACE,
+      replacementDiagnosisId: 'replacement-id',
+      firstSymptomsDate: '2026-01-01',
+      diagnosisDate: '2026-03-02',
+      waitTimeForDiagnosis: null,
+    });
+
+    const calls = replaceCurrent.mock.calls as unknown as Array<
+      [
+        unknown,
+        unknown,
+        {
+          waitTimeSource: WaitTimeSource | null;
+          waitTimeForDiagnosis: { valueMin: unknown };
+        },
+      ]
+    >;
+    const values = calls[0][2];
+    expect(values.waitTimeSource).toBeNull();
+    expect(values.waitTimeForDiagnosis).toMatchObject({
+      valueMin: null,
     });
   });
 

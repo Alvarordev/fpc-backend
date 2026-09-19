@@ -28,6 +28,9 @@ export const CATALOG_KINDS = [
   'patient_health_phase',
   'patient_health_subcategory',
   'treatment_type',
+  'country',
+  'chemotherapy_route',
+  'surgical_procedure',
 ] as const;
 
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
@@ -40,6 +43,9 @@ export const OPEN_CATALOG_KINDS = [
   'native_language',
   'entry_source',
   'entry_sub_source',
+  'country',
+  'chemotherapy_route',
+  'surgical_procedure',
 ] as const satisfies readonly CatalogKind[];
 
 export type OpenCatalogKind = (typeof OPEN_CATALOG_KINDS)[number];

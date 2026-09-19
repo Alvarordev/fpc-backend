@@ -52,6 +52,7 @@ import { normalizeDuration } from '../../shared/duration/duration.util';
 import { CompanionContactRole } from '../../database/entities/companion-contact-role.enum';
 import { PatientPsychooncologySupportAssessment } from '../../database/entities/patient-psychooncology-support-assessment.entity';
 import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-non-oncological-follow-up.entity';
+import { CatalogValueService } from '../catalogs/catalog-value.service';
 
 function resolveContactRole(
   contactRole: CompanionContactRole | null | undefined,
@@ -103,6 +104,7 @@ export class PatientsService {
     private readonly webhooks: N8nTransactionalDispatchService,
     @InjectRepository(PatientNonOncologicalFollowUp)
     private readonly nonOncologicalFollowUpsRepository: Repository<PatientNonOncologicalFollowUp>,
+    private readonly catalogValues: CatalogValueService,
   ) {}
 
   assertCanRead(patientId: string, user: User): Promise<void> {
@@ -702,11 +704,32 @@ export class PatientsService {
       healthSubcategory = null;
     }
 
-    const { travelTimeToHospital, ...rest } = input;
+    const { travelTimeToHospital, birthCountry, birthDepartment, ...rest } =
+      input;
+    let nextBirthCountry = details?.birthCountry ?? null;
+    let nextBirthDepartment = details?.birthDepartment ?? null;
+    if (birthCountry !== undefined) {
+      const resolvedCountry = await this.catalogValues.resolveOptional(
+        'country',
+        birthCountry,
+        { manager },
+      );
+      nextBirthCountry = resolvedCountry?.code ?? (birthCountry?.trim() || null);
+    }
+    if (birthDepartment !== undefined) {
+      nextBirthDepartment = birthDepartment ?? null;
+    }
+    if (birthCountry !== undefined && nextBirthCountry) {
+      nextBirthDepartment = null;
+    } else if (birthDepartment !== undefined && nextBirthDepartment) {
+      nextBirthCountry = null;
+    }
     const normalized = {
       ...rest,
       healthPhase,
       healthSubcategory,
+      birthCountry: nextBirthCountry,
+      birthDepartment: nextBirthDepartment,
       travelTimeToHospital: normalizeDuration(travelTimeToHospital),
     };
     const saved = await repository.save(

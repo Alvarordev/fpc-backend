@@ -120,7 +120,7 @@ export class PatientDiagnosesService {
         throw new BadRequestException(
           'firstSymptomsDate must not be after diagnosisDate',
         );
-      if (!waitTimeForDiagnosis) {
+      if (waitTimeForDiagnosis === undefined) {
         const days = Math.round(
           (diagnosed.getTime() - first.getTime()) / (1000 * 60 * 60 * 24),
         );

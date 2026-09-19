@@ -88,6 +88,9 @@ Reglas:
 | `entry_source` | `enrollments.entry_source` | Jerarquía con `parentCode` |
 | `entry_sub_source` | `enrollments.entry_sub_source` | `parentCode` = entry_source |
 | `treatment_type` | `patient_treatments.treatment_type` | Quimioterapia, etc. |
+| `country` | `patient_details.birth_country` | País de nacimiento (abierto) |
+| `chemotherapy_route` | `patient_treatments.chemotherapy_route` | Vía cuando el tipo es Quimioterapia |
+| `surgical_procedure` | `patient_treatments.operation_name` | Procedimiento cuando el tipo es Cirugía |
 
 ### 4.3 No configurables (permanecen enum de flujo)
 
@@ -191,7 +194,8 @@ Sin query: todos los departamentos con provincias (distritos opcionales vía
 - `POST`: crea ítem no-system. `code` obligatorio, único por kind.
   `code=OTRO` está reservado. AGENT y FOUNDATION solo pueden crear kinds
   abiertos (`cancer_diagnosis`, `medical_specialty`, `treatment_type`,
-  `native_language`, `entry_source`, `entry_sub_source`) — mismo patrón
+  `native_language`, `entry_source`, `entry_sub_source`, `country`,
+  `chemotherapy_route`, `surgical_procedure`) — mismo patrón
   que `POST /health-centers`.
 - `PATCH`: `label`, `sortOrder`, `isActive`, `metadata`, `parentCode`.
   No cambia `code` ni `kind`. Ítems system permiten cambiar label/orden/activo.

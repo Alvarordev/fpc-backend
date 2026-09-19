@@ -95,6 +95,13 @@ export class PatientTreatment {
     nullable: true,
   })
   operationName!: string | null;
+  @Column({
+    name: 'chemotherapy_route',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  chemotherapyRoute!: string | null;
   @Column({ name: 'care_program', type: 'varchar', length: 10, nullable: true })
   careProgram!: CareProgram | null;
   @Column({

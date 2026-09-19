@@ -31,11 +31,17 @@ export class UpsertPatientDetailsDto {
   @IsIn(Object.values(PatientHealthSubcategory))
   healthSubcategory?: PatientHealthSubcategory | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  birthDepartment?: string;
+  birthDepartment?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  birthCountry?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()

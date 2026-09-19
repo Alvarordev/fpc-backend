@@ -73,6 +73,9 @@ export class PatientDetailsResponseDto {
   @ApiProperty({ nullable: true })
   birthDepartment!: string | null;
 
+  @ApiProperty({ nullable: true })
+  birthCountry!: string | null;
+
   @ApiProperty({ format: 'uuid', nullable: true })
   primaryHealthCenterId!: string | null;
 
@@ -188,6 +191,7 @@ export class PatientDetailsResponseDto {
       healthPhase: details.healthPhase,
       healthSubcategory: details.healthSubcategory,
       birthDepartment: details.birthDepartment,
+      birthCountry: details.birthCountry,
       primaryHealthCenterId: details.primaryHealthCenterId,
       primaryHealthCenterName: details.primaryHealthCenter?.name ?? null,
       travelTimeToHospital: DurationResponseDto.from(

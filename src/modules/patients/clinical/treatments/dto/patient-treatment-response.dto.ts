@@ -79,6 +79,9 @@ export class PatientTreatmentResponseDto {
   @ApiProperty({ nullable: true })
   operationName!: string | null;
 
+  @ApiProperty({ nullable: true })
+  chemotherapyRoute!: string | null;
+
   @ApiProperty({ enum: CareProgram, nullable: true })
   careProgram!: CareProgram | null;
 
@@ -163,6 +166,7 @@ export class PatientTreatmentResponseDto {
       changeReason: treatment.changeReason,
       notReceivingReason: treatment.notReceivingReason,
       operationName: treatment.operationName,
+      chemotherapyRoute: treatment.chemotherapyRoute,
       careProgram: treatment.careProgram,
       receivesTeleconsultation: treatment.receivesTeleconsultation,
       teleconsultationNote: treatment.teleconsultationNote,

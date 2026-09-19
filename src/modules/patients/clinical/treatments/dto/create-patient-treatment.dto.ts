@@ -59,6 +59,7 @@ export class CreatePatientTreatmentDto {
   @IsOptional() @IsString() changeReason?: string;
   @IsOptional() @IsString() notReceivingReason?: string;
   @IsOptional() @IsString() operationName?: string;
+  @IsOptional() @IsString() chemotherapyRoute?: string;
   @IsOptional() @IsIn(Object.values(CareProgram)) careProgram?: CareProgram;
   @IsOptional()
   @IsBoolean()

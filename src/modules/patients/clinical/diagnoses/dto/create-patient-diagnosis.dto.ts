@@ -64,10 +64,12 @@ export class CreatePatientDiagnosisDto {
   @IsOptional()
   @IsString()
   symptomLeadingToCheckup?: string;
+  @ApiPropertyOptional({ nullable: true, type: DurationDto })
+  @ValidateIf((_, value: unknown) => value != null)
   @IsOptional()
   @ValidateNested()
   @Type(() => DurationDto)
-  waitTimeForDiagnosis?: DurationDto;
+  waitTimeForDiagnosis?: DurationDto | null;
   @IsOptional() @IsBoolean() hasMedicalReport?: boolean;
   @IsOptional() @IsBoolean() isSepaActiveReferral?: boolean;
   @IsOptional() @IsString() changeReason?: string;

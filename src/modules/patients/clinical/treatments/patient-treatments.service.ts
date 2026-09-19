@@ -125,6 +125,16 @@ export class PatientTreatmentsService {
         input.treatmentType,
         { otherText: treatmentTypeOther, manager: entityManager },
       );
+      const resolvedChemoRoute = await this.catalogValues.resolveOptional(
+        'chemotherapy_route',
+        input.chemotherapyRoute,
+        { manager: entityManager },
+      );
+      const resolvedProcedure = await this.catalogValues.tryResolve(
+        'surgical_procedure',
+        input.operationName,
+        { manager: entityManager },
+      );
       const teleconsultationSpecialties = await this.catalogValues.resolveMany(
         'medical_specialty',
         input.teleconsultationSpecialties,
@@ -134,6 +144,14 @@ export class PatientTreatmentsService {
         ...rest,
         treatmentType: resolvedType.code,
         treatmentTypeOther: resolvedType.other,
+        chemotherapyRoute:
+          resolvedType.code === 'QUIMIOTERAPIA'
+            ? (resolvedChemoRoute?.code ?? null)
+            : null,
+        operationName:
+          resolvedType.code === 'CIRUGIA'
+            ? (resolvedProcedure?.code ?? input.operationName ?? null)
+            : null,
         teleconsultationSpecialties,
         patientId,
         seriesId,
