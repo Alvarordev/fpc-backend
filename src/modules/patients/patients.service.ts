@@ -30,6 +30,7 @@ import { PatientSymptomReport } from '../../database/entities/patient-symptom-re
 import { PatientTreatment } from '../../database/entities/patient-treatment.entity';
 import { PatientHealthBackgroundAssessment } from '../../database/entities/patient-health-background-assessment.entity';
 import { Patient } from '../../database/entities/patient.entity';
+import { savePatientOrDniConflict } from './patient-dni-conflict';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CreateCompanionDto } from './dto/create-companion.dto';
 import { type PatientCreationInput } from './dto/create-patient.dto';
@@ -140,7 +141,7 @@ export class PatientsService {
   ): Promise<Patient> {
     const repository =
       manager?.getRepository(Patient) ?? this.patientsRepository;
-    const patient = await repository.save(repository.create({ ...input }));
+    const patient = await savePatientOrDniConflict(repository, { ...input });
     await this.invalidations.markDirty(patient.id, manager);
     // Only fire here when called directly (no manager): the enrollment
     // flow creates its own patient and dispatches its own Registro with
@@ -785,13 +786,11 @@ export class PatientsService {
       ...patientFields
     } = input;
     const patients = manager.getRepository(Patient);
-    const companion = await patients.save(
-      patients.create({
-        ...patientFields,
-        role: PatientRole.COMPANION,
-        status: PatientStatus.UNENROLLED,
-      }),
-    );
+    const companion = await savePatientOrDniConflict(patients, {
+      ...patientFields,
+      role: PatientRole.COMPANION,
+      status: PatientStatus.UNENROLLED,
+    });
     const links = manager.getRepository(CompanionPatient);
     const resolvedContactRole = resolveContactRole(
       contactRole,

@@ -3,10 +3,15 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, QueryFailedError, Repository } from 'typeorm';
+import {
+  enrollmentDbDriverError,
+  translateEnrollmentQueryError,
+} from './enrollment-db-error';
 import { Agent } from '../../database/entities/agent.entity';
 import {
   AffiliationType,
@@ -94,7 +99,30 @@ export class EnrollmentsService {
     private readonly webhooks: N8nTransactionalDispatchService,
   ) {}
 
+  private readonly logger = new Logger(EnrollmentsService.name);
+
   async create(
+    input: EnrollmentInput,
+    userId: string,
+    userRole: string,
+    options: EnrollmentCreateOptions = {},
+  ) {
+    try {
+      return await this.createInTransaction(input, userId, userRole, options);
+    } catch (error) {
+      const translated = translateEnrollmentQueryError(error);
+      if (!translated) throw error;
+      const driver = error instanceof QueryFailedError
+        ? enrollmentDbDriverError(error)
+        : undefined;
+      this.logger.warn(
+        `Enrollment database constraint ${driver?.code ?? 'unknown'} ${driver?.constraint ?? ''} ${driver?.table ?? ''}`.trim(),
+      );
+      throw translated;
+    }
+  }
+
+  private async createInTransaction(
     input: EnrollmentInput,
     userId: string,
     userRole: string,
@@ -179,9 +207,11 @@ export class EnrollmentsService {
         );
       }
       if (insurance?.insuranceType === InsuranceType.SIS && sisAffiliation)
-        throw new ConflictException(
-          'A patient with SIS insurance cannot also have a SIS affiliation request',
-        );
+        throw new ConflictException({
+          code: 'SIS_AFFILIATION_CONFLICT',
+          message:
+            'Un paciente con SIS no puede tener además un trámite de afiliación al SIS.',
+        });
 
       const patient = patientId
         ? await manager
@@ -197,12 +227,18 @@ export class EnrollmentsService {
         patient.status !== PatientStatus.UNENROLLED &&
         !(options.historical && Boolean(patientId))
       )
-        throw new ConflictException('Patient is already enrolled');
+        throw new ConflictException({
+          code: 'PATIENT_ALREADY_ENROLLED',
+          message: 'El paciente ya está enrolado.',
+        });
       if (
         patient.role !== PatientRole.UNKNOWN &&
         patient.role !== PatientRole.PATIENT
       )
-        throw new ConflictException('Only a patient can be enrolled');
+        throw new ConflictException({
+          code: 'PATIENT_ROLE_INVALID',
+          message: 'Solo se puede enrolar a un paciente.',
+        });
 
       patient.role = PatientRole.PATIENT;
       patient.status = PatientStatus.ENROLLED;

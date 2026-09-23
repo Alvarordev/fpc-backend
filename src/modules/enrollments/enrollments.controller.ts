@@ -14,6 +14,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
+import { ApiErrorResponseDto } from '../../shared/filters/api-error-response.dto';
 import { User } from '../../database/entities/user.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { Enrollment } from '../../database/entities/enrollment.entity';
@@ -41,9 +42,14 @@ export class EnrollmentsController {
   @Roles(...WRITE)
   @ApiOperation({ summary: 'Create a patient enrollment' })
   @ApiCreatedResponse({ type: EnrollmentResponseDto })
-  @ApiBadRequestResponse({ description: 'Enrollment data is invalid' })
+  @ApiBadRequestResponse({
+    description: 'Enrollment data is invalid',
+    type: ApiErrorResponseDto,
+  })
   @ApiConflictResponse({
-    description: 'Patient is already enrolled or enrollment data conflicts',
+    description:
+      'Patient is already enrolled, the DNI already exists, or enrollment data conflicts',
+    type: ApiErrorResponseDto,
   })
   @ApiForbiddenResponse({ description: 'Agent assignment is not permitted' })
   @ApiNotFoundResponse({

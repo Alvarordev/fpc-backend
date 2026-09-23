@@ -1796,7 +1796,14 @@
             }
           },
           "400": {
-            "description": "Enrollment data is invalid"
+            "description": "Enrollment data is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
           },
           "401": {
             "description": "JWT missing, invalid, or expired"
@@ -1808,7 +1815,14 @@
             "description": "Patient, companion, or agent not found"
           },
           "409": {
-            "description": "Patient is already enrolled or enrollment data conflicts"
+            "description": "Patient is already enrolled, the DNI already exists, or enrollment data conflicts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -7235,7 +7249,14 @@
             }
           },
           "400": {
-            "description": "Historical enrollment is invalid"
+            "description": "Historical enrollment is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
           },
           "401": {
             "description": "JWT missing, invalid, or expired"
@@ -7245,6 +7266,16 @@
           },
           "404": {
             "description": "A referenced record was not found"
+          },
+          "409": {
+            "description": "Patient is already enrolled, the DNI already exists, or enrollment data conflicts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10710,6 +10741,34 @@
           "followUpQualityRating",
           "isHistorical",
           "createdAt"
+        ]
+      },
+      "ApiErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number"
+          },
+          "code": {
+            "type": "string",
+            "description": "Stable machine-readable error code when one is known"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "path",
+          "timestamp"
         ]
       },
       "UpdateEnrollmentSurveyDto": {

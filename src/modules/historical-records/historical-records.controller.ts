@@ -9,6 +9,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -25,6 +26,7 @@ import { User } from '../../database/entities/user.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
+import { ApiErrorResponseDto } from '../../shared/filters/api-error-response.dto';
 import { EnrollmentResponseDto } from '../enrollments/dto/enrollment-response.dto';
 import { FollowUpResponseDto } from '../follow-ups/dto/follow-up-response.dto';
 import {
@@ -58,7 +60,15 @@ export class HistoricalRecordsController {
   @Post('enrollments')
   @ApiOperation({ summary: 'Create a historical enrollment' })
   @ApiCreatedResponse({ type: EnrollmentResponseDto })
-  @ApiBadRequestResponse({ description: 'Historical enrollment is invalid' })
+  @ApiBadRequestResponse({
+    description: 'Historical enrollment is invalid',
+    type: ApiErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description:
+      'Patient is already enrolled, the DNI already exists, or enrollment data conflicts',
+    type: ApiErrorResponseDto,
+  })
   @ApiForbiddenResponse({ description: 'Only administrators may load history' })
   @ApiNotFoundResponse({ description: 'A referenced record was not found' })
   createEnrollment(
