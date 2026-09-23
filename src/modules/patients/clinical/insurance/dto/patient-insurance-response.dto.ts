@@ -1,9 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  EpsProvider,
-  InsuranceType,
-  PatientInsurance,
-} from '../../../../../database/entities/patient-insurance.entity';
+import { PatientInsurance } from '../../../../../database/entities/patient-insurance.entity';
 
 export class PatientInsuranceResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -15,11 +11,11 @@ export class PatientInsuranceResponseDto {
   @ApiProperty({ format: 'uuid' })
   followUpId!: string;
 
-  @ApiProperty({ enum: InsuranceType })
-  insuranceType!: InsuranceType;
+  @ApiProperty()
+  insuranceType!: string;
 
-  @ApiProperty({ enum: EpsProvider, nullable: true })
-  epsProvider!: EpsProvider | null;
+  @ApiProperty({ nullable: true })
+  epsProvider!: string | null;
 
   @ApiProperty()
   isCurrent!: boolean;

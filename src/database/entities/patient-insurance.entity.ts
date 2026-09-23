@@ -1,5 +1,4 @@
 import {
-  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -11,6 +10,7 @@ import {
 import { FollowUp } from './follow-up.entity';
 import { Patient } from './patient.entity';
 
+/** Seed codes for insurance_type. New options live in catalog_items. */
 export enum InsuranceType {
   SIS = 'SIS',
   ESSALUD = 'ESSALUD',
@@ -19,6 +19,8 @@ export enum InsuranceType {
   SALUDPOL = 'SALUDPOL',
   NONE = 'NONE',
 }
+
+/** Seed codes for eps_provider. New options live in catalog_items. */
 export enum EpsProvider {
   RIMAC = 'RIMAC',
   PACIFICO = 'PACIFICO',
@@ -30,12 +32,6 @@ export enum EpsProvider {
 }
 
 @Entity('patient_insurance')
-@Check(
-  `"insurance_type" IN ('SIS','ESSALUD','EPS','FUERZAS_ARMADAS','SALUDPOL','NONE')`,
-)
-@Check(
-  `"eps_provider" IS NULL OR "eps_provider" IN ('RIMAC','PACIFICO','MAPFRE','SANITAS','LA_POSITIVA','ONCOSALUD','OTHER')`,
-)
 @Index('UQ_patient_insurance_current', ['patientId'], {
   unique: true,
   where: '"is_current" = true',
@@ -52,10 +48,10 @@ export class PatientInsurance {
   @ManyToOne(() => FollowUp)
   @JoinColumn({ name: 'follow_up_id' })
   followUp!: FollowUp;
-  @Column({ name: 'insurance_type', type: 'varchar', length: 30 })
-  insuranceType!: InsuranceType;
-  @Column({ name: 'eps_provider', type: 'varchar', length: 30, nullable: true })
-  epsProvider!: EpsProvider | null;
+  @Column({ name: 'insurance_type', type: 'varchar', length: 100 })
+  insuranceType!: string;
+  @Column({ name: 'eps_provider', type: 'varchar', length: 100, nullable: true })
+  epsProvider!: string | null;
   @Column({ name: 'is_current', type: 'boolean' }) isCurrent!: boolean;
   @Column({ name: 'change_reason', type: 'text', nullable: true })
   changeReason!: string | null;

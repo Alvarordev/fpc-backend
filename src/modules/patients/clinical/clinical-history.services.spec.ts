@@ -97,6 +97,7 @@ describe('clinical history services', () => {
       patients,
       versioning,
       invalidations,
+      catalogValues,
     );
 
     await service.create('patient-id', {
@@ -104,6 +105,11 @@ describe('clinical history services', () => {
       insuranceType: InsuranceType.SIS,
     });
 
+    expect(catalogValues.resolve).toHaveBeenCalledWith(
+      'insurance_type',
+      'SIS',
+      expect.objectContaining({}),
+    );
     expect(replaceCurrent).toHaveBeenCalledWith(
       PatientInsurance,
       { patientId: 'patient-id', isCurrent: true },
@@ -111,6 +117,49 @@ describe('clinical history services', () => {
         patientId: 'patient-id',
         followUpId: 'followUp-id',
         insuranceType: 'SIS',
+        epsProvider: null,
+      },
+    );
+  });
+
+  it('persists insurance codes from the catalog', async () => {
+    (followUps.existsBy as jest.Mock).mockResolvedValue(true);
+    replaceCurrent.mockResolvedValue({
+      id: 'insurance-id',
+    });
+    const service = new PatientInsuranceService(
+      {} as Repository<PatientInsurance>,
+      followUps,
+      patients,
+      versioning,
+      invalidations,
+      catalogValues,
+    );
+
+    await service.create('patient-id', {
+      followUpId: 'followUp-id',
+      insuranceType: 'EPS_ESSALUD',
+      epsProvider: 'RIMAC',
+    });
+
+    expect(catalogValues.resolve).toHaveBeenCalledWith(
+      'insurance_type',
+      'EPS_ESSALUD',
+      expect.objectContaining({}),
+    );
+    expect(catalogValues.resolveOptional).toHaveBeenCalledWith(
+      'eps_provider',
+      'RIMAC',
+      expect.objectContaining({}),
+    );
+    expect(replaceCurrent).toHaveBeenCalledWith(
+      PatientInsurance,
+      { patientId: 'patient-id', isCurrent: true },
+      {
+        patientId: 'patient-id',
+        followUpId: 'followUp-id',
+        insuranceType: 'EPS_ESSALUD',
+        epsProvider: 'RIMAC',
       },
     );
   });

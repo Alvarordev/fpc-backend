@@ -7,6 +7,7 @@ import { PatientInsurance } from '../../../../database/entities/patient-insuranc
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
+import { CatalogValueService } from '../../../catalogs/catalog-value.service';
 import { CreatePatientInsuranceDto } from './dto/create-patient-insurance.dto';
 import { User } from '../../../../database/entities/user.entity';
 
@@ -20,6 +21,7 @@ export class PatientInsuranceService {
     private readonly patients: PatientsService,
     private readonly versioning: HistoryVersioningService,
     private readonly invalidations: PatientSummaryInvalidationService,
+    private readonly catalogValues: CatalogValueService,
   ) {}
   async create(
     patientId: string,
@@ -27,17 +29,33 @@ export class PatientInsuranceService {
     manager?: EntityManager,
   ) {
     await this.assertReferences(patientId, input.followUpId, manager);
+    const insuranceType = await this.catalogValues.resolve(
+      'insurance_type',
+      input.insuranceType,
+      { manager },
+    );
+    const epsProvider = await this.catalogValues.resolveOptional(
+      'eps_provider',
+      input.epsProvider,
+      { manager },
+    );
+    const values = {
+      ...input,
+      patientId,
+      insuranceType: insuranceType.code,
+      epsProvider: epsProvider?.code ?? null,
+    };
     const insurance = await (manager
       ? this.versioning.replaceCurrent(
           PatientInsurance,
           { patientId, isCurrent: true },
-          { ...input, patientId },
+          values,
           manager,
         )
       : this.versioning.replaceCurrent(
           PatientInsurance,
           { patientId, isCurrent: true },
-          { ...input, patientId },
+          values,
         ));
     await this.invalidations.markDirty(patientId, manager);
     return insurance;

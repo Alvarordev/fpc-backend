@@ -1,20 +1,24 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsDateString,
-  IsIn,
   IsOptional,
   IsString,
   IsUUID,
+  MaxLength,
 } from 'class-validator';
-import {
-  EpsProvider,
-  InsuranceType,
-} from '../../../../../database/entities/patient-insurance.entity';
 
 export class CreatePatientInsuranceDto {
   @IsUUID() followUpId!: string;
-  @IsIn(Object.values(InsuranceType)) insuranceType!: InsuranceType;
-  @IsOptional() @IsIn(Object.values(EpsProvider)) epsProvider?: EpsProvider;
+  @ApiProperty({ maxLength: 100 })
+  @IsString()
+  @MaxLength(100)
+  insuranceType!: string;
+  @ApiPropertyOptional({ maxLength: 100 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  epsProvider?: string;
   @IsOptional() @IsString() changeReason?: string;
   @IsOptional() @IsDateString() startDate?: string;
   @IsOptional() @IsDateString() endDate?: string;

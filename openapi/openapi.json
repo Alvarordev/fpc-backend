@@ -9610,27 +9610,12 @@
         "type": "object",
         "properties": {
           "insuranceType": {
-            "enum": [
-              "SIS",
-              "ESSALUD",
-              "EPS",
-              "FUERZAS_ARMADAS",
-              "SALUDPOL",
-              "NONE"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "epsProvider": {
-            "enum": [
-              "RIMAC",
-              "PACIFICO",
-              "MAPFRE",
-              "SANITAS",
-              "LA_POSITIVA",
-              "ONCOSALUD",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "changeReason": {
             "type": "string"
@@ -13674,28 +13659,11 @@
             "format": "uuid"
           },
           "insuranceType": {
-            "enum": [
-              "SIS",
-              "ESSALUD",
-              "EPS",
-              "FUERZAS_ARMADAS",
-              "SALUDPOL",
-              "NONE"
-            ],
             "type": "string"
           },
           "epsProvider": {
-            "nullable": true,
-            "enum": [
-              "RIMAC",
-              "PACIFICO",
-              "MAPFRE",
-              "SANITAS",
-              "LA_POSITIVA",
-              "ONCOSALUD",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isCurrent": {
             "type": "boolean"
@@ -14814,32 +14782,17 @@
       "CreatePatientInsuranceDto": {
         "type": "object",
         "properties": {
-          "followUpId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "insuranceType": {
             "type": "string",
-            "enum": [
-              "SIS",
-              "ESSALUD",
-              "EPS",
-              "FUERZAS_ARMADAS",
-              "SALUDPOL",
-              "NONE"
-            ]
+            "maxLength": 100
           },
           "epsProvider": {
             "type": "string",
-            "enum": [
-              "RIMAC",
-              "PACIFICO",
-              "MAPFRE",
-              "SANITAS",
-              "LA_POSITIVA",
-              "ONCOSALUD",
-              "OTHER"
-            ]
+            "maxLength": 100
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
           },
           "changeReason": {
             "type": "string"
@@ -14855,8 +14808,8 @@
           }
         },
         "required": [
-          "followUpId",
-          "insuranceType"
+          "insuranceType",
+          "followUpId"
         ]
       },
       "CreatePatientMedicalAppointmentDto": {
@@ -18062,27 +18015,12 @@
         "type": "object",
         "properties": {
           "insuranceType": {
-            "enum": [
-              "SIS",
-              "ESSALUD",
-              "EPS",
-              "FUERZAS_ARMADAS",
-              "SALUDPOL",
-              "NONE"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "epsProvider": {
-            "enum": [
-              "RIMAC",
-              "PACIFICO",
-              "MAPFRE",
-              "SANITAS",
-              "LA_POSITIVA",
-              "ONCOSALUD",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "changeReason": {
             "type": "string"
