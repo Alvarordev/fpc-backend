@@ -871,9 +871,22 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
   },
   {
     kind: 'cancer_diagnosis',
+    code: 'LINFOMANH_BURKITT',
+    label: 'Linfoma de Burkitt',
+    parentCode: 'LINFOMANH',
+    sortOrder: 125,
+  },
+  {
+    kind: 'cancer_diagnosis',
     code: 'LINFOMAH',
     label: 'Linfoma Hodgkin',
     sortOrder: 130,
+  },
+  {
+    kind: 'cancer_diagnosis',
+    code: 'LINFOMA_LINFOBLASTICO_T',
+    label: 'Linfoma linfoblástico de células T',
+    sortOrder: 135,
   },
   {
     kind: 'cancer_diagnosis',
@@ -890,15 +903,33 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
   },
   {
     kind: 'cancer_diagnosis',
+    code: 'LLA_B',
+    label: 'Leucemia linfoblástica aguda tipo B',
+    sortOrder: 155,
+  },
+  {
+    kind: 'cancer_diagnosis',
     code: 'LLC',
     label: 'Leucemia linfocítica crónica',
     sortOrder: 160,
   },
   {
     kind: 'cancer_diagnosis',
+    code: 'LEUCEMIA',
+    label: 'Leucemia',
+    sortOrder: 165,
+  },
+  {
+    kind: 'cancer_diagnosis',
     code: 'PIEL_MELANOMA',
     label: 'Melanoma',
     sortOrder: 170,
+  },
+  {
+    kind: 'cancer_diagnosis',
+    code: 'PIEL',
+    label: 'Cáncer de piel',
+    sortOrder: 175,
   },
   {
     kind: 'cancer_diagnosis',
@@ -940,6 +971,12 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     metadata: {
       aliases: ['Cancer diagnosis', 'Rollback diagnosis'],
     },
+  },
+  {
+    kind: 'cancer_diagnosis',
+    code: 'MIELOMA_MULTIPLE',
+    label: 'Mieloma múltiple',
+    sortOrder: 225,
   },
   {
     kind: 'cancer_diagnosis',
