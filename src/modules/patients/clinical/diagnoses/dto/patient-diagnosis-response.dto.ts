@@ -1,8 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  CancerStage,
-  PatientDiagnosis,
-} from '../../../../../database/entities/patient-diagnosis.entity';
+import { PatientDiagnosis } from '../../../../../database/entities/patient-diagnosis.entity';
 import { WaitTimeSource } from '../../../../../database/entities/wait-time-source.enum';
 import { DurationResponseDto } from '../../../../../shared/duration/duration-response.dto';
 
@@ -19,8 +16,8 @@ export class PatientDiagnosisResponseDto {
   @ApiProperty()
   diagnosis!: string;
 
-  @ApiProperty({ enum: CancerStage, nullable: true })
-  cancerStage!: CancerStage | null;
+  @ApiProperty({ nullable: true })
+  cancerStage!: string | null;
 
   @ApiProperty({ format: 'date', nullable: true })
   diagnosisDate!: string | null;

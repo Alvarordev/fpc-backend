@@ -6,7 +6,6 @@ import {
   ManyToOne,
   PrimaryColumn,
 } from 'typeorm';
-import { PatientHealthSubcategory } from './patient-health-subcategory.enum';
 import { Patient } from './patient.entity';
 
 @Entity('patient_health_subcategory_history')
@@ -25,8 +24,8 @@ export class PatientHealthSubcategoryHistory {
   @JoinColumn({ name: 'patient_id' })
   patient!: Patient;
 
-  @Column({ name: 'health_subcategory', type: 'varchar', length: 40 })
-  healthSubcategory!: PatientHealthSubcategory;
+  @Column({ name: 'health_subcategory', type: 'varchar', length: 100 })
+  healthSubcategory!: string;
 
   @Column({
     name: 'changed_at',

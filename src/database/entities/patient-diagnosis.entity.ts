@@ -14,6 +14,7 @@ import { Patient } from './patient.entity';
 import { Duration } from './embedded/duration.embedded';
 import { WaitTimeSource } from './wait-time-source.enum';
 
+/** Seed codes for cancer_stage. New options live in catalog_items. */
 export enum CancerStage {
   STAGE_1 = 'STAGE_1',
   STAGE_2 = 'STAGE_2',
@@ -23,9 +24,6 @@ export enum CancerStage {
 }
 
 @Entity('patient_diagnoses')
-@Check(
-  `"cancer_stage" IS NULL OR "cancer_stage" IN ('STAGE_1','STAGE_2','STAGE_3','STAGE_4','UNKNOWN')`,
-)
 @Check(
   `"wait_time_source" IS NULL OR "wait_time_source" IN ('COMPUTED','REPORTED')`,
 )
@@ -51,8 +49,8 @@ export class PatientDiagnosis {
   @Column({ type: 'text' }) diagnosis!: string;
   @Column({ name: 'diagnosis_other', type: 'text', nullable: true })
   diagnosisOther!: string | null;
-  @Column({ name: 'cancer_stage', type: 'varchar', length: 20, nullable: true })
-  cancerStage!: CancerStage | null;
+  @Column({ name: 'cancer_stage', type: 'varchar', length: 100, nullable: true })
+  cancerStage!: string | null;
   @Column({ name: 'diagnosis_date', type: 'date', nullable: true })
   diagnosisDate!: string | null;
   @Column({ name: 'health_center_id', type: 'uuid', nullable: true })

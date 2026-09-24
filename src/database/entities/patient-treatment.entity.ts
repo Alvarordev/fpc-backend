@@ -13,21 +13,11 @@ import { FollowUp } from './follow-up.entity';
 import { PatientDiagnosis } from './patient-diagnosis.entity';
 import { Patient } from './patient.entity';
 import { Duration } from './embedded/duration.embedded';
-import { AccessBarrierCode } from './access-barrier-code.enum';
-import { CareProgram } from './care-program.enum';
 import { TreatmentInterruptionReason } from './treatment-interruption-reason.enum';
-import { TreatmentSituation } from './treatment-situation.enum';
 
 @Entity('patient_treatments')
 @Check(
-  `"treatment_situation" IS NULL OR "treatment_situation" IN ('EN_CURSO','PENDIENTE_DE_INICIO','INTERRUMPIDO','FINALIZADO','SEARCHING','ABANDONED','DECEASED_DURING_TREATMENT','NOT_APPLICABLE','REMISSION')`,
-)
-@Check(`"care_program" IS NULL OR "care_program" IN ('COPHOES','PADOMI')`)
-@Check(
   `"interruption_reason" IS NULL OR "interruption_reason" IN ('ADVERSE_REACTION','THERAPEUTIC_OPTION_EVAL','OTHER')`,
-)
-@Check(
-  `"access_barrier_code" IS NULL OR "access_barrier_code" IN ('TRANSFER','LODGING','ALTERNATIVE_MEDICINE','EXCESSIVE_COST','DOES_NOT_WANT_TO_START','STOCKOUT','INFUSION_ROOM_INOPERATIVE','PATIENT_OVERLOAD','OTHER')`,
 )
 @Check(
   '"is_referred" = false AND "source_health_center_id" IS NULL OR "is_referred" = true AND "source_health_center_id" IS NOT NULL AND "receiving_health_center_id" IS NOT NULL AND "source_health_center_id" <> "receiving_health_center_id"',
@@ -102,8 +92,8 @@ export class PatientTreatment {
     nullable: true,
   })
   chemotherapyRoute!: string | null;
-  @Column({ name: 'care_program', type: 'varchar', length: 10, nullable: true })
-  careProgram!: CareProgram | null;
+  @Column({ name: 'care_program', type: 'varchar', length: 100, nullable: true })
+  careProgram!: string | null;
   @Column({
     name: 'receives_teleconsultation',
     type: 'boolean',
@@ -122,10 +112,10 @@ export class PatientTreatment {
   @Column({
     name: 'treatment_situation',
     type: 'varchar',
-    length: 50,
+    length: 100,
     nullable: true,
   })
-  treatmentSituation!: TreatmentSituation | null;
+  treatmentSituation!: string | null;
   @Column({
     name: 'treatment_abandonment_reason',
     type: 'text',
@@ -161,10 +151,10 @@ export class PatientTreatment {
   @Column({
     name: 'access_barrier_code',
     type: 'varchar',
-    length: 40,
+    length: 100,
     nullable: true,
   })
-  accessBarrierCode!: AccessBarrierCode | null;
+  accessBarrierCode!: string | null;
   @Column({ name: 'access_barrier_other', type: 'text', nullable: true })
   accessBarrierOther!: string | null;
   @Column({

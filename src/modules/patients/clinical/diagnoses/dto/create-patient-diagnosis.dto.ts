@@ -6,12 +6,12 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MaxLength,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { CancerStage } from '../../../../../database/entities/patient-diagnosis.entity';
 import { PatientDiagnosisMode } from '../../../../../database/entities/patient-diagnosis-mode.enum';
 import { DurationDto } from '../../../../../shared/duration/duration.dto';
 export class CreatePatientDiagnosisDto {
@@ -39,7 +39,7 @@ export class CreatePatientDiagnosisDto {
   @IsDefined()
   @IsUUID()
   replacementDiagnosisId?: string;
-  @IsOptional() @IsIn(Object.values(CancerStage)) cancerStage?: CancerStage;
+  @IsOptional() @IsString() @MaxLength(100) cancerStage?: string;
   @IsOptional() @IsDateString() diagnosisDate?: string;
   @IsOptional() @IsDateString() firstSymptomsDate?: string;
   @IsOptional() @IsUUID() healthCenterId?: string;

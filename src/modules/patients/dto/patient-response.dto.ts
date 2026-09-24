@@ -17,14 +17,8 @@ import { PatientSymptomReportResponseDto } from '../symptom-reports/dto/patient-
 import { PatientHealthBackgroundAssessmentResponseDto } from '../clinical/health-background/dto/patient-health-background-assessment-response.dto';
 import { CompanionPatient } from '../../../database/entities/companion-patient.entity';
 import { DeactivationReason } from '../../../database/entities/deactivation-reason.enum';
-import { EducationLevel } from '../../../database/entities/education-level.enum';
-import { ProgramDropoutReasonCode } from '../../../database/entities/program-dropout-reason-code.enum';
-import { ShelterSepaProvider } from '../../../database/entities/shelter-sepa-provider.enum';
-import { TransportationSepaProvider } from '../../../database/entities/transportation-sepa-provider.enum';
 import { PatientActivityStatus } from '../../../database/entities/patient-activity-status.enum';
 import { PatientDetails } from '../../../database/entities/patient-details.entity';
-import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
-import { PatientHealthSubcategory } from '../../../database/entities/patient-health-subcategory.enum';
 import { PatientHealthPhaseHistory } from '../../../database/entities/patient-health-phase-history.entity';
 import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../../database/entities/patient-status.enum';
@@ -40,8 +34,8 @@ export class PatientHealthPhaseHistoryResponseDto {
   @ApiProperty({ format: 'uuid' })
   id!: string;
 
-  @ApiProperty({ enum: PatientHealthPhase })
-  healthPhase!: PatientHealthPhase;
+  @ApiProperty()
+  healthPhase!: string;
 
   @ApiProperty({ format: 'date-time' })
   changedAt!: string;
@@ -64,11 +58,11 @@ export class PatientDetailsResponseDto {
   @ApiProperty({ format: 'uuid' })
   patientId!: string;
 
-  @ApiProperty({ enum: PatientHealthPhase, nullable: true })
-  healthPhase!: PatientHealthPhase | null;
+  @ApiProperty({ nullable: true })
+  healthPhase!: string | null;
 
-  @ApiProperty({ enum: PatientHealthSubcategory, nullable: true })
-  healthSubcategory!: PatientHealthSubcategory | null;
+  @ApiProperty({ nullable: true })
+  healthSubcategory!: string | null;
 
   @ApiProperty({ nullable: true })
   birthDepartment!: string | null;
@@ -97,8 +91,8 @@ export class PatientDetailsResponseDto {
   @ApiProperty({ nullable: true })
   emergencyContactGender!: string | null;
 
-  @ApiProperty({ enum: EducationLevel, nullable: true })
-  educationLevel!: EducationLevel | null;
+  @ApiProperty({ nullable: true })
+  educationLevel!: string | null;
 
   @ApiProperty({ nullable: true })
   nativeLanguage!: string | null;
@@ -139,8 +133,8 @@ export class PatientDetailsResponseDto {
   @ApiProperty({ nullable: true })
   transportationViaSepa!: boolean | null;
 
-  @ApiProperty({ enum: TransportationSepaProvider, nullable: true })
-  transportationSepaProvider!: TransportationSepaProvider | null;
+  @ApiProperty({ nullable: true })
+  transportationSepaProvider!: string | null;
 
   @ApiProperty({ nullable: true })
   transportationSepaProviderOther!: string | null;
@@ -148,8 +142,8 @@ export class PatientDetailsResponseDto {
   @ApiProperty({ nullable: true })
   shelterViaSepa!: boolean | null;
 
-  @ApiProperty({ enum: ShelterSepaProvider, nullable: true })
-  shelterSepaProvider!: ShelterSepaProvider | null;
+  @ApiProperty({ nullable: true })
+  shelterSepaProvider!: string | null;
 
   @ApiProperty({ nullable: true })
   shelterSepaProviderOther!: string | null;
@@ -160,8 +154,8 @@ export class PatientDetailsResponseDto {
   @ApiProperty({ format: 'date', nullable: true })
   attendedEducationalTalkAt!: string | null;
 
-  @ApiProperty({ enum: ProgramDropoutReasonCode, nullable: true })
-  programDropoutReasonCode!: ProgramDropoutReasonCode | null;
+  @ApiProperty({ nullable: true })
+  programDropoutReasonCode!: string | null;
 
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
@@ -496,11 +490,11 @@ export class PatientListItemResponseDto extends PatientResponseDto {
   @ApiProperty({ type: LatestFollowUpResponseDto, nullable: true })
   latestFollowUp!: LatestFollowUpResponseDto | null;
 
-  @ApiProperty({ enum: PatientHealthPhase, nullable: true })
-  healthPhase!: PatientHealthPhase | null;
+  @ApiProperty({ nullable: true })
+  healthPhase!: string | null;
 
-  @ApiProperty({ enum: PatientHealthSubcategory, nullable: true })
-  healthSubcategory!: PatientHealthSubcategory | null;
+  @ApiProperty({ nullable: true })
+  healthSubcategory!: string | null;
 
   @ApiProperty({ nullable: true })
   primaryCompanionName!: string | null;
@@ -510,8 +504,8 @@ export class PatientListItemResponseDto extends PatientResponseDto {
       currentDiagnosis: PatientDiagnosis | null;
       currentDepartment: string | null;
       latestFollowUp: FollowUp | null;
-      healthPhase: PatientHealthPhase | null;
-      healthSubcategory: PatientHealthSubcategory | null;
+      healthPhase: string | null;
+      healthSubcategory: string | null;
       primaryCompanionName: string | null;
     },
   ): PatientListItemResponseDto {
@@ -544,8 +538,8 @@ export class PatientListResponseDto {
         currentDiagnosis: PatientDiagnosis | null;
         currentDepartment: string | null;
         latestFollowUp: FollowUp | null;
-        healthPhase: PatientHealthPhase | null;
-        healthSubcategory: PatientHealthSubcategory | null;
+        healthPhase: string | null;
+        healthSubcategory: string | null;
         primaryCompanionName: string | null;
       }
     >;

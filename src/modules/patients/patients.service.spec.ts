@@ -120,7 +120,17 @@ describe('PatientsService.upsertDetails health phase history', () => {
       {},
       {},
       {},
-      { resolveOptional: jest.fn().mockResolvedValue(null) },
+      {
+        resolve: jest.fn(async (_kind: string, value: string) => ({
+          code: value,
+          label: value,
+          other: null,
+        })),
+        resolveOptional: jest.fn(
+          async (_kind: string, value: string | null | undefined) =>
+            value ? { code: value, label: value, other: null } : null,
+        ),
+      },
     ] as unknown as ConstructorParameters<typeof PatientsService>;
     const service = new PatientsService(...dependencies);
     jest.spyOn(service, 'assertPatientRole').mockResolvedValue({} as Patient);
@@ -206,7 +216,17 @@ describe('PatientsService.upsertDetails health subcategory', () => {
       {},
       {},
       {},
-      { resolveOptional: jest.fn().mockResolvedValue(null) },
+      {
+        resolve: jest.fn(async (_kind: string, value: string) => ({
+          code: value,
+          label: value,
+          other: null,
+        })),
+        resolveOptional: jest.fn(
+          async (_kind: string, value: string | null | undefined) =>
+            value ? { code: value, label: value, other: null } : null,
+        ),
+      },
     ] as unknown as ConstructorParameters<typeof PatientsService>;
     const service = new PatientsService(...dependencies);
     jest

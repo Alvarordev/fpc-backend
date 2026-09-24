@@ -22,6 +22,7 @@ import { PatientsService } from '../patients.service';
 import { PatientSummaryInvalidationService } from '../../patient-summaries/patient-summary-invalidation.service';
 import { N8nTransactionalDispatchService } from '../../../integrations/n8n/transactional-dispatch.service';
 import { DataSource, EntityManager } from 'typeorm';
+import { CatalogValueService } from '../../catalogs/catalog-value.service';
 
 describe('clinical history services', () => {
   const patients = {
@@ -56,7 +57,7 @@ describe('clinical history services', () => {
       async (_kind: string, value: string | null | undefined) =>
         value ? { code: value, label: value, other: null } : null,
     ),
-  } as never;
+  } as unknown as CatalogValueService;
 
   beforeEach(() => {
     jest.resetAllMocks();

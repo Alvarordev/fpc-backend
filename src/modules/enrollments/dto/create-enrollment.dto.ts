@@ -25,10 +25,6 @@ import { CreatePatientDto } from '../../patients/dto/create-patient.dto';
 import { UpsertPatientDetailsDto } from '../../patients/dto/upsert-patient-details.dto';
 import { CreatePatientAddressDto } from '../../patients/addresses/dto/create-patient-address.dto';
 import { CreatePatientHealthBackgroundAssessmentDto } from '../../patients/clinical/health-background/dto/create-patient-health-background-assessment.dto';
-import {
-  ENROLLMENT_HEALTH_PHASES,
-  PatientHealthPhase,
-} from '../../../database/entities/patient-health-phase.enum';
 import { CompanionContactRole } from '../../../database/entities/companion-contact-role.enum';
 import { EnrollmentContactSource } from '../enrollment-contact-source.enum';
 import { CreatePatientPsychooncologySupportAssessmentDto } from '../../patients/clinical/psychooncology-support/dto/create-patient-psychooncology-support-assessment.dto';
@@ -147,9 +143,10 @@ export class CreateEnrollmentDto {
   @Type(() => EnrollmentFollowUpDto)
   followUp!: EnrollmentFollowUpDto;
   @IsIn(Object.values(AffiliationType)) affiliationType!: AffiliationType;
-  @ApiProperty({ enum: ENROLLMENT_HEALTH_PHASES })
-  @IsIn(ENROLLMENT_HEALTH_PHASES)
-  healthPhase!: PatientHealthPhase;
+  @ApiProperty({ maxLength: 100 })
+  @IsString()
+  @MaxLength(100)
+  healthPhase!: string;
   @IsOptional() @IsUUID() companionId?: string;
   @IsOptional()
   @ValidateNested()
@@ -230,8 +227,8 @@ export class CreateEnrollmentDto {
   @IsString()
   @MaxLength(2000)
   notReceivingTreatmentReason?: string;
-  @IsOptional() @IsString() @MaxLength(50) entrySource?: string;
-  @IsOptional() @IsString() @MaxLength(50) entrySubSource?: string;
+  @IsOptional() @IsString() @MaxLength(100) entrySource?: string;
+  @IsOptional() @IsString() @MaxLength(100) entrySubSource?: string;
   @IsOptional() @IsBoolean() consentToContact?: boolean;
   @IsOptional() @IsBoolean() consentToShareData?: boolean;
   @IsOptional() @IsBoolean() requiresTransportation?: boolean;

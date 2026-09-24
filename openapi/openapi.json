@@ -3322,12 +3322,8 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "string",
-              "enum": [
-                "CANCER_DIAGNOSIS",
-                "ANNUAL_CHECKUP",
-                "SIGNS_AND_SYMPTOMS"
-              ]
+              "maxLength": 100,
+              "type": "string"
             }
           },
           {
@@ -3335,16 +3331,8 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "string",
-              "enum": [
-                "SIGNS_AND_SYMPTOMS_PATIENT",
-                "ACTIVE_TREATMENT",
-                "UNDER_CONTROLS",
-                "TREATMENT_ABANDONED",
-                "PALLIATIVE_NO_ACTIVE_TREATMENT",
-                "CANCER_RULED_OUT",
-                "UNASSIGNED"
-              ]
+              "maxLength": 100,
+              "type": "string"
             }
           },
           {
@@ -9451,24 +9439,13 @@
         "type": "object",
         "properties": {
           "healthPhase": {
-            "enum": [
-              "CANCER_DIAGNOSIS",
-              "ANNUAL_CHECKUP",
-              "SIGNS_AND_SYMPTOMS"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "healthSubcategory": {
+            "type": "string",
             "nullable": true,
-            "enum": [
-              "SIGNS_AND_SYMPTOMS_PATIENT",
-              "ACTIVE_TREATMENT",
-              "UNDER_CONTROLS",
-              "TREATMENT_ABANDONED",
-              "PALLIATIVE_NO_ACTIVE_TREATMENT",
-              "CANCER_RULED_OUT"
-            ],
-            "type": "string"
+            "maxLength": 100
           },
           "birthDepartment": {
             "type": "string",
@@ -9497,26 +9474,15 @@
           },
           "zoneType": {
             "type": "string",
-            "maxLength": 10
+            "maxLength": 100
           },
           "emergencyContactGender": {
             "type": "string",
             "maxLength": 10
           },
           "educationLevel": {
-            "enum": [
-              "INITIAL",
-              "PRIMARY_INCOMPLETE",
-              "PRIMARY",
-              "SECONDARY_INCOMPLETE",
-              "SECONDARY",
-              "TECHNICAL",
-              "TECHNICAL_INCOMPLETE",
-              "HIGHER",
-              "HIGHER_INCOMPLETE",
-              "NONE"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "nativeLanguage": {
             "type": "string",
@@ -9561,12 +9527,8 @@
             "type": "boolean"
           },
           "transportationSepaProvider": {
-            "enum": [
-              "CRUZ_DEL_SUR",
-              "LATAM_AVION_SOLIDARIO",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "transportationSepaProviderOther": {
             "type": "string"
@@ -9575,15 +9537,8 @@
             "type": "boolean"
           },
           "shelterSepaProvider": {
-            "enum": [
-              "FRIEDA_HELLER",
-              "CASA_MAGIA",
-              "CASA_RONALD_MCDONALD",
-              "INSPIRA",
-              "ALINEN",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "shelterSepaProviderOther": {
             "type": "string"
@@ -9596,13 +9551,8 @@
             "format": "date"
           },
           "programDropoutReasonCode": {
-            "enum": [
-              "VOLUNTARY",
-              "UNLOCATABLE",
-              "DECEASED",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           }
         }
       },
@@ -9711,14 +9661,8 @@
             "type": "string"
           },
           "cancerStage": {
-            "enum": [
-              "STAGE_1",
-              "STAGE_2",
-              "STAGE_3",
-              "STAGE_4",
-              "UNKNOWN"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "diagnosisDate": {
             "type": "string"
@@ -9861,11 +9805,8 @@
             "type": "string"
           },
           "careProgram": {
-            "enum": [
-              "COPHOES",
-              "PADOMI"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "receivesTeleconsultation": {
             "type": "boolean"
@@ -9880,18 +9821,8 @@
             }
           },
           "treatmentSituation": {
-            "enum": [
-              "EN_CURSO",
-              "PENDIENTE_DE_INICIO",
-              "INTERRUMPIDO",
-              "FINALIZADO",
-              "SEARCHING",
-              "ABANDONED",
-              "DECEASED_DURING_TREATMENT",
-              "NOT_APPLICABLE",
-              "REMISSION"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "treatmentAbandonmentReason": {
             "type": "string"
@@ -9922,18 +9853,8 @@
             "type": "boolean"
           },
           "accessBarrierCode": {
-            "enum": [
-              "TRANSFER",
-              "LODGING",
-              "ALTERNATIVE_MEDICINE",
-              "EXCESSIVE_COST",
-              "DOES_NOT_WANT_TO_START",
-              "STOCKOUT",
-              "INFUSION_ROOM_INOPERATIVE",
-              "PATIENT_OVERLOAD",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "accessBarrierOther": {
             "type": "string"
@@ -10447,11 +10368,8 @@
         "type": "object",
         "properties": {
           "healthPhase": {
-            "enum": [
-              "CANCER_DIAGNOSIS",
-              "SIGNS_AND_SYMPTOMS"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "currentlyAttendingConsultations": {
             "type": "boolean",
@@ -10550,11 +10468,11 @@
           },
           "entrySource": {
             "type": "string",
-            "maxLength": 50
+            "maxLength": 100
           },
           "entrySubSource": {
             "type": "string",
-            "maxLength": 50
+            "maxLength": 100
           },
           "consentToContact": {
             "type": "boolean"
@@ -12782,25 +12700,12 @@
             ]
           },
           "healthPhase": {
-            "nullable": true,
-            "enum": [
-              "CANCER_DIAGNOSIS",
-              "ANNUAL_CHECKUP",
-              "SIGNS_AND_SYMPTOMS"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "healthSubcategory": {
-            "nullable": true,
-            "enum": [
-              "SIGNS_AND_SYMPTOMS_PATIENT",
-              "ACTIVE_TREATMENT",
-              "UNDER_CONTROLS",
-              "TREATMENT_ABANDONED",
-              "PALLIATIVE_NO_ACTIVE_TREATMENT",
-              "CANCER_RULED_OUT"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "primaryCompanionName": {
             "type": "string",
@@ -12975,11 +12880,6 @@
             "format": "uuid"
           },
           "healthPhase": {
-            "enum": [
-              "CANCER_DIAGNOSIS",
-              "ANNUAL_CHECKUP",
-              "SIGNS_AND_SYMPTOMS"
-            ],
             "type": "string"
           },
           "changedAt": {
@@ -13005,25 +12905,12 @@
             "format": "uuid"
           },
           "healthPhase": {
-            "nullable": true,
-            "enum": [
-              "CANCER_DIAGNOSIS",
-              "ANNUAL_CHECKUP",
-              "SIGNS_AND_SYMPTOMS"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "healthSubcategory": {
-            "nullable": true,
-            "enum": [
-              "SIGNS_AND_SYMPTOMS_PATIENT",
-              "ACTIVE_TREATMENT",
-              "UNDER_CONTROLS",
-              "TREATMENT_ABANDONED",
-              "PALLIATIVE_NO_ACTIVE_TREATMENT",
-              "CANCER_RULED_OUT"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "birthDepartment": {
             "type": "string",
@@ -13068,20 +12955,8 @@
             "nullable": true
           },
           "educationLevel": {
-            "nullable": true,
-            "enum": [
-              "INITIAL",
-              "PRIMARY_INCOMPLETE",
-              "PRIMARY",
-              "SECONDARY_INCOMPLETE",
-              "SECONDARY",
-              "TECHNICAL",
-              "TECHNICAL_INCOMPLETE",
-              "HIGHER",
-              "HIGHER_INCOMPLETE",
-              "NONE"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "nativeLanguage": {
             "type": "string",
@@ -13136,13 +13011,8 @@
             "nullable": true
           },
           "transportationSepaProvider": {
-            "nullable": true,
-            "enum": [
-              "CRUZ_DEL_SUR",
-              "LATAM_AVION_SOLIDARIO",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "transportationSepaProviderOther": {
             "type": "string",
@@ -13153,16 +13023,8 @@
             "nullable": true
           },
           "shelterSepaProvider": {
-            "nullable": true,
-            "enum": [
-              "FRIEDA_HELLER",
-              "CASA_MAGIA",
-              "CASA_RONALD_MCDONALD",
-              "INSPIRA",
-              "ALINEN",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "shelterSepaProviderOther": {
             "type": "string",
@@ -13178,14 +13040,8 @@
             "format": "date"
           },
           "programDropoutReasonCode": {
-            "nullable": true,
-            "enum": [
-              "VOLUNTARY",
-              "UNLOCATABLE",
-              "DECEASED",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "createdAt": {
             "type": "string",
@@ -13261,15 +13117,8 @@
             "type": "string"
           },
           "cancerStage": {
-            "nullable": true,
-            "enum": [
-              "STAGE_1",
-              "STAGE_2",
-              "STAGE_3",
-              "STAGE_4",
-              "UNKNOWN"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "diagnosisDate": {
             "type": "string",
@@ -13380,15 +13229,8 @@
             "type": "string"
           },
           "cancerStage": {
-            "nullable": true,
-            "enum": [
-              "STAGE_1",
-              "STAGE_2",
-              "STAGE_3",
-              "STAGE_4",
-              "UNKNOWN"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "diagnosisDate": {
             "type": "string",
@@ -13498,12 +13340,8 @@
             "nullable": true
           },
           "careProgram": {
-            "nullable": true,
-            "enum": [
-              "COPHOES",
-              "PADOMI"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "receivesTeleconsultation": {
             "type": "boolean",
@@ -13521,19 +13359,8 @@
             }
           },
           "treatmentSituation": {
-            "nullable": true,
-            "enum": [
-              "EN_CURSO",
-              "PENDIENTE_DE_INICIO",
-              "INTERRUMPIDO",
-              "FINALIZADO",
-              "SEARCHING",
-              "ABANDONED",
-              "DECEASED_DURING_TREATMENT",
-              "NOT_APPLICABLE",
-              "REMISSION"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "treatmentAbandonmentReason": {
             "type": "string",
@@ -13569,19 +13396,8 @@
             "nullable": true
           },
           "accessBarrierCode": {
-            "nullable": true,
-            "enum": [
-              "TRANSFER",
-              "LODGING",
-              "ALTERNATIVE_MEDICINE",
-              "EXCESSIVE_COST",
-              "DOES_NOT_WANT_TO_START",
-              "STOCKOUT",
-              "INFUSION_ROOM_INOPERATIVE",
-              "PATIENT_OVERLOAD",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "accessBarrierOther": {
             "type": "string",
@@ -14742,13 +14558,7 @@
           },
           "cancerStage": {
             "type": "string",
-            "enum": [
-              "STAGE_1",
-              "STAGE_2",
-              "STAGE_3",
-              "STAGE_4",
-              "UNKNOWN"
-            ]
+            "maxLength": 100
           },
           "diagnosisDate": {
             "type": "string"
@@ -14975,10 +14785,7 @@
           },
           "careProgram": {
             "type": "string",
-            "enum": [
-              "COPHOES",
-              "PADOMI"
-            ]
+            "maxLength": 100
           },
           "receivesTeleconsultation": {
             "type": "boolean"
@@ -14994,17 +14801,7 @@
           },
           "treatmentSituation": {
             "type": "string",
-            "enum": [
-              "EN_CURSO",
-              "PENDIENTE_DE_INICIO",
-              "INTERRUMPIDO",
-              "FINALIZADO",
-              "SEARCHING",
-              "ABANDONED",
-              "DECEASED_DURING_TREATMENT",
-              "NOT_APPLICABLE",
-              "REMISSION"
-            ]
+            "maxLength": 100
           },
           "treatmentAbandonmentReason": {
             "type": "string"
@@ -15036,17 +14833,7 @@
           },
           "accessBarrierCode": {
             "type": "string",
-            "enum": [
-              "TRANSFER",
-              "LODGING",
-              "ALTERNATIVE_MEDICINE",
-              "EXCESSIVE_COST",
-              "DOES_NOT_WANT_TO_START",
-              "STOCKOUT",
-              "INFUSION_ROOM_INOPERATIVE",
-              "PATIENT_OVERLOAD",
-              "OTHER"
-            ]
+            "maxLength": 100
           },
           "accessBarrierOther": {
             "type": "string"
@@ -15859,14 +15646,8 @@
             "type": "string"
           },
           "cancerStage": {
-            "enum": [
-              "STAGE_1",
-              "STAGE_2",
-              "STAGE_3",
-              "STAGE_4",
-              "UNKNOWN"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "diagnosisDate": {
             "type": "string"
@@ -17060,11 +16841,8 @@
         "type": "object",
         "properties": {
           "healthPhase": {
-            "enum": [
-              "CANCER_DIAGNOSIS",
-              "SIGNS_AND_SYMPTOMS"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "currentlyAttendingConsultations": {
             "type": "boolean",
@@ -17157,11 +16935,11 @@
           },
           "entrySource": {
             "type": "string",
-            "maxLength": 50
+            "maxLength": 100
           },
           "entrySubSource": {
             "type": "string",
-            "maxLength": 50
+            "maxLength": 100
           },
           "consentToContact": {
             "type": "boolean"
@@ -17260,11 +17038,8 @@
             "type": "string"
           },
           "careProgram": {
-            "enum": [
-              "COPHOES",
-              "PADOMI"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "receivesTeleconsultation": {
             "type": "boolean"
@@ -17279,18 +17054,8 @@
             }
           },
           "treatmentSituation": {
-            "enum": [
-              "EN_CURSO",
-              "PENDIENTE_DE_INICIO",
-              "INTERRUMPIDO",
-              "FINALIZADO",
-              "SEARCHING",
-              "ABANDONED",
-              "DECEASED_DURING_TREATMENT",
-              "NOT_APPLICABLE",
-              "REMISSION"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "treatmentAbandonmentReason": {
             "type": "string"
@@ -17321,18 +17086,8 @@
             "type": "boolean"
           },
           "accessBarrierCode": {
-            "enum": [
-              "TRANSFER",
-              "LODGING",
-              "ALTERNATIVE_MEDICINE",
-              "EXCESSIVE_COST",
-              "DOES_NOT_WANT_TO_START",
-              "STOCKOUT",
-              "INFUSION_ROOM_INOPERATIVE",
-              "PATIENT_OVERLOAD",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "accessBarrierOther": {
             "type": "string"
@@ -17632,14 +17387,8 @@
             "type": "string"
           },
           "cancerStage": {
-            "enum": [
-              "STAGE_1",
-              "STAGE_2",
-              "STAGE_3",
-              "STAGE_4",
-              "UNKNOWN"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "diagnosisDate": {
             "type": "string"
@@ -17724,11 +17473,8 @@
             "type": "string"
           },
           "careProgram": {
-            "enum": [
-              "COPHOES",
-              "PADOMI"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "receivesTeleconsultation": {
             "type": "boolean"
@@ -17743,18 +17489,8 @@
             }
           },
           "treatmentSituation": {
-            "enum": [
-              "EN_CURSO",
-              "PENDIENTE_DE_INICIO",
-              "INTERRUMPIDO",
-              "FINALIZADO",
-              "SEARCHING",
-              "ABANDONED",
-              "DECEASED_DURING_TREATMENT",
-              "NOT_APPLICABLE",
-              "REMISSION"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "treatmentAbandonmentReason": {
             "type": "string"
@@ -17785,18 +17521,8 @@
             "type": "boolean"
           },
           "accessBarrierCode": {
-            "enum": [
-              "TRANSFER",
-              "LODGING",
-              "ALTERNATIVE_MEDICINE",
-              "EXCESSIVE_COST",
-              "DOES_NOT_WANT_TO_START",
-              "STOCKOUT",
-              "INFUSION_ROOM_INOPERATIVE",
-              "PATIENT_OVERLOAD",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100
           },
           "accessBarrierOther": {
             "type": "string"

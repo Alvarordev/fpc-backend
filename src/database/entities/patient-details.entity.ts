@@ -10,40 +10,11 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { EducationLevel } from './education-level.enum';
-import { ProgramDropoutReasonCode } from './program-dropout-reason-code.enum';
-import { ShelterSepaProvider } from './shelter-sepa-provider.enum';
-import { TransportationSepaProvider } from './transportation-sepa-provider.enum';
-import { PatientHealthPhase } from './patient-health-phase.enum';
-import { PatientHealthSubcategory } from './patient-health-subcategory.enum';
 import { Patient } from './patient.entity';
 import { Duration } from './embedded/duration.embedded';
 import { HealthCenter } from './health-center.entity';
 
 @Entity('patient_details')
-@Check(
-  "\"education_level\" IN ('INITIAL', 'PRIMARY_INCOMPLETE', 'PRIMARY', 'SECONDARY_INCOMPLETE', 'SECONDARY', 'TECHNICAL', 'TECHNICAL_INCOMPLETE', 'HIGHER', 'HIGHER_INCOMPLETE', 'NONE')",
-)
-@Check(
-  'CHK_patient_details_health_phase',
-  "\"health_phase\" IS NULL OR \"health_phase\" IN ('CANCER_DIAGNOSIS', 'ANNUAL_CHECKUP', 'SIGNS_AND_SYMPTOMS')",
-)
-@Check(
-  'CHK_patient_details_health_subcategory',
-  "\"health_subcategory\" IS NULL OR \"health_subcategory\" IN ('SIGNS_AND_SYMPTOMS_PATIENT', 'ACTIVE_TREATMENT', 'UNDER_CONTROLS', 'TREATMENT_ABANDONED', 'PALLIATIVE_NO_ACTIVE_TREATMENT', 'CANCER_RULED_OUT')",
-)
-@Check(
-  'CHK_patient_details_transportation_sepa_provider',
-  "\"transportation_sepa_provider\" IS NULL OR \"transportation_sepa_provider\" IN ('CRUZ_DEL_SUR','LATAM_AVION_SOLIDARIO','OTHER')",
-)
-@Check(
-  'CHK_patient_details_shelter_sepa_provider',
-  "\"shelter_sepa_provider\" IS NULL OR \"shelter_sepa_provider\" IN ('FRIEDA_HELLER','CASA_MAGIA','CASA_RONALD_MCDONALD','INSPIRA','ALINEN','OTHER')",
-)
-@Check(
-  'CHK_patient_details_program_dropout_reason_code',
-  "\"program_dropout_reason_code\" IS NULL OR \"program_dropout_reason_code\" IN ('VOLUNTARY','UNLOCATABLE','DECEASED','OTHER')",
-)
 @Check(
   'CHK_patient_details_children_count_non_negative',
   '"children_count" IS NULL OR "children_count" >= 0',
@@ -57,16 +28,16 @@ export class PatientDetails {
   @Column({ name: 'patient_id', type: 'uuid' })
   patientId!: string;
 
-  @Column({ name: 'health_phase', type: 'varchar', length: 30, nullable: true })
-  healthPhase!: PatientHealthPhase | null;
+  @Column({ name: 'health_phase', type: 'varchar', length: 100, nullable: true })
+  healthPhase!: string | null;
 
   @Column({
     name: 'health_subcategory',
     type: 'varchar',
-    length: 40,
+    length: 100,
     nullable: true,
   })
-  healthSubcategory!: PatientHealthSubcategory | null;
+  healthSubcategory!: string | null;
 
   @OneToOne(() => Patient, (patient) => patient.details, {
     onDelete: 'CASCADE',
@@ -116,7 +87,7 @@ export class PatientDetails {
   })
   emergencyContactPhone!: string | null;
 
-  @Column({ name: 'zone_type', type: 'varchar', length: 10, nullable: true })
+  @Column({ name: 'zone_type', type: 'varchar', length: 100, nullable: true })
   zoneType!: string | null;
 
   @Column({
@@ -130,10 +101,10 @@ export class PatientDetails {
   @Column({
     name: 'education_level',
     type: 'varchar',
-    length: 30,
+    length: 100,
     nullable: true,
   })
-  educationLevel!: EducationLevel | null;
+  educationLevel!: string | null;
 
   @Column({
     name: 'native_language',
@@ -193,10 +164,10 @@ export class PatientDetails {
   @Column({
     name: 'transportation_sepa_provider',
     type: 'varchar',
-    length: 40,
+    length: 100,
     nullable: true,
   })
-  transportationSepaProvider!: TransportationSepaProvider | null;
+  transportationSepaProvider!: string | null;
 
   @Column({
     name: 'transportation_sepa_provider_other',
@@ -211,10 +182,10 @@ export class PatientDetails {
   @Column({
     name: 'shelter_sepa_provider',
     type: 'varchar',
-    length: 40,
+    length: 100,
     nullable: true,
   })
-  shelterSepaProvider!: ShelterSepaProvider | null;
+  shelterSepaProvider!: string | null;
 
   @Column({ name: 'shelter_sepa_provider_other', type: 'text', nullable: true })
   shelterSepaProviderOther!: string | null;
@@ -236,10 +207,10 @@ export class PatientDetails {
   @Column({
     name: 'program_dropout_reason_code',
     type: 'varchar',
-    length: 40,
+    length: 100,
     nullable: true,
   })
-  programDropoutReasonCode!: ProgramDropoutReasonCode | null;
+  programDropoutReasonCode!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

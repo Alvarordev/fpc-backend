@@ -139,6 +139,11 @@ export class PatientDiagnosesService {
       input.diagnosisSpecialty,
       { otherText: diagnosisSpecialtyOther, manager },
     );
+    const resolvedStage = await this.catalogValues.resolveOptional(
+      'cancer_stage',
+      input.cancerStage,
+      { manager },
+    );
 
     const symptomReports =
       manager?.getRepository(PatientSymptomReport) ??
@@ -156,6 +161,9 @@ export class PatientDiagnosesService {
       diagnosisOther: resolvedDiagnosis.other,
       diagnosisSpecialty: resolvedSpecialty?.code ?? null,
       diagnosisSpecialtyOther: resolvedSpecialty?.other ?? null,
+      ...(input.cancerStage !== undefined
+        ? { cancerStage: resolvedStage?.code ?? null }
+        : {}),
       symptomLeadingToCheckup: hasSymptomReport
         ? null
         : (rest.symptomLeadingToCheckup ?? null),

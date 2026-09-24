@@ -7,6 +7,7 @@ import { FollowUpsModule } from '../follow-ups/follow-ups.module';
 import { PatientsModule } from '../patients/patients.module';
 import { PatientSummariesModule } from '../patient-summaries/patient-summaries.module';
 import { N8nModule } from '../../integrations/n8n/n8n.module';
+import { CatalogsModule } from '../catalogs/catalogs.module';
 import { EnrollmentsController } from './enrollments.controller';
 import { FamilyTalkInterestsController } from './family-talk-interests.controller';
 import { EnrollmentsService } from './enrollments.service';
@@ -18,6 +19,7 @@ import { EnrollmentsService } from './enrollments.service';
     PatientSummariesModule,
     FollowUpsModule,
     N8nModule,
+    CatalogsModule,
   ],
   controllers: [EnrollmentsController, FamilyTalkInterestsController],
   providers: [EnrollmentsService],

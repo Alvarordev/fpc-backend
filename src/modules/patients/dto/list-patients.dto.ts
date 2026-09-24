@@ -1,9 +1,7 @@
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 import { PatientActivityStatus } from '../../../database/entities/patient-activity-status.enum';
-import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
-import { PatientHealthSubcategory } from '../../../database/entities/patient-health-subcategory.enum';
 import { PatientListSegment } from '../../../database/entities/patient-list-segment.enum';
 import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { PatientStatus } from '../../../database/entities/patient-status.enum';
@@ -26,24 +24,17 @@ export class ListPatientsDto {
   @IsIn(Object.values(PatientActivityStatus))
   activityStatus?: PatientActivityStatus;
 
-  @ApiPropertyOptional({ enum: PatientHealthPhase })
+  @ApiPropertyOptional({ maxLength: 100 })
   @IsOptional()
-  @IsIn(Object.values(PatientHealthPhase))
-  healthPhase?: PatientHealthPhase;
+  @IsString()
+  @MaxLength(100)
+  healthPhase?: string;
 
-  @ApiPropertyOptional({
-    enum: [
-      ...Object.values(PatientHealthSubcategory),
-      UNASSIGNED_HEALTH_SUBCATEGORY,
-    ],
-  })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsIn([
-    ...Object.values(PatientHealthSubcategory),
-    UNASSIGNED_HEALTH_SUBCATEGORY,
-  ])
-  healthSubcategory?:
-    PatientHealthSubcategory | typeof UNASSIGNED_HEALTH_SUBCATEGORY;
+  @IsString()
+  @MaxLength(100)
+  healthSubcategory?: string | typeof UNASSIGNED_HEALTH_SUBCATEGORY;
 
   @ApiPropertyOptional({ enum: PatientListSegment })
   @IsOptional()

@@ -140,6 +140,21 @@ export class PatientTreatmentsService {
         input.teleconsultationSpecialties,
         { manager: entityManager },
       );
+      const resolvedSituation = await this.catalogValues.resolveOptional(
+        'treatment_situation',
+        input.treatmentSituation,
+        { manager: entityManager },
+      );
+      const resolvedCareProgram = await this.catalogValues.resolveOptional(
+        'care_program',
+        input.careProgram,
+        { manager: entityManager },
+      );
+      const resolvedBarrier = await this.catalogValues.resolveOptional(
+        'access_barrier',
+        input.accessBarrierCode,
+        { otherText: input.accessBarrierOther, manager: entityManager },
+      );
       const values = {
         ...rest,
         treatmentType: resolvedType.code,
@@ -153,6 +168,18 @@ export class PatientTreatmentsService {
             ? (resolvedProcedure?.code ?? input.operationName ?? null)
             : null,
         teleconsultationSpecialties,
+        ...(input.treatmentSituation !== undefined
+          ? { treatmentSituation: resolvedSituation?.code ?? null }
+          : {}),
+        ...(input.careProgram !== undefined
+          ? { careProgram: resolvedCareProgram?.code ?? null }
+          : {}),
+        ...(input.accessBarrierCode !== undefined
+          ? {
+              accessBarrierCode: resolvedBarrier?.code ?? null,
+              accessBarrierOther: resolvedBarrier?.other ?? null,
+            }
+          : {}),
         patientId,
         seriesId,
         treatmentAbandonmentReason:

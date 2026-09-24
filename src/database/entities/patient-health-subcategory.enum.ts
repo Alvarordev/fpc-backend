@@ -16,10 +16,7 @@ export const ONCOLOGICAL_HEALTH_SUBCATEGORIES = [
   PatientHealthSubcategory.PALLIATIVE_NO_ACTIVE_TREATMENT,
 ] as const;
 
-export const HEALTH_SUBCATEGORY_PHASE: Record<
-  PatientHealthSubcategory,
-  PatientHealthPhase
-> = {
+export const HEALTH_SUBCATEGORY_PHASE: Record<string, PatientHealthPhase> = {
   [PatientHealthSubcategory.SIGNS_AND_SYMPTOMS_PATIENT]:
     PatientHealthPhase.SIGNS_AND_SYMPTOMS,
   [PatientHealthSubcategory.ACTIVE_TREATMENT]:

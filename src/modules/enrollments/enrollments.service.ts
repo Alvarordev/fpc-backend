@@ -56,8 +56,10 @@ import { EnrollmentContactSource } from './enrollment-contact-source.enum';
 import { PatientDiagnosticStatusesService } from '../patients/diagnostic-status/patient-diagnostic-statuses.service';
 import { PatientPsychooncologySupportAssessmentsService } from '../patients/clinical/psychooncology-support/patient-psychooncology-support-assessments.service';
 import { PatientNonOncologicalFollowUpsService } from '../patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
-import { dateOnlyInLima } from '../../shared/date-only/date-only.util';
+import { CatalogsService } from '../catalogs/catalogs.service';
+import { CatalogValueService } from '../catalogs/catalog-value.service';
 import type { HistoricalEnrollmentInput } from '../historical-records/dto/create-historical-enrollment.dto';
+import { dateOnlyInLima } from '../../shared/date-only/date-only.util';
 
 type EnrollmentInput = (CreateEnrollmentDto | HistoricalEnrollmentInput) & {
   enrolledOn?: string;
@@ -97,6 +99,8 @@ export class EnrollmentsService {
     private readonly diagnosticStatuses: PatientDiagnosticStatusesService,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly webhooks: N8nTransactionalDispatchService,
+    private readonly catalogValues: CatalogValueService,
+    private readonly catalogs: CatalogsService,
   ) {}
 
   private readonly logger = new Logger(EnrollmentsService.name);
@@ -148,11 +152,18 @@ export class EnrollmentsService {
         psychooncologySupportAssessment,
         nonOncologicalFollowUp,
         familyPreventionTalkInterests,
-        healthPhase,
+        healthPhase: requestedHealthPhase,
         addresses,
         enrolledOn,
         ...metadata
       } = input;
+      const healthPhase = (
+        await this.catalogValues.resolve(
+          'patient_health_phase',
+          requestedHealthPhase,
+          { manager },
+        )
+      ).code;
       const followUpValues = {
         ...followUpInput,
       };
@@ -365,6 +376,30 @@ export class EnrollmentsService {
         },
       );
       const enrollmentRepository = manager.getRepository(Enrollment);
+      const resolvedEntrySource = await this.catalogValues.resolveOptional(
+        'entry_source',
+        metadata.entrySource,
+        { manager },
+      );
+      const resolvedEntrySubSource = await this.catalogValues.resolveOptional(
+        'entry_sub_source',
+        metadata.entrySubSource,
+        { manager },
+      );
+      if (resolvedEntrySource && resolvedEntrySubSource) {
+        const subItems = await this.catalogs.findAll('entry_sub_source');
+        const subItem = subItems.find(
+          (item) => item.code === resolvedEntrySubSource.code,
+        );
+        if (
+          subItem?.parentCode &&
+          subItem.parentCode !== resolvedEntrySource.code
+        ) {
+          throw new BadRequestException(
+            'entrySubSource does not belong to the selected entrySource',
+          );
+        }
+      }
       const enrollmentMetadata = {
         ...metadata,
         notAttendingConsultationsNote:
@@ -375,6 +410,14 @@ export class EnrollmentsService {
           metadata.currentlyReceivingTreatment === false
             ? metadata.notReceivingTreatmentReason?.trim() || null
             : null,
+        entrySource:
+          metadata.entrySource !== undefined
+            ? (resolvedEntrySource?.code ?? null)
+            : metadata.entrySource,
+        entrySubSource:
+          metadata.entrySubSource !== undefined
+            ? (resolvedEntrySubSource?.code ?? null)
+            : metadata.entrySubSource,
       };
       const enrollment = await enrollmentRepository.save(
         enrollmentRepository.create({

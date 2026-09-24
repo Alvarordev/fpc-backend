@@ -1,10 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AccessBarrierCode } from '../../../../../database/entities/access-barrier-code.enum';
-import { CareProgram } from '../../../../../database/entities/care-program.enum';
 import { TreatmentInterruptionReason } from '../../../../../database/entities/treatment-interruption-reason.enum';
-import { CancerStage } from '../../../../../database/entities/patient-diagnosis.entity';
 import { PatientTreatment } from '../../../../../database/entities/patient-treatment.entity';
-import { TreatmentSituation } from '../../../../../database/entities/treatment-situation.enum';
 import { DurationResponseDto } from '../../../../../shared/duration/duration-response.dto';
 
 export class PatientDiagnosisSummaryDto {
@@ -14,8 +10,8 @@ export class PatientDiagnosisSummaryDto {
   @ApiProperty()
   diagnosis!: string;
 
-  @ApiProperty({ enum: CancerStage, nullable: true })
-  cancerStage!: CancerStage | null;
+  @ApiProperty({ nullable: true })
+  cancerStage!: string | null;
 
   @ApiProperty({ format: 'date', nullable: true })
   diagnosisDate!: string | null;
@@ -82,8 +78,8 @@ export class PatientTreatmentResponseDto {
   @ApiProperty({ nullable: true })
   chemotherapyRoute!: string | null;
 
-  @ApiProperty({ enum: CareProgram, nullable: true })
-  careProgram!: CareProgram | null;
+  @ApiProperty({ nullable: true })
+  careProgram!: string | null;
 
   @ApiProperty({ nullable: true })
   receivesTeleconsultation!: boolean | null;
@@ -94,8 +90,8 @@ export class PatientTreatmentResponseDto {
   @ApiProperty({ type: [String], nullable: true })
   teleconsultationSpecialties!: string[] | null;
 
-  @ApiProperty({ enum: TreatmentSituation, nullable: true })
-  treatmentSituation!: TreatmentSituation | null;
+  @ApiProperty({ nullable: true })
+  treatmentSituation!: string | null;
 
   @ApiProperty({ nullable: true })
   treatmentAbandonmentReason!: string | null;
@@ -118,8 +114,8 @@ export class PatientTreatmentResponseDto {
   @ApiProperty({ nullable: true })
   hormonalTreatmentCompleted!: boolean | null;
 
-  @ApiProperty({ enum: AccessBarrierCode, nullable: true })
-  accessBarrierCode!: AccessBarrierCode | null;
+  @ApiProperty({ nullable: true })
+  accessBarrierCode!: string | null;
 
   @ApiProperty({ nullable: true })
   accessBarrierOther!: string | null;

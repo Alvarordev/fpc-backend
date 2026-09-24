@@ -678,6 +678,23 @@ export class PatientsService {
       : previousHealthSubcategory;
     let healthPhase = input.healthPhase ?? previousHealthPhase;
 
+    if (input.healthPhase) {
+      healthPhase = (
+        await this.catalogValues.resolve('patient_health_phase', input.healthPhase, {
+          manager,
+        })
+      ).code;
+    }
+    if (hasSubcategoryInput && input.healthSubcategory) {
+      healthSubcategory = (
+        await this.catalogValues.resolve(
+          'patient_health_subcategory',
+          input.healthSubcategory,
+          { manager },
+        )
+      ).code;
+    }
+
     if (healthSubcategory) {
       if (
         ONCOLOGICAL_HEALTH_SUBCATEGORIES.some(
@@ -696,17 +713,32 @@ export class PatientsService {
           );
         }
       }
-      healthPhase = HEALTH_SUBCATEGORY_PHASE[healthSubcategory];
+      healthPhase =
+        HEALTH_SUBCATEGORY_PHASE[healthSubcategory] ?? healthPhase;
     } else if (
       input.healthPhase &&
       previousHealthSubcategory &&
-      HEALTH_SUBCATEGORY_PHASE[previousHealthSubcategory] !== input.healthPhase
+      HEALTH_SUBCATEGORY_PHASE[previousHealthSubcategory] !== healthPhase
     ) {
       healthSubcategory = null;
     }
 
-    const { travelTimeToHospital, birthCountry, birthDepartment, ...rest } =
-      input;
+    const {
+      travelTimeToHospital,
+      birthCountry,
+      birthDepartment,
+      educationLevel,
+      nativeLanguage,
+      zoneType,
+      shelterSepaProvider,
+      shelterSepaProviderOther,
+      transportationSepaProvider,
+      transportationSepaProviderOther,
+      programDropoutReasonCode,
+      healthPhase: _healthPhaseInput,
+      healthSubcategory: _healthSubcategoryInput,
+      ...rest
+    } = input;
     let nextBirthCountry = details?.birthCountry ?? null;
     let nextBirthDepartment = details?.birthDepartment ?? null;
     if (birthCountry !== undefined) {
@@ -725,6 +757,36 @@ export class PatientsService {
     } else if (birthDepartment !== undefined && nextBirthDepartment) {
       nextBirthCountry = null;
     }
+    const resolvedEducation = await this.catalogValues.resolveOptional(
+      'education_level',
+      educationLevel,
+      { manager },
+    );
+    const resolvedLanguage = await this.catalogValues.resolveOptional(
+      'native_language',
+      nativeLanguage,
+      { manager },
+    );
+    const resolvedZone = await this.catalogValues.resolveOptional(
+      'zone_type',
+      zoneType,
+      { manager },
+    );
+    const resolvedShelter = await this.catalogValues.resolveOptional(
+      'sepa_shelter',
+      shelterSepaProvider,
+      { otherText: shelterSepaProviderOther, manager },
+    );
+    const resolvedTransport = await this.catalogValues.resolveOptional(
+      'sepa_transport',
+      transportationSepaProvider,
+      { otherText: transportationSepaProviderOther, manager },
+    );
+    const resolvedDropout = await this.catalogValues.resolveOptional(
+      'program_dropout_reason',
+      programDropoutReasonCode,
+      { manager },
+    );
     const normalized = {
       ...rest,
       healthPhase,
@@ -732,6 +794,28 @@ export class PatientsService {
       birthCountry: nextBirthCountry,
       birthDepartment: nextBirthDepartment,
       travelTimeToHospital: normalizeDuration(travelTimeToHospital),
+      ...(educationLevel !== undefined
+        ? { educationLevel: resolvedEducation?.code ?? null }
+        : {}),
+      ...(nativeLanguage !== undefined
+        ? { nativeLanguage: resolvedLanguage?.code ?? null }
+        : {}),
+      ...(zoneType !== undefined ? { zoneType: resolvedZone?.code ?? null } : {}),
+      ...(shelterSepaProvider !== undefined
+        ? {
+            shelterSepaProvider: resolvedShelter?.code ?? null,
+            shelterSepaProviderOther: resolvedShelter?.other ?? null,
+          }
+        : {}),
+      ...(transportationSepaProvider !== undefined
+        ? {
+            transportationSepaProvider: resolvedTransport?.code ?? null,
+            transportationSepaProviderOther: resolvedTransport?.other ?? null,
+          }
+        : {}),
+      ...(programDropoutReasonCode !== undefined
+        ? { programDropoutReasonCode: resolvedDropout?.code ?? null }
+        : {}),
     };
     const saved = await repository.save(
       details

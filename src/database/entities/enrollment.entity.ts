@@ -74,12 +74,12 @@ export class Enrollment {
     nullable: true,
   })
   notReceivingTreatmentReason!: string | null;
-  @Column({ name: 'entry_source', type: 'varchar', length: 50, nullable: true })
+  @Column({ name: 'entry_source', type: 'varchar', length: 100, nullable: true })
   entrySource!: string | null;
   @Column({
     name: 'entry_sub_source',
     type: 'varchar',
-    length: 50,
+    length: 100,
     nullable: true,
   })
   entrySubSource!: string | null;

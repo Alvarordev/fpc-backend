@@ -3,7 +3,6 @@ import {
   IsBoolean,
   IsDateString,
   IsInt,
-  IsIn,
   IsOptional,
   IsString,
   IsUUID,
@@ -12,24 +11,20 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { EducationLevel } from '../../../database/entities/education-level.enum';
-import { ProgramDropoutReasonCode } from '../../../database/entities/program-dropout-reason-code.enum';
-import { ShelterSepaProvider } from '../../../database/entities/shelter-sepa-provider.enum';
-import { TransportationSepaProvider } from '../../../database/entities/transportation-sepa-provider.enum';
-import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
-import { PatientHealthSubcategory } from '../../../database/entities/patient-health-subcategory.enum';
 import { DurationDto } from '../../../shared/duration/duration.dto';
 
 export class UpsertPatientDetailsDto {
-  @ApiPropertyOptional({ enum: PatientHealthPhase })
+  @ApiPropertyOptional({ maxLength: 100 })
   @IsOptional()
-  @IsIn(Object.values(PatientHealthPhase))
-  healthPhase?: PatientHealthPhase;
+  @IsString()
+  @MaxLength(100)
+  healthPhase?: string;
 
-  @ApiPropertyOptional({ enum: PatientHealthSubcategory, nullable: true })
+  @ApiPropertyOptional({ nullable: true, maxLength: 100 })
   @IsOptional()
-  @IsIn(Object.values(PatientHealthSubcategory))
-  healthSubcategory?: PatientHealthSubcategory | null;
+  @IsString()
+  @MaxLength(100)
+  healthSubcategory?: string | null;
 
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
@@ -66,10 +61,10 @@ export class UpsertPatientDetailsDto {
   @MaxLength(50)
   emergencyContactPhone?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ maxLength: 100 })
   @IsOptional()
   @IsString()
-  @MaxLength(10)
+  @MaxLength(100)
   zoneType?: string;
 
   @ApiPropertyOptional()
@@ -78,10 +73,11 @@ export class UpsertPatientDetailsDto {
   @MaxLength(10)
   emergencyContactGender?: string;
 
-  @ApiPropertyOptional({ enum: EducationLevel })
+  @ApiPropertyOptional({ maxLength: 100 })
   @IsOptional()
-  @IsIn(Object.values(EducationLevel))
-  educationLevel?: EducationLevel;
+  @IsString()
+  @MaxLength(100)
+  educationLevel?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -150,10 +146,11 @@ export class UpsertPatientDetailsDto {
   @IsBoolean()
   transportationViaSepa?: boolean;
 
-  @ApiPropertyOptional({ enum: TransportationSepaProvider })
+  @ApiPropertyOptional({ maxLength: 100 })
   @IsOptional()
-  @IsIn(Object.values(TransportationSepaProvider))
-  transportationSepaProvider?: TransportationSepaProvider;
+  @IsString()
+  @MaxLength(100)
+  transportationSepaProvider?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -165,10 +162,11 @@ export class UpsertPatientDetailsDto {
   @IsBoolean()
   shelterViaSepa?: boolean;
 
-  @ApiPropertyOptional({ enum: ShelterSepaProvider })
+  @ApiPropertyOptional({ maxLength: 100 })
   @IsOptional()
-  @IsIn(Object.values(ShelterSepaProvider))
-  shelterSepaProvider?: ShelterSepaProvider;
+  @IsString()
+  @MaxLength(100)
+  shelterSepaProvider?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -185,8 +183,9 @@ export class UpsertPatientDetailsDto {
   @IsDateString()
   attendedEducationalTalkAt?: string;
 
-  @ApiPropertyOptional({ enum: ProgramDropoutReasonCode })
+  @ApiPropertyOptional({ maxLength: 100 })
   @IsOptional()
-  @IsIn(Object.values(ProgramDropoutReasonCode))
-  programDropoutReasonCode?: ProgramDropoutReasonCode;
+  @IsString()
+  @MaxLength(100)
+  programDropoutReasonCode?: string;
 }
