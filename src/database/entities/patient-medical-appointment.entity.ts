@@ -76,7 +76,7 @@ export class PatientMedicalAppointment {
   nextAppointmentSpecialtyOther!: string | null;
   @Column({ name: 'has_referral_sheet', type: 'boolean', nullable: true })
   hasReferralSheet!: boolean | null;
-  @Column({ name: 'referred_to', type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'referred_to', type: 'text', nullable: true })
   referredTo!: string | null;
   @Column({
     name: 'referral_not_provided_reason',

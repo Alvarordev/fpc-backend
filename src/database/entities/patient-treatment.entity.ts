@@ -78,12 +78,7 @@ export class PatientTreatment {
   changeReason!: string | null;
   @Column({ name: 'not_receiving_reason', type: 'text', nullable: true })
   notReceivingReason!: string | null;
-  @Column({
-    name: 'operation_name',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
+  @Column({ name: 'operation_name', type: 'text', nullable: true })
   operationName!: string | null;
   @Column({
     name: 'chemotherapy_route',

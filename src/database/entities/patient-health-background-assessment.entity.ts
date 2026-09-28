@@ -65,7 +65,7 @@ export class PatientActiveComorbidity {
   @JoinColumn({ name: 'assessment_id' })
   assessment!: PatientHealthBackgroundAssessment;
 
-  @Column({ name: 'condition_name', type: 'varchar', length: 255 })
+  @Column({ name: 'condition_name', type: 'text' })
   conditionName!: string;
 
   @Column({ name: 'treatment_description', type: 'text', nullable: true })

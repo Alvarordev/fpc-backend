@@ -19,7 +19,7 @@ export class CreateTreatmentMedicationDto {
   @IsString() @MaxLength(255) name!: string;
   @IsOptional() @IsNumber() @Min(0) doseAmount?: number;
   @IsOptional() @IsIn(Object.values(DoseUnit)) doseUnit?: DoseUnit;
-  @IsOptional() @IsString() @MaxLength(255) doseDescription?: string;
+  @IsOptional() @IsString() doseDescription?: string;
   @IsOptional() @IsIn(Object.values(MedicationRoute)) route?: MedicationRoute;
   @IsOptional()
   @ValidateNested()

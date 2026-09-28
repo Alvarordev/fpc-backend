@@ -37,7 +37,7 @@ export class CreatePatientSymptomReportDto {
   symptomFrequency?: DurationDto;
   @IsOptional() @IsBoolean() isPainPresent?: boolean;
   @IsOptional() @IsInt() @Min(0) @Max(10) painIntensity?: number;
-  @IsOptional() @IsString() @MaxLength(255) painLocation?: string;
+  @IsOptional() @IsString() painLocation?: string;
   @IsOptional() @IsString() painDescription?: string;
   @IsOptional() @IsBoolean() hasSoughtMedicalConsultation?: boolean;
   @IsOptional() @IsBoolean() hasRequestedMedicalConsultation?: boolean | null;

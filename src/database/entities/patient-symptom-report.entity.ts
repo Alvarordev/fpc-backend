@@ -61,12 +61,7 @@ export class PatientSymptomReport {
   isPainPresent!: boolean | null;
   @Column({ name: 'pain_intensity', type: 'smallint', nullable: true })
   painIntensity!: number | null;
-  @Column({
-    name: 'pain_location',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
+  @Column({ name: 'pain_location', type: 'text', nullable: true })
   painLocation!: string | null;
   @Column({ name: 'pain_description', type: 'text', nullable: true })
   painDescription!: string | null;

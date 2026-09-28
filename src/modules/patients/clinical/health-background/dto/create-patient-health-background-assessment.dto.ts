@@ -13,7 +13,7 @@ import {
 import { LimitationCause } from '../../../../../database/entities/patient-health-background-assessment.entity';
 
 export class CreatePatientActiveComorbidityDto {
-  @IsString() @IsNotEmpty() @MaxLength(255) conditionName!: string;
+  @IsString() @IsNotEmpty() conditionName!: string;
 
   @IsOptional() @IsString() treatmentDescription?: string;
 

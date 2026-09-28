@@ -51,12 +51,7 @@ export class TreatmentMedication {
   doseAmount!: string | null;
   @Column({ name: 'dose_unit', type: 'varchar', length: 20, nullable: true })
   doseUnit!: DoseUnit | null;
-  @Column({
-    name: 'dose_description',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
+  @Column({ name: 'dose_description', type: 'text', nullable: true })
   doseDescription!: string | null;
   @Column({ type: 'varchar', length: 20, nullable: true })
   route!: MedicationRoute | null;
