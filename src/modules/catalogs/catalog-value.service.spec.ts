@@ -73,6 +73,30 @@ describe('CatalogValueService', () => {
     ).resolves.toMatchObject({ code: 'OTRO', other: 'Genética' });
   });
 
+  it('maps the legacy URBAN zone code to URBANA', async () => {
+    const zoneService = new CatalogValueService({
+      find: jest.fn().mockResolvedValue([
+        {
+          id: 'zone-1',
+          kind: 'zone_type',
+          code: 'URBANA',
+          label: 'Urbana',
+          parentCode: null,
+          sortOrder: 10,
+          isActive: true,
+          isSystem: true,
+          metadata: { aliases: ['URBAN', 'Urbano'] },
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]),
+    } as never);
+
+    await expect(zoneService.resolve('zone_type', 'URBAN')).resolves.toMatchObject({
+      code: 'URBANA',
+    });
+  });
+
   it('rejects unknown values', async () => {
     await expect(
       service.resolve('medical_specialty', 'xyz'),

@@ -221,6 +221,7 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     label: 'Urbana',
     sortOrder: 10,
     isSystem: true,
+    metadata: { aliases: ['URBAN', 'Urbano'] },
   },
   {
     kind: 'zone_type',
