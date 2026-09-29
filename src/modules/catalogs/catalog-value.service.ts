@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import {
   CatalogItem,
+  CATALOG_KIND_LABELS,
+  isOpenCatalogKind,
   type CatalogKind,
 } from '../../database/entities/catalog-item.entity';
 
@@ -32,8 +34,13 @@ export class CatalogValueService {
   ): Promise<ResolvedCatalogValue> {
     const resolved = await this.tryResolve(kind, value, options);
     if (!resolved) {
+      const field = CATALOG_KIND_LABELS[kind];
+      const quoted = `«${value.trim()}»`;
+      const action = isOpenCatalogKind(kind)
+        ? 'Si falta, agregala con + en esa misma selección o desde Catálogos.'
+        : 'Si falta, un administrador debe agregarla en Catálogos.';
       throw new BadRequestException(
-        `Unknown ${kind} catalog value: ${value.trim()}`,
+        `${quoted} no está en el catálogo de ${field}. Verificá esa selección. ${action}`,
       );
     }
     return resolved;
@@ -59,7 +66,7 @@ export class CatalogValueService {
     const other = this.otherFor(match.code, raw, options.otherText);
     if (match.code === 'OTRO' && !other) {
       throw new BadRequestException(
-        `${kind} requires additional text when the value is OTRO`,
+        `El catálogo de ${CATALOG_KIND_LABELS[kind]} pide un detalle adicional cuando la opción es OTRO.`,
       );
     }
     return { code: match.code, label: match.label, other };

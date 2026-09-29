@@ -54,6 +54,32 @@ export function isOpenCatalogKind(kind: CatalogKind): kind is OpenCatalogKind {
   return (OPEN_CATALOG_KINDS as readonly CatalogKind[]).includes(kind);
 }
 
+export const CATALOG_KIND_LABELS: Record<CatalogKind, string> = {
+  cancer_stage: 'Estadio del cáncer',
+  education_level: 'Nivel educativo',
+  insurance_type: 'Tipo de seguro',
+  eps_provider: 'Proveedor EPS',
+  native_language: 'Lengua nativa',
+  medical_specialty: 'Especialidad médica',
+  cancer_diagnosis: 'Diagnóstico oncológico',
+  entry_source: 'Punto de ingreso',
+  entry_sub_source: 'Cómo se enteró concretamente',
+  zone_type: 'Tipo de zona',
+  health_center_category: 'Categoría de establecimiento',
+  care_program: 'Programa de atención',
+  access_barrier: 'Barrera de acceso',
+  treatment_situation: 'Situación del tratamiento',
+  sepa_shelter: 'Albergue SEPA',
+  sepa_transport: 'Transporte SEPA',
+  program_dropout_reason: 'Motivo de baja',
+  patient_health_phase: 'Categorización',
+  patient_health_subcategory: 'Subcategoría clínica',
+  treatment_type: 'Tipo de tratamiento',
+  country: 'País',
+  chemotherapy_route: 'Vía de quimioterapia',
+  surgical_procedure: 'Procedimiento quirúrgico',
+};
+
 export const RESERVED_CATALOG_CODE = 'OTRO';
 
 @Entity('catalog_items')

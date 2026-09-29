@@ -97,10 +97,13 @@ describe('CatalogValueService', () => {
     });
   });
 
-  it('rejects unknown values', async () => {
+  it('rejects unknown values with a Spanish field name', async () => {
     await expect(
       service.resolve('medical_specialty', 'xyz'),
     ).rejects.toBeInstanceOf(BadRequestException);
     await expect(service.tryResolve('medical_specialty', 'xyz')).resolves.toBeNull();
+    await expect(
+      service.resolve('medical_specialty', 'xyz'),
+    ).rejects.toThrow(/Especialidad médica/);
   });
 });
