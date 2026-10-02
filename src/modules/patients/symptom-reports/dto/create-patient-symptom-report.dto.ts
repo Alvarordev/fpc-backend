@@ -69,6 +69,13 @@ export class CreatePatientSymptomReportDto {
   @Matches(DATE_ONLY_PATTERN)
   nextConsultationDate?: string;
   @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  nextConsultationSpecialty?: string;
+  @IsOptional()
+  @IsString()
+  nextConsultationNote?: string;
+  @IsOptional()
   @IsIn(Object.values(MedicalConsultationStatus))
   consultationStatus?: MedicalConsultationStatus;
   @IsOptional() @IsString() consultationNotObtainedReason?: string;

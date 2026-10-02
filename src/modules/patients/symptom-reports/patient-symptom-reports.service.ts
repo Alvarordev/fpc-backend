@@ -35,7 +35,7 @@ export class PatientSymptomReportsService {
     patientId: string,
     input: CreatePatientSymptomReportDto,
     manager?: EntityManager,
-    options: { skipAppointmentFanOut?: boolean } = {},
+    options: { skipAppointmentFanOut?: boolean; historical?: boolean } = {},
   ): Promise<PatientSymptomReport> {
     if (!manager) {
       return this.repository.manager.transaction((transactionManager) =>
@@ -71,7 +71,7 @@ export class PatientSymptomReportsService {
       input.enrollmentId ?? null,
       normalized,
       manager,
-      { skipAppointment: options.skipAppointmentFanOut },
+      { skipAppointment: options.skipAppointmentFanOut, historical: options.historical },
     );
     const persistable = this.ownership.stripOwnershipFields(normalized);
     const symptom = await repository.save(
@@ -151,6 +151,8 @@ export class PatientSymptomReportsService {
       normalized.referredHealthCenterId = undefined;
       normalized.referralNotProvidedReason = undefined;
       normalized.nextConsultationDate = undefined;
+      normalized.nextConsultationSpecialty = undefined;
+      normalized.nextConsultationNote = undefined;
       normalized.hasReceivedDiagnosis = undefined;
       normalized.reportedDiagnosis = undefined;
     } else if (input.hasMedicalConsultation === true) {
@@ -163,9 +165,9 @@ export class PatientSymptomReportsService {
         throw new BadRequestException(
           'firstConsultationDate is required when a consultation was made',
         );
-      if (typeof input.isAwaitingDiagnosis !== 'boolean')
+      if (input.nextConsultationDate && !present(input.nextConsultationSpecialty))
         throw new BadRequestException(
-          'isAwaitingDiagnosis is required when a consultation was made',
+          'nextConsultationSpecialty is required when nextConsultationDate is set',
         );
       if (input.hasReferral === undefined)
         throw new BadRequestException(

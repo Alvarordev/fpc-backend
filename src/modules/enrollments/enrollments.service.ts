@@ -548,7 +548,7 @@ export class EnrollmentsService {
             enrollmentId: enrollment.id,
           },
           manager,
-          { skipAppointmentFanOut: Boolean(medicalAppointments?.length) },
+          { skipAppointmentFanOut: Boolean(medicalAppointments?.length), historical: options.historical },
         );
       if (healthBackgroundAssessment)
         await this.healthBackgroundAssessments.create(

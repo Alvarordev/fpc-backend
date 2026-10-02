@@ -3,6 +3,10 @@ import { MedicalAppointmentStatus } from '../../database/entities/medical-appoin
 import { MedicalConsultationStatus } from '../../database/entities/medical-consultation-status.enum';
 import { PatientDiagnosticStatus } from '../../database/entities/patient-diagnostic-status.enum';
 import { PatientDiagnosticStatusEvent } from '../../database/entities/patient-diagnostic-status-event.entity';
+import { FollowUp } from '../../database/entities/follow-up.entity';
+import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
+import { Reminder } from '../../database/entities/reminder.entity';
+import { ReminderKind } from '../../database/entities/reminder-kind.enum';
 import { CatalogValueService } from '../catalogs/catalog-value.service';
 import { PatientDiagnosesService } from './clinical/diagnoses/patient-diagnoses.service';
 import { PatientMedicalAppointmentsService } from './clinical/medical-appointments/patient-medical-appointments.service';
@@ -168,6 +172,87 @@ describe('ClinicalOwnershipService', () => {
       }),
       manager,
       true,
+    );
+  });
+
+  it('creates a scheduled appointment and reminder for the next consultation', async () => {
+    const followUps = {
+      findOneBy: jest.fn().mockResolvedValue({
+        id: 'follow-up-id',
+        agentId: 'agent-id',
+      }),
+    };
+    const reminders = {
+      create: jest.fn((value: unknown) => value),
+      save: jest.fn((value: unknown) =>
+        Promise.resolve({ ...(value as object), id: 'reminder-id' }),
+      ),
+    };
+    const appointmentRepo = {
+      update: jest.fn().mockResolvedValue(undefined),
+    };
+    const { service, appointments, manager } = buildService(async () => null);
+    appointments.create
+      .mockResolvedValueOnce({ id: 'completed-appointment-id' })
+      .mockResolvedValueOnce({ id: 'scheduled-appointment-id' });
+    (manager.getRepository as jest.Mock).mockImplementation((entity: unknown) => {
+      if (entity === FollowUp) return followUps;
+      if (entity === Reminder) return reminders;
+      if (entity === PatientMedicalAppointment) return appointmentRepo;
+      return {};
+    });
+
+    await service.fanOutFromSymptomReport(
+      'patient-id',
+      'follow-up-id',
+      null,
+      {
+        followUpId: 'follow-up-id',
+        hasMedicalConsultation: true,
+        specialty: 'Medicina general',
+        healthCenterId: 'center-id',
+        firstConsultationDate: '2026-01-15',
+        nextConsultationDate: '2026-02-10',
+        nextConsultationSpecialty: 'ONCOLOGIA_MEDICA',
+        nextConsultationNote: 'Llevar resultados',
+      },
+      manager,
+    );
+
+    expect(appointments.create).toHaveBeenNthCalledWith(
+      1,
+      'patient-id',
+      expect.objectContaining({
+        nextAppointmentDate: '2026-02-10',
+        nextAppointmentSpecialty: 'ONCOLOGIA_MEDICA',
+        status: MedicalAppointmentStatus.COMPLETED,
+      }),
+      manager,
+      false,
+    );
+    expect(appointments.create).toHaveBeenNthCalledWith(
+      2,
+      'patient-id',
+      expect.objectContaining({
+        specialty: 'ONCOLOGIA_MEDICA',
+        appointmentDate: '2026-02-10',
+        status: MedicalAppointmentStatus.SCHEDULED,
+      }),
+      manager,
+      true,
+    );
+    expect(reminders.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        assignedAgentId: 'agent-id',
+        description: 'Llevar resultados',
+        kind: ReminderKind.MEDICAL_APPOINTMENT,
+        medicalAppointmentId: 'scheduled-appointment-id',
+        dueOn: '2026-02-10',
+      }),
+    );
+    expect(appointmentRepo.update).toHaveBeenCalledWith(
+      { id: 'scheduled-appointment-id' },
+      { reminderId: 'reminder-id' },
     );
   });
 

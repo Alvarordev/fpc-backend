@@ -152,6 +152,26 @@ describe('PatientSymptomReportsService', () => {
     );
   });
 
+  it('accepts a consultation without the deprecated awaiting-diagnosis flag', async () => {
+    const { service, manager } = buildService();
+
+    await expect(
+      service.create(
+        'patient-id',
+        {
+          followUpId: 'follow-up-id',
+          hasMedicalConsultation: true,
+          healthCenterId: 'health-center-id',
+          specialty: 'Medicina general',
+          firstConsultationDate: '2026-06-20',
+          hasReferral: null,
+          hasReceivedDiagnosis: false,
+        },
+        manager,
+      ),
+    ).resolves.toEqual(expect.objectContaining({ id: 'report-id' }));
+  });
+
   it('requires a consultation status when a consultation was requested', async () => {
     const { service, manager } = buildService();
 
