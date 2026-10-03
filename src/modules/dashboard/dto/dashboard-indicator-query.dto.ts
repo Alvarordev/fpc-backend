@@ -2,13 +2,23 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDateString,
+  IsEnum,
   IsIn,
   IsInt,
   IsOptional,
+  IsString,
+  Matches,
   Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 import { DashboardPeriod } from './dashboard-query.dto';
+
+export enum DashboardPopulation {
+  ALL_ACTIVE = 'all_active',
+  ACTIVE_IN_PERIOD = 'active_in_period',
+  ENROLLED_IN_PERIOD = 'enrolled_in_period',
+}
 
 export class DashboardIndicatorQueryDto {
   @ApiPropertyOptional({
@@ -65,4 +75,25 @@ export class DashboardIndicatorQueryDto {
   @IsOptional()
   @IsIn(['America/Lima'])
   timezone?: string;
+
+  @ApiPropertyOptional({
+    enum: DashboardPopulation,
+    default: DashboardPopulation.ALL_ACTIVE,
+    description:
+      'Denominator for estado indicators. Flujo metrics stay period-scoped.',
+  })
+  @IsOptional()
+  @IsEnum(DashboardPopulation)
+  population?: DashboardPopulation;
+
+  @ApiPropertyOptional({
+    example: 'LIMA',
+    description:
+      'Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  @Matches(/^[A-Za-zÑñ _-]+$/)
+  department?: string;
 }

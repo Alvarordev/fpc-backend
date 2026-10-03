@@ -146,6 +146,20 @@ export class PatientSymptomReport {
     nullable: true,
   })
   notReceivingTreatmentReason!: string | null;
+  @Column({ name: 'referred_via_sepa', type: 'boolean', nullable: true })
+  referredViaSepa!: boolean | null;
+  @Column({
+    name: 'attended_primary_care_via_sepa',
+    type: 'boolean',
+    nullable: true,
+  })
+  attendedPrimaryCareViaSepa!: boolean | null;
+  @Column({
+    name: 'first_primary_care_via_sepa_at',
+    type: 'date',
+    nullable: true,
+  })
+  firstPrimaryCareViaSepaAt!: string | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }

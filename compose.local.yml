@@ -8,7 +8,7 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://fpc_dev:fpc_dev_password@postgres:5432/fpc_dev
       JWT_SECRET: local-development-secret-change-before-any-deployment
-      CORS_ORIGIN: http://localhost:5173
+      CORS_ORIGIN: http://localhost:5173,http://127.0.0.1:5173
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
       PATIENT_SUMMARY_RATE_LIMIT: ${PATIENT_SUMMARY_RATE_LIMIT:-10}

@@ -18,6 +18,12 @@ export class DashboardIndicatorMetaDto {
 
   @ApiProperty()
   populationCount!: number;
+
+  @ApiProperty({
+    description:
+      'Patients in the population whose first enrollment is before the period start. Zero when population is enrolled_in_period.',
+  })
+  enrolledBeforePeriod!: number;
 }
 
 export class DashboardIndicatorItemDto {
@@ -173,7 +179,7 @@ export class DashboardProductivityResponseDto {
 
   @ApiProperty({
     description:
-      'Average days from enrollment to SIS affiliation (affiliated_via_sepa only). Null when unknown.',
+      'Average days from enrollment to SIS affiliation for patients whose current insurance is SIS and whose affiliation date differs from enrollment. Null when unknown.',
     nullable: true,
   })
   avgDaysEnrollmentToSis!: number | null;

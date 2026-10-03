@@ -450,7 +450,7 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
   {
     kind: 'sepa_shelter',
     code: 'FRIEDA_HELLER',
-    label: 'Frieda Heller',
+    label: 'Albergue Frieda Heller – FPC',
     sortOrder: 10,
     isSystem: true,
   },
@@ -471,7 +471,7 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
   {
     kind: 'sepa_shelter',
     code: 'INSPIRA',
-    label: 'Inspira',
+    label: 'Albergue Inspira',
     sortOrder: 40,
     isSystem: true,
   },
@@ -500,7 +500,7 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
   {
     kind: 'sepa_transport',
     code: 'LATAM_AVION_SOLIDARIO',
-    label: 'LATAM Avión Solidario',
+    label: 'LATAM – Avión Solidario',
     sortOrder: 20,
     isSystem: true,
   },

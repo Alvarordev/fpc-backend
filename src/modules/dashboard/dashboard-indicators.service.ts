@@ -1,7 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { DashboardPeriod } from './dto/dashboard-query.dto';
-import { DashboardIndicatorQueryDto } from './dto/dashboard-indicator-query.dto';
+import {
+  DashboardIndicatorQueryDto,
+  DashboardPopulation,
+} from './dto/dashboard-indicator-query.dto';
 import {
   DashboardAbandonmentResponseDto,
   DashboardAdherenceResponseDto,
@@ -39,6 +42,7 @@ interface EventRow {
 
 interface PopulationRow {
   count: string | number;
+  enrolledBeforePeriod?: string | number;
 }
 
 interface MetricRow {
@@ -57,21 +61,23 @@ export class DashboardIndicatorsService {
     const parameters = [bounds.fromAt, bounds.toAt, bounds.toDate];
     const [populationRows, distributionRows] = await Promise.all([
       this.dataSource.query<PopulationRow[]>(
-        this.populationQuery(),
+        this.populationQuery(query),
         parameters.slice(0, 2),
       ),
       this.dataSource.query<DistributionRow[]>(
-        this.demographicsQuery(),
+        this.demographicsQuery(query),
         parameters,
       ),
     ]);
-    const populationCount = this.toNumber(populationRows[0]?.count ?? 0);
+    const { populationCount, enrolledBeforePeriod } = this.readPopulation(populationRows);
     const distributions = this.toDistributions(distributionRows);
 
     return {
       meta: this.meta(
+        query,
         bounds,
         populationCount,
+        enrolledBeforePeriod,
         'Distribucion demografica de la cohorte de pacientes enrolados en el periodo.',
       ),
       age: distributions.age,
@@ -102,16 +108,16 @@ export class DashboardIndicatorsService {
     ];
     const [populationRows, distributionRows, eventRows] = await Promise.all([
       this.dataSource.query<PopulationRow[]>(
-        this.populationQuery(),
+        this.populationQuery(query),
         populationParameters,
       ),
       this.dataSource.query<DistributionRow[]>(
-        this.epidemiologyQuery(),
+        this.epidemiologyQuery(query),
         populationParameters,
       ),
       this.dataSource.query<EventRow[]>(this.eventsQuery(), eventParameters),
     ]);
-    const populationCount = this.toNumber(populationRows[0]?.count ?? 0);
+    const { populationCount, enrolledBeforePeriod } = this.readPopulation(populationRows);
     const distributions = this.toDistributions(distributionRows);
     const events = {
       deaths: 0,
@@ -123,8 +129,10 @@ export class DashboardIndicatorsService {
 
     return {
       meta: this.meta(
+        query,
         bounds,
         populationCount,
+        enrolledBeforePeriod,
         'Estado epidemiologico actual de la cohorte y eventos efectivos del periodo.',
       ),
       currentDiagnoses: distributions.currentDiagnoses,
@@ -143,19 +151,19 @@ export class DashboardIndicatorsService {
     const populationParameters = [bounds.fromAt, bounds.toAt];
     const [populationRows, metricRows, distributionRows] = await Promise.all([
       this.dataSource.query<PopulationRow[]>(
-        this.populationQuery(),
+        this.populationQuery(query),
         populationParameters,
       ),
       this.dataSource.query<MetricRow[]>(
-        this.managementMetricsQuery(),
+        this.managementMetricsQuery(query),
         populationParameters,
       ),
       this.dataSource.query<DistributionRow[]>(
-        this.managementDistributionsQuery(),
+        this.managementDistributionsQuery(query),
         populationParameters,
       ),
     ]);
-    const populationCount = this.toNumber(populationRows[0]?.count ?? 0);
+    const { populationCount, enrolledBeforePeriod } = this.readPopulation(populationRows);
     const metrics = this.toMetrics(metricRows);
     const distributions = this.toDistributions(distributionRows, [
       'specialtyForDiagnosis',
@@ -165,8 +173,10 @@ export class DashboardIndicatorsService {
 
     return {
       meta: this.meta(
+        query,
         bounds,
         populationCount,
+        enrolledBeforePeriod,
         'Indicadores de gestion SEPA sobre la cohorte enrolada en el periodo.',
       ),
       sisAffiliatedViaSepa: metrics.sisAffiliatedViaSepa ?? 0,
@@ -191,21 +201,23 @@ export class DashboardIndicatorsService {
     const parameters = [bounds.fromAt, bounds.toAt];
     const [populationRows, metricRows] = await Promise.all([
       this.dataSource.query<PopulationRow[]>(
-        this.populationQuery(),
+        this.populationQuery(query),
         parameters,
       ),
       this.dataSource.query<MetricRow[]>(
-        this.productivityMetricsQuery(),
+        this.productivityMetricsQuery(query),
         parameters,
       ),
     ]);
-    const populationCount = this.toNumber(populationRows[0]?.count ?? 0);
+    const { populationCount, enrolledBeforePeriod } = this.readPopulation(populationRows);
     const metrics = this.toMetrics(metricRows);
 
     return {
       meta: this.meta(
+        query,
         bounds,
         populationCount,
+        enrolledBeforePeriod,
         'Indicadores de productividad SEPA: tiempos promedio y beneficios recibidos.',
       ),
       avgDaysEnrollmentToSis: this.toNullableNumber(
@@ -235,21 +247,23 @@ export class DashboardIndicatorsService {
     const parameters = [bounds.fromAt, bounds.toAt];
     const [populationRows, metricRows] = await Promise.all([
       this.dataSource.query<PopulationRow[]>(
-        this.populationQuery(),
+        this.populationQuery(query),
         parameters,
       ),
       this.dataSource.query<MetricRow[]>(
-        this.adherenceMetricsQuery(),
+        this.adherenceMetricsQuery(query),
         parameters,
       ),
     ]);
-    const populationCount = this.toNumber(populationRows[0]?.count ?? 0);
+    const { populationCount, enrolledBeforePeriod } = this.readPopulation(populationRows);
     const metrics = this.toMetrics(metricRows);
 
     return {
       meta: this.meta(
+        query,
         bounds,
         populationCount,
+        enrolledBeforePeriod,
         'Indicadores de adherencia al tratamiento y barreras de acceso SEPA.',
       ),
       chemoRadioCompliancePct: metrics.chemoRadioCompliancePct ?? 0,
@@ -270,19 +284,19 @@ export class DashboardIndicatorsService {
     const parameters = [bounds.fromAt, bounds.toAt];
     const [populationRows, metricRows, distributionRows] = await Promise.all([
       this.dataSource.query<PopulationRow[]>(
-        this.populationQuery(),
+        this.populationQuery(query),
         parameters,
       ),
       this.dataSource.query<MetricRow[]>(
-        this.abandonmentMetricsQuery(),
+        this.abandonmentMetricsQuery(query),
         parameters,
       ),
       this.dataSource.query<DistributionRow[]>(
-        this.abandonmentDistributionsQuery(),
+        this.abandonmentDistributionsQuery(query),
         parameters,
       ),
     ]);
-    const populationCount = this.toNumber(populationRows[0]?.count ?? 0);
+    const { populationCount, enrolledBeforePeriod } = this.readPopulation(populationRows);
     const metrics = this.toMetrics(metricRows);
     const distributions = this.toDistributions(distributionRows, [
       'dropoutReasons',
@@ -290,8 +304,10 @@ export class DashboardIndicatorsService {
 
     return {
       meta: this.meta(
+        query,
         bounds,
         populationCount,
+        enrolledBeforePeriod,
         'Indicadores de abandono del programa SEPA.',
       ),
       dropoutReasons: distributions.dropoutReasons,
@@ -353,8 +369,10 @@ export class DashboardIndicatorsService {
   }
 
   private meta(
+    query: DashboardIndicatorQueryDto,
     bounds: IndicatorBounds,
     populationCount: number,
+    enrolledBeforePeriod: number,
     definition: string,
   ): DashboardIndicatorMetaDto {
     return {
@@ -362,10 +380,31 @@ export class DashboardIndicatorsService {
       to: bounds.toDate,
       timezone: TIMEZONE,
       definition,
-      population:
-        'Pacientes distintos con un enrolamiento efectivo en el periodo seleccionado.',
+      population: this.populationCopy(query),
       populationCount,
+      enrolledBeforePeriod,
     };
+  }
+
+  private readPopulation(rows: PopulationRow[]): {
+    populationCount: number;
+    enrolledBeforePeriod: number;
+  } {
+    return {
+      populationCount: this.toNumber(rows[0]?.count ?? 0),
+      enrolledBeforePeriod: this.toNumber(rows[0]?.enrolledBeforePeriod ?? 0),
+    };
+  }
+
+  private populationCopy(query: DashboardIndicatorQueryDto): string {
+    const population = query.population ?? DashboardPopulation.ALL_ACTIVE;
+    if (population === DashboardPopulation.ACTIVE_IN_PERIOD) {
+      return 'Pacientes activos con actividad registrada en el periodo.';
+    }
+    if (population === DashboardPopulation.ENROLLED_IN_PERIOD) {
+      return 'Pacientes distintos con un enrolamiento efectivo en el periodo seleccionado.';
+    }
+    return 'Todos los pacientes activos al cierre del periodo, sin importar cuándo se enrolaron.';
   }
 
   private toDistributions(rows: DistributionRow[], categoryNames?: string[]) {
@@ -444,39 +483,118 @@ export class DashboardIndicatorsService {
     return Number(value);
   }
 
-  private populationQuery(): string {
+  private populationQuery(query: DashboardIndicatorQueryDto): string {
     return `
-      SELECT COUNT(DISTINCT enrollment.patient_id) AS count
-      FROM enrollments enrollment
-      JOIN patients patient ON patient.id = enrollment.patient_id
-      WHERE patient.role = 'PATIENT'
-        AND COALESCE(
-          enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-          enrollment.created_at
-        ) >= $1
-        AND COALESCE(
-          enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-          enrollment.created_at
-        ) < $2
+      WITH ${this.cohortCtes(query)}
+      SELECT
+        COUNT(*)::int AS count,
+        COUNT(*) FILTER (
+          WHERE enrolled_at IS NOT NULL AND enrolled_at < $1
+        )::int AS "enrolledBeforePeriod"
+      FROM cohort
     `;
   }
 
-  private demographicsQuery(): string {
+  private departmentPredicate(department?: string): string {
+    const normalized = department?.trim().toUpperCase().replace(/\s+/g, '_');
+    if (!normalized || !/^[A-ZÑ_]{2,80}$/.test(normalized)) return '';
+    const escaped = normalized.replace(/'/g, "''");
     return `
-      WITH cohort AS (
-        SELECT DISTINCT enrollment.patient_id
+      AND EXISTS (
+        SELECT 1 FROM patient_addresses address
+        WHERE address.patient_id = patient.id
+          AND address.is_primary = true
+          AND address.is_active = true
+          AND REPLACE(UPPER(BTRIM(address.department)), ' ', '_') = '${escaped}'
+      )
+    `;
+  }
+
+  private cohortCtes(query: DashboardIndicatorQueryDto): string {
+    const enrolledAt = `COALESCE(enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}', enrollment.created_at)`;
+    const departmentPredicate = this.departmentPredicate(query.department);
+    const population = query.population ?? DashboardPopulation.ALL_ACTIVE;
+    const firstEnrollment = `
+      first_enrollment AS (
+        SELECT enrollment.patient_id, MIN(${enrolledAt}) AS enrolled_at
         FROM enrollments enrollment
-        JOIN patients patient ON patient.id = enrollment.patient_id
+        GROUP BY enrollment.patient_id
+      )
+    `;
+
+    if (population === DashboardPopulation.ENROLLED_IN_PERIOD) {
+      return `
+        ${firstEnrollment},
+        cohort AS (
+          SELECT patient.id AS patient_id, first_enrollment.enrolled_at
+          FROM patients patient
+          INNER JOIN first_enrollment ON first_enrollment.patient_id = patient.id
+          WHERE patient.role = 'PATIENT'
+            AND first_enrollment.enrolled_at >= $1
+            AND first_enrollment.enrolled_at < $2
+            ${departmentPredicate}
+        )
+      `;
+    }
+
+    const activityFilter = `patient.activity_status IN ('ACTIVE', 'REACTIVE')`;
+    if (population === DashboardPopulation.ALL_ACTIVE) {
+      return `
+        ${firstEnrollment},
+        cohort AS (
+          SELECT patient.id AS patient_id, first_enrollment.enrolled_at
+          FROM patients patient
+          LEFT JOIN first_enrollment ON first_enrollment.patient_id = patient.id
+          WHERE patient.role = 'PATIENT'
+            AND ${activityFilter}
+            AND $1::timestamptz IS NOT NULL
+            AND $2::timestamptz IS NOT NULL
+            ${departmentPredicate}
+        )
+      `;
+    }
+
+    return `
+      ${firstEnrollment},
+      cohort AS (
+        SELECT patient.id AS patient_id, first_enrollment.enrolled_at
+        FROM patients patient
+        LEFT JOIN first_enrollment ON first_enrollment.patient_id = patient.id
         WHERE patient.role = 'PATIENT'
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) >= $1
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) < $2
-      ), primary_addresses AS (
+          AND ${activityFilter}
+          ${departmentPredicate}
+          AND (
+            (
+              first_enrollment.enrolled_at IS NOT NULL
+              AND first_enrollment.enrolled_at >= $1
+              AND first_enrollment.enrolled_at < $2
+            )
+            OR EXISTS (
+              SELECT 1 FROM follow_ups follow_up
+              WHERE follow_up.subject_patient_id = patient.id
+                AND COALESCE(follow_up.completed_at, follow_up.scheduled_at, follow_up.created_at) >= $1
+                AND COALESCE(follow_up.completed_at, follow_up.scheduled_at, follow_up.created_at) < $2
+            )
+            OR EXISTS (
+              SELECT 1 FROM psychooncology_appointments psycho
+              WHERE psycho.patient_id = patient.id
+                AND COALESCE(
+                  psycho.scheduled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+                  psycho.scheduled_at
+                ) >= $1
+                AND COALESCE(
+                  psycho.scheduled_on::timestamp AT TIME ZONE '${TIMEZONE}',
+                  psycho.scheduled_at
+                ) < $2
+            )
+          )
+      )
+    `;
+  }
+
+  private demographicsQuery(query: DashboardIndicatorQueryDto): string {
+    return `
+      WITH ${this.cohortCtes(query)}, primary_addresses AS (
         SELECT DISTINCT ON (address.patient_id)
           address.patient_id, address.district, address.province, address.department
         FROM patient_addresses address
@@ -556,22 +674,9 @@ export class DashboardIndicatorsService {
     `;
   }
 
-  private epidemiologyQuery(): string {
+  private epidemiologyQuery(query: DashboardIndicatorQueryDto): string {
     return `
-      WITH cohort AS (
-        SELECT DISTINCT enrollment.patient_id
-        FROM enrollments enrollment
-        JOIN patients patient ON patient.id = enrollment.patient_id
-        WHERE patient.role = 'PATIENT'
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) >= $1
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) < $2
-      ), current_diagnoses AS (
+      WITH ${this.cohortCtes(query)}, current_diagnoses AS (
         SELECT DISTINCT ON (diagnosis.patient_id)
           diagnosis.patient_id, diagnosis.diagnosis, diagnosis.cancer_stage
         FROM patient_diagnoses diagnosis
@@ -644,22 +749,9 @@ export class DashboardIndicatorsService {
     `;
   }
 
-  private managementMetricsQuery(): string {
+  private managementMetricsQuery(query: DashboardIndicatorQueryDto): string {
     return `
-      WITH cohort AS (
-        SELECT DISTINCT enrollment.patient_id
-        FROM enrollments enrollment
-        JOIN patients patient ON patient.id = enrollment.patient_id
-        WHERE patient.role = 'PATIENT'
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) >= $1
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) < $2
-      ), latest_statuses AS (
+      WITH ${this.cohortCtes(query)}, latest_statuses AS (
         SELECT DISTINCT ON (event.patient_id)
           event.patient_id,
           event.status,
@@ -688,18 +780,34 @@ export class DashboardIndicatorsService {
           AND insurance.affiliated_via_sepa = true
         UNION ALL
         SELECT 'primaryCareViaSepa',
-          COUNT(DISTINCT appointment.patient_id)::float
-        FROM patient_medical_appointments appointment
-        JOIN cohort ON cohort.patient_id = appointment.patient_id
-        WHERE appointment.is_current = true
-          AND appointment.attended_via_sepa = true
+          COUNT(DISTINCT primary_care.patient_id)::float
+        FROM (
+          SELECT appointment.patient_id
+          FROM patient_medical_appointments appointment
+          JOIN cohort ON cohort.patient_id = appointment.patient_id
+          WHERE appointment.is_current = true
+            AND appointment.attended_via_sepa = true
+          UNION
+          SELECT symptom.patient_id
+          FROM patient_symptom_reports symptom
+          JOIN cohort ON cohort.patient_id = symptom.patient_id
+          WHERE symptom.attended_primary_care_via_sepa = true
+        ) primary_care
         UNION ALL
         SELECT 'referredViaSepa',
-          COUNT(DISTINCT appointment.patient_id)::float
-        FROM patient_medical_appointments appointment
-        JOIN cohort ON cohort.patient_id = appointment.patient_id
-        WHERE appointment.is_current = true
-          AND appointment.referred_via_sepa = true
+          COUNT(DISTINCT referred.patient_id)::float
+        FROM (
+          SELECT appointment.patient_id
+          FROM patient_medical_appointments appointment
+          JOIN cohort ON cohort.patient_id = appointment.patient_id
+          WHERE appointment.is_current = true
+            AND appointment.referred_via_sepa = true
+          UNION
+          SELECT symptom.patient_id
+          FROM patient_symptom_reports symptom
+          JOIN cohort ON cohort.patient_id = symptom.patient_id
+          WHERE symptom.referred_via_sepa = true
+        ) referred
         UNION ALL
         SELECT 'diagnosticRuledOutViaSepa',
           COUNT(DISTINCT status.patient_id)::float
@@ -738,22 +846,9 @@ export class DashboardIndicatorsService {
     `;
   }
 
-  private managementDistributionsQuery(): string {
+  private managementDistributionsQuery(query: DashboardIndicatorQueryDto): string {
     return `
-      WITH cohort AS (
-        SELECT DISTINCT enrollment.patient_id
-        FROM enrollments enrollment
-        JOIN patients patient ON patient.id = enrollment.patient_id
-        WHERE patient.role = 'PATIENT'
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) >= $1
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) < $2
-      ), current_diagnoses AS (
+      WITH ${this.cohortCtes(query)}, current_diagnoses AS (
         SELECT DISTINCT ON (diagnosis.patient_id)
           diagnosis.patient_id, diagnosis.diagnosis_specialty
         FROM patient_diagnoses diagnosis
@@ -794,34 +889,21 @@ export class DashboardIndicatorsService {
     `;
   }
 
-  private productivityMetricsQuery(): string {
+  private productivityMetricsQuery(query: DashboardIndicatorQueryDto): string {
     return `
-      WITH cohort AS (
-        SELECT DISTINCT enrollment.patient_id,
-          MIN(COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          )) AS enrolled_at
-        FROM enrollments enrollment
-        JOIN patients patient ON patient.id = enrollment.patient_id
-        WHERE patient.role = 'PATIENT'
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) >= $1
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) < $2
-        GROUP BY enrollment.patient_id
-      ), sis_days AS (
+      WITH ${this.cohortCtes(query)}, sis_days AS (
         SELECT AVG(
           EXTRACT(EPOCH FROM (sis.affiliated_at - cohort.enrolled_at)) / 86400.0
         ) AS avg_days
         FROM cohort
         JOIN patient_sis_affiliation sis ON sis.patient_id = cohort.patient_id
-        WHERE sis.affiliated_via_sepa = true
+        JOIN patient_insurance insurance
+          ON insurance.patient_id = cohort.patient_id
+         AND insurance.is_current = true
+        WHERE insurance.insurance_type = 'SIS'
           AND sis.affiliated_at IS NOT NULL
+          AND (sis.affiliated_at AT TIME ZONE '${TIMEZONE}')::date
+              IS DISTINCT FROM (cohort.enrolled_at AT TIME ZONE '${TIMEZONE}')::date
       ), primary_care_days AS (
         SELECT AVG(
           (confirmed.occurred_on::date - first_care.occurred_on::date)
@@ -901,22 +983,9 @@ export class DashboardIndicatorsService {
     `;
   }
 
-  private adherenceMetricsQuery(): string {
+  private adherenceMetricsQuery(query: DashboardIndicatorQueryDto): string {
     return `
-      WITH cohort AS (
-        SELECT DISTINCT enrollment.patient_id
-        FROM enrollments enrollment
-        JOIN patients patient ON patient.id = enrollment.patient_id
-        WHERE patient.role = 'PATIENT'
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) >= $1
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) < $2
-      ), current_treatments AS (
+      WITH ${this.cohortCtes(query)}, current_treatments AS (
         SELECT treatment.*
         FROM patient_treatments treatment
         JOIN cohort ON cohort.patient_id = treatment.patient_id
@@ -990,22 +1059,9 @@ export class DashboardIndicatorsService {
     `;
   }
 
-  private abandonmentMetricsQuery(): string {
+  private abandonmentMetricsQuery(query: DashboardIndicatorQueryDto): string {
     return `
-      WITH cohort AS (
-        SELECT DISTINCT enrollment.patient_id
-        FROM enrollments enrollment
-        JOIN patients patient ON patient.id = enrollment.patient_id
-        WHERE patient.role = 'PATIENT'
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) >= $1
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) < $2
-      ), reasons AS (
+      WITH ${this.cohortCtes(query)}, reasons AS (
         SELECT
           COALESCE(
             details.program_dropout_reason_code,
@@ -1037,22 +1093,9 @@ export class DashboardIndicatorsService {
     `;
   }
 
-  private abandonmentDistributionsQuery(): string {
+  private abandonmentDistributionsQuery(query: DashboardIndicatorQueryDto): string {
     return `
-      WITH cohort AS (
-        SELECT DISTINCT enrollment.patient_id
-        FROM enrollments enrollment
-        JOIN patients patient ON patient.id = enrollment.patient_id
-        WHERE patient.role = 'PATIENT'
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) >= $1
-          AND COALESCE(
-            enrollment.enrolled_on::timestamp AT TIME ZONE '${TIMEZONE}',
-            enrollment.created_at
-          ) < $2
-      ), values AS (
+      WITH ${this.cohortCtes(query)}, values AS (
         SELECT 'dropoutReasons' AS category,
           COALESCE(
             NULLIF(BTRIM(details.program_dropout_reason_code), ''),

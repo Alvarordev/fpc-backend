@@ -201,4 +201,25 @@ describe('PatientSymptomReportsService', () => {
       ),
     ).rejects.toThrow('notReceivingTreatmentReason is required');
   });
+
+  it('clears the SEPA primary-care date unless the patient attended with support', async () => {
+    const { service, manager, savedReports } = buildService();
+
+    await service.create(
+      'patient-id',
+      {
+        followUpId: 'follow-up-id',
+        attendedPrimaryCareViaSepa: false,
+        firstPrimaryCareViaSepaAt: '2026-06-20',
+        referredViaSepa: true,
+      },
+      manager,
+    );
+
+    expect(savedReports[0]).toMatchObject({
+      attendedPrimaryCareViaSepa: false,
+      firstPrimaryCareViaSepaAt: undefined,
+      referredViaSepa: true,
+    });
+  });
 });

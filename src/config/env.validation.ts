@@ -16,7 +16,21 @@ export const envValidationSchema = Joi.object({
     .pattern(/^\d+(ms|s|m|h|d|w|y)$/)
     .default('7d'),
   REFRESH_TOKEN_COOKIE_NAME: Joi.string().default('refresh_token'),
-  CORS_ORIGIN: Joi.string().uri().invalid('*').required(),
+  CORS_ORIGIN: Joi.string()
+    .custom((value, helpers) => {
+      const origins = String(value)
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean);
+      if (origins.length === 0) return helpers.error('any.required');
+      for (const origin of origins) {
+        if (origin === '*') return helpers.error('any.invalid');
+        const { error } = Joi.string().uri().validate(origin);
+        if (error) return helpers.error('string.uri');
+      }
+      return value;
+    })
+    .required(),
   SEED_ADMIN_EMAIL: Joi.string().email().optional(),
   SEED_ADMIN_PASSWORD: Joi.string().min(8).optional(),
   // Only read by the standalone demo seed script, declared here so the app

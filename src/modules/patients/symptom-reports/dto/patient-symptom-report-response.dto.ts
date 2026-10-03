@@ -115,6 +115,15 @@ export class PatientSymptomReportResponseDto {
   @ApiProperty({ nullable: true, deprecated: true })
   notReceivingTreatmentReason!: string | null;
 
+  @ApiProperty({ nullable: true })
+  referredViaSepa!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  attendedPrimaryCareViaSepa!: boolean | null;
+
+  @ApiProperty({ format: 'date', nullable: true })
+  firstPrimaryCareViaSepaAt!: string | null;
+
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
 
@@ -161,6 +170,9 @@ export class PatientSymptomReportResponseDto {
         report.reportedTreatmentFrequency,
       ),
       notReceivingTreatmentReason: report.notReceivingTreatmentReason,
+      referredViaSepa: report.referredViaSepa,
+      attendedPrimaryCareViaSepa: report.attendedPrimaryCareViaSepa,
+      firstPrimaryCareViaSepaAt: report.firstPrimaryCareViaSepaAt,
       createdAt: report.createdAt.toISOString(),
     };
   }

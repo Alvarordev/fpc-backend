@@ -643,6 +643,33 @@
                 "America/Lima"
               ]
             }
+          },
+          {
+            "name": "population",
+            "required": false,
+            "in": "query",
+            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "schema": {
+              "default": "all_active",
+              "type": "string",
+              "enum": [
+                "all_active",
+                "active_in_period",
+                "enrolled_in_period"
+              ]
+            }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "schema": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-zÑñ _-]+$",
+              "example": "LIMA",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -749,6 +776,33 @@
               "enum": [
                 "America/Lima"
               ]
+            }
+          },
+          {
+            "name": "population",
+            "required": false,
+            "in": "query",
+            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "schema": {
+              "default": "all_active",
+              "type": "string",
+              "enum": [
+                "all_active",
+                "active_in_period",
+                "enrolled_in_period"
+              ]
+            }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "schema": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-zÑñ _-]+$",
+              "example": "LIMA",
+              "type": "string"
             }
           }
         ],
@@ -857,6 +911,33 @@
                 "America/Lima"
               ]
             }
+          },
+          {
+            "name": "population",
+            "required": false,
+            "in": "query",
+            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "schema": {
+              "default": "all_active",
+              "type": "string",
+              "enum": [
+                "all_active",
+                "active_in_period",
+                "enrolled_in_period"
+              ]
+            }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "schema": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-zÑñ _-]+$",
+              "example": "LIMA",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -963,6 +1044,33 @@
               "enum": [
                 "America/Lima"
               ]
+            }
+          },
+          {
+            "name": "population",
+            "required": false,
+            "in": "query",
+            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "schema": {
+              "default": "all_active",
+              "type": "string",
+              "enum": [
+                "all_active",
+                "active_in_period",
+                "enrolled_in_period"
+              ]
+            }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "schema": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-zÑñ _-]+$",
+              "example": "LIMA",
+              "type": "string"
             }
           }
         ],
@@ -1071,6 +1179,33 @@
                 "America/Lima"
               ]
             }
+          },
+          {
+            "name": "population",
+            "required": false,
+            "in": "query",
+            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "schema": {
+              "default": "all_active",
+              "type": "string",
+              "enum": [
+                "all_active",
+                "active_in_period",
+                "enrolled_in_period"
+              ]
+            }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "schema": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-zÑñ _-]+$",
+              "example": "LIMA",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1177,6 +1312,33 @@
               "enum": [
                 "America/Lima"
               ]
+            }
+          },
+          {
+            "name": "population",
+            "required": false,
+            "in": "query",
+            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "schema": {
+              "default": "all_active",
+              "type": "string",
+              "enum": [
+                "all_active",
+                "active_in_period",
+                "enrolled_in_period"
+              ]
+            }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "schema": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-zÑñ _-]+$",
+              "example": "LIMA",
+              "type": "string"
             }
           }
         ],
@@ -8368,6 +8530,10 @@
           },
           "populationCount": {
             "type": "number"
+          },
+          "enrolledBeforePeriod": {
+            "type": "number",
+            "description": "Patients in the population whose first enrollment is before the period start. Zero when population is enrolled_in_period."
           }
         },
         "required": [
@@ -8376,7 +8542,8 @@
           "timezone",
           "definition",
           "population",
-          "populationCount"
+          "populationCount",
+          "enrolledBeforePeriod"
         ]
       },
       "DashboardIndicatorItemDto": {
@@ -8557,7 +8724,7 @@
           "avgDaysEnrollmentToSis": {
             "type": "number",
             "nullable": true,
-            "description": "Average days from enrollment to SIS affiliation (affiliated_via_sepa only). Null when unknown."
+            "description": "Average days from enrollment to SIS affiliation for patients whose current insurance is SIS and whose affiliation date differs from enrollment. Null when unknown."
           },
           "avgDaysPrimaryCareToDiagnosis": {
             "type": "number",
@@ -9721,8 +9888,7 @@
             "type": "string"
           },
           "doseDescription": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "route": {
             "enum": [
@@ -10102,6 +10268,22 @@
             "type": "string",
             "deprecated": true
           },
+          "referredViaSepa": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the patient was referred to a higher-complexity facility with SEPA support."
+          },
+          "attendedPrimaryCareViaSepa": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the patient attended a first primary-care consultation with SEPA support."
+          },
+          "firstPrimaryCareViaSepaAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date",
+            "description": "Date of the first primary-care consultation attended with SEPA support."
+          },
           "discomfortSeverity": {
             "type": "string",
             "maxLength": 20
@@ -10137,8 +10319,7 @@
             "maximum": 10
           },
           "painLocation": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "painDescription": {
             "type": "string"
@@ -10155,6 +10336,13 @@
             "nullable": true
           },
           "noMedicalConsultationReason": {
+            "type": "string"
+          },
+          "nextConsultationSpecialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "nextConsultationNote": {
             "type": "string"
           },
           "consultationStatus": {
@@ -10177,8 +10365,7 @@
         "type": "object",
         "properties": {
           "conditionName": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "treatmentDescription": {
             "type": "string"
@@ -13902,6 +14089,19 @@
             "nullable": true,
             "deprecated": true
           },
+          "referredViaSepa": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "attendedPrimaryCareViaSepa": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "firstPrimaryCareViaSepaAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -13945,6 +14145,9 @@
           "reportedTreatment",
           "reportedTreatmentFrequency",
           "notReceivingTreatmentReason",
+          "referredViaSepa",
+          "attendedPrimaryCareViaSepa",
+          "firstPrimaryCareViaSepaAt",
           "createdAt"
         ]
       },
@@ -14983,8 +15186,7 @@
             "type": "string"
           },
           "doseDescription": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "route": {
             "enum": [
@@ -15336,6 +15538,22 @@
             "type": "string",
             "deprecated": true
           },
+          "referredViaSepa": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the patient was referred to a higher-complexity facility with SEPA support."
+          },
+          "attendedPrimaryCareViaSepa": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the patient attended a first primary-care consultation with SEPA support."
+          },
+          "firstPrimaryCareViaSepaAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date",
+            "description": "Date of the first primary-care consultation attended with SEPA support."
+          },
           "followUpId": {
             "type": "string",
             "format": "uuid"
@@ -15379,8 +15597,7 @@
             "maximum": 10
           },
           "painLocation": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "painDescription": {
             "type": "string"
@@ -15397,6 +15614,13 @@
             "nullable": true
           },
           "noMedicalConsultationReason": {
+            "type": "string"
+          },
+          "nextConsultationSpecialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "nextConsultationNote": {
             "type": "string"
           },
           "consultationStatus": {
@@ -17632,6 +17856,22 @@
             "type": "string",
             "deprecated": true
           },
+          "referredViaSepa": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the patient was referred to a higher-complexity facility with SEPA support."
+          },
+          "attendedPrimaryCareViaSepa": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the patient attended a first primary-care consultation with SEPA support."
+          },
+          "firstPrimaryCareViaSepaAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date",
+            "description": "Date of the first primary-care consultation attended with SEPA support."
+          },
           "discomfortSeverity": {
             "type": "string",
             "maxLength": 20
@@ -17667,8 +17907,7 @@
             "maximum": 10
           },
           "painLocation": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "painDescription": {
             "type": "string"
@@ -17685,6 +17924,13 @@
             "nullable": true
           },
           "noMedicalConsultationReason": {
+            "type": "string"
+          },
+          "nextConsultationSpecialty": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "nextConsultationNote": {
             "type": "string"
           },
           "consultationStatus": {

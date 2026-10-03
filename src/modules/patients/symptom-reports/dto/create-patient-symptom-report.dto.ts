@@ -121,4 +121,30 @@ export class CreatePatientSymptomReportDto {
   @IsOptional()
   @IsString()
   notReceivingTreatmentReason?: string;
+  @ApiPropertyOptional({
+    nullable: true,
+    description:
+      'Whether the patient was referred to a higher-complexity facility with SEPA support.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  referredViaSepa?: boolean | null;
+  @ApiPropertyOptional({
+    nullable: true,
+    description:
+      'Whether the patient attended a first primary-care consultation with SEPA support.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  attendedPrimaryCareViaSepa?: boolean | null;
+  @ApiPropertyOptional({
+    format: 'date',
+    nullable: true,
+    description:
+      'Date of the first primary-care consultation attended with SEPA support.',
+  })
+  @IsOptional()
+  @IsDateString()
+  @Matches(DATE_ONLY_PATTERN)
+  firstPrimaryCareViaSepaAt?: string | null;
 }

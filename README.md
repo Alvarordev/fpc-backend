@@ -88,7 +88,7 @@ En producción / Dokploy staging exige `SEED_STAGING_FORCE=true`. Ver
 
 - `DATABASE_URL`: conexión del API con PostgreSQL.
 - `JWT_SECRET`: secreto local para los tokens.
-- `CORS_ORIGIN`: origen permitido del frontend, por defecto `http://localhost:5173`.
+- `CORS_ORIGIN`: origen(es) permitido(s) del frontend, separados por coma. En local: `http://localhost:5173` y `http://127.0.0.1:5173`. No acepta `*`.
 - `GEMINI_API_KEY`: opcional; deja vacío el valor para desactivar la integración.
 - `N8N_WEBHOOK_URL`: opcional; vacío desactiva los webhooks de n8n.
 - `PATIENT_DOCUMENT_STORAGE_DRIVER`: `memory` para desarrollo local y `r2` para

@@ -214,6 +214,10 @@ export class PatientSymptomReportsService {
     if (input.hasReceivedDiagnosis === false)
       normalized.reportedDiagnosis = undefined;
 
+    if (input.attendedPrimaryCareViaSepa !== true) {
+      normalized.firstPrimaryCareViaSepaAt = undefined;
+    }
+
     if (input.isReceivingReportedTreatment === true) {
       if (
         !present(input.reportedTreatment) ||
