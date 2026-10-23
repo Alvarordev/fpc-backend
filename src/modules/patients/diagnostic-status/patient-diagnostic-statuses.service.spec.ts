@@ -126,7 +126,10 @@ describe('PatientDiagnosticStatusesService', () => {
     );
     expect(patients.upsertDetails).toHaveBeenCalledWith(
       'patient-id',
-      { healthSubcategory: PatientHealthSubcategory.CANCER_RULED_OUT },
+      {
+        healthPhase: PatientHealthPhase.ANNUAL_CHECKUP,
+        healthSubcategory: PatientHealthSubcategory.CANCER_RULED_OUT,
+      },
       manager,
     );
   });
@@ -205,7 +208,10 @@ describe('PatientDiagnosticStatusesService', () => {
     );
     expect(patients.upsertDetails).toHaveBeenCalledWith(
       'patient-id',
-      { healthPhase: PatientHealthPhase.CANCER_DIAGNOSIS },
+      {
+        healthPhase: PatientHealthPhase.CANCER_DIAGNOSIS,
+        healthSubcategory: PatientHealthSubcategory.ACTIVE_TREATMENT,
+      },
       manager,
     );
     expect(events.create).toHaveBeenCalledWith(
@@ -291,7 +297,10 @@ describe('PatientDiagnosticStatusesService', () => {
     );
     expect(patients.upsertDetails).toHaveBeenCalledWith(
       'patient-id',
-      { healthSubcategory: PatientHealthSubcategory.CANCER_RULED_OUT },
+      {
+        healthPhase: PatientHealthPhase.ANNUAL_CHECKUP,
+        healthSubcategory: PatientHealthSubcategory.CANCER_RULED_OUT,
+      },
       manager,
     );
   });

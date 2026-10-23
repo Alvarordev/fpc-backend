@@ -12,7 +12,10 @@ import { PatientDiagnosis } from '../../../database/entities/patient-diagnosis.e
 import { PatientDiagnosticStatusEvent } from '../../../database/entities/patient-diagnostic-status-event.entity';
 import { PatientDiagnosticStatus } from '../../../database/entities/patient-diagnostic-status.enum';
 import { PatientHealthPhase } from '../../../database/entities/patient-health-phase.enum';
-import { PatientHealthSubcategory } from '../../../database/entities/patient-health-subcategory.enum';
+import {
+  ONCOLOGICAL_HEALTH_SUBCATEGORIES,
+  PatientHealthSubcategory,
+} from '../../../database/entities/patient-health-subcategory.enum';
 import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { User } from '../../../database/entities/user.entity';
 import { CreatePatientDiagnosisDto } from '../clinical/diagnoses/dto/create-patient-diagnosis.dto';
@@ -156,9 +159,15 @@ export class PatientDiagnosticStatusesService {
           );
           diagnosisId = diagnosis.id;
         }
+        const healthSubcategory = this.confirmedHealthSubcategory(
+          input.healthSubcategory,
+        );
         await this.patients.upsertDetails(
           patientId,
-          { healthPhase: PatientHealthPhase.CANCER_DIAGNOSIS },
+          {
+            healthPhase: PatientHealthPhase.CANCER_DIAGNOSIS,
+            healthSubcategory,
+          },
           manager,
         );
       } else {
@@ -177,6 +186,7 @@ export class PatientDiagnosticStatusesService {
         await this.patients.upsertDetails(
           patientId,
           {
+            healthPhase: PatientHealthPhase.ANNUAL_CHECKUP,
             healthSubcategory: PatientHealthSubcategory.CANCER_RULED_OUT,
           },
           manager,
@@ -232,6 +242,20 @@ export class PatientDiagnosticStatusesService {
           ? null
           : Math.round(elapsedMilliseconds / 60000),
     });
+  }
+
+  private confirmedHealthSubcategory(
+    value: PatientHealthSubcategory | undefined,
+  ): PatientHealthSubcategory {
+    const subcategory = value ?? PatientHealthSubcategory.ACTIVE_TREATMENT;
+    if (
+      !ONCOLOGICAL_HEALTH_SUBCATEGORIES.some((item) => item === subcategory)
+    ) {
+      throw new BadRequestException(
+        'A confirmed diagnostic status requires an oncological health subcategory',
+      );
+    }
+    return subcategory;
   }
 
   private async assertFollowUp(

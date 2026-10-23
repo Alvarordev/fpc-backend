@@ -10,6 +10,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { PatientDiagnosticStatus } from '../../../../database/entities/patient-diagnostic-status.enum';
+import { PatientHealthSubcategory } from '../../../../database/entities/patient-health-subcategory.enum';
 import { CreatePatientDiagnosisDto } from '../../clinical/diagnoses/dto/create-patient-diagnosis.dto';
 
 export class DiagnosticStatusDiagnosisDto extends OmitType(
@@ -17,10 +18,15 @@ export class DiagnosticStatusDiagnosisDto extends OmitType(
   ['followUpId'] as const,
 ) {}
 
+const DIAGNOSTIC_RESULT_STATUSES = [
+  PatientDiagnosticStatus.CONFIRMED,
+  PatientDiagnosticStatus.RULED_OUT,
+] as const;
+
 export class TransitionPatientDiagnosticStatusDto {
-  @ApiProperty({ enum: PatientDiagnosticStatus })
-  @IsIn(Object.values(PatientDiagnosticStatus))
-  status!: PatientDiagnosticStatus;
+  @ApiProperty({ enum: DIAGNOSTIC_RESULT_STATUSES })
+  @IsIn(DIAGNOSTIC_RESULT_STATUSES)
+  status!: (typeof DIAGNOSTIC_RESULT_STATUSES)[number];
 
   @ApiProperty({ format: 'uuid' })
   @IsUUID()
@@ -46,4 +52,13 @@ export class TransitionPatientDiagnosticStatusDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional({
+    enum: PatientHealthSubcategory,
+    description:
+      'Required only for CONFIRMED. Defaults to ACTIVE_TREATMENT. Ignored for RULED_OUT.',
+  })
+  @IsOptional()
+  @IsIn(Object.values(PatientHealthSubcategory))
+  healthSubcategory?: PatientHealthSubcategory;
 }
