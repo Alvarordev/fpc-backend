@@ -16,6 +16,12 @@ export const envValidationSchema = Joi.object({
     .pattern(/^\d+(ms|s|m|h|d|w|y)$/)
     .default('7d'),
   REFRESH_TOKEN_COOKIE_NAME: Joi.string().default('refresh_token'),
+  // Swagger UI (/docs) is off by default in production; set to true to expose it.
+  SWAGGER_ENABLED: Joi.boolean().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.boolean().default(false),
+    otherwise: Joi.boolean().default(true),
+  }),
   CORS_ORIGIN: Joi.string()
     .custom((value, helpers) => {
       const origins = String(value)

@@ -69,6 +69,7 @@ como obligatorios no tienen un valor seguro por defecto.
 | `REFRESH_TOKEN_EXPIRES_IN`                  | No             | `7d`.                                                                                           |
 | `REFRESH_TOKEN_COOKIE_NAME`                 | No             | `refresh_token`.                                                                                |
 | `CORS_ORIGIN`                               | Sí             | URI del frontend; no acepta `*`.                                                                |
+| `SWAGGER_ENABLED`                           | No             | `false` con `NODE_ENV=production`, `true` en el resto. Con `true` expone Swagger UI en `/docs`. |
 | `GEMINI_MODEL`                              | No             | El default del código es `gemini-2.0-flash`.                                                    |
 | `PATIENT_SUMMARY_RATE_LIMIT`                | No             | `10`.                                                                                           |
 | `PATIENT_SUMMARY_RATE_LIMIT_WINDOW_SECONDS` | No             | `60`.                                                                                           |
