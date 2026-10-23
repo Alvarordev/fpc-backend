@@ -6,14 +6,20 @@ import {
   IsString,
   Min,
   MaxLength,
+  ValidateIf,
 } from 'class-validator';
 import { DurationUnit } from '../../database/entities/duration-unit.enum';
 
 export class DurationDto {
-  @ApiProperty()
+  /**
+   * Omitted only when the amount is unknown but the unit is not
+   * (e.g. "No especifica (meses)"); a label is then required.
+   */
+  @ApiPropertyOptional()
+  @ValidateIf((duration: DurationDto) => !duration.label)
   @IsNumber()
   @Min(0)
-  valueMin!: number;
+  valueMin?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

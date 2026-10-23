@@ -60,6 +60,20 @@ export function normalizeDuration(
     return duration;
   }
 
+  if (dto.valueMin === undefined) {
+    if (!dto.label || dto.valueMax !== undefined)
+      throw new BadRequestException(
+        'A duration without valueMin requires a label and no valueMax',
+      );
+    duration.valueMin = null;
+    duration.valueMax = null;
+    duration.unit = dto.unit;
+    duration.label = dto.label;
+    duration.canonicalMinutesMin = null;
+    duration.canonicalMinutesMax = null;
+    return duration;
+  }
+
   const valueMax = dto.valueMax ?? dto.valueMin;
   if (valueMax < dto.valueMin) {
     throw new BadRequestException(

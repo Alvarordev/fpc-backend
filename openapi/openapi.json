@@ -9709,7 +9709,6 @@
           }
         },
         "required": [
-          "valueMin",
           "unit"
         ]
       },
@@ -13142,7 +13141,8 @@
         "type": "object",
         "properties": {
           "valueMin": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           },
           "valueMax": {
             "type": "number",
