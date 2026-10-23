@@ -356,6 +356,11 @@ export class EnrollmentsService {
         patient.id,
         { ...details, healthPhase },
         manager,
+        // A historical enrollment's phase started on the real enrollment date,
+        // not on the day it was loaded.
+        options.historical && enrolledOn
+          ? { changedAt: new Date(`${enrolledOn}T12:00:00-05:00`) }
+          : {},
       );
       const followUp = await this.followUps.create(
         {

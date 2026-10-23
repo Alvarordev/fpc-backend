@@ -91,7 +91,13 @@ export async function attachHistoricalClinicalData(
   authorId: string,
 ) {
   if (input.details)
-    await services.patients.upsertDetails(patientId, input.details, manager);
+    await upsertHistoricalDetails(
+      services,
+      manager,
+      patientId,
+      followUpId,
+      input.details,
+    );
 
   const createdDiagnoses = new Map<string, PatientDiagnosis>();
   for (const diagnosisInput of input.diagnoses ?? []) {
@@ -175,7 +181,13 @@ export async function upsertHistoricalClinicalData(
   authorId: string,
 ) {
   if (input.details)
-    await services.patients.upsertDetails(patientId, input.details, manager);
+    await upsertHistoricalDetails(
+      services,
+      manager,
+      patientId,
+      followUpId,
+      input.details,
+    );
 
   const createdDiagnoses = new Map<string, PatientDiagnosis>();
   for (const diagnosisInput of input.diagnoses ?? []) {
@@ -448,19 +460,11 @@ async function recordHistoricalDiagnosticSearch(
   )
     return;
 
-  const followUp = await manager.getRepository(FollowUp).findOne({
-    where: { id: followUpId, subjectPatientId: patientId },
-  });
-  if (!followUp) return;
-
-  const occurredAt =
-    followUp.completedAt ??
-    followUp.scheduledAt ??
-    (followUp.completedOn
-      ? new Date(`${followUp.completedOn}T12:00:00-05:00`)
-      : followUp.scheduledOn
-        ? new Date(`${followUp.scheduledOn}T12:00:00-05:00`)
-        : null);
+  const occurredAt = await historicalFollowUpOccurredAt(
+    manager,
+    patientId,
+    followUpId,
+  );
   if (!occurredAt) return;
 
   await services.diagnosticStatuses.recordSearching(
@@ -469,6 +473,46 @@ async function recordHistoricalDiagnosticSearch(
     manager,
     occurredAt,
   );
+}
+
+/** When a historical follow-up actually happened, not when it was loaded. */
+async function historicalFollowUpOccurredAt(
+  manager: EntityManager,
+  patientId: string,
+  followUpId: string,
+): Promise<Date | null> {
+  const followUp = await manager.getRepository(FollowUp).findOne({
+    where: { id: followUpId, subjectPatientId: patientId },
+  });
+  if (!followUp) return null;
+
+  return (
+    followUp.completedAt ??
+    followUp.scheduledAt ??
+    (followUp.completedOn
+      ? new Date(`${followUp.completedOn}T12:00:00-05:00`)
+      : followUp.scheduledOn
+        ? new Date(`${followUp.scheduledOn}T12:00:00-05:00`)
+        : null)
+  );
+}
+
+/** Health phase/subcategory history must carry the follow-up's real date. */
+async function upsertHistoricalDetails(
+  services: HistoricalClinicalServices,
+  manager: EntityManager,
+  patientId: string,
+  followUpId: string,
+  details: NonNullable<ClinicalCreateInput['details']>,
+) {
+  const changedAt = await historicalFollowUpOccurredAt(
+    manager,
+    patientId,
+    followUpId,
+  );
+  await services.patients.upsertDetails(patientId, details, manager, {
+    ...(changedAt ? { changedAt } : {}),
+  });
 }
 
 async function persistTreatments(

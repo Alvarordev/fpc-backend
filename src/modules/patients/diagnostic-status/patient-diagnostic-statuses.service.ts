@@ -135,6 +135,9 @@ export class PatientDiagnosticStatusesService {
           'A ruled-out diagnostic status cannot include a formal diagnosis',
         );
 
+      const phaseHistoryOptions = input.occurredAt
+        ? { changedAt: new Date(input.occurredAt) }
+        : {};
       let diagnosisId: string | null = null;
       if (input.status === PatientDiagnosticStatus.CONFIRMED) {
         const diagnosisRepository = manager.getRepository(PatientDiagnosis);
@@ -169,6 +172,7 @@ export class PatientDiagnosticStatusesService {
             healthSubcategory,
           },
           manager,
+          phaseHistoryOptions,
         );
       } else {
         if (
@@ -190,6 +194,7 @@ export class PatientDiagnosticStatusesService {
             healthSubcategory: PatientHealthSubcategory.CANCER_RULED_OUT,
           },
           manager,
+          phaseHistoryOptions,
         );
       }
 

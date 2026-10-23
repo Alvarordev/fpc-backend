@@ -131,6 +131,7 @@ describe('PatientDiagnosticStatusesService', () => {
         healthSubcategory: PatientHealthSubcategory.CANCER_RULED_OUT,
       },
       manager,
+      {},
     );
   });
 
@@ -213,6 +214,7 @@ describe('PatientDiagnosticStatusesService', () => {
         healthSubcategory: PatientHealthSubcategory.ACTIVE_TREATMENT,
       },
       manager,
+      {},
     );
     expect(events.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -302,6 +304,7 @@ describe('PatientDiagnosticStatusesService', () => {
         healthSubcategory: PatientHealthSubcategory.CANCER_RULED_OUT,
       },
       manager,
+      {},
     );
   });
 

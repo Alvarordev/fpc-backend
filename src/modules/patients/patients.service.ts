@@ -646,10 +646,15 @@ export class PatientsService {
     id: string,
     input: UpsertPatientDetailsDto,
     manager?: EntityManager,
+    /**
+     * When the phase/subcategory change really happened. Historical loads pass
+     * the follow-up or enrollment date; omitted, history rows default to now.
+     */
+    options: { changedAt?: Date } = {},
   ): Promise<PatientDetails> {
     if (!manager) {
       return this.dataSource.transaction((transactionManager) =>
-        this.upsertDetails(id, input, transactionManager),
+        this.upsertDetails(id, input, transactionManager, options),
       );
     }
     await this.assertPatientRole(id, PatientRole.PATIENT, undefined, manager);
@@ -830,6 +835,7 @@ export class PatientsService {
         historyRepository.create({
           patientId: id,
           healthPhase,
+          ...(options.changedAt ? { changedAt: options.changedAt } : {}),
         }),
       );
     }
@@ -841,6 +847,7 @@ export class PatientsService {
         subcategoryHistory.create({
           patientId: id,
           healthSubcategory,
+          ...(options.changedAt ? { changedAt: options.changedAt } : {}),
         }),
       );
     }
