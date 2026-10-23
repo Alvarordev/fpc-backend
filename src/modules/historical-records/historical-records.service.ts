@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { Enrollment } from '../../database/entities/enrollment.entity';
+import { FollowUpPurpose } from '../../database/entities/follow-up.enums';
 import { User } from '../../database/entities/user.entity';
 import { EnrollmentsService } from '../enrollments/enrollments.service';
 import { FollowUpsService } from '../follow-ups/follow-ups.service';
@@ -31,6 +33,7 @@ import {
 import { UpdateHistoricalPsychooncologyAppointmentDto } from './dto/update-historical-psychooncology-appointment.dto';
 import {
   attachHistoricalClinicalData,
+  deleteHistoricalOwnedByFollowUp,
   upsertHistoricalClinicalData,
   type HistoricalClinicalServices,
 } from './historical-clinical.util';
@@ -171,6 +174,30 @@ export class HistoricalRecordsService {
       );
 
       return this.followUps.findOne(updated.id, manager);
+    });
+  }
+
+  async deleteFollowUp(id: string) {
+    return this.dataSource.transaction(async (manager) => {
+      const followUp = await this.followUps.findOne(id, manager);
+      if (!followUp.isHistorical)
+        throw new BadRequestException(
+          'Solo se pueden eliminar seguimientos históricos',
+        );
+      if (followUp.purpose === FollowUpPurpose.ENROLLMENT)
+        throw new BadRequestException(
+          'No se puede eliminar el seguimiento de enrolamiento',
+        );
+      const enrollment = await manager.getRepository(Enrollment).existsBy({
+        followUpId: id,
+      });
+      if (enrollment)
+        throw new BadRequestException(
+          'No se puede eliminar el seguimiento de enrolamiento',
+        );
+
+      await deleteHistoricalOwnedByFollowUp(manager, id);
+      await this.followUps.deleteHistorical(id, manager);
     });
   }
 

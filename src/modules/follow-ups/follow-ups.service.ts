@@ -281,6 +281,17 @@ export class FollowUpsService {
     await this.invalidations.markDirty(saved.subjectPatientId, manager);
     return saved;
   }
+
+  async deleteHistorical(id: string, manager: EntityManager) {
+    const item = await this.findOne(id, manager);
+    if (!item.isHistorical)
+      throw new BadRequestException(
+        'Solo se pueden eliminar seguimientos históricos',
+      );
+    await manager.getRepository(FollowUp).delete({ id });
+    await this.invalidations.markDirty(item.subjectPatientId, manager);
+    return item;
+  }
   async createBatch(
     input: CreateFollowUpsBatchDto,
     userId: string,

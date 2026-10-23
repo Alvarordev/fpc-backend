@@ -7544,6 +7544,45 @@
         "tags": [
           "historical-records"
         ]
+      },
+      "delete": {
+        "operationId": "HistoricalRecordsController_deleteFollowUp",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "The follow-up is not historical or belongs to an enrollment"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may load history"
+          },
+          "404": {
+            "description": "Follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a historical follow-up and its clinical data",
+        "tags": [
+          "historical-records"
+        ]
       }
     },
     "/historical-records/reminders": {
@@ -15905,12 +15944,11 @@
         "type": "object",
         "properties": {
           "status": {
+            "type": "string",
             "enum": [
-              "SEARCHING",
               "CONFIRMED",
               "RULED_OUT"
-            ],
-            "type": "string"
+            ]
           },
           "followUpId": {
             "type": "string",
@@ -15928,6 +15966,18 @@
           },
           "notes": {
             "type": "string"
+          },
+          "healthSubcategory": {
+            "type": "string",
+            "enum": [
+              "SIGNS_AND_SYMPTOMS_PATIENT",
+              "ACTIVE_TREATMENT",
+              "UNDER_CONTROLS",
+              "TREATMENT_ABANDONED",
+              "PALLIATIVE_NO_ACTIVE_TREATMENT",
+              "CANCER_RULED_OUT"
+            ],
+            "description": "Required only for CONFIRMED. Defaults to ACTIVE_TREATMENT. Ignored for RULED_OUT."
           }
         },
         "required": [

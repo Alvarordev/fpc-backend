@@ -1,13 +1,22 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { EntityManager } from 'typeorm';
+import { EntityManager, EntityTarget, ObjectLiteral } from 'typeorm';
+import { Alert } from '../../database/entities/alert.entity';
+import { AlertEvent } from '../../database/entities/alert-event.entity';
 import { FollowUp } from '../../database/entities/follow-up.entity';
 import { PatientAddress } from '../../database/entities/patient-address.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
+import { PatientDiagnosticStatusEvent } from '../../database/entities/patient-diagnostic-status-event.entity';
 import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
+import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
+import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-non-oncological-follow-up.entity';
+import { PatientPsychooncologySupportAssessment } from '../../database/entities/patient-psychooncology-support-assessment.entity';
 import { PatientSisAffiliation } from '../../database/entities/patient-sis-affiliation.entity';
 import { PatientSocialNote } from '../../database/entities/patient-social-note.entity';
 import { PatientSymptomReport } from '../../database/entities/patient-symptom-report.entity';
 import { PatientTreatment } from '../../database/entities/patient-treatment.entity';
+import { PsychooncologyAppointment } from '../../database/entities/psychooncology-appointment.entity';
+import { Reminder } from '../../database/entities/reminder.entity';
+import { TreatmentMedication } from '../../database/entities/treatment-medication.entity';
 import {
   PatientActiveComorbidity,
   PatientFamilyCancerHistory,
@@ -493,4 +502,155 @@ async function persistTreatments(
       manager,
     );
   }
+}
+
+async function deleteWhereIn<T extends ObjectLiteral>(
+  manager: EntityManager,
+  entity: EntityTarget<T>,
+  column: string,
+  ids: string[],
+) {
+  if (ids.length === 0) return;
+  await manager
+    .createQueryBuilder()
+    .delete()
+    .from(entity)
+    .where(`${column} IN (:...ids)`, { ids })
+    .execute();
+}
+
+export async function deleteHistoricalOwnedByFollowUp(
+  manager: EntityManager,
+  followUpId: string,
+) {
+  await manager.update(
+    FollowUp,
+    { nextFollowUpId: followUpId },
+    { nextFollowUpId: null },
+  );
+  await manager.update(
+    Reminder,
+    { createdFromFollowUpId: followUpId },
+    { createdFromFollowUpId: null },
+  );
+  await manager.update(
+    Reminder,
+    { resultingFollowUpId: followUpId },
+    { resultingFollowUpId: null },
+  );
+  await manager.update(
+    PsychooncologyAppointment,
+    { followUpId },
+    { followUpId: null },
+  );
+  await manager.update(
+    PatientDiagnosticStatusEvent,
+    { followUpId },
+    { followUpId: null },
+  );
+  await manager.update(PatientAddress, { followUpId }, { followUpId: null });
+  await manager.update(
+    TreatmentMedication,
+    { followUpId },
+    { followUpId: null },
+  );
+
+  const appointments = await manager.find(PatientMedicalAppointment, {
+    where: { followUpId },
+    select: { id: true },
+  });
+  const appointmentIds = appointments.map((item) => item.id);
+  if (appointmentIds.length > 0) {
+    await manager
+      .createQueryBuilder()
+      .update(Reminder)
+      .set({ medicalAppointmentId: null })
+      .where('medical_appointment_id IN (:...ids)', { ids: appointmentIds })
+      .execute();
+    await manager.update(
+      PatientMedicalAppointment,
+      { followUpId },
+      { reminderId: null },
+    );
+    await manager.delete(PatientMedicalAppointment, { followUpId });
+  }
+
+  const alerts = await manager.find(Alert, {
+    where: { followUpId },
+    select: { id: true },
+  });
+  await deleteWhereIn(
+    manager,
+    AlertEvent,
+    'alert_id',
+    alerts.map((item) => item.id),
+  );
+  await manager.delete(Alert, { followUpId });
+
+  const assessments = await manager.find(PatientHealthBackgroundAssessment, {
+    where: { followUpId },
+    select: { id: true },
+  });
+  const assessmentIds = assessments.map((item) => item.id);
+  await deleteWhereIn(
+    manager,
+    PatientActiveComorbidity,
+    'assessment_id',
+    assessmentIds,
+  );
+  await deleteWhereIn(
+    manager,
+    PatientLimitation,
+    'assessment_id',
+    assessmentIds,
+  );
+  await deleteWhereIn(
+    manager,
+    PatientFamilyCancerHistory,
+    'assessment_id',
+    assessmentIds,
+  );
+  await manager.delete(PatientHealthBackgroundAssessment, { followUpId });
+
+  const treatments = await manager.find(PatientTreatment, {
+    where: { followUpId },
+    select: { id: true },
+  });
+  await deleteWhereIn(
+    manager,
+    TreatmentMedication,
+    'treatment_id',
+    treatments.map((item) => item.id),
+  );
+  await manager.delete(PatientTreatment, { followUpId });
+
+  const diagnoses = await manager.find(PatientDiagnosis, {
+    where: { followUpId },
+    select: { id: true },
+  });
+  const diagnosisIds = diagnoses.map((item) => item.id);
+  if (diagnosisIds.length > 0) {
+    const linkedTreatments = await manager
+      .createQueryBuilder(PatientTreatment, 'treatment')
+      .where('treatment.diagnosis_id IN (:...ids)', { ids: diagnosisIds })
+      .getCount();
+    if (linkedTreatments > 0)
+      throw new BadRequestException(
+        'No se puede eliminar el seguimiento porque otros tratamientos dependen de sus diagnósticos',
+      );
+    await manager
+      .createQueryBuilder()
+      .update(PatientDiagnosticStatusEvent)
+      .set({ diagnosisId: null })
+      .where('diagnosis_id IN (:...ids)', { ids: diagnosisIds })
+      .execute();
+  }
+
+  await manager.delete(PatientDiagnosis, { followUpId });
+  await manager.delete(PatientInsurance, { followUpId });
+  await manager.delete(PatientSisAffiliation, { followUpId });
+  await manager.delete(PatientSymptomReport, { followUpId });
+  await manager.delete(PatientSocialNote, { followUpId });
+  await manager.delete(PatientPsychooncologySupportAssessment, { followUpId });
+  await manager.delete(PatientNonOncologicalFollowUp, { followUpId });
 }

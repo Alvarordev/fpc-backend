@@ -1,6 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -12,6 +15,7 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -113,6 +117,21 @@ export class HistoricalRecordsController {
     return this.service
       .updateFollowUp(id, input, user)
       .then(this.toFollowUpResponse);
+  }
+
+  @Delete('follow-ups/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete a historical follow-up and its clinical data',
+  })
+  @ApiNoContentResponse()
+  @ApiBadRequestResponse({
+    description: 'The follow-up is not historical or belongs to an enrollment',
+  })
+  @ApiForbiddenResponse({ description: 'Only administrators may load history' })
+  @ApiNotFoundResponse({ description: 'Follow-up not found' })
+  deleteFollowUp(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.deleteFollowUp(id);
   }
 
   @Post('reminders')

@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Agent } from '../../database/entities/agent.entity';
 import { FollowUp } from '../../database/entities/follow-up.entity';
 import {
@@ -157,5 +157,67 @@ describe('FollowUpsService.createBatch', () => {
       service.createBatch(input, 'admin-1', UserRole.ADMIN),
     ).rejects.toThrow(BadRequestException);
     expect(transaction).not.toHaveBeenCalled();
+  });
+});
+
+describe('FollowUpsService.deleteHistorical', () => {
+  const followUpId = 'follow-up-1';
+  const patientId = 'patient-1';
+  let service: FollowUpsService;
+  let findOne: jest.Mock;
+  let deleteBy: jest.Mock;
+  let markDirty: jest.Mock;
+  let manager: { getRepository: jest.Mock };
+
+  beforeEach(() => {
+    findOne = jest.fn();
+    deleteBy = jest.fn().mockResolvedValue({ affected: 1 });
+    markDirty = jest.fn().mockResolvedValue(undefined);
+    manager = {
+      getRepository: jest.fn(() => ({ delete: deleteBy })),
+    };
+    const followUps = {
+      findOne: jest.fn(),
+    } as unknown as Repository<FollowUp>;
+    service = new FollowUpsService(
+      followUps,
+      {} as Repository<Patient>,
+      {} as Repository<Agent>,
+      {} as Repository<Reminder>,
+      {} as DataSource,
+      { markDirty } as unknown as PatientSummaryInvalidationService,
+      {} as PatientAccessService,
+    );
+    jest.spyOn(service, 'findOne').mockImplementation(findOne);
+  });
+
+  it('deletes a historical follow-up and marks the summary dirty', async () => {
+    findOne.mockResolvedValue({
+      id: followUpId,
+      subjectPatientId: patientId,
+      isHistorical: true,
+    });
+
+    await service.deleteHistorical(
+      followUpId,
+      manager as unknown as EntityManager,
+    );
+
+    expect(deleteBy).toHaveBeenCalledWith({ id: followUpId });
+    expect(markDirty).toHaveBeenCalledWith(patientId, manager);
+  });
+
+  it('rejects operational follow-ups', async () => {
+    findOne.mockResolvedValue({
+      id: followUpId,
+      subjectPatientId: patientId,
+      isHistorical: false,
+    });
+
+    await expect(
+      service.deleteHistorical(followUpId, manager as unknown as EntityManager),
+    ).rejects.toThrow(BadRequestException);
+    expect(deleteBy).not.toHaveBeenCalled();
+    expect(markDirty).not.toHaveBeenCalled();
   });
 });
