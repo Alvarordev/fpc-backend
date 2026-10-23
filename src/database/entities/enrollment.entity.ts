@@ -21,7 +21,7 @@ export enum AffiliationType {
 @Entity('enrollments')
 @Check(`"affiliation_type" IN ('SELF','FAMILY_FRIEND')`)
 @Check(
-  '"follow_up_quality_rating" IS NULL OR "follow_up_quality_rating" BETWEEN 1 AND 5',
+  '"follow_up_quality_rating" IS NULL OR "follow_up_quality_rating" BETWEEN 0 AND 5',
 )
 @Index('IDX_enrollments_patient_id', ['patientId'])
 @Index('IDX_enrollments_follow_up_id', ['followUpId'])
