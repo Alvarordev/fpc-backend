@@ -15968,7 +15968,6 @@
             "type": "string"
           },
           "healthSubcategory": {
-            "type": "string",
             "enum": [
               "SIGNS_AND_SYMPTOMS_PATIENT",
               "ACTIVE_TREATMENT",
@@ -15977,6 +15976,7 @@
               "PALLIATIVE_NO_ACTIVE_TREATMENT",
               "CANCER_RULED_OUT"
             ],
+            "type": "string",
             "description": "Required only for CONFIRMED. Defaults to ACTIVE_TREATMENT. Ignored for RULED_OUT."
           }
         },
