@@ -80,6 +80,12 @@ export class UpdatePatientDiagnosisDto {
   @IsOptional()
   @IsString()
   symptomLeadingToCheckup?: string | null;
+  @ApiPropertyOptional({ nullable: true })
+  @ValidateIf((_, value: unknown) => value !== null)
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  diseaseEvolution?: string | null;
   @ApiPropertyOptional({
     nullable: true,
     type: DurationDto,

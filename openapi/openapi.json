@@ -9951,6 +9951,10 @@
             "deprecated": true,
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
+          "diseaseEvolution": {
+            "type": "string",
+            "maxLength": 2000
+          },
           "waitTimeForDiagnosis": {
             "nullable": true,
             "type": "object",
@@ -13539,6 +13543,10 @@
             "type": "string",
             "nullable": true
           },
+          "diseaseEvolution": {
+            "type": "string",
+            "nullable": true
+          },
           "waitTimeSource": {
             "nullable": true,
             "enum": [
@@ -13588,6 +13596,7 @@
           "hasReferral",
           "diagnosisSpecialty",
           "symptomLeadingToCheckup",
+          "diseaseEvolution",
           "waitTimeSource",
           "waitTimeForDiagnosis",
           "hasMedicalReport",
@@ -14953,6 +14962,10 @@
             "deprecated": true,
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
+          "diseaseEvolution": {
+            "type": "string",
+            "maxLength": 2000
+          },
           "waitTimeForDiagnosis": {
             "nullable": true,
             "type": "object",
@@ -15056,6 +15069,11 @@
             "nullable": true,
             "deprecated": true,
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
+          },
+          "diseaseEvolution": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
           },
           "waitTimeForDiagnosis": {
             "nullable": true,
@@ -16257,6 +16275,10 @@
             "type": "string",
             "deprecated": true,
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
+          },
+          "diseaseEvolution": {
+            "type": "string",
+            "maxLength": 2000
           },
           "waitTimeForDiagnosis": {
             "nullable": true,
@@ -18017,6 +18039,10 @@
             "type": "string",
             "deprecated": true,
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
+          },
+          "diseaseEvolution": {
+            "type": "string",
+            "maxLength": 2000
           },
           "waitTimeForDiagnosis": {
             "nullable": true,

@@ -46,6 +46,9 @@ export class PatientDiagnosisResponseDto {
   @ApiProperty({ nullable: true })
   symptomLeadingToCheckup!: string | null;
 
+  @ApiProperty({ nullable: true })
+  diseaseEvolution!: string | null;
+
   @ApiProperty({ enum: WaitTimeSource, nullable: true })
   waitTimeSource!: WaitTimeSource | null;
 
@@ -83,6 +86,7 @@ export class PatientDiagnosisResponseDto {
       hasReferral: diagnosis.hasReferral ?? null,
       diagnosisSpecialty: diagnosis.diagnosisSpecialty,
       symptomLeadingToCheckup: diagnosis.symptomLeadingToCheckup,
+      diseaseEvolution: diagnosis.diseaseEvolution,
       waitTimeSource: diagnosis.waitTimeSource,
       waitTimeForDiagnosis: DurationResponseDto.from(
         diagnosis.waitTimeForDiagnosis,
