@@ -8,3 +8,5 @@ process.env.JWT_EXPIRES_IN ??= '1h';
 process.env.REFRESH_TOKEN_EXPIRES_IN ??= '7d';
 process.env.REFRESH_TOKEN_COOKIE_NAME ??= 'refresh_token';
 process.env.CORS_ORIGIN ??= 'http://localhost:5173';
+process.env.PATIENT_DOCUMENT_STORAGE_DRIVER ??= 'memory';
+process.env.PATIENT_DOCUMENT_MAX_BYTES ??= '10485760';

@@ -10,7 +10,7 @@ import { AppModule } from '../src/app.module';
 import { RefreshToken } from '../src/database/entities/refresh-token.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
 import { User } from '../src/database/entities/user.entity';
-import { UsersService } from '../src/users/users.service';
+import { UsersService } from '../src/modules/users/users.service';
 
 describe('Authentication (e2e)', () => {
   const password = 'e2e-password';

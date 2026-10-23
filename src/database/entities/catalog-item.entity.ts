@@ -1,0 +1,121 @@
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
+export const CATALOG_KINDS = [
+  'cancer_stage',
+  'education_level',
+  'insurance_type',
+  'eps_provider',
+  'native_language',
+  'medical_specialty',
+  'cancer_diagnosis',
+  'entry_source',
+  'entry_sub_source',
+  'zone_type',
+  'health_center_category',
+  'care_program',
+  'access_barrier',
+  'treatment_situation',
+  'sepa_shelter',
+  'sepa_transport',
+  'program_dropout_reason',
+  'patient_health_phase',
+  'patient_health_subcategory',
+  'treatment_type',
+  'country',
+  'chemotherapy_route',
+  'surgical_procedure',
+] as const;
+
+export type CatalogKind = (typeof CATALOG_KINDS)[number];
+
+/** Kinds AGENT/FOUNDATION may create via POST /catalogs (same idea as hospitals). */
+export const OPEN_CATALOG_KINDS = [
+  'cancer_diagnosis',
+  'medical_specialty',
+  'treatment_type',
+  'native_language',
+  'entry_source',
+  'entry_sub_source',
+  'country',
+  'chemotherapy_route',
+  'surgical_procedure',
+] as const satisfies readonly CatalogKind[];
+
+export type OpenCatalogKind = (typeof OPEN_CATALOG_KINDS)[number];
+
+export function isOpenCatalogKind(kind: CatalogKind): kind is OpenCatalogKind {
+  return (OPEN_CATALOG_KINDS as readonly CatalogKind[]).includes(kind);
+}
+
+export const CATALOG_KIND_LABELS: Record<CatalogKind, string> = {
+  cancer_stage: 'Estadio del cáncer',
+  education_level: 'Nivel educativo',
+  insurance_type: 'Tipo de seguro',
+  eps_provider: 'Proveedor EPS',
+  native_language: 'Lengua nativa',
+  medical_specialty: 'Especialidad médica',
+  cancer_diagnosis: 'Diagnóstico oncológico',
+  entry_source: 'Punto de ingreso',
+  entry_sub_source: 'Cómo se enteró concretamente',
+  zone_type: 'Tipo de zona',
+  health_center_category: 'Categoría de establecimiento',
+  care_program: 'Programa de atención',
+  access_barrier: 'Barrera de acceso',
+  treatment_situation: 'Situación del tratamiento',
+  sepa_shelter: 'Albergue SEPA',
+  sepa_transport: 'Transporte SEPA',
+  program_dropout_reason: 'Motivo de baja',
+  patient_health_phase: 'Categorización',
+  patient_health_subcategory: 'Subcategoría clínica',
+  treatment_type: 'Tipo de tratamiento',
+  country: 'País',
+  chemotherapy_route: 'Vía de quimioterapia',
+  surgical_procedure: 'Procedimiento quirúrgico',
+};
+
+export const RESERVED_CATALOG_CODE = 'OTRO';
+
+@Entity('catalog_items')
+@Index('UQ_catalog_items_kind_code', ['kind', 'code'], { unique: true })
+@Index('IDX_catalog_items_kind_active', ['kind', 'isActive'])
+export class CatalogItem {
+  @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' })
+  id!: string;
+
+  @Column({ type: 'varchar', length: 50 })
+  kind!: CatalogKind;
+
+  @Column({ type: 'varchar', length: 100 })
+  code!: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  label!: string;
+
+  @Column({ name: 'parent_code', type: 'varchar', length: 100, nullable: true })
+  parentCode!: string | null;
+
+  @Column({ name: 'sort_order', type: 'int', default: 0 })
+  sortOrder!: number;
+
+  @Column({ name: 'is_active', type: 'boolean', default: true })
+  isActive!: boolean;
+
+  @Column({ name: 'is_system', type: 'boolean', default: false })
+  isSystem!: boolean;
+
+  @Column({ type: 'jsonb', nullable: true })
+  metadata!: Record<string, unknown> | null;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt!: Date;
+}

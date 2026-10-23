@@ -1,0 +1,178 @@
+import { Type } from 'class-transformer';
+import { IsInt, Max, Min } from 'class-validator';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  getSchemaPath,
+} from '@nestjs/swagger';
+import {
+  FollowUpPurpose,
+  FollowUpStatus,
+  FollowUpType,
+} from '../../../database/entities/follow-up.enums';
+import { ReminderStatus } from '../../../database/entities/reminder-status.enum';
+import {
+  AppointmentModality,
+  AppointmentStatus,
+} from '../../../database/entities/psychooncology-appointment.entity';
+import { SocialNoteType } from '../../../database/entities/patient-social-note.entity';
+
+export enum PatientTimelineEventKind {
+  FOLLOW_UP = 'FOLLOW_UP',
+  REMINDER = 'REMINDER',
+  PSYCHOONCOLOGY_APPOINTMENT = 'PSYCHOONCOLOGY_APPOINTMENT',
+  SOCIAL_NOTE = 'SOCIAL_NOTE',
+}
+
+export enum PatientTimelineOutcomeType {
+  DIAGNOSIS = 'DIAGNOSIS',
+  TREATMENT = 'TREATMENT',
+  MEDICATION = 'MEDICATION',
+  SYMPTOM = 'SYMPTOM',
+  INSURANCE = 'INSURANCE',
+  SIS_AFFILIATION = 'SIS_AFFILIATION',
+  ADDRESS = 'ADDRESS',
+  SOCIAL_NOTE = 'SOCIAL_NOTE',
+  REMINDER = 'REMINDER',
+  PSYCHOONCOLOGY_APPOINTMENT = 'PSYCHOONCOLOGY_APPOINTMENT',
+  MEDICAL_APPOINTMENT = 'MEDICAL_APPOINTMENT',
+  NON_ONCOLOGICAL_FOLLOW_UP = 'NON_ONCOLOGICAL_FOLLOW_UP',
+  DIAGNOSTIC_STATUS = 'DIAGNOSTIC_STATUS',
+  ALERT = 'ALERT',
+}
+
+export class PatientTimelineQueryDto {
+  @ApiPropertyOptional({ default: 50, minimum: 1, maximum: 100 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit = 50;
+
+  @ApiPropertyOptional({ default: 0, minimum: 0 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  offset = 0;
+}
+
+export class PatientTimelineOutcomeDto {
+  @ApiProperty({ enum: PatientTimelineOutcomeType })
+  type!: PatientTimelineOutcomeType;
+
+  @ApiProperty({ format: 'uuid' })
+  recordId!: string;
+
+  @ApiProperty({ description: 'Etiqueta legible del tipo de registro' })
+  label!: string;
+
+  @ApiProperty({ description: 'Resumen operativo del registro relacionado' })
+  summary!: string;
+}
+
+export class FollowUpTimelineEventDto {
+  @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiProperty({ enum: [PatientTimelineEventKind.FOLLOW_UP] })
+  kind!: PatientTimelineEventKind.FOLLOW_UP;
+  @ApiProperty({ format: 'date-time' }) occurredAt!: string;
+  @ApiProperty() occurredAtIsApproximate!: boolean;
+  @ApiProperty({ format: 'date-time' }) createdAt!: string;
+  @ApiProperty({ format: 'date-time' }) updatedAt!: string;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ApiProperty({ nullable: true }) historicalLoadedByEmail!: string | null;
+  @ApiProperty({ enum: FollowUpStatus }) status!: FollowUpStatus;
+  @ApiProperty({ format: 'uuid' }) followUpId!: string;
+  @ApiProperty({ enum: FollowUpType }) type!: FollowUpType;
+  @ApiProperty({ enum: FollowUpPurpose }) purpose!: FollowUpPurpose;
+  @ApiProperty({ nullable: true, type: String }) notes!: string | null;
+  @ApiProperty({ type: PatientTimelineOutcomeDto, isArray: true })
+  outcomes!: PatientTimelineOutcomeDto[];
+}
+
+export class ReminderTimelineEventDto {
+  @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiProperty({ enum: [PatientTimelineEventKind.REMINDER] })
+  kind!: PatientTimelineEventKind.REMINDER;
+  @ApiProperty({ format: 'date-time' }) occurredAt!: string;
+  @ApiProperty() occurredAtIsApproximate!: boolean;
+  @ApiProperty({ format: 'date-time' }) createdAt!: string;
+  @ApiProperty({ format: 'date-time' }) updatedAt!: string;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ApiProperty({ nullable: true }) historicalLoadedByEmail!: string | null;
+  @ApiProperty({ enum: ReminderStatus }) status!: ReminderStatus;
+  @ApiProperty({ format: 'uuid', nullable: true, type: String })
+  followUpId!: string | null;
+  @ApiProperty() description!: string;
+}
+
+export class PsychooncologyAppointmentTimelineEventDto {
+  @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiProperty({
+    enum: [PatientTimelineEventKind.PSYCHOONCOLOGY_APPOINTMENT],
+  })
+  kind!: PatientTimelineEventKind.PSYCHOONCOLOGY_APPOINTMENT;
+  @ApiProperty({ format: 'date-time' }) occurredAt!: string;
+  @ApiProperty() occurredAtIsApproximate!: boolean;
+  @ApiProperty({ format: 'date-time' }) createdAt!: string;
+  @ApiProperty({ format: 'date-time' }) updatedAt!: string;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ApiProperty({ nullable: true }) historicalLoadedByEmail!: string | null;
+  @ApiProperty({ enum: AppointmentStatus }) status!: AppointmentStatus;
+  @ApiProperty({ format: 'uuid', nullable: true }) followUpId!: string | null;
+  @ApiProperty({ enum: AppointmentModality }) modality!: AppointmentModality;
+  @ApiProperty({ minimum: 1 }) sessionNumber!: number;
+}
+
+export class SocialNoteTimelineEventDto {
+  @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiProperty({ enum: [PatientTimelineEventKind.SOCIAL_NOTE] })
+  kind!: PatientTimelineEventKind.SOCIAL_NOTE;
+  @ApiProperty({ format: 'date-time' }) occurredAt!: string;
+  @ApiProperty() occurredAtIsApproximate!: boolean;
+  @ApiProperty({ format: 'date-time' }) createdAt!: string;
+  @ApiProperty({ format: 'date-time' }) updatedAt!: string;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  historicalLoadedById!: string | null;
+  @ApiProperty({ nullable: true }) historicalLoadedByEmail!: string | null;
+  @ApiProperty({ format: 'uuid' }) followUpId!: string;
+  @ApiProperty({ enum: SocialNoteType }) type!: SocialNoteType;
+  @ApiProperty() note!: string;
+  @ApiProperty({ format: 'uuid' }) authorId!: string;
+}
+
+export type PatientTimelineEventDto =
+  | FollowUpTimelineEventDto
+  | ReminderTimelineEventDto
+  | PsychooncologyAppointmentTimelineEventDto
+  | SocialNoteTimelineEventDto;
+
+export class PatientTimelineResponseDto {
+  @ApiProperty({
+    type: 'array',
+    items: {
+      oneOf: [
+        { $ref: getSchemaPath(FollowUpTimelineEventDto) },
+        { $ref: getSchemaPath(ReminderTimelineEventDto) },
+        { $ref: getSchemaPath(PsychooncologyAppointmentTimelineEventDto) },
+        { $ref: getSchemaPath(SocialNoteTimelineEventDto) },
+      ],
+      discriminator: {
+        propertyName: 'kind',
+        mapping: {
+          FOLLOW_UP: getSchemaPath(FollowUpTimelineEventDto),
+          REMINDER: getSchemaPath(ReminderTimelineEventDto),
+          PSYCHOONCOLOGY_APPOINTMENT: getSchemaPath(
+            PsychooncologyAppointmentTimelineEventDto,
+          ),
+          SOCIAL_NOTE: getSchemaPath(SocialNoteTimelineEventDto),
+        },
+      },
+    },
+  })
+  data!: PatientTimelineEventDto[];
+
+  @ApiProperty({ minimum: 0 }) total!: number;
+}

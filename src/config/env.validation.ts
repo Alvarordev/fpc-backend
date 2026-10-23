@@ -16,12 +16,28 @@ export const envValidationSchema = Joi.object({
     .pattern(/^\d+(ms|s|m|h|d|w|y)$/)
     .default('7d'),
   REFRESH_TOKEN_COOKIE_NAME: Joi.string().default('refresh_token'),
-  CORS_ORIGIN: Joi.string().uri().invalid('*').required(),
+  CORS_ORIGIN: Joi.string()
+    .custom((value, helpers) => {
+      const origins = String(value)
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean);
+      if (origins.length === 0) return helpers.error('any.required');
+      for (const origin of origins) {
+        if (origin === '*') return helpers.error('any.invalid');
+        const { error } = Joi.string().uri().validate(origin);
+        if (error) return helpers.error('string.uri');
+      }
+      return value;
+    })
+    .required(),
   SEED_ADMIN_EMAIL: Joi.string().email().optional(),
   SEED_ADMIN_PASSWORD: Joi.string().min(8).optional(),
   // Only read by the standalone demo seed script, declared here so the app
   // still boots when it is present in the environment.
   SEED_DEMO_SEED: Joi.number().integer().optional(),
+  SEED_DEMO_FORCE: Joi.boolean().optional(),
+  SEED_STAGING_FORCE: Joi.boolean().optional(),
   GEMINI_API_KEY: Joi.string().trim().optional().allow(''),
   GEMINI_MODEL: Joi.string().trim().default('gemini-2.0-flash'),
   PATIENT_SUMMARY_RATE_LIMIT: Joi.number().integer().min(1).default(10),
@@ -41,4 +57,42 @@ export const envValidationSchema = Joi.object({
     .min(100)
     .max(30000)
     .default(5000),
+  PATIENT_DOCUMENT_STORAGE_DRIVER: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.valid('r2').default('r2'),
+    otherwise: Joi.valid('r2', 'memory').default('memory'),
+  }),
+  R2_ACCOUNT_ID: Joi.when('PATIENT_DOCUMENT_STORAGE_DRIVER', {
+    is: 'r2',
+    then: Joi.string().trim().required(),
+    otherwise: Joi.string().trim().optional().allow(''),
+  }),
+  R2_ACCESS_KEY_ID: Joi.when('PATIENT_DOCUMENT_STORAGE_DRIVER', {
+    is: 'r2',
+    then: Joi.string().trim().required(),
+    otherwise: Joi.string().trim().optional().allow(''),
+  }),
+  R2_SECRET_ACCESS_KEY: Joi.when('PATIENT_DOCUMENT_STORAGE_DRIVER', {
+    is: 'r2',
+    then: Joi.string().trim().required(),
+    otherwise: Joi.string().trim().optional().allow(''),
+  }),
+  R2_BUCKET_NAME: Joi.when('PATIENT_DOCUMENT_STORAGE_DRIVER', {
+    is: 'r2',
+    then: Joi.string().trim().required(),
+    otherwise: Joi.string().trim().optional().allow(''),
+  }),
+  R2_ENDPOINT: Joi.when('PATIENT_DOCUMENT_STORAGE_DRIVER', {
+    is: 'r2',
+    then: Joi.string()
+      .trim()
+      .uri({ scheme: ['http', 'https'] })
+      .optional(),
+    otherwise: Joi.string().trim().optional().allow(''),
+  }),
+  PATIENT_DOCUMENT_MAX_BYTES: Joi.number()
+    .integer()
+    .min(1)
+    .max(10485760)
+    .default(10485760),
 });

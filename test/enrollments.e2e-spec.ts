@@ -14,17 +14,21 @@ import {
   FollowUpStatus,
   FollowUpType,
 } from '../src/database/entities/follow-up.enums';
-import { CompanionPatient } from '../src/patients/entities/companion-patient.entity';
-import { PatientDiagnosis } from '../src/patients/entities/patient-diagnosis.entity';
-import { PatientInsurance } from '../src/patients/entities/patient-insurance.entity';
-import { PatientRole } from '../src/patients/entities/patient-role.enum';
-import { PatientSisAffiliation } from '../src/patients/entities/patient-sis-affiliation.entity';
-import { PatientStatus } from '../src/patients/entities/patient-status.enum';
-import { PatientSymptomReport } from '../src/patients/entities/patient-symptom-report.entity';
-import { PatientTreatment } from '../src/patients/entities/patient-treatment.entity';
-import { Patient } from '../src/patients/entities/patient.entity';
+import { CompanionPatient } from '../src/database/entities/companion-patient.entity';
+import { PatientDiagnosis } from '../src/database/entities/patient-diagnosis.entity';
+import { PatientInsurance } from '../src/database/entities/patient-insurance.entity';
+import { PatientRole } from '../src/database/entities/patient-role.enum';
+import { PatientSisAffiliation } from '../src/database/entities/patient-sis-affiliation.entity';
+import { PatientStatus } from '../src/database/entities/patient-status.enum';
+import { PatientSymptomReport } from '../src/database/entities/patient-symptom-report.entity';
+import { PatientAddress } from '../src/database/entities/patient-address.entity';
+import { PatientTreatment } from '../src/database/entities/patient-treatment.entity';
+import { PatientMedicalAppointment } from '../src/database/entities/patient-medical-appointment.entity';
+import { Patient } from '../src/database/entities/patient.entity';
+import { HealthCenter } from '../src/database/entities/health-center.entity';
+import { PatientDiagnosticStatusEvent } from '../src/database/entities/patient-diagnostic-status-event.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
-import { UsersService } from '../src/users/users.service';
+import { UsersService } from '../src/modules/users/users.service';
 
 describe('Enrollment wizard (e2e)', () => {
   const emailPrefix = 'p7-%@example.test';
@@ -90,19 +94,44 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: true,
         },
         affiliationType: 'FAMILY_FRIEND',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'IN_PERSON', notes: 'Enrollment completed' },
-        details: { currentDepartment: 'LIMA', requiresTranslation: true },
+        details: { birthDepartment: 'LIMA', requiresTranslation: true },
+        addresses: [
+          {
+            type: 'PERMANENT',
+            isPrimary: true,
+            address: 'Av. Siempre Viva 123',
+            district: 'Comas',
+            department: 'LIMA',
+          },
+          {
+            type: 'TEMPORARY',
+            address: 'Jr. Provisional 456',
+            district: 'Ate',
+            department: 'LIMA',
+          },
+        ],
         insurance: { insuranceType: 'NONE' },
         sisAffiliation: { canAffiliate: true, comments: 'Start process' },
-        diagnosis: { diagnosis: 'Breast cancer', cancerStage: 'STAGE_2' },
-        treatment: { treatmentType: 'Chemotherapy' },
-        medicalAppointments: [{ specialty: 'ONCOLOGY' }],
+        diagnosis: {
+          diagnosis: 'Breast cancer',
+          cancerStage: 'STAGE_2',
+          mode: 'PARALLEL',
+        },
+        treatments: [{ treatmentType: 'Chemotherapy' }],
+        medicalAppointments: [
+          {
+            specialty: 'ONCOLOGY',
+            nextAppointmentDate: '2030-02-01',
+            nextAppointmentSpecialty: 'Radioterapia',
+          },
+        ],
         symptomReport: { isPainPresent: true, painIntensity: 7 },
         currentlyReceivingTreatment: true,
         consentToContact: true,
         consentToShareData: false,
         isOncologicalPatient: true,
-        followUpQualityRating: 5,
       })
       .expect(201);
 
@@ -159,6 +188,291 @@ describe('Enrollment wizard (e2e)', () => {
       followUpId: followUp.id,
       painIntensity: 7,
     });
+    await expect(
+      dataSource.getRepository(PatientMedicalAppointment).findOneByOrFail({
+        patientId: patient.id,
+      }),
+    ).resolves.toMatchObject({
+      nextAppointmentDate: '2030-02-01',
+      nextAppointmentSpecialty: 'RADIOTERAPIA',
+      specialty: 'ONCOLOGIA_MEDICA',
+    });
+
+    const addresses = await dataSource.getRepository(PatientAddress).find({
+      where: { patientId: patient.id },
+      order: { type: 'ASC' },
+    });
+    expect(addresses).toHaveLength(2);
+    expect(addresses).toEqual([
+      expect.objectContaining({
+        type: 'PERMANENT',
+        isPrimary: true,
+        district: 'Comas',
+        department: 'LIMA',
+        followUpId: followUp.id,
+      }),
+      expect.objectContaining({
+        type: 'TEMPORARY',
+        isPrimary: false,
+        district: 'Ate',
+        followUpId: followUp.id,
+      }),
+    ]);
+  });
+
+  it('fans out a signs-and-symptoms consultation into owner entities', async () => {
+    const healthCenter = await dataSource.getRepository(HealthCenter).findOneByOrFail({
+      isActive: true,
+    });
+    const response = await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'Signs Fan Out Patient',
+          primaryPhone: '21',
+          email: 'p7-signs-fanout@example.test',
+        },
+        affiliationType: 'SELF',
+        healthPhase: 'SIGNS_AND_SYMPTOMS',
+        followUp: { type: 'CALL' },
+        symptomReport: {
+          hasDiscomfort: true,
+          signsAndSymptoms: 'Dolor persistente',
+          hasRequestedMedicalConsultation: true,
+          consultationStatus: 'ATTENDED',
+          healthCenterId: healthCenter.id,
+          specialty: 'Medicina general',
+          hasMedicalConsultation: true,
+          firstConsultationDate: '2026-01-10',
+          isAwaitingDiagnosis: false,
+          hasReferral: false,
+          referralNotProvidedReason: 'No le entregaron ficha',
+          hasReceivedDiagnosis: true,
+          reportedDiagnosis: 'Cáncer de mama',
+          isReceivingReportedTreatment: true,
+          reportedTreatment: 'Quimioterapia',
+          reportedTreatmentFrequency: { valueMin: 2, unit: 'WEEK' },
+        },
+      })
+      .expect(201);
+
+    const enrollment = response.body as Enrollment;
+    const report = await dataSource
+      .getRepository(PatientSymptomReport)
+      .findOneByOrFail({ patientId: enrollment.patientId });
+    expect(report).toMatchObject({
+      signsAndSymptoms: 'Dolor persistente',
+      specialty: null,
+      reportedDiagnosis: null,
+      healthCenterId: null,
+    });
+    await expect(
+      dataSource.getRepository(PatientMedicalAppointment).findOneByOrFail({
+        patientId: enrollment.patientId,
+      }),
+    ).resolves.toMatchObject({
+      specialty: 'MEDICINA_GENERAL',
+      healthCenterId: healthCenter.id,
+      followUpId: enrollment.followUpId,
+    });
+    await expect(
+      dataSource.getRepository(PatientDiagnosis).findOneByOrFail({
+        patientId: enrollment.patientId,
+      }),
+    ).resolves.toMatchObject({ diagnosis: 'MAMA_DUCTAL' });
+    await expect(
+      dataSource.getRepository(PatientTreatment).findOneByOrFail({
+        patientId: enrollment.patientId,
+      }),
+    ).resolves.toMatchObject({ treatmentType: 'QUIMIOTERAPIA' });
+    const events = await dataSource
+      .getRepository(PatientDiagnosticStatusEvent)
+      .find({
+        where: { patientId: enrollment.patientId },
+        order: { createdAt: 'ASC' },
+      });
+    expect(events.map((event) => event.status)).toEqual(
+      expect.arrayContaining(['SEARCHING', 'CONFIRMED']),
+    );
+  });
+
+  it('keeps parallel diagnoses active and replaces only the selected diagnosis', async () => {
+    const patient = await dataSource.getRepository(Patient).save({
+      fullName: 'Parallel Diagnosis Patient',
+      primaryPhone: '18',
+      email: 'p7-parallel-diagnosis@example.test',
+      role: PatientRole.PATIENT,
+      status: PatientStatus.ENROLLED,
+    });
+    const followUp = await dataSource.getRepository(FollowUp).save({
+      subjectPatientId: patient.id,
+      interlocutorId: patient.id,
+      agentId: agent.id,
+      type: FollowUpType.CALL,
+      status: FollowUpStatus.COMPLETED,
+      purpose: FollowUpPurpose.FIRST_CONTACT,
+    });
+
+    const createDiagnosis = (diagnosis: string) =>
+      request(server)
+        .post(`/patients/${patient.id}/diagnoses`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          followUpId: followUp.id,
+          diagnosis,
+          mode: 'PARALLEL',
+        })
+        .expect(201);
+    const first = (await createDiagnosis('First active diagnosis')).body as {
+      id: string;
+    };
+    const second = (await createDiagnosis('Second active diagnosis')).body as {
+      id: string;
+    };
+
+    await expect(
+      dataSource.getRepository(PatientDiagnosis).find({
+        where: { patientId: patient.id, isCurrent: true },
+      }),
+    ).resolves.toHaveLength(2);
+
+    await request(server)
+      .post(`/patients/${patient.id}/diagnoses`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        followUpId: followUp.id,
+        diagnosis: 'Replacement diagnosis',
+        mode: 'REPLACE',
+        replacementDiagnosisId: first.id,
+      })
+      .expect(201);
+
+    const diagnoses = await dataSource.getRepository(PatientDiagnosis).find({
+      where: { patientId: patient.id },
+    });
+    expect(diagnoses).toHaveLength(3);
+    expect(diagnoses.find(({ id }) => id === first.id)?.isCurrent).toBe(false);
+    expect(diagnoses.find(({ id }) => id === second.id)?.isCurrent).toBe(true);
+    expect(diagnoses.filter((diagnosis) => diagnosis.isCurrent)).toHaveLength(
+      2,
+    );
+  });
+
+  it('records and updates the enrollment rating after enrollment', async () => {
+    const enrollmentResponse = await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'Post Enrollment Rating Patient',
+          primaryPhone: '14',
+          email: 'p7-rating@example.test',
+        },
+        affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
+        followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
+      })
+      .expect(201);
+    const enrollment = enrollmentResponse.body as Enrollment;
+
+    await request(server)
+      .patch(`/enrollments/${enrollment.id}/survey`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ followUpQualityRating: 5 })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({
+          id: enrollment.id,
+          followUpQualityRating: 5,
+        });
+      });
+
+    await request(server)
+      .patch(`/enrollments/${enrollment.id}/survey`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ followUpQualityRating: 3 })
+      .expect(200)
+      .expect(({ body }) => {
+        expect((body as Enrollment).followUpQualityRating).toBe(3);
+      });
+
+    await expect(
+      dataSource
+        .getRepository(Enrollment)
+        .findOneByOrFail({ id: enrollment.id }),
+    ).resolves.toMatchObject({ followUpQualityRating: 3 });
+  });
+
+  it('rejects an enrollment rating outside the allowed range', async () => {
+    const enrollmentResponse = await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'Invalid Rating Patient',
+          primaryPhone: '15',
+          email: 'p7-invalid-rating@example.test',
+        },
+        affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
+        followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
+      })
+      .expect(201);
+    const enrollment = enrollmentResponse.body as Enrollment;
+
+    await request(server)
+      .patch(`/enrollments/${enrollment.id}/survey`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ followUpQualityRating: 6 })
+      .expect(400);
+
+    await request(server)
+      .patch('/enrollments/00000000-0000-0000-0000-000000000000/survey')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ followUpQualityRating: 5 })
+      .expect(404);
+  });
+
+  it('prevents an agent from changing another agent enrollment', async () => {
+    const otherAgentUser = await users.create({
+      email: 'p7-other-agent@example.test',
+      password: 'password123',
+      role: UserRole.AGENT,
+    });
+    await dataSource.getRepository(Agent).save({
+      userId: otherAgentUser.id,
+      fullName: 'Other Enrollment Agent',
+      phone: '16',
+    });
+    const otherToken = await jwt.signAsync({
+      sub: otherAgentUser.id,
+      role: otherAgentUser.role,
+    });
+    const enrollmentResponse = await request(server)
+      .post('/enrollments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        patient: {
+          fullName: 'Cross Agent Rating Patient',
+          primaryPhone: '17',
+          email: 'p7-cross-agent-rating@example.test',
+        },
+        affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
+        followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
+      })
+      .expect(201);
+    const enrollment = enrollmentResponse.body as Enrollment;
+
+    await request(server)
+      .patch(`/enrollments/${enrollment.id}/survey`)
+      .set('Authorization', `Bearer ${otherToken}`)
+      .send({ followUpQualityRating: 4 })
+      .expect(403);
   });
 
   it('links an existing companion to a second patient as primary informant', async () => {
@@ -178,7 +492,9 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: true,
         },
         affiliationType: 'FAMILY_FRIEND',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(201);
     const firstEnrollmentBody = firstEnrollment.body as Enrollment;
@@ -194,7 +510,9 @@ describe('Enrollment wizard (e2e)', () => {
         },
         companionId: firstEnrollmentBody.companionId,
         affiliationType: 'FAMILY_FRIEND',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(201);
     const secondEnrollmentBody = secondEnrollment.body as Enrollment;
@@ -222,7 +540,9 @@ describe('Enrollment wizard (e2e)', () => {
       .send({
         patientId: companion.id,
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(409);
   });
@@ -244,7 +564,9 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: false,
         },
         affiliationType: 'FAMILY_FRIEND',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(400);
   });
@@ -266,63 +588,102 @@ describe('Enrollment wizard (e2e)', () => {
           isPrimaryInformant: true,
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(400);
   });
 
-  it('uses the current diagnosis for enrollment treatment and rejects when absent', async () => {
-    const patient = await dataSource.getRepository(Patient).save({
-      fullName: 'Existing Diagnosis Patient',
-      primaryPhone: '12',
-      email: 'p7-existing-diagnosis@example.test',
-      role: PatientRole.PATIENT,
-      status: PatientStatus.UNENROLLED,
-    });
-    const diagnosisFollowUp = await dataSource.getRepository(FollowUp).save({
-      subjectPatientId: patient.id,
-      interlocutorId: patient.id,
-      agentId: agent.id,
-      type: FollowUpType.CALL,
-      status: FollowUpStatus.COMPLETED,
-      purpose: FollowUpPurpose.FIRST_CONTACT,
-    });
-    const diagnosis = await dataSource.getRepository(PatientDiagnosis).save({
-      patientId: patient.id,
-      followUpId: diagnosisFollowUp.id,
-      diagnosis: 'Existing cancer diagnosis',
-      isCurrent: true,
-    });
-
-    await request(server)
+  it('creates multiple diagnoses and associates each enrollment treatment', async () => {
+    const response = await request(server)
       .post('/enrollments')
       .set('Authorization', `Bearer ${token}`)
       .send({
-        patientId: patient.id,
+        patient: {
+          fullName: 'Multiple Clinical Records Patient',
+          primaryPhone: '12',
+          email: 'p7-multiple-records@example.test',
+        },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
-        treatment: { treatmentType: 'Existing diagnosis treatment' },
+        diagnoses: [
+          {
+            clientRef: 'breast-diagnosis',
+            diagnosis: 'Breast cancer',
+            mode: 'PARALLEL',
+          },
+          {
+            clientRef: 'thyroid-diagnosis',
+            diagnosis: 'Thyroid cancer',
+            mode: 'PARALLEL',
+          },
+        ],
+        treatments: [
+          {
+            diagnosisRef: 'breast-diagnosis',
+            treatmentType: 'Chemotherapy',
+          },
+          {
+            diagnosisRef: 'breast-diagnosis',
+            treatmentType: 'Radiotherapy',
+          },
+          {
+            diagnosisRef: 'thyroid-diagnosis',
+            treatmentType: 'Surgery',
+          },
+        ],
       })
       .expect(201);
-
-    await expect(
-      dataSource.getRepository(PatientTreatment).findOneByOrFail({
-        patientId: patient.id,
+    const enrollment = response.body as Enrollment;
+    const [diagnoses, treatments] = await Promise.all([
+      dataSource.getRepository(PatientDiagnosis).find({
+        where: { patientId: enrollment.patientId },
+        order: { diagnosis: 'ASC' },
       }),
-    ).resolves.toMatchObject({ diagnosisId: diagnosis.id });
+      dataSource.getRepository(PatientTreatment).find({
+        where: { patientId: enrollment.patientId },
+        order: { treatmentType: 'ASC' },
+      }),
+    ]);
 
+    expect(diagnoses).toHaveLength(2);
+    expect(treatments).toHaveLength(3);
+    const diagnosisByName = new Map(
+      diagnoses.map((diagnosis) => [diagnosis.diagnosis, diagnosis.id]),
+    );
+    expect(treatments).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          treatmentType: 'QUIMIOTERAPIA',
+          diagnosisId: diagnosisByName.get('MAMA_DUCTAL'),
+        }),
+        expect.objectContaining({
+          treatmentType: 'RADIOTERAPIA',
+          diagnosisId: diagnosisByName.get('MAMA_DUCTAL'),
+        }),
+        expect.objectContaining({
+          treatmentType: 'CIRUGIA',
+          diagnosisId: diagnosisByName.get('TIROIDES_PAPILAR'),
+        }),
+      ]),
+    );
+  });
+
+  it('requires a diagnosis for a cancer diagnosis enrollment', async () => {
     await request(server)
       .post('/enrollments')
       .set('Authorization', `Bearer ${token}`)
       .send({
         patient: {
-          fullName: 'Missing Diagnosis Patient',
+          fullName: 'Missing Cancer Diagnosis Patient',
           primaryPhone: '13',
-          email: 'p7-missing-diagnosis@example.test',
+          email: 'p7-missing-cancer-diagnosis@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
-        treatment: { treatmentType: 'Missing diagnosis treatment' },
       })
       .expect(400);
   });
@@ -338,9 +699,23 @@ describe('Enrollment wizard (e2e)', () => {
           email: 'p7-rollback@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
         insurance: { insuranceType: 'NONE' },
-        treatment: { treatmentType: 'This has no diagnosis' },
+        diagnoses: [
+          {
+            clientRef: 'rollback-diagnosis',
+            diagnosis: 'Rollback diagnosis',
+            mode: 'PARALLEL',
+          },
+        ],
+        treatments: [
+          {
+            diagnosisRef: 'rollback-diagnosis',
+            treatmentType: 'This treatment should roll back',
+            isReferred: true,
+          },
+        ],
       })
       .expect(400);
 
@@ -357,12 +732,12 @@ describe('Enrollment wizard (e2e)', () => {
     // Scoped to this agent, like the assertions above: the database also holds
     // the demo dataset (`npm run seed:demo`) and rows from the other suites.
     const countForAgent = async (table: string): Promise<number> => {
-      const [{ count }] = (await dataSource.query(
+      const [{ count }] = await dataSource.query<{ count: number }[]>(
         `SELECT COUNT(*)::int AS count FROM "${table}" t
            JOIN follow_ups f ON f.id = t.follow_up_id
           WHERE f.agent_id = $1`,
         [agent.id],
-      )) as { count: number }[];
+      );
       return count;
     };
 
@@ -376,6 +751,14 @@ async function clearPromptSevenData(
   emailPrefix: string,
 ) {
   const patientIds = `(SELECT id FROM patients WHERE email LIKE $1)`;
+  await dataSource.query(
+    `DELETE FROM patient_non_oncological_follow_ups WHERE patient_id IN ${patientIds}`,
+    [emailPrefix],
+  );
+  await dataSource.query(
+    `DELETE FROM patient_diagnostic_status_events WHERE patient_id IN ${patientIds}`,
+    [emailPrefix],
+  );
   await dataSource.query(
     `DELETE FROM patient_symptom_reports WHERE patient_id IN ${patientIds}`,
     [emailPrefix],
@@ -402,6 +785,12 @@ async function clearPromptSevenData(
   );
   await dataSource.query(
     `DELETE FROM patient_medical_appointments WHERE patient_id IN ${patientIds}`,
+    [emailPrefix],
+  );
+  // Both reference follow_ups without ON DELETE CASCADE, so they must go
+  // before the follow_ups delete below.
+  await dataSource.query(
+    `DELETE FROM patient_addresses WHERE patient_id IN ${patientIds}`,
     [emailPrefix],
   );
   await dataSource.query(

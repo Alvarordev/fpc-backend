@@ -6,6 +6,7 @@ import type { DemoContext } from './demo/context';
 import { seedEnrollments } from './demo/enrollments';
 import { seedFollowUps } from './demo/follow-ups';
 import { seedHealthCenters } from './demo/health-centers';
+import { seedCatalogItems } from './staging/seed-reference-data';
 import { seedPatients } from './demo/patients';
 import { seedPsychooncology } from './demo/psychooncology';
 import { seedReminders } from './demo/reminders';
@@ -25,6 +26,7 @@ const REPORTED_TABLES = [
   'patients',
   'companion_patient',
   'patient_details',
+  'patient_health_phase_history',
   'follow_ups',
   'enrollments',
   'enrollment_family_talk_interests',
@@ -34,6 +36,8 @@ const REPORTED_TABLES = [
   'patient_medical_appointments',
   'patient_sis_affiliation',
   'patient_symptom_reports',
+  'patient_addresses',
+  'treatment_medications',
   'volunteer_availability',
   'psychooncology_appointments',
   'reminders',
@@ -83,6 +87,7 @@ async function seedDemo(): Promise<void> {
       };
 
       await resetDomainTables(manager);
+      await seedCatalogItems(manager);
 
       const users = await seedUsers(manager);
       const healthCenters = await seedHealthCenters(ctx);
@@ -90,7 +95,7 @@ async function seedDemo(): Promise<void> {
       const histories = await seedFollowUps(ctx, patients, users.agents);
       const enrollments = await seedEnrollments(ctx, histories);
 
-      await seedClinicalHistory(ctx, histories, enrollments);
+      await seedClinicalHistory(ctx, histories, enrollments, healthCenters);
       await seedPsychooncology(ctx, histories, users.volunteers);
       await seedReminders(ctx, histories, users.agents);
       await seedAlerts(ctx, histories, users.agents);

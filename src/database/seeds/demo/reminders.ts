@@ -4,7 +4,7 @@ import { ReminderStatus } from '../../entities/reminder-status.enum';
 import { REMINDER_DESCRIPTIONS } from './catalog';
 import type { DemoContext } from './context';
 import type { PatientFollowUps } from './follow-ups';
-import { addDays, addMinutes, atTime } from './rng';
+import { addDays, addMinutes, atTime, toDateOnly } from './rng';
 
 const REMINDER_COUNT = 20;
 
@@ -54,9 +54,11 @@ export async function seedReminders(
         createdFromFollowUpId: createdFrom.id,
         assignedAgentId: agent.id,
         dueAt,
+        dueOn: toDateOnly(dueAt),
         description: rng.pick(REMINDER_DESCRIPTIONS),
         status,
         completedAt: isDone ? addMinutes(dueAt, rng.int(30, 600)) : null,
+        completedOn: isDone ? toDateOnly(dueAt) : null,
         // A completed reminder usually produced the next conversation.
         resultingFollowUpId: isDone ? rng.pick(history.completed).id : null,
       }),

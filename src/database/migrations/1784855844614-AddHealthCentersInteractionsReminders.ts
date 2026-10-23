@@ -52,8 +52,14 @@ export class AddHealthCentersInteractionsReminders1784855844614 implements Migra
     await queryRunner.query(
       `ALTER TABLE "reminders" ADD CONSTRAINT "FK_reminders_resulting" FOREIGN KEY ("resulting_interaction_id") REFERENCES "interactions"("id")`,
     );
+    await queryRunner.query(
+      `ALTER TABLE "patient_details" ADD COLUMN "primary_health_center_id" uuid REFERENCES "health_centers"("id")`,
+    );
   }
   async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "patient_details" DROP COLUMN "primary_health_center_id"`,
+    );
     await queryRunner.query('DROP TABLE "reminders"');
     await queryRunner.query('DROP TABLE "interactions"');
     await queryRunner.query('DROP TABLE "health_centers"');

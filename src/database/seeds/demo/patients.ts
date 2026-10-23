@@ -1,10 +1,17 @@
-import { CompanionPatient } from '../../../patients/entities/companion-patient.entity';
-import { DeactivationReason } from '../../../patients/entities/deactivation-reason.enum';
-import { PatientDetails } from '../../../patients/entities/patient-details.entity';
-import { PatientRole } from '../../../patients/entities/patient-role.enum';
-import { PatientStatus } from '../../../patients/entities/patient-status.enum';
-import { Patient } from '../../../patients/entities/patient.entity';
+import { CompanionPatient } from '../../entities/companion-patient.entity';
+import { DeactivationReason } from '../../entities/deactivation-reason.enum';
+import { PatientActivityStatus } from '../../entities/patient-activity-status.enum';
+import { PatientDetails } from '../../entities/patient-details.entity';
+import { PatientHealthPhase } from '../../entities/patient-health-phase.enum';
+import { PatientHealthPhaseHistory } from '../../entities/patient-health-phase-history.entity';
+import { PatientAddress } from '../../entities/patient-address.entity';
+import { AddressType } from '../../entities/address-type.enum';
+import { DurationUnit } from '../../entities/duration-unit.enum';
+import { PatientRole } from '../../entities/patient-role.enum';
+import { PatientStatus } from '../../entities/patient-status.enum';
+import { Patient } from '../../entities/patient.entity';
 import type { HealthCenter } from '../../entities/health-center.entity';
+import type { PeruDepartment } from '../../entities/health-center.entity';
 import {
   DISTRICTS,
   EDUCATION_LEVELS,
@@ -18,6 +25,7 @@ import {
 import type { DemoContext } from './context';
 import { DEMO_EMAIL_DOMAIN } from './users';
 import { addDays, toDateOnly } from './rng';
+import { normalizeDuration } from '../../../shared/duration/duration.util';
 
 export const PATIENT_COUNT = 15;
 export const ENROLLED_COUNT = 11;
@@ -29,6 +37,23 @@ export interface DemoPatient {
   companion: Patient | null;
   healthCenter: HealthCenter;
   isEnrolled: boolean;
+  initialHealthPhase: PatientHealthPhase | null;
+  healthPhase: PatientHealthPhase | null;
+}
+
+function initialHealthPhaseFor(index: number): PatientHealthPhase {
+  return index % 2 === 0
+    ? PatientHealthPhase.CANCER_DIAGNOSIS
+    : PatientHealthPhase.SIGNS_AND_SYMPTOMS;
+}
+
+function currentHealthPhaseFor(
+  index: number,
+  isEnrolled: boolean,
+): PatientHealthPhase | null {
+  if (!isEnrolled) return null;
+  if (index === 2 || index === 7) return PatientHealthPhase.ANNUAL_CHECKUP;
+  return initialHealthPhaseFor(index);
 }
 
 interface Person {
@@ -86,7 +111,7 @@ export async function seedPatients(
         hasWhatsapp: rng.bool(0.75),
         role: PatientRole.PATIENT,
         status: isEnrolled ? PatientStatus.ENROLLED : PatientStatus.UNENROLLED,
-        isActive: true,
+        activityStatus: PatientActivityStatus.ACTIVE,
         deactivationReason: null,
         deactivationReasonDetail: null,
         deactivatedAt: null,
@@ -100,13 +125,13 @@ export async function seedPatients(
   // and a detail only when the reason is OTHER.
   const deceased = patientRows[ENROLLED_COUNT - 1];
   const deceasedAt = addDays(now, -rng.int(20, 70));
-  deceased.isActive = false;
+  deceased.activityStatus = PatientActivityStatus.INACTIVE;
   deceased.deactivationReason = DeactivationReason.DECEASED;
   deceased.deactivatedAt = deceasedAt;
   deceased.deceasedAt = toDateOnly(deceasedAt);
 
   const lost = patientRows[ENROLLED_COUNT - 2];
-  lost.isActive = false;
+  lost.activityStatus = PatientActivityStatus.INACTIVE;
   lost.deactivationReason = DeactivationReason.LOST_CONTACT;
   lost.deactivatedAt = addDays(now, -rng.int(30, 90));
 
@@ -129,7 +154,7 @@ export async function seedPatients(
         hasWhatsapp: rng.bool(0.9),
         role: PatientRole.COMPANION,
         status: PatientStatus.UNENROLLED,
-        isActive: true,
+        activityStatus: PatientActivityStatus.ACTIVE,
       }),
     );
   }
@@ -145,17 +170,34 @@ export async function seedPatients(
     ),
   );
 
-  const demoPatients: DemoPatient[] = patients.map((patient, index) => ({
-    patient,
-    companion: index < COMPANION_COUNT ? companions[index] : null,
-    healthCenter: assignedCenters[index],
-    isEnrolled: index < ENROLLED_COUNT,
-  }));
+  const demoPatients: DemoPatient[] = patients.map((patient, index) => {
+    const isEnrolled = index < ENROLLED_COUNT;
+    return {
+      patient,
+      companion: index < COMPANION_COUNT ? companions[index] : null,
+      healthCenter: assignedCenters[index],
+      isEnrolled,
+      initialHealthPhase: isEnrolled ? initialHealthPhaseFor(index) : null,
+      healthPhase: currentHealthPhaseFor(index, isEnrolled),
+    };
+  });
 
   await seedPatientDetails(ctx, demoPatients);
+  await seedPatientAddresses(ctx, demoPatients);
 
   return demoPatients;
 }
+
+const TRAVEL_TIME_DURATIONS: Record<
+  (typeof TRAVEL_TIMES)[number],
+  { valueMin: number; unit: DurationUnit }
+> = {
+  'Menos de 30 minutos': { valueMin: 20, unit: DurationUnit.MINUTE },
+  'Entre 30 minutos y 1 hora': { valueMin: 45, unit: DurationUnit.MINUTE },
+  'Entre 1 y 3 horas': { valueMin: 2, unit: DurationUnit.HOUR },
+  'Más de 3 horas': { valueMin: 4, unit: DurationUnit.HOUR },
+  'Más de un día de viaje': { valueMin: 1, unit: DurationUnit.DAY },
+};
 
 async function seedPatientDetails(
   { manager, rng, now }: DemoContext,
@@ -164,20 +206,21 @@ async function seedPatientDetails(
   const rows = demoPatients
     // Details are captured during enrollment, so unenrolled leads have none.
     .filter(({ isEnrolled }) => isEnrolled)
-    .map(({ patient, healthCenter }) => {
+    .map(({ patient, healthCenter, healthPhase }) => {
       const department = healthCenter.department;
-      const districts = DISTRICTS[department] ?? [department];
       const nativeLanguage = rng.pick(NATIVE_LANGUAGES);
       const droppedOut = rng.bool(0.12);
+      const travelTimeLabel = rng.pick(TRAVEL_TIMES);
 
       return manager.create(PatientDetails, {
         patientId: patient.id,
+        healthPhase,
         birthDepartment: department,
-        currentAddress: `${rng.pick(STREET_NAMES)} ${rng.int(100, 1899)}`,
-        currentDistrict: rng.pick(districts),
-        currentDepartment: department,
-        dniMatchesAddress: rng.maybeBool(0.65),
-        travelTimeToHospital: rng.pick(TRAVEL_TIMES),
+        primaryHealthCenterId: healthCenter.id,
+        travelTimeToHospital: normalizeDuration({
+          ...TRAVEL_TIME_DURATIONS[travelTimeLabel],
+          label: travelTimeLabel,
+        }),
         emergencyContactName: `${rng.pick([...FIRST_NAMES_FEMALE, ...FIRST_NAMES_MALE])} ${rng.pick(LAST_NAMES)}`,
         emergencyContactPhone: `+51 9${rng.int(10, 99)} ${rng.int(100, 999)} ${rng.int(100, 999)}`,
         zoneType: rng.bool(0.7) ? 'URBANA' : 'RURAL',
@@ -199,6 +242,94 @@ async function seedPatientDetails(
           ? toDateOnly(addDays(now, -rng.int(15, 120)))
           : null,
       });
+    });
+
+  await manager.save(rows);
+
+  const historyRows = demoPatients
+    .filter(
+      ({ isEnrolled, initialHealthPhase, healthPhase }) =>
+        isEnrolled && initialHealthPhase && healthPhase,
+    )
+    .flatMap(({ patient, initialHealthPhase, healthPhase }) => {
+      if (!initialHealthPhase || !healthPhase) return [];
+      if (initialHealthPhase === healthPhase) {
+        return [
+          manager.create(PatientHealthPhaseHistory, {
+            patientId: patient.id,
+            healthPhase: initialHealthPhase,
+            changedAt: patient.createdAt,
+          }),
+        ];
+      }
+
+      const changedAt = addDays(now, -rng.int(20, 90));
+      return [
+        manager.create(PatientHealthPhaseHistory, {
+          patientId: patient.id,
+          healthPhase: initialHealthPhase,
+          changedAt: addDays(changedAt, -rng.int(60, 180)),
+        }),
+        manager.create(PatientHealthPhaseHistory, {
+          patientId: patient.id,
+          healthPhase,
+          changedAt,
+        }),
+      ];
+    });
+
+  await manager.save(historyRows);
+}
+
+/**
+ * Patients enrolled from a provincia hospital sometimes keep their permanent
+ * residence back home while staying in Lima temporarily for treatment — this
+ * is the "residencia doble" case the addresses feature exists to capture.
+ */
+async function seedPatientAddresses(
+  { manager, rng }: DemoContext,
+  demoPatients: DemoPatient[],
+): Promise<void> {
+  const rows: PatientAddress[] = [];
+
+  demoPatients
+    .filter(({ isEnrolled }) => isEnrolled)
+    .forEach(({ patient, healthCenter }) => {
+      const department = healthCenter.department;
+      const districts = DISTRICTS[department] ?? [department];
+
+      rows.push(
+        manager.create(PatientAddress, {
+          patientId: patient.id,
+          type: AddressType.PERMANENT,
+          isPrimary: true,
+          address: `${rng.pick(STREET_NAMES)} ${rng.int(100, 1899)}`,
+          district: rng.pick(districts),
+          province: rng.pick(districts),
+          department,
+          dniMatchesAddress: rng.maybeBool(0.65),
+          isActive: true,
+        }),
+      );
+
+      // ~30% of patients from outside Lima also keep a temporary Lima address
+      // while they undergo treatment there.
+      if (department !== 'LIMA' && department !== 'CALLAO' && rng.bool(0.3)) {
+        const limaDistricts = DISTRICTS.LIMA ?? ['LIMA'];
+        rows.push(
+          manager.create(PatientAddress, {
+            patientId: patient.id,
+            type: AddressType.TEMPORARY,
+            isPrimary: false,
+            address: `${rng.pick(STREET_NAMES)} ${rng.int(100, 1899)}`,
+            district: rng.pick(limaDistricts),
+            province: rng.pick(limaDistricts),
+            department: 'LIMA' as PeruDepartment,
+            reference: 'Alojamiento temporal durante el tratamiento.',
+            isActive: true,
+          }),
+        );
+      }
     });
 
   await manager.save(rows);

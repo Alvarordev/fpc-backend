@@ -8,14 +8,14 @@ import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { Agent } from '../src/database/entities/agent.entity';
 import { HealthCenter } from '../src/database/entities/health-center.entity';
-import { Patient } from '../src/patients/entities/patient.entity';
-import { PatientRole } from '../src/patients/entities/patient-role.enum';
-import { PatientStatus } from '../src/patients/entities/patient-status.enum';
+import { Patient } from '../src/database/entities/patient.entity';
+import { PatientRole } from '../src/database/entities/patient-role.enum';
+import { PatientStatus } from '../src/database/entities/patient-status.enum';
 import { UserRole } from '../src/database/entities/user-role.enum';
-import { UsersService } from '../src/users/users.service';
-import { N8nWebhookService } from '../src/webhooks/n8n-webhook.service';
-import { N8nWebhookEnvelope } from '../src/webhooks/n8n-webhook.events';
-import { AlertResponseDto } from '../src/alerts/alert-response.dto';
+import { UsersService } from '../src/modules/users/users.service';
+import { N8nWebhookService } from '../src/integrations/n8n/n8n-webhook.service';
+import { N8nWebhookEnvelope } from '../src/integrations/n8n/n8n-webhook.events';
+import { AlertResponseDto } from '../src/modules/alerts/dto/alert-response.dto';
 
 describe('n8n webhook dispatch (e2e)', () => {
   const emailPrefix = 'hook-%@example.test';
@@ -187,9 +187,14 @@ describe('n8n webhook dispatch (e2e)', () => {
           email: 'hook-enrolled@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
         insurance: { insuranceType: 'NONE' },
-        diagnosis: { diagnosis: 'Breast cancer', cancerStage: 'STAGE_2' },
+        diagnosis: {
+          diagnosis: 'Breast cancer',
+          cancerStage: 'STAGE_2',
+          mode: 'PARALLEL',
+        },
         medicalAppointments: [{ specialty: 'ONCOLOGY' }],
       })
       .expect(201);
@@ -214,6 +219,7 @@ describe('n8n webhook dispatch (e2e)', () => {
           email: 'hook-rollback@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL' },
         insurance: { insuranceType: 'NONE' },
         treatment: { treatmentType: 'No diagnosis behind this treatment' },

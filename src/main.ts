@@ -6,7 +6,8 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
+import { parseCorsOrigins } from './config/cors-origin';
 import { createOpenApiConfig } from './openapi/openapi.config';
 
 async function bootstrap() {
@@ -17,7 +18,7 @@ async function bootstrap() {
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({
-    origin: configService.getOrThrow<string>('CORS_ORIGIN'),
+    origin: parseCorsOrigins(configService.getOrThrow<string>('CORS_ORIGIN')),
     credentials: true,
   });
   app.useGlobalPipes(

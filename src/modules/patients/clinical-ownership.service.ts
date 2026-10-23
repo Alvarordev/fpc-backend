@@ -1,0 +1,282 @@
+import { Injectable } from '@nestjs/common';
+import { EntityManager } from 'typeorm';
+import { MedicalAppointmentStatus } from '../../database/entities/medical-appointment-status.enum';
+import { MedicalConsultationStatus } from '../../database/entities/medical-consultation-status.enum';
+import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
+import { PatientDiagnosisMode } from '../../database/entities/patient-diagnosis-mode.enum';
+import { PatientDiagnosticStatus } from '../../database/entities/patient-diagnostic-status.enum';
+import { PatientDiagnosticStatusEvent } from '../../database/entities/patient-diagnostic-status-event.entity';
+import { CatalogValueService } from '../catalogs/catalog-value.service';
+import { PatientDiagnosesService } from './clinical/diagnoses/patient-diagnoses.service';
+import { PatientMedicalAppointmentsService } from './clinical/medical-appointments/patient-medical-appointments.service';
+import { PatientNonOncologicalFollowUpsService } from './clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
+import { PatientTreatmentsService } from './clinical/treatments/patient-treatments.service';
+import { FollowUp } from '../../database/entities/follow-up.entity';
+import { Reminder } from '../../database/entities/reminder.entity';
+import { ReminderKind } from '../../database/entities/reminder-kind.enum';
+import { ReminderStatus } from '../../database/entities/reminder-status.enum';
+import { CreatePatientSymptomReportDto } from './symptom-reports/dto/create-patient-symptom-report.dto';
+
+export type SymptomFanOutOptions = {
+  skipAppointment?: boolean;
+  historical?: boolean;
+  historicalLoadedById?: string;
+};
+
+@Injectable()
+export class ClinicalOwnershipService {
+  constructor(
+    private readonly catalogValues: CatalogValueService,
+    private readonly appointments: PatientMedicalAppointmentsService,
+    private readonly diagnoses: PatientDiagnosesService,
+    private readonly treatments: PatientTreatmentsService,
+    private readonly nonOncological: PatientNonOncologicalFollowUpsService,
+  ) {}
+
+  stripOwnershipFields(
+    input: CreatePatientSymptomReportDto,
+  ): CreatePatientSymptomReportDto {
+    return {
+      ...input,
+      healthCenterId: undefined,
+      specialty: undefined,
+      firstConsultationDate: undefined,
+      nextConsultationDate: undefined,
+      nextConsultationSpecialty: undefined,
+      nextConsultationNote: undefined,
+      hasReferral: undefined,
+      referredHealthCenterId: undefined,
+      referralNotProvidedReason: undefined,
+      isAwaitingDiagnosis: undefined,
+      hasReceivedDiagnosis: undefined,
+      reportedDiagnosis: undefined,
+      reportedTreatment: undefined,
+      reportedTreatmentFrequency: undefined,
+      isReceivingReportedTreatment: undefined,
+      notReceivingTreatmentReason: undefined,
+    };
+  }
+
+  async fanOutFromSymptomReport(
+    patientId: string,
+    followUpId: string,
+    enrollmentId: string | null,
+    input: CreatePatientSymptomReportDto,
+    manager: EntityManager,
+    options: SymptomFanOutOptions = {},
+  ): Promise<void> {
+    if (!options.skipAppointment) {
+      await this.deriveAppointment(
+        patientId,
+        followUpId,
+        input,
+        manager,
+        options,
+      );
+    }
+    await this.deriveDiagnosisAndTreatment(
+      patientId,
+      followUpId,
+      enrollmentId,
+      input,
+      manager,
+    );
+  }
+
+  private shouldCreateAppointment(input: CreatePatientSymptomReportDto): boolean {
+    if (input.hasMedicalConsultation === true) return true;
+    return (
+      input.consultationStatus === MedicalConsultationStatus.SCHEDULED ||
+      input.consultationStatus === MedicalConsultationStatus.ATTENDED
+    );
+  }
+
+  private async deriveAppointment(
+    patientId: string,
+    followUpId: string,
+    input: CreatePatientSymptomReportDto,
+    manager: EntityManager,
+    options: SymptomFanOutOptions,
+  ): Promise<void> {
+    if (!this.shouldCreateAppointment(input)) return;
+    if (!input.specialty || !input.healthCenterId) return;
+
+    const attended =
+      input.hasMedicalConsultation === true ||
+      input.consultationStatus === MedicalConsultationStatus.ATTENDED;
+    await this.appointments.create(
+      patientId,
+      {
+        followUpId,
+        specialty: input.specialty,
+        healthCenterId: input.healthCenterId,
+        appointmentDate: input.firstConsultationDate,
+        nextAppointmentDate: input.nextConsultationDate,
+        nextAppointmentSpecialty: input.nextConsultationSpecialty,
+        hasReferralSheet: input.hasReferral,
+        referredHealthCenterId: input.referredHealthCenterId,
+        referralNotProvidedReason: input.referralNotProvidedReason,
+        isFirstConsultation: attended,
+        status: attended
+          ? MedicalAppointmentStatus.COMPLETED
+          : MedicalAppointmentStatus.SCHEDULED,
+      },
+      manager,
+      !attended,
+    );
+    await this.deriveUpcomingReminder(
+      patientId,
+      followUpId,
+      input,
+      manager,
+      options,
+    );
+  }
+
+  private async deriveUpcomingReminder(
+    patientId: string,
+    followUpId: string,
+    input: CreatePatientSymptomReportDto,
+    manager: EntityManager,
+    options: SymptomFanOutOptions,
+  ): Promise<void> {
+    if (options.historical) return;
+    const nextDate = input.nextConsultationDate?.trim();
+    const nextSpecialty = input.nextConsultationSpecialty?.trim();
+    if (!nextDate || !nextSpecialty) return;
+
+    const followUp = await manager.getRepository(FollowUp).findOneBy({
+      id: followUpId,
+    });
+    if (!followUp?.agentId) return;
+
+    const scheduled = await this.appointments.create(
+      patientId,
+      {
+        followUpId,
+        specialty: nextSpecialty,
+        healthCenterId:
+          input.referredHealthCenterId ?? input.healthCenterId,
+        appointmentDate: nextDate,
+        isFirstConsultation: false,
+        status: MedicalAppointmentStatus.SCHEDULED,
+      },
+      manager,
+      true,
+    );
+
+    const note = input.nextConsultationNote?.trim();
+    const reminder = await manager.getRepository(Reminder).save(
+      manager.getRepository(Reminder).create({
+        subjectPatientId: patientId,
+        createdFromFollowUpId: followUpId,
+        assignedAgentId: followUp.agentId,
+        dueAt: new Date(`${nextDate}T08:00:00-05:00`),
+        dueOn: nextDate,
+        description: note || `Cita: ${nextSpecialty}`,
+        kind: ReminderKind.MEDICAL_APPOINTMENT,
+        medicalAppointmentId: scheduled.id,
+        status: ReminderStatus.PENDING,
+        completedOn: null,
+        isHistorical: false,
+      }),
+    );
+    await manager
+      .getRepository(PatientMedicalAppointment)
+      .update({ id: scheduled.id }, { reminderId: reminder.id });
+  }
+
+  private async deriveDiagnosisAndTreatment(
+    patientId: string,
+    followUpId: string,
+    enrollmentId: string | null,
+    input: CreatePatientSymptomReportDto,
+    manager: EntityManager,
+  ): Promise<void> {
+    if (input.hasReceivedDiagnosis !== true || !input.reportedDiagnosis?.trim())
+      return;
+
+    const oncological = await this.catalogValues.tryResolve(
+      'cancer_diagnosis',
+      input.reportedDiagnosis,
+      { manager },
+    );
+    const events = manager.getRepository(PatientDiagnosticStatusEvent);
+
+    if (oncological) {
+      const diagnosis = await this.diagnoses.create(
+        patientId,
+        {
+          followUpId,
+          diagnosis: oncological.code,
+          diagnosisOther: oncological.other ?? undefined,
+          mode: PatientDiagnosisMode.PARALLEL,
+          healthCenterId: input.healthCenterId,
+          diagnosisSpecialty: input.specialty,
+        },
+        manager,
+      );
+      await events.save(
+        events.create({
+          patientId,
+          followUpId,
+          status: PatientDiagnosticStatus.CONFIRMED,
+          occurredAt: new Date(),
+          reportedDiagnosis: oncological.code,
+          diagnosisId: diagnosis.id,
+        }),
+      );
+      if (input.isReceivingReportedTreatment === true && input.reportedTreatment) {
+        const treatmentType = await this.catalogValues.tryResolve(
+          'treatment_type',
+          input.reportedTreatment,
+          { manager },
+        );
+        await this.treatments.create(
+          patientId,
+          {
+            followUpId,
+            diagnosisId: diagnosis.id,
+            treatmentType: treatmentType?.code ?? 'OTRO',
+            treatmentTypeOther: treatmentType
+              ? (treatmentType.other ?? undefined)
+              : input.reportedTreatment,
+            treatmentFrequency: input.reportedTreatmentFrequency,
+          },
+          manager,
+        );
+      }
+      return;
+    }
+
+    const event = await events.save(
+      events.create({
+        patientId,
+        followUpId,
+        status: PatientDiagnosticStatus.RULED_OUT,
+        occurredAt: new Date(),
+        reportedDiagnosis: input.reportedDiagnosis,
+        diagnosisId: null,
+      }),
+    );
+    await this.nonOncological.create(
+      patientId,
+      {
+        followUpId,
+        enrollmentId,
+        diagnosticStatusEventId: event.id,
+        diagnosis: input.reportedDiagnosis,
+        receivesTreatment: input.isReceivingReportedTreatment ?? null,
+        treatmentName:
+          input.isReceivingReportedTreatment === true
+            ? input.reportedTreatment
+            : null,
+        treatmentFrequency:
+          input.isReceivingReportedTreatment === true
+            ? input.reportedTreatmentFrequency
+            : null,
+      },
+      manager,
+    );
+  }
+}

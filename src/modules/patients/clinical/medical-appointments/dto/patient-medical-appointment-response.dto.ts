@@ -1,0 +1,104 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { MedicalAppointmentStatus } from '../../../../../database/entities/medical-appointment-status.enum';
+import { PatientMedicalAppointment } from '../../../../../database/entities/patient-medical-appointment.entity';
+
+export class PatientMedicalAppointmentResponseDto {
+  @ApiProperty({ format: 'uuid' })
+  id!: string;
+
+  @ApiProperty({ format: 'uuid' })
+  patientId!: string;
+
+  @ApiProperty({ format: 'uuid' })
+  followUpId!: string;
+
+  @ApiProperty({ format: 'uuid', nullable: true })
+  healthCenterId!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  healthCenterName?: string | null;
+
+  @ApiProperty()
+  specialty!: string;
+
+  @ApiProperty({ format: 'date', nullable: true })
+  appointmentDate!: string | null;
+
+  @ApiProperty({ nullable: true, description: 'HH:mm or HH:mm:ss' })
+  appointmentTime!: string | null;
+
+  @ApiProperty({ format: 'date', nullable: true })
+  nextAppointmentDate!: string | null;
+
+  @ApiProperty({ nullable: true })
+  nextAppointmentSpecialty!: string | null;
+
+  @ApiProperty({ nullable: true })
+  hasReferralSheet!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  referredTo!: string | null;
+
+  @ApiProperty({ nullable: true })
+  referralNotProvidedReason!: string | null;
+
+  @ApiProperty({ nullable: true })
+  difficulties!: string | null;
+
+  @ApiProperty()
+  isFirstConsultation!: boolean;
+
+  @ApiProperty({ nullable: true })
+  attendedViaSepa!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  referredViaSepa!: boolean | null;
+
+  @ApiProperty({ enum: MedicalAppointmentStatus })
+  status!: MedicalAppointmentStatus;
+
+  @ApiProperty({ format: 'uuid', nullable: true })
+  reminderId!: string | null;
+
+  @ApiProperty()
+  isCurrent!: boolean;
+
+  @ApiProperty()
+  isHistorical!: boolean;
+
+  @ApiProperty({ nullable: true })
+  changeReason!: string | null;
+
+  @ApiProperty({ format: 'date-time' })
+  createdAt!: string;
+
+  static from(
+    appointment: PatientMedicalAppointment,
+  ): PatientMedicalAppointmentResponseDto {
+    return {
+      id: appointment.id,
+      patientId: appointment.patientId,
+      followUpId: appointment.followUpId,
+      healthCenterId: appointment.healthCenterId,
+      healthCenterName: appointment.healthCenter?.name ?? null,
+      specialty: appointment.specialty,
+      appointmentDate: appointment.appointmentDate,
+      appointmentTime: appointment.appointmentTime,
+      nextAppointmentDate: appointment.nextAppointmentDate,
+      nextAppointmentSpecialty: appointment.nextAppointmentSpecialty,
+      hasReferralSheet: appointment.hasReferralSheet,
+      referredTo: appointment.referredTo,
+      referralNotProvidedReason: appointment.referralNotProvidedReason,
+      difficulties: appointment.difficulties,
+      isFirstConsultation: appointment.isFirstConsultation,
+      attendedViaSepa: appointment.attendedViaSepa,
+      referredViaSepa: appointment.referredViaSepa,
+      status: appointment.status,
+      reminderId: appointment.reminderId,
+      isCurrent: appointment.isCurrent,
+      isHistorical: appointment.isHistorical,
+      changeReason: appointment.changeReason,
+      createdAt: appointment.createdAt.toISOString(),
+    };
+  }
+}

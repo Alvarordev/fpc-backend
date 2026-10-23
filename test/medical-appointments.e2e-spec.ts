@@ -8,12 +8,12 @@ import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { Agent } from '../src/database/entities/agent.entity';
 import { HealthCenter } from '../src/database/entities/health-center.entity';
-import { Patient } from '../src/patients/entities/patient.entity';
-import { PatientRole } from '../src/patients/entities/patient-role.enum';
+import { Patient } from '../src/database/entities/patient.entity';
+import { PatientRole } from '../src/database/entities/patient-role.enum';
 import { UserRole } from '../src/database/entities/user-role.enum';
 import { Volunteer } from '../src/database/entities/volunteer.entity';
-import { UsersService } from '../src/users/users.service';
-import { MedicalAppointmentResponseDto } from '../src/medical-appointments/medical-appointments-response.dto';
+import { UsersService } from '../src/modules/users/users.service';
+import { MedicalAppointmentResponseDto } from '../src/modules/patients/clinical/medical-appointments/dto/medical-appointment-response.dto';
 
 describe('Global medical appointments (e2e)', () => {
   const emailPrefix = 'medappt-%@example.test';
@@ -137,9 +137,15 @@ describe('Global medical appointments (e2e)', () => {
         patientId: assignedPatient.id,
         specialty: 'Oncología',
         healthCenterId: healthCenter.id,
+        nextAppointmentDate: '2030-02-01',
+        nextAppointmentSpecialty: 'Radioterapia',
       })
       .expect(201);
     const firstAppointment = first.body as MedicalAppointmentResponseDto;
+    expect(firstAppointment).toMatchObject({
+      nextAppointmentDate: '2030-02-01',
+      nextAppointmentSpecialty: 'RADIOTERAPIA',
+    });
 
     const second = await request(server)
       .post('/medical-appointments')

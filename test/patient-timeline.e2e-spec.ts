@@ -26,8 +26,8 @@ import {
   VolunteerAvailability,
 } from '../src/database/entities/volunteer-availability.entity';
 import { Volunteer } from '../src/database/entities/volunteer.entity';
-import { Patient } from '../src/patients/entities/patient.entity';
-import { UsersService } from '../src/users/users.service';
+import { Patient } from '../src/database/entities/patient.entity';
+import { UsersService } from '../src/modules/users/users.service';
 
 describe('Patient timeline (e2e)', () => {
   const emailPrefix = 'timeline-%@example.test';
@@ -234,6 +234,85 @@ describe('Patient timeline (e2e)', () => {
         occurredAt: '2026-08-04T10:00:00.000Z',
       }),
     );
+    expect(body.data).toContainEqual(
+      expect.objectContaining({
+        id: otherAgentFollowUp.id,
+        kind: 'FOLLOW_UP',
+        outcomes: expect.arrayContaining([
+          expect.objectContaining({
+            type: 'REMINDER',
+            recordId: otherAgentReminder.id,
+            label: 'Recordatorio',
+            summary: expect.stringContaining('Recordatorio pendiente'),
+          }),
+        ]),
+      }),
+    );
+  });
+
+  it('keeps multiple future follow-ups as independent timeline events', async () => {
+    const firstScheduledAt = new Date(
+      Date.now() + 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const secondScheduledAt = new Date(
+      Date.now() + 15 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const response = await request(server)
+      .post('/follow-ups/batch')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        followUps: [
+          {
+            subjectPatientId: patient.id,
+            interlocutorId: patient.id,
+            agentId: agentA.id,
+            type: 'CALL',
+            purpose: 'FOLLOW_UP',
+            scheduledAt: firstScheduledAt,
+          },
+          {
+            subjectPatientId: patient.id,
+            interlocutorId: patient.id,
+            agentId: agentA.id,
+            type: 'WHATSAPP',
+            purpose: 'FOLLOW_UP',
+            scheduledAt: secondScheduledAt,
+          },
+        ],
+      })
+      .expect(201);
+    const created = response.body as Array<{
+      id: string;
+      status: string;
+      nextFollowUpId: string | null;
+    }>;
+
+    expect(created).toHaveLength(2);
+    expect(created).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          status: 'SCHEDULED',
+          nextFollowUpId: null,
+        }),
+      ]),
+    );
+    expect(created[0].nextFollowUpId).toBeNull();
+    expect(created[1].nextFollowUpId).toBeNull();
+
+    const timeline = await request(server)
+      .get(`/patients/${patient.id}/timeline?limit=100`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    const timelineBody = timeline.body as {
+      data: Array<{ id: string; kind: string; occurredAt: string }>;
+    };
+    const createdIds = new Set(created.map((followUp) => followUp.id));
+    const scheduled = timelineBody.data.filter(
+      (event) => event.kind === 'FOLLOW_UP' && createdIds.has(event.id),
+    );
+    expect(scheduled).toHaveLength(2);
+    expect(scheduled[0].occurredAt).toBe(secondScheduledAt);
+    expect(scheduled[1].occurredAt).toBe(firstScheduledAt);
   });
 
   it('paginates a stable global projection', async () => {
@@ -277,7 +356,7 @@ describe('Patient timeline (e2e)', () => {
       .get('/reminders')
       .set('Authorization', `Bearer ${agentAToken}`)
       .expect(200);
-    expect(reminders.body).toContainEqual(
+    expect(reminders.body).not.toContainEqual(
       expect.objectContaining({ id: otherAgentReminder.id }),
     );
     await request(server)

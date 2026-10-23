@@ -15,6 +15,7 @@ import {
 } from './catalog';
 import type { DemoContext } from './context';
 import type { PatientFollowUps } from './follow-ups';
+import { PatientActivityStatus } from '../../entities/patient-activity-status.enum';
 import { addDays, addMinutes, atTime, toDateOnly } from './rng';
 
 const TARGET_APPOINTMENTS = 10;
@@ -92,7 +93,9 @@ export async function seedPsychooncology(
   // psychooncology session would realistically have been booked for.
   const candidates = histories.filter(
     (history) =>
-      history.enrollment !== null && history.demoPatient.patient.isActive,
+      history.enrollment !== null &&
+      history.demoPatient.patient.activityStatus !==
+        PatientActivityStatus.INACTIVE,
   );
   const ordered = [
     ...candidates.filter((history) => history.psychoReferral),
@@ -136,7 +139,9 @@ export async function seedPsychooncology(
             ? AppointmentStatus.COMPLETED
             : AppointmentStatus.SCHEDULED,
           scheduledAt: slot.startsAt,
+          scheduledOn: slot.availability.date,
           completedAt: isPast ? addMinutes(slot.startsAt, 50) : null,
+          completedOn: isPast ? slot.availability.date : null,
           topicAddressed: isPast ? rng.pick(PSYCHO_TOPICS) : null,
           sessionDetails: isPast ? rng.pick(PSYCHO_DETAILS) : null,
           additionalObservations:

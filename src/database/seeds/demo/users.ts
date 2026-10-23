@@ -2,14 +2,16 @@ import * as bcrypt from 'bcrypt';
 import type { EntityManager } from 'typeorm';
 import { BCRYPT_ROUNDS, ensureAdminUser } from '../admin-user';
 import { Agent } from '../../entities/agent.entity';
+import { Foundation } from '../../entities/foundation.entity';
 import { User } from '../../entities/user.entity';
 import { UserRole } from '../../entities/user-role.enum';
 import { Volunteer } from '../../entities/volunteer.entity';
+import { ensureSystemVolunteer } from '../system-volunteer';
 
 /**
  * Shared password for every seeded account. The e2e suites clean up by email
  * prefix (`e2e-%@example.test`, `p7-%@example.test`), so the demo domain is
- * deliberately different — running the tests must not delete the demo dataset.
+ * deliberately different from their suite-local test data.
  */
 export const DEMO_PASSWORD = 'Demo1234!';
 export const DEMO_EMAIL_DOMAIN = 'fpc.demo';
@@ -70,14 +72,25 @@ const VOLUNTEERS: readonly VolunteerSeed[] = [
   },
 ];
 
-const FOUNDATION_EMAILS = [
-  `fundacion.direccion@${DEMO_EMAIL_DOMAIN}`,
-  `fundacion.programas@${DEMO_EMAIL_DOMAIN}`,
-];
+const FOUNDATION_SEEDS = [
+  {
+    firstName: 'María',
+    lastName: 'Delgado Ríos',
+    email: `fundacion.direccion@${DEMO_EMAIL_DOMAIN}`,
+    phone: '+51 985 201 101',
+  },
+  {
+    firstName: 'Carlos',
+    lastName: 'Vega Montoya',
+    email: `fundacion.programas@${DEMO_EMAIL_DOMAIN}`,
+    phone: '+51 985 303 404',
+  },
+] as const;
 
 export interface SeededUsers {
   admin: User;
   foundationUsers: User[];
+  foundations: Foundation[];
   agents: Agent[];
   agentUsers: User[];
   volunteers: Volunteer[];
@@ -93,7 +106,17 @@ export async function seedUsers(manager: EntityManager): Promise<SeededUsers> {
     manager.create(User, { email, passwordHash, role });
 
   const foundationUsers = await manager.save(
-    FOUNDATION_EMAILS.map((email) => createUser(email, UserRole.FOUNDATION)),
+    FOUNDATION_SEEDS.map(({ email }) => createUser(email, UserRole.FOUNDATION)),
+  );
+  const foundations = await manager.save(
+    FOUNDATION_SEEDS.map((seed, index) =>
+      manager.create(Foundation, {
+        userId: foundationUsers[index].id,
+        firstName: seed.firstName,
+        lastName: seed.lastName,
+        phone: seed.phone,
+      }),
+    ),
   );
 
   const agentUsers = await manager.save(
@@ -126,9 +149,12 @@ export async function seedUsers(manager: EntityManager): Promise<SeededUsers> {
     ),
   );
 
+  await ensureSystemVolunteer(manager);
+
   return {
     admin,
     foundationUsers,
+    foundations,
     agents,
     agentUsers,
     volunteers,

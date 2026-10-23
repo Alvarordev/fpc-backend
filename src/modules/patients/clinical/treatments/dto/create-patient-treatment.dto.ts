@@ -1,0 +1,108 @@
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+  MaxLength,
+  Validate,
+  ValidateIf,
+  ValidateNested,
+  ValidationArguments,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from 'class-validator';
+import { TreatmentInterruptionReason } from '../../../../../database/entities/treatment-interruption-reason.enum';
+import { Type } from 'class-transformer';
+import { TreatmentSituation } from '../../../../../database/entities/treatment-situation.enum';
+import { DurationDto } from '../../../../../shared/duration/duration.dto';
+import { CreateTreatmentMedicationDto } from '../medications/create-treatment-medication.dto';
+
+@ValidatorConstraint({ name: 'teleconsultationDetailsWhenDisabled' })
+class TeleconsultationDetailsWhenDisabled implements ValidatorConstraintInterface {
+  validate(_: unknown, args: ValidationArguments): boolean {
+    const dto = args.object as CreatePatientTreatmentDto;
+    if (dto.receivesTeleconsultation !== false) return true;
+    return (
+      !dto.teleconsultationNote &&
+      (!dto.teleconsultationSpecialties ||
+        dto.teleconsultationSpecialties.length === 0)
+    );
+  }
+
+  defaultMessage(): string {
+    return 'teleconsultation details must be empty when receivesTeleconsultation is false';
+  }
+}
+
+export class CreatePatientTreatmentDto {
+  @IsUUID() followUpId!: string;
+  @IsUUID() diagnosisId!: string;
+  @IsOptional() @IsUUID() seriesId?: string;
+  @IsString() treatmentType!: string;
+  @IsOptional() @IsString() treatmentTypeOther?: string;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DurationDto)
+  treatmentFrequency?: DurationDto;
+  @IsOptional() @IsBoolean() isReferred?: boolean;
+  @IsOptional() @IsUUID() sourceHealthCenterId?: string;
+  @IsOptional() @IsUUID() receivingHealthCenterId?: string;
+  @IsOptional() @IsDateString() startDate?: string;
+  @IsOptional() @IsDateString() endDate?: string;
+  @IsOptional() @IsString() changeReason?: string;
+  @IsOptional() @IsString() notReceivingReason?: string;
+  @IsOptional() @IsString() operationName?: string;
+  @IsOptional() @IsString() chemotherapyRoute?: string;
+  @IsOptional() @IsString() @MaxLength(100) careProgram?: string;
+  @IsOptional()
+  @IsBoolean()
+  @Validate(TeleconsultationDetailsWhenDisabled)
+  receivesTeleconsultation?: boolean;
+  @IsOptional() @IsString() teleconsultationNote?: string;
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  teleconsultationSpecialties?: string[];
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  treatmentSituation?: string;
+  @ValidateIf(
+    (dto: CreatePatientTreatmentDto) =>
+      dto.treatmentSituation === TreatmentSituation.ABANDONED,
+  )
+  @IsString()
+  @IsNotEmpty()
+  treatmentAbandonmentReason?: string;
+
+  @ValidateIf(
+    (dto: CreatePatientTreatmentDto) =>
+      dto.treatmentSituation === TreatmentSituation.INTERRUMPIDO,
+  )
+  @IsIn(Object.values(TreatmentInterruptionReason))
+  @IsNotEmpty()
+  interruptionReason?: TreatmentInterruptionReason;
+  @IsOptional() @IsString() interruptionReasonOther?: string;
+  @IsOptional() @IsBoolean() treatmentViaSepa?: boolean;
+  @IsOptional() @IsInt() @Min(0) scheduledSessions?: number;
+  @IsOptional() @IsInt() @Min(0) completedSessions?: number;
+  @IsOptional() @IsBoolean() hormonalTreatmentCompleted?: boolean;
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  accessBarrierCode?: string;
+  @IsOptional() @IsString() accessBarrierOther?: string;
+  @IsOptional() @IsBoolean() orientedRegardingBarriers?: boolean;
+  @IsOptional() @IsBoolean() hasLatestPrescription?: boolean;
+  @IsOptional() @IsDateString() latestPrescriptionDate?: string;
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateTreatmentMedicationDto)
+  medications?: CreateTreatmentMedicationDto[];
+}

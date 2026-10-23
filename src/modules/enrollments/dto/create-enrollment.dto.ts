@@ -1,0 +1,246 @@
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  ValidateNested,
+} from 'class-validator';
+import { AffiliationType } from '../../../database/entities/enrollment.entity';
+import { FollowUpType } from '../../../database/entities/follow-up.enums';
+import { CreatePatientDiagnosisDto } from '../../patients/clinical/diagnoses/dto/create-patient-diagnosis.dto';
+import { CreatePatientInsuranceDto } from '../../patients/clinical/insurance/dto/create-patient-insurance.dto';
+import { CreatePatientMedicalAppointmentDto } from '../../patients/clinical/medical-appointments/dto/create-patient-medical-appointment.dto';
+import { CreatePatientSisAffiliationDto } from '../../patients/clinical/sis-affiliation/dto/create-patient-sis-affiliation.dto';
+import { CreatePatientTreatmentDto } from '../../patients/clinical/treatments/dto/create-patient-treatment.dto';
+import { CreatePatientSymptomReportDto } from '../../patients/symptom-reports/dto/create-patient-symptom-report.dto';
+import { CreateCompanionDto } from '../../patients/dto/create-companion.dto';
+import { CreatePatientDto } from '../../patients/dto/create-patient.dto';
+import { UpsertPatientDetailsDto } from '../../patients/dto/upsert-patient-details.dto';
+import { CreatePatientAddressDto } from '../../patients/addresses/dto/create-patient-address.dto';
+import { CreatePatientHealthBackgroundAssessmentDto } from '../../patients/clinical/health-background/dto/create-patient-health-background-assessment.dto';
+import { CompanionContactRole } from '../../../database/entities/companion-contact-role.enum';
+import { EnrollmentContactSource } from '../enrollment-contact-source.enum';
+import { CreatePatientPsychooncologySupportAssessmentDto } from '../../patients/clinical/psychooncology-support/dto/create-patient-psychooncology-support-assessment.dto';
+import { CreatePatientNonOncologicalFollowUpDto } from '../../patients/clinical/non-oncological-follow-up/dto/create-patient-non-oncological-follow-up.dto';
+
+export class EnrollmentContactPersonDto extends OmitType(CreateCompanionDto, [
+  'email',
+  'isPrimaryInformant',
+  'isPrimaryContact',
+  'contactRole',
+  'isCaregiver',
+  'relationship',
+] as const) {
+  @IsString() @MaxLength(50) relationship!: string;
+}
+
+export class EnrollmentContactInputDto {
+  @ApiProperty({ enum: CompanionContactRole })
+  @IsIn(Object.values(CompanionContactRole))
+  role!: CompanionContactRole;
+
+  @ApiProperty({ enum: EnrollmentContactSource })
+  @IsIn(Object.values(EnrollmentContactSource))
+  source!: EnrollmentContactSource;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentContactPersonDto)
+  person?: EnrollmentContactPersonDto;
+}
+
+export class EnrollmentFollowUpDto {
+  @IsIn(Object.values(FollowUpType)) type!: FollowUpType;
+  @IsOptional() @IsUUID() agentId?: string;
+  @IsOptional() @IsString() notes?: string;
+  @IsOptional() @IsDateString() scheduledAt?: string;
+  @IsOptional() @IsDateString() completedAt?: string;
+}
+
+export class CreateEnrollmentFamilyTalkInterestDto {
+  @IsString() @MaxLength(255) talkName!: string;
+  @IsString() @MaxLength(255) familyMemberName!: string;
+  @IsOptional() @IsString() @MaxLength(50) familyMemberPhone?: string;
+  @IsOptional() @IsString() @MaxLength(255) familyMemberEmail?: string;
+}
+
+export class EnrollmentDiagnosisDto extends OmitType(
+  CreatePatientDiagnosisDto,
+  ['followUpId'] as const,
+) {
+  @ApiProperty({
+    required: false,
+    description:
+      'Temporary client reference used to associate enrollment treatments; required for diagnoses[] and omitted only by the legacy diagnosis field',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  clientRef?: string;
+}
+export class EnrollmentTreatmentDto extends OmitType(
+  CreatePatientTreatmentDto,
+  ['followUpId', 'diagnosisId'] as const,
+) {
+  @ApiProperty({
+    required: false,
+    description:
+      'Temporary clientRef of the diagnosis for this treatment; required when diagnoses[] is used and omitted only for the legacy diagnosis field',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  diagnosisRef?: string;
+}
+export class EnrollmentInsuranceDto extends OmitType(
+  CreatePatientInsuranceDto,
+  ['followUpId'] as const,
+) {}
+export class EnrollmentSisAffiliationDto extends OmitType(
+  CreatePatientSisAffiliationDto,
+  ['followUpId'] as const,
+) {}
+export class EnrollmentMedicalAppointmentDto extends OmitType(
+  CreatePatientMedicalAppointmentDto,
+  ['followUpId'] as const,
+) {}
+export class EnrollmentSymptomReportDto extends OmitType(
+  CreatePatientSymptomReportDto,
+  ['followUpId', 'enrollmentId'] as const,
+) {}
+export class EnrollmentAddressDto extends OmitType(CreatePatientAddressDto, [
+  'followUpId',
+] as const) {}
+export class EnrollmentHealthBackgroundAssessmentDto extends OmitType(
+  CreatePatientHealthBackgroundAssessmentDto,
+  ['followUpId'] as const,
+) {}
+export class EnrollmentPsychooncologySupportAssessmentDto extends OmitType(
+  CreatePatientPsychooncologySupportAssessmentDto,
+  ['followUpId'] as const,
+) {}
+export class EnrollmentNonOncologicalFollowUpDto extends OmitType(
+  CreatePatientNonOncologicalFollowUpDto,
+  ['followUpId', 'enrollmentId'] as const,
+) {}
+
+export class CreateEnrollmentDto {
+  @IsOptional() @IsUUID() patientId?: string;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreatePatientDto)
+  patient?: CreatePatientDto;
+  @ValidateNested()
+  @Type(() => EnrollmentFollowUpDto)
+  followUp!: EnrollmentFollowUpDto;
+  @IsIn(Object.values(AffiliationType)) affiliationType!: AffiliationType;
+  @ApiProperty({ maxLength: 100 })
+  @IsString()
+  @MaxLength(100)
+  healthPhase!: string;
+  @IsOptional() @IsUUID() companionId?: string;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateCompanionDto)
+  companion?: CreateCompanionDto;
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EnrollmentContactInputDto)
+  contacts?: EnrollmentContactInputDto[];
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpsertPatientDetailsDto)
+  details?: UpsertPatientDetailsDto;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentInsuranceDto)
+  insurance?: EnrollmentInsuranceDto;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentSisAffiliationDto)
+  sisAffiliation?: EnrollmentSisAffiliationDto;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentDiagnosisDto)
+  diagnosis?: EnrollmentDiagnosisDto;
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EnrollmentDiagnosisDto)
+  diagnoses?: EnrollmentDiagnosisDto[];
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EnrollmentTreatmentDto)
+  treatments?: EnrollmentTreatmentDto[];
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EnrollmentMedicalAppointmentDto)
+  medicalAppointments?: EnrollmentMedicalAppointmentDto[];
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EnrollmentAddressDto)
+  addresses?: EnrollmentAddressDto[];
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentSymptomReportDto)
+  symptomReport?: EnrollmentSymptomReportDto;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentHealthBackgroundAssessmentDto)
+  healthBackgroundAssessment?: EnrollmentHealthBackgroundAssessmentDto;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentPsychooncologySupportAssessmentDto)
+  psychooncologySupportAssessment?: EnrollmentPsychooncologySupportAssessmentDto;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnrollmentNonOncologicalFollowUpDto)
+  nonOncologicalFollowUp?: EnrollmentNonOncologicalFollowUpDto;
+  @ApiPropertyOptional({
+    description:
+      'Enrollment snapshot only. Current consultation status is owned by patient_medical_appointments, not this flag.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  currentlyAttendingConsultations?: boolean;
+  @IsOptional() @IsBoolean() currentlyReceivingTreatment?: boolean;
+  @ApiPropertyOptional({ maxLength: 2000, nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  notAttendingConsultationsNote?: string;
+  @ApiPropertyOptional({ maxLength: 2000, nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  notReceivingTreatmentReason?: string;
+  @IsOptional() @IsString() @MaxLength(100) entrySource?: string;
+  @IsOptional() @IsString() @MaxLength(100) entrySubSource?: string;
+  @IsOptional() @IsBoolean() consentToContact?: boolean;
+  @IsOptional() @IsBoolean() consentToShareData?: boolean;
+  @IsOptional() @IsBoolean() requiresTransportation?: boolean;
+  @IsOptional() @IsBoolean() hasMobilityIssues?: boolean;
+  @IsOptional() @IsBoolean() isOncologicalPatient?: boolean;
+  @IsOptional() @IsBoolean() surveyAccepted?: boolean;
+  @IsOptional() @IsString() caseComments?: string;
+  @IsOptional() @IsDateString() callStartedAt?: string;
+  @IsOptional() @IsDateString() callEndedAt?: string;
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateEnrollmentFamilyTalkInterestDto)
+  familyPreventionTalkInterests?: CreateEnrollmentFamilyTalkInterestDto[];
+}

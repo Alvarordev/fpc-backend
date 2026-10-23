@@ -12,18 +12,18 @@ import {
   PatientSummaryStatus,
 } from '../src/database/entities/patient-summary.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
-import { GeminiSummaryClient } from '../src/patient-summaries/gemini-summary.client';
+import { GeminiSummaryClient } from '../src/integrations/gemini/gemini-summary.client';
 import {
   PATIENT_DATA_CHANGED,
   PatientDataChangedEvent,
-} from '../src/patient-summaries/patient-data-changed.event';
-import { PatientSummaryRateLimiterService } from '../src/patient-summaries/patient-summary-rate-limiter.service';
-import { PatientRole } from '../src/patients/entities/patient-role.enum';
-import { PatientStatus } from '../src/patients/entities/patient-status.enum';
-import { Patient } from '../src/patients/entities/patient.entity';
+} from '../src/modules/patient-summaries/patient-data-changed.event';
+import { PatientSummaryRateLimiterService } from '../src/modules/patient-summaries/patient-summary-rate-limiter.service';
+import { PatientRole } from '../src/database/entities/patient-role.enum';
+import { PatientStatus } from '../src/database/entities/patient-status.enum';
+import { Patient } from '../src/database/entities/patient.entity';
 import { Agent } from '../src/database/entities/agent.entity';
-import { PatientsService } from '../src/patients/patients.service';
-import { UsersService } from '../src/users/users.service';
+import { PatientsService } from '../src/modules/patients/patients.service';
+import { UsersService } from '../src/modules/users/users.service';
 import { Volunteer } from '../src/database/entities/volunteer.entity';
 
 type PatientListResponse = { data: Array<Record<string, unknown>> };
@@ -251,7 +251,9 @@ describe('Patient summaries (e2e)', () => {
           email: 'p10-enrollment@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL', agentId: assignedAgentId },
+        diagnosis: { diagnosis: 'Cancer diagnosis', mode: 'PARALLEL' },
       })
       .expect(201);
 
@@ -283,8 +285,9 @@ describe('Patient summaries (e2e)', () => {
           email: 'p10-rollback@example.test',
         },
         affiliationType: 'SELF',
+        healthPhase: 'CANCER_DIAGNOSIS',
         followUp: { type: 'CALL', agentId: assignedAgentId },
-        treatment: { treatmentType: 'Requires a diagnosis' },
+        treatments: [{ treatmentType: 'Requires a diagnosis' }],
       })
       .expect(400);
 
@@ -299,7 +302,7 @@ describe('Patient summaries (e2e)', () => {
     await dataSource.transaction(async (manager) => {
       await patients.upsertDetails(
         patient.id,
-        { currentDepartment: 'LIMA' },
+        { birthDepartment: 'LIMA' },
         manager,
       );
       await expect(

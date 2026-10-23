@@ -7,14 +7,14 @@ import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { Agent } from '../src/database/entities/agent.entity';
-import { CompanionPatient } from '../src/patients/entities/companion-patient.entity';
-import { PatientRole } from '../src/patients/entities/patient-role.enum';
-import { PatientStatus } from '../src/patients/entities/patient-status.enum';
-import { Patient } from '../src/patients/entities/patient.entity';
+import { CompanionPatient } from '../src/database/entities/companion-patient.entity';
+import { PatientRole } from '../src/database/entities/patient-role.enum';
+import { PatientStatus } from '../src/database/entities/patient-status.enum';
+import { Patient } from '../src/database/entities/patient.entity';
 import { UserRole } from '../src/database/entities/user-role.enum';
 import { User } from '../src/database/entities/user.entity';
 import { Volunteer } from '../src/database/entities/volunteer.entity';
-import { UsersService } from '../src/users/users.service';
+import { UsersService } from '../src/modules/users/users.service';
 
 describe('Patients, agents and volunteers (e2e)', () => {
   let app: INestApplication;
