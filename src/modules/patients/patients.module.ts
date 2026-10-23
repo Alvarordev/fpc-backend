@@ -28,6 +28,7 @@ import { PatientDetails } from '../../database/entities/patient-details.entity';
 import { PatientHealthPhaseHistory } from '../../database/entities/patient-health-phase-history.entity';
 import { PatientHealthSubcategoryHistory } from '../../database/entities/patient-health-subcategory-history.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
+import { PatientDiagnosisRevision } from '../../database/entities/patient-diagnosis-revision.entity';
 import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
 import { PatientSisAffiliation } from '../../database/entities/patient-sis-affiliation.entity';
@@ -77,6 +78,7 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
       PatientAddress,
       CompanionPatient,
       PatientDiagnosis,
+      PatientDiagnosisRevision,
       PatientInsurance,
       PatientMedicalAppointment,
       PatientSisAffiliation,

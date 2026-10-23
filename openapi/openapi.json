@@ -4382,6 +4382,78 @@
         ]
       }
     },
+    "/patients/{patientId}/diagnoses/{diagnosisId}": {
+      "patch": {
+        "description": "Updates the diagnosis in place (its id does not change) and records the overwritten values in the revision log. The diagnosis code cannot be changed; record a REPLACE diagnosis instead. changeReason is required.",
+        "operationId": "PatientDiagnosesController_update",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "diagnosisId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePatientDiagnosisDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientDiagnosisResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient, follow-up, diagnosis or health center not found"
+          },
+          "409": {
+            "description": "The diagnosis is not active"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Correct an active patient diagnosis",
+        "tags": [
+          "Patient diagnoses"
+        ]
+      }
+    },
     "/patients/{patientId}/insurance": {
       "post": {
         "operationId": "PatientInsuranceController_create",
@@ -10905,8 +10977,9 @@
         "properties": {
           "followUpQualityRating": {
             "type": "number",
-            "minimum": 1,
-            "maximum": 5
+            "minimum": 0,
+            "maximum": 5,
+            "description": "0 = No indica"
           }
         },
         "required": [
@@ -14829,6 +14902,84 @@
           "mode",
           "followUpId",
           "diagnosis"
+        ]
+      },
+      "UpdatePatientDiagnosisDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Follow-up in which the correction is recorded"
+          },
+          "changeReason": {
+            "type": "string",
+            "description": "Why the diagnosis is being corrected"
+          },
+          "cancerStage": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          },
+          "diagnosisDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "firstSymptomsDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "referredHealthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "hasReferral": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "diagnosisSpecialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "diagnosisSpecialtyOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "symptomLeadingToCheckup": {
+            "type": "string",
+            "nullable": true,
+            "deprecated": true,
+            "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
+          },
+          "waitTimeForDiagnosis": {
+            "nullable": true,
+            "description": "Omit to recompute from the dates when both are set; null clears it.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationDto"
+              }
+            ]
+          },
+          "isSepaActiveReferral": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "hasMedicalReport": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "followUpId",
+          "changeReason"
         ]
       },
       "CreatePatientInsuranceDto": {

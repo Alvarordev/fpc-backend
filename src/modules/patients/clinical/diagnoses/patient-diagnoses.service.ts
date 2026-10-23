@@ -16,6 +16,8 @@ import { HistoryVersioningService } from '../../history-versioning/history-versi
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
 import { CreatePatientDiagnosisDto } from './dto/create-patient-diagnosis.dto';
+import { UpdatePatientDiagnosisDto } from './dto/update-patient-diagnosis.dto';
+import { PatientDiagnosisRevision } from '../../../../database/entities/patient-diagnosis-revision.entity';
 import { User } from '../../../../database/entities/user.entity';
 import {
   durationFromElapsedDays,
@@ -200,6 +202,145 @@ export class PatientDiagnosesService {
           );
     await this.invalidations.markDirty(patientId, manager);
     return diagnosis;
+  }
+  /**
+   * Corrects an active diagnosis in place, keeping its id so treatments,
+   * documents and status events stay linked. The overwritten values are kept
+   * in patient_diagnosis_revisions.
+   */
+  async update(
+    patientId: string,
+    diagnosisId: string,
+    input: UpdatePatientDiagnosisDto,
+    user?: User,
+    manager?: EntityManager,
+  ): Promise<PatientDiagnosis> {
+    if (!manager)
+      return this.repository.manager.transaction((transactionManager) =>
+        this.update(patientId, diagnosisId, input, user, transactionManager),
+      );
+
+    await this.patients.assertPatientRole(
+      patientId,
+      PatientRole.PATIENT,
+      undefined,
+      manager,
+    );
+    if (
+      !(await manager.getRepository(FollowUp).existsBy({
+        id: input.followUpId,
+        subjectPatientId: patientId,
+      }))
+    )
+      throw new NotFoundException('Follow-up not found');
+
+    const diagnosisRepository = manager.getRepository(PatientDiagnosis);
+    const diagnosis = await diagnosisRepository.findOne({
+      where: { id: diagnosisId, patientId },
+    });
+    if (!diagnosis) throw new NotFoundException('Diagnosis not found');
+    if (!diagnosis.isCurrent)
+      throw new ConflictException('Only an active diagnosis can be corrected');
+    if (
+      input.referredHealthCenterId &&
+      !(await manager
+        .getRepository(HealthCenter)
+        .existsBy({ id: input.referredHealthCenterId, isActive: true }))
+    )
+      throw new NotFoundException('Referred health center not found');
+
+    const {
+      followUpId,
+      changeReason,
+      waitTimeForDiagnosis,
+      diagnosisSpecialty,
+      diagnosisSpecialtyOther,
+      cancerStage,
+      ...rest
+    } = input;
+    const next: Partial<PatientDiagnosis> = {};
+    for (const [key, value] of Object.entries(rest))
+      if (value !== undefined) (next as Record<string, unknown>)[key] = value;
+
+    // Re-sending the same specialty without its "other" text keeps that text.
+    const keepsSpecialty =
+      diagnosisSpecialty === diagnosis.diagnosisSpecialty &&
+      diagnosisSpecialtyOther === undefined;
+    if (diagnosisSpecialty !== undefined && !keepsSpecialty) {
+      const resolved = await this.catalogValues.resolveOptional(
+        'medical_specialty',
+        diagnosisSpecialty ?? undefined,
+        { otherText: diagnosisSpecialtyOther ?? undefined, manager },
+      );
+      next.diagnosisSpecialty = resolved?.code ?? null;
+      next.diagnosisSpecialtyOther = resolved?.other ?? null;
+    }
+    if (cancerStage !== undefined) {
+      const resolved = await this.catalogValues.resolveOptional(
+        'cancer_stage',
+        cancerStage ?? undefined,
+        { manager },
+      );
+      next.cancerStage = resolved?.code ?? null;
+    }
+
+    const firstSymptomsDate =
+      next.firstSymptomsDate !== undefined
+        ? next.firstSymptomsDate
+        : diagnosis.firstSymptomsDate;
+    const diagnosisDate =
+      next.diagnosisDate !== undefined
+        ? next.diagnosisDate
+        : diagnosis.diagnosisDate;
+    if (
+      firstSymptomsDate &&
+      diagnosisDate &&
+      new Date(firstSymptomsDate) > new Date(diagnosisDate)
+    )
+      throw new BadRequestException(
+        'firstSymptomsDate must not be after diagnosisDate',
+      );
+    if (waitTimeForDiagnosis !== undefined) {
+      next.waitTimeForDiagnosis = normalizeDuration(waitTimeForDiagnosis);
+      next.waitTimeSource = waitTimeForDiagnosis
+        ? WaitTimeSource.REPORTED
+        : null;
+    } else if (firstSymptomsDate && diagnosisDate) {
+      const days = Math.round(
+        (new Date(diagnosisDate).getTime() -
+          new Date(firstSymptomsDate).getTime()) /
+          (1000 * 60 * 60 * 24),
+      );
+      next.waitTimeForDiagnosis = normalizeDuration(
+        durationFromElapsedDays(days),
+      );
+      next.waitTimeSource = WaitTimeSource.COMPUTED;
+    }
+
+    // Only fields that actually change are written and logged.
+    const previousValues: Record<string, unknown> = {};
+    const changes: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(next)) {
+      const previous = (diagnosis as unknown as Record<string, unknown>)[key];
+      if (JSON.stringify(previous ?? null) === JSON.stringify(value ?? null))
+        continue;
+      previousValues[key] = previous ?? null;
+      changes[key] = value;
+    }
+    if (Object.keys(changes).length === 0) return diagnosis;
+
+    const reason = changeReason.trim();
+    await manager.getRepository(PatientDiagnosisRevision).save({
+      diagnosisId: diagnosis.id,
+      followUpId,
+      changedById: user?.id ?? null,
+      changeReason: reason,
+      previousValues,
+    });
+    Object.assign(diagnosis, changes, { changeReason: reason });
+    const saved = await diagnosisRepository.save(diagnosis);
+    await this.invalidations.markDirty(patientId, manager);
+    return saved;
   }
   async findAll(patientId: string, user: User) {
     await this.patients.assertCanRead(patientId, user);
