@@ -30,11 +30,13 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  const swaggerDocument = SwaggerModule.createDocument(
-    app,
-    createOpenApiConfig(),
-  );
-  SwaggerModule.setup('docs', app, swaggerDocument);
+  if (configService.get<boolean>('SWAGGER_ENABLED')) {
+    const swaggerDocument = SwaggerModule.createDocument(
+      app,
+      createOpenApiConfig(),
+    );
+    SwaggerModule.setup('docs', app, swaggerDocument);
+  }
 
   await app.listen(configService.getOrThrow<number>('PORT'));
 }
