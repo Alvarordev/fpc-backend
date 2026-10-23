@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { DeactivationReason } from './deactivation-reason.enum';
+import { IdentityDocumentType } from './identity-document-type.enum';
 import { PatientActivityStatus } from './patient-activity-status.enum';
 import { PatientDetails } from './patient-details.entity';
 import { PatientRole } from './patient-role.enum';
@@ -28,6 +29,10 @@ import { PatientStatus } from './patient-status.enum';
   'CHK_patients_activity_deactivation',
   '(("activity_status" IN (\'ACTIVE\', \'REACTIVE\') AND "deactivation_reason" IS NULL AND "deactivated_at" IS NULL AND "deactivation_reason_detail" IS NULL) OR ("activity_status" = \'INACTIVE\' AND "deactivation_reason" IS NOT NULL AND "deactivated_at" IS NOT NULL AND (("deactivation_reason" = \'OTHER\' AND "deactivation_reason_detail" IS NOT NULL) OR ("deactivation_reason" != \'OTHER\' AND "deactivation_reason_detail" IS NULL)))))',
 )
+@Check(
+  'CHK_patients_document_type',
+  `"document_type" IS NULL OR "document_type" IN ('DNI', 'CE', 'CPP')`,
+)
 @Index('IDX_patients_dni', ['dni'])
 @Index('IDX_patients_role', ['role'])
 @Index('IDX_patients_status', ['status'])
@@ -45,6 +50,10 @@ export class Patient {
 
   @Column({ type: 'varchar', length: 20, unique: true, nullable: true })
   dni!: string | null;
+
+  /** Type of the identity document stored in `dni`. */
+  @Column({ name: 'document_type', type: 'varchar', length: 10, nullable: true })
+  documentType!: IdentityDocumentType | null;
 
   @Column({ name: 'birth_date', type: 'date', nullable: true })
   birthDate!: string | null;

@@ -3,11 +3,14 @@ import {
   IsBoolean,
   IsDateString,
   IsEmail,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
 } from 'class-validator';
+import { IdentityDocumentType } from '../../../database/entities/identity-document-type.enum';
+import { MatchesIdentityDocumentType } from '../../../shared/identity-document/identity-document.validator';
 
 export class CreatePatientDto {
   @ApiProperty()
@@ -27,10 +30,17 @@ export class CreatePatientDto {
   @MaxLength(50)
   secondaryPhone?: string;
 
+  @ApiPropertyOptional({ enum: IdentityDocumentType })
+  @IsOptional()
+  @IsIn(Object.values(IdentityDocumentType))
+  documentType?: IdentityDocumentType;
+
+  /** Identity document number (DNI, CE or CPP per `documentType`). */
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   @MaxLength(20)
+  @MatchesIdentityDocumentType()
   dni?: string;
 
   @ApiPropertyOptional()

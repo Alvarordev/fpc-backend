@@ -2789,7 +2789,9 @@
                 "treatment_type",
                 "country",
                 "chemotherapy_route",
-                "surgical_procedure"
+                "surgical_procedure",
+                "location_share_status",
+                "temporary_housing_type"
               ],
               "type": "string"
             }
@@ -9496,6 +9498,14 @@
             "type": "string",
             "maxLength": 50
           },
+          "documentType": {
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
+          },
           "dni": {
             "type": "string",
             "maxLength": 20
@@ -9568,6 +9578,14 @@
             "type": "string",
             "maxLength": 50
           },
+          "documentType": {
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
+          },
           "dni": {
             "type": "string",
             "maxLength": 20
@@ -9628,6 +9646,14 @@
           "secondaryPhone": {
             "type": "string",
             "maxLength": 50
+          },
+          "documentType": {
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
           },
           "dni": {
             "type": "string",
@@ -10265,6 +10291,16 @@
             ],
             "type": "string"
           },
+          "travelTimeToHospital": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "averageLodgingCostPeriod": {
+            "enum": [
+              "NIGHT",
+              "MONTH"
+            ],
+            "type": "string"
+          },
           "type": {
             "enum": [
               "PERMANENT",
@@ -10292,6 +10328,28 @@
           "locationUrl": {
             "type": "string",
             "format": "uri"
+          },
+          "locationShareStatus": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "locationShareStatusOther": {
+            "type": "string"
+          },
+          "housingType": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "housingTypeOther": {
+            "type": "string"
+          },
+          "shelterName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "averageLodgingCost": {
+            "type": "number",
+            "minimum": 0
           },
           "dniMatchesAddress": {
             "type": "boolean"
@@ -11875,7 +11933,9 @@
               "treatment_type",
               "country",
               "chemotherapy_route",
-              "surgical_procedure"
+              "surgical_procedure",
+              "location_share_status",
+              "temporary_housing_type"
             ],
             "type": "string"
           },
@@ -12580,6 +12640,15 @@
             "type": "string",
             "nullable": true
           },
+          "documentType": {
+            "nullable": true,
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
+          },
           "birthDate": {
             "type": "string",
             "nullable": true,
@@ -12662,6 +12731,7 @@
           "fullName",
           "email",
           "dni",
+          "documentType",
           "birthDate",
           "gender",
           "primaryPhone",
@@ -12899,6 +12969,15 @@
             "type": "string",
             "nullable": true
           },
+          "documentType": {
+            "nullable": true,
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
+          },
           "birthDate": {
             "type": "string",
             "nullable": true,
@@ -13015,6 +13094,7 @@
           "fullName",
           "email",
           "dni",
+          "documentType",
           "birthDate",
           "gender",
           "primaryPhone",
@@ -14573,6 +14653,15 @@
             "type": "string",
             "nullable": true
           },
+          "documentType": {
+            "nullable": true,
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
+          },
           "birthDate": {
             "type": "string",
             "nullable": true,
@@ -14728,6 +14817,7 @@
           "fullName",
           "email",
           "dni",
+          "documentType",
           "birthDate",
           "gender",
           "primaryPhone",
@@ -14770,6 +14860,14 @@
           "secondaryPhone": {
             "type": "string",
             "maxLength": 50
+          },
+          "documentType": {
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
           },
           "dni": {
             "type": "string",
@@ -15443,6 +15541,16 @@
             ],
             "type": "string"
           },
+          "travelTimeToHospital": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "averageLodgingCostPeriod": {
+            "enum": [
+              "NIGHT",
+              "MONTH"
+            ],
+            "type": "string"
+          },
           "followUpId": {
             "type": "string",
             "format": "uuid"
@@ -15474,6 +15582,28 @@
           "locationUrl": {
             "type": "string",
             "format": "uri"
+          },
+          "locationShareStatus": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "locationShareStatusOther": {
+            "type": "string"
+          },
+          "housingType": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "housingTypeOther": {
+            "type": "string"
+          },
+          "shelterName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "averageLodgingCost": {
+            "type": "number",
+            "minimum": 0
           },
           "dniMatchesAddress": {
             "type": "boolean"
@@ -15540,6 +15670,47 @@
             "nullable": true,
             "format": "uri"
           },
+          "locationShareStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "locationShareStatusOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "housingType": {
+            "type": "string",
+            "nullable": true
+          },
+          "housingTypeOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "shelterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "travelTimeToHospital": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DurationResponseDto"
+              }
+            ]
+          },
+          "averageLodgingCost": {
+            "type": "number",
+            "nullable": true
+          },
+          "averageLodgingCostPeriod": {
+            "nullable": true,
+            "enum": [
+              "NIGHT",
+              "MONTH"
+            ],
+            "type": "string"
+          },
           "dniMatchesAddress": {
             "type": "boolean",
             "nullable": true
@@ -15574,6 +15745,14 @@
           "department",
           "reference",
           "locationUrl",
+          "locationShareStatus",
+          "locationShareStatusOther",
+          "housingType",
+          "housingTypeOther",
+          "shelterName",
+          "travelTimeToHospital",
+          "averageLodgingCost",
+          "averageLodgingCostPeriod",
           "dniMatchesAddress",
           "validFrom",
           "validTo",
@@ -15614,6 +15793,16 @@
             ],
             "type": "string"
           },
+          "travelTimeToHospital": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "averageLodgingCostPeriod": {
+            "enum": [
+              "NIGHT",
+              "MONTH"
+            ],
+            "type": "string"
+          },
           "followUpId": {
             "type": "string",
             "format": "uuid"
@@ -15645,6 +15834,28 @@
           "locationUrl": {
             "type": "string",
             "format": "uri"
+          },
+          "locationShareStatus": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "locationShareStatusOther": {
+            "type": "string"
+          },
+          "housingType": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "housingTypeOther": {
+            "type": "string"
+          },
+          "shelterName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "averageLodgingCost": {
+            "type": "number",
+            "minimum": 0
           },
           "dniMatchesAddress": {
             "type": "boolean"
@@ -17180,6 +17391,14 @@
             "type": "string",
             "maxLength": 50
           },
+          "documentType": {
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
+          },
           "dni": {
             "type": "string",
             "maxLength": 20
@@ -18279,6 +18498,16 @@
             ],
             "type": "string"
           },
+          "travelTimeToHospital": {
+            "$ref": "#/components/schemas/DurationDto"
+          },
+          "averageLodgingCostPeriod": {
+            "enum": [
+              "NIGHT",
+              "MONTH"
+            ],
+            "type": "string"
+          },
           "type": {
             "enum": [
               "PERMANENT",
@@ -18306,6 +18535,28 @@
           "locationUrl": {
             "type": "string",
             "format": "uri"
+          },
+          "locationShareStatus": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "locationShareStatusOther": {
+            "type": "string"
+          },
+          "housingType": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "housingTypeOther": {
+            "type": "string"
+          },
+          "shelterName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "averageLodgingCost": {
+            "type": "number",
+            "minimum": 0
           },
           "dniMatchesAddress": {
             "type": "boolean"

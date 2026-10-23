@@ -408,7 +408,12 @@ export async function upsertHistoricalClinicalData(
         throw new NotFoundException(
           'Address not found for this historical follow-up',
         );
-      await repository.save(Object.assign(existing, values));
+      await repository.save(
+        repository.merge(
+          existing,
+          await services.addresses.normalize(values, manager),
+        ),
+      );
     } else {
       await services.addresses.create(
         patientId,

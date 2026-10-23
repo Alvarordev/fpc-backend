@@ -29,6 +29,7 @@ import { PatientPsychooncologySupportAssessment } from '../../../database/entiti
 import { PatientPsychooncologySupportAssessmentResponseDto } from '../clinical/psychooncology-support/dto/patient-psychooncology-support-assessment-response.dto';
 import { PatientNonOncologicalFollowUp } from '../../../database/entities/patient-non-oncological-follow-up.entity';
 import { PatientNonOncologicalFollowUpResponseDto } from '../clinical/non-oncological-follow-up/dto/patient-non-oncological-follow-up-response.dto';
+import { IdentityDocumentType } from '../../../database/entities/identity-document-type.enum';
 
 export class PatientHealthPhaseHistoryResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -239,6 +240,9 @@ export class PatientResponseDto {
   @ApiProperty({ nullable: true })
   dni!: string | null;
 
+  @ApiProperty({ enum: IdentityDocumentType, nullable: true })
+  documentType!: IdentityDocumentType | null;
+
   @ApiProperty({ format: 'date', nullable: true })
   birthDate!: string | null;
 
@@ -287,6 +291,7 @@ export class PatientResponseDto {
       fullName: patient.fullName,
       email: patient.email,
       dni: patient.dni,
+      documentType: patient.documentType,
       birthDate: patient.birthDate,
       gender: patient.gender,
       primaryPhone: patient.primaryPhone,

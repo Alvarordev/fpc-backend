@@ -1,6 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import {
+  DataSource,
+  type DeepPartial,
+  EntityManager,
+  Repository,
+} from 'typeorm';
 import { PatientAddress } from '../../../database/entities/patient-address.entity';
 import { PatientRole } from '../../../database/entities/patient-role.enum';
 import { PatientsService } from '../patients.service';
@@ -8,6 +17,8 @@ import { PatientSummaryInvalidationService } from '../../patient-summaries/patie
 import { CreatePatientAddressDto } from './dto/create-patient-address.dto';
 import { UpdatePatientAddressDto } from './dto/update-patient-address.dto';
 import { User } from '../../../database/entities/user.entity';
+import { CatalogValueService } from '../../catalogs/catalog-value.service';
+import { normalizeDuration } from '../../../shared/duration/duration.util';
 
 @Injectable()
 export class PatientAddressesService {
@@ -17,7 +28,56 @@ export class PatientAddressesService {
     private readonly patients: PatientsService,
     private readonly invalidations: PatientSummaryInvalidationService,
     private readonly dataSource: DataSource,
+    private readonly catalogValues: CatalogValueService,
   ) {}
+
+  /** Resolves catalog answers and the travel duration into stored columns. */
+  async normalize(
+    input: UpdatePatientAddressDto,
+    manager?: EntityManager,
+  ): Promise<DeepPartial<PatientAddress>> {
+    const {
+      locationShareStatus,
+      locationShareStatusOther,
+      housingType,
+      housingTypeOther,
+      travelTimeToHospital,
+      averageLodgingCost,
+      ...rest
+    } = input;
+    const values: DeepPartial<PatientAddress> = { ...rest };
+    if (locationShareStatus !== undefined) {
+      const resolved = await this.catalogValues.resolveOptional(
+        'location_share_status',
+        locationShareStatus,
+        { otherText: locationShareStatusOther, manager },
+      );
+      values.locationShareStatus = resolved?.code ?? null;
+      values.locationShareStatusOther = resolved?.other ?? null;
+    }
+    if (housingType !== undefined) {
+      const resolved = await this.catalogValues.resolveOptional(
+        'temporary_housing_type',
+        housingType,
+        { otherText: housingTypeOther, manager },
+      );
+      values.housingType = resolved?.code ?? null;
+      values.housingTypeOther = resolved?.other ?? null;
+    }
+    if (travelTimeToHospital !== undefined)
+      values.travelTimeToHospital = normalizeDuration(travelTimeToHospital);
+    if (averageLodgingCost !== undefined) {
+      // A cost without its period (night or month) cannot be compared.
+      if (averageLodgingCost !== null && !input.averageLodgingCostPeriod)
+        throw new BadRequestException(
+          'Indica si el gasto promedio del alojamiento es por noche o por mes',
+        );
+      values.averageLodgingCost =
+        averageLodgingCost === null ? null : String(averageLodgingCost);
+      if (averageLodgingCost === null) values.averageLodgingCostPeriod = null;
+    }
+    return values;
+  }
 
   async create(
     patientId: string,
@@ -42,8 +102,9 @@ export class PatientAddressesService {
           .where('patient_id = :patientId', { patientId })
           .execute();
       }
+      const values = await this.normalize(input, entityManager);
       const address = await repository.save(
-        repository.create({ ...input, patientId, isPrimary }),
+        repository.create({ ...values, patientId, isPrimary }),
       );
       await this.invalidations.markDirty(patientId, entityManager);
       return address;
@@ -72,7 +133,8 @@ export class PatientAddressesService {
           .where('patient_id = :patientId', { patientId })
           .execute();
       }
-      const saved = await repository.save(Object.assign(address, input));
+      const values = await this.normalize(input, manager);
+      const saved = await repository.save(repository.merge(address, values));
       await this.invalidations.markDirty(patientId, manager);
       return saved;
     });

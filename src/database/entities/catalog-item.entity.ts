@@ -31,6 +31,8 @@ export const CATALOG_KINDS = [
   'country',
   'chemotherapy_route',
   'surgical_procedure',
+  'location_share_status',
+  'temporary_housing_type',
 ] as const;
 
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
@@ -78,6 +80,8 @@ export const CATALOG_KIND_LABELS: Record<CatalogKind, string> = {
   country: 'País',
   chemotherapy_route: 'Vía de quimioterapia',
   surgical_procedure: 'Procedimiento quirúrgico',
+  location_share_status: 'Ubicación web de la vivienda',
+  temporary_housing_type: 'Tipo de vivienda provisional',
 };
 
 export const RESERVED_CATALOG_CODE = 'OTRO';
