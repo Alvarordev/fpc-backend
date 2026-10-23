@@ -7,7 +7,10 @@ import { PatientDiagnosisMode } from '../../database/entities/patient-diagnosis-
 import { AffiliationType } from '../../database/entities/enrollment.entity';
 
 type PrivateValidationMethods = {
-  validateClinicalBranches(input: CreateEnrollmentDto): void;
+  validateClinicalBranches(
+    input: CreateEnrollmentDto,
+    historical?: boolean,
+  ): void;
   validateContacts(contacts: CreateEnrollmentDto['contacts']): void;
 };
 
@@ -18,13 +21,17 @@ function validationMethods() {
 function validateClinical(
   input: Partial<CreateEnrollmentDto>,
   healthPhase = PatientHealthPhase.SIGNS_AND_SYMPTOMS,
+  historical = false,
 ) {
   const service = validationMethods();
   return () =>
-    service.validateClinicalBranches({
-      ...input,
-      healthPhase,
-    } as CreateEnrollmentDto);
+    service.validateClinicalBranches(
+      {
+        ...input,
+        healthPhase,
+      } as CreateEnrollmentDto,
+      historical,
+    );
 }
 
 describe('EnrollmentsService phase-one validation', () => {
@@ -94,9 +101,7 @@ describe('EnrollmentsService phase-one validation', () => {
         affiliationType: AffiliationType.SELF,
         psychooncologySupportAssessment: { excessiveWorry: true },
       }),
-    ).toThrow(
-      'Psycho-oncology support assessment requires a self enrollment with a cancer diagnosis',
-    );
+    ).toThrow('Psycho-oncology support assessment requires a cancer diagnosis');
   });
 
   it('rejects psycho-oncology support answers from a third party', () => {
@@ -115,6 +120,48 @@ describe('EnrollmentsService phase-one validation', () => {
     ).toThrow(
       'Psycho-oncology support assessment requires a self enrollment with a cancer diagnosis',
     );
+  });
+
+  it('accepts psycho-oncology support answers from a third party in a historical load', () => {
+    expect(
+      validateClinical(
+        {
+          affiliationType: AffiliationType.FAMILY_FRIEND,
+          diagnosis: {
+            diagnosis: 'Breast cancer',
+            mode: PatientDiagnosisMode.PARALLEL,
+          },
+          psychooncologySupportAssessment: { emotionalDistressScore: 6 },
+          currentlyAttendingConsultations: false,
+          notAttendingConsultationsNote: 'Sin citas registradas',
+          currentlyReceivingTreatment: true,
+        },
+        PatientHealthPhase.CANCER_DIAGNOSIS,
+        true,
+      ),
+    ).not.toThrow();
+  });
+
+  it('allows several secondary contacts', () => {
+    const service = validationMethods();
+
+    expect(() =>
+      service.validateContacts([
+        {
+          role: CompanionContactRole.PRIMARY,
+          source: EnrollmentContactSource.PATIENT,
+        },
+        {
+          role: CompanionContactRole.SECONDARY,
+          source: EnrollmentContactSource.CALLER,
+        },
+        {
+          role: CompanionContactRole.SECONDARY,
+          source: EnrollmentContactSource.NEW,
+          person: { fullName: 'Ana Pérez', primaryPhone: '999888777' },
+        },
+      ] as CreateEnrollmentDto['contacts']),
+    ).not.toThrow();
   });
 
   it('accepts optional psycho-oncology support answers from the patient', () => {

@@ -238,7 +238,8 @@ export class PatientsService {
       input.isPrimaryContact,
       null,
     );
-    if (contactRole)
+    // Only the primary contact is unique; a patient may have several secondary ones.
+    if (contactRole === CompanionContactRole.PRIMARY)
       await repository.update(
         { patientId, contactRole },
         { contactRole: null, isPrimaryContact: false },
@@ -278,7 +279,7 @@ export class PatientsService {
         input.isPrimaryContact,
         link.contactRole,
       );
-      if (contactRole)
+      if (contactRole === CompanionContactRole.PRIMARY)
         await repository.update(
           { patientId, contactRole },
           { contactRole: null, isPrimaryContact: false },
@@ -888,7 +889,7 @@ export class PatientsService {
       isPrimaryContact,
       null,
     );
-    if (resolvedContactRole)
+    if (resolvedContactRole === CompanionContactRole.PRIMARY)
       await links.update(
         { patientId, contactRole: resolvedContactRole },
         { contactRole: null, isPrimaryContact: false },

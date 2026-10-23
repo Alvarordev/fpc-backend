@@ -178,7 +178,7 @@ export class EnrollmentsService {
       delete followUpValues.status;
       const usesExplicitContacts = contacts !== undefined;
       this.validateContacts(contacts);
-      this.validateClinicalBranches(input);
+      this.validateClinicalBranches(input, options.historical ?? false);
       if (
         healthPhase !== PatientHealthPhase.CANCER_DIAGNOSIS &&
         healthPhase !== PatientHealthPhase.SIGNS_AND_SYMPTOMS
@@ -696,14 +696,6 @@ export class EnrollmentsService {
       );
     if (
       contacts.filter(
-        (contact) => contact.role === CompanionContactRole.SECONDARY,
-      ).length > 1
-    )
-      throw new BadRequestException(
-        'contacts may contain at most one SECONDARY contact',
-      );
-    if (
-      contacts.filter(
         (contact) => contact.source === EnrollmentContactSource.CALLER,
       ).length > 1
     )
@@ -759,16 +751,21 @@ export class EnrollmentsService {
 
   private validateClinicalBranches(
     input: CreateEnrollmentDto | HistoricalEnrollmentInput,
+    historical = false,
   ) {
     const { symptomReport, medicalAppointments, healthPhase } = input;
-    if (
-      input.psychooncologySupportAssessment &&
-      (healthPhase !== PatientHealthPhase.CANCER_DIAGNOSIS ||
-        input.affiliationType !== AffiliationType.SELF)
-    )
-      throw new BadRequestException(
-        'Psycho-oncology support assessment requires a self enrollment with a cancer diagnosis',
-      );
+    if (input.psychooncologySupportAssessment) {
+      if (healthPhase !== PatientHealthPhase.CANCER_DIAGNOSIS)
+        throw new BadRequestException(
+          'Psycho-oncology support assessment requires a cancer diagnosis',
+        );
+      // Historical records may carry the patient's answers even when a
+      // relative made the call; live enrollments ask the patient directly.
+      if (!historical && input.affiliationType !== AffiliationType.SELF)
+        throw new BadRequestException(
+          'Psycho-oncology support assessment requires a self enrollment with a cancer diagnosis',
+        );
+    }
     if (input.diagnosis && input.diagnoses)
       throw new BadRequestException(
         'Provide either diagnosis or diagnoses, not both',

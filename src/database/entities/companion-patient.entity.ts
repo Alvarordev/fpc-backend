@@ -24,10 +24,6 @@ import { CompanionContactRole } from './companion-contact-role.enum';
   unique: true,
   where: `"contact_role" = 'PRIMARY'`,
 })
-@Index('UQ_companion_patient_secondary_contact', ['patientId'], {
-  unique: true,
-  where: `"contact_role" = 'SECONDARY'`,
-})
 export class CompanionPatient {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'companion_id', type: 'uuid' }) companionId!: string;
