@@ -27,6 +27,8 @@ import { PatientSummariesModule } from './modules/patient-summaries/patient-summ
 import { CallCenterModule } from './modules/call-center/call-center.module';
 import { VolunteerCalendarModule } from './modules/volunteers/calendar/volunteer-calendar.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { SurveysModule } from './modules/surveys/surveys.module';
+import { ExportsModule } from './modules/exports/exports.module';
 import { MedicalAppointmentsModule } from './modules/patients/clinical/medical-appointments/medical-appointments.module';
 import { N8nModule } from './integrations/n8n/n8n.module';
 import { EmbeddedUnderscoreNamingStrategy } from './database/embedded-underscore-naming.strategy';
@@ -94,6 +96,8 @@ import { HistoricalRecordsModule } from './modules/historical-records/historical
     PatientSummariesModule,
     CallCenterModule,
     DashboardModule,
+    SurveysModule,
+    ExportsModule,
     HistoricalRecordsModule,
     AuditModule,
   ],
