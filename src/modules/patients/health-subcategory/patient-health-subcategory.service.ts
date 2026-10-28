@@ -43,8 +43,9 @@ export function deriveCancerSubcategory(
   const situations = treatments
     .map((item) => item.treatmentSituation)
     .filter(
-      (situation): situation is string =>
-        Boolean(situation) && situation !== TreatmentSituation.NO_APLICA,
+      (situation): situation is TreatmentSituation =>
+        Boolean(situation) &&
+        (situation as TreatmentSituation) !== TreatmentSituation.NO_APLICA,
     );
   if (!situations.length) return null;
   if (

@@ -1,3 +1,4 @@
+import { EmailModule } from '../../integrations/email/email.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Patient } from '../../database/entities/patient.entity';
@@ -23,6 +24,7 @@ import { PatientSummariesModule } from '../patient-summaries/patient-summaries.m
       Patient,
     ]),
     PatientAccessModule,
+    EmailModule,
     PatientSummariesModule,
   ],
   controllers: [

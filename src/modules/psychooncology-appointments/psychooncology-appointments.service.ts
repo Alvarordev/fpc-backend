@@ -1,3 +1,4 @@
+import { EmailService } from '../../integrations/email/email.service';
 import {
   BadRequestException,
   ConflictException,
@@ -66,6 +67,7 @@ const RESULT_KEYS = new Set([
 @Injectable()
 export class PsychooncologyAppointmentsService {
   constructor(
+    private readonly email: EmailService,
     @InjectRepository(PsychooncologyAppointment)
     private readonly appointments: Repository<PsychooncologyAppointment>,
     private readonly dataSource: DataSource,
@@ -671,6 +673,29 @@ export class PsychooncologyAppointmentsService {
         .execute(),
     );
     return result.affected ?? 0;
+  }
+
+  /**
+   * Emails every automatic reminder that is due. Without an email for the
+   * patient it stays pending, for the agent to send it by hand.
+   */
+  async sendDueReminders(now = new Date()) {
+    let sent = 0;
+    for (const appointment of await this.findDueReminders(now)) {
+      const to = appointment.patientEmail ?? appointment.patient?.email;
+      if (!to) continue;
+      const result = await this.email.send({
+        to,
+        subject: 'Recordatorio de su sesión de psicooncología',
+        text: this.toReminder(appointment).message,
+      });
+      if (result.status !== 'SENT') continue;
+      await this.appointments.update(appointment.id, {
+        reminderSentAt: new Date(),
+      });
+      sent++;
+    }
+    return sent;
   }
 
   /** Sessions whose automatic reminder is due and not yet sent. */

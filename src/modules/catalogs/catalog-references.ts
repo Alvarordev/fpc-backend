@@ -56,9 +56,8 @@ export const CATALOG_REFERENCES: Partial<
   sepa_transport: [
     { table: 'patient_details', column: 'transportation_sepa_provider' },
   ],
-  program_dropout_reason: [
-    { table: 'patient_details', column: 'program_dropout_reason_code' },
-  ],
+  alert_category: [{ table: 'alerts', column: 'category' }],
+  alert_derivation_entity: [{ table: 'alerts', column: 'derived_to' }],
   patient_health_phase: [
     { table: 'patient_details', column: 'health_phase' },
     { table: 'patient_health_phase_history', column: 'health_phase' },

@@ -7,6 +7,8 @@ import { PsychooncologyAppointmentsService } from './psychooncology-appointments
 @Injectable()
 export class PsychooncologyAppointmentsJob {
   private readonly logger = new Logger(PsychooncologyAppointmentsJob.name);
+  // Single instance: skip a tick while the previous one is still sending.
+  private sending = false;
 
   constructor(
     private readonly appointments: PsychooncologyAppointmentsService,
@@ -23,7 +25,18 @@ export class PsychooncologyAppointmentsJob {
       this.logger.log(`Marked ${affected} psycho-oncology sessions as overdue`);
   }
 
-  // TODO(reminders): once the mail service exists, add a frequent @Cron here
-  // that sends `appointments.findDueReminders()` to the patient email (text
-  // from the reminder message) and stamps `reminder_sent_at`.
+  @Cron('0 */5 * * * *')
+  async sendDueReminders() {
+    if (this.sending) return;
+    this.sending = true;
+    try {
+      const sent = await this.audit.run(
+        { actorUserId: null, context: AuditContextKind.SYSTEM },
+        () => this.appointments.sendDueReminders(),
+      );
+      if (sent) this.logger.log(`Emailed ${sent} psycho-oncology reminders`);
+    } finally {
+      this.sending = false;
+    }
+  }
 }

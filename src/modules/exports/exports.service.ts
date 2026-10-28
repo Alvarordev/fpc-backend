@@ -137,7 +137,7 @@ const SHEETS: SheetDefinition[] = [
     name: 'Psicooncología',
     sql: `
       SELECT ${PATIENT_KEY}, t.id, t.beneficiary_type, t.status, t.session_number,
-        v.full_name AS volunteer_name, t.scheduled_at, t.completed_at,
+        CONCAT_WS(' ', v.first_name, v.last_name) AS volunteer_name, t.scheduled_at, t.completed_at,
         t.topic_addressed, t.created_at
       FROM psychooncology_appointments t
       JOIN patients p ON p.id = t.patient_id
