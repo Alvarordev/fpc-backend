@@ -189,6 +189,24 @@ extraer del código y validar.
   desconocido: la indexación debe escalar.
 - **IA7** Solo da información al agente; no redacta respuestas para el paciente.
 
+### Implementado: asistente de datos (IA2, IA4, IA5) — 2026-10-28
+- Módulo `src/modules/assistant/`. Endpoints (solo ADMIN y FOUNDATION, 15 preguntas/min):
+  `POST /assistant/messages` (`{ message, conversationId? }`), `GET /assistant/conversations`,
+  `GET /assistant/conversations/:id`, `DELETE /assistant/conversations/:id`.
+- Bucle de Gemini con function calling, máximo 8 pasos. Las herramientas son de solo lectura y
+  validan sus argumentos con los DTO de la API: `get_indicators` (los 7 grupos del dashboard),
+  `search_health_centers`, `search_patients`, `list_alerts` y `get_call_center_workload`. Cada
+  herramienta declara sus roles. Herramienta nueva = una entrada más en `assistant-tools.service.ts`.
+- IA4: los pacientes viajan al modelo como `P-001…`. El mapa vive en
+  `assistant_conversations.pseudonyms`; la API rehidrata el nombre y devuelve `patients`
+  (token, id, nombre) para enlazar a la ficha. Lo que el usuario escribe en la pregunta sí llega al
+  modelo tal cual.
+- Registro: `assistant_messages` guarda pregunta, respuesta (con seudónimos), herramientas usadas
+  con sus argumentos y resultado, modelo y tokens. La respuesta trae `sources` para citarlas.
+- Modelos: `GEMINI_ASSISTANT_MODELS` (lista en orden; default
+  `gemini-3-flash-preview,gemini-2.5-flash`). Ante 429/5xx reintenta y pasa al siguiente.
+- Pendiente: pantalla en el front; respuesta en streaming si la latencia molesta.
+
 ## 17. Hallazgos del código (para la auditoría)
 
 - `health-center.category` es texto libre opcional; no hay nivel de atención normalizado.

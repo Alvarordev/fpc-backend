@@ -33,6 +33,7 @@ import { ExportsModule } from './modules/exports/exports.module';
 import { MedicalAppointmentsModule } from './modules/patients/clinical/medical-appointments/medical-appointments.module';
 import { N8nModule } from './integrations/n8n/n8n.module';
 import { EmbeddedUnderscoreNamingStrategy } from './database/embedded-underscore-naming.strategy';
+import { AssistantModule } from './modules/assistant/assistant.module';
 import { HistoricalRecordsModule } from './modules/historical-records/historical-records.module';
 
 @Module({
@@ -101,6 +102,7 @@ import { HistoricalRecordsModule } from './modules/historical-records/historical
     SurveysModule,
     ExportsModule,
     HistoricalRecordsModule,
+    AssistantModule,
     AuditModule,
   ],
 })

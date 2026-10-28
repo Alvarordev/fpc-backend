@@ -41,6 +41,11 @@ Generado desde openapi/openapi.json. Fuente de verdad para adaptar el front.
 - DELETE /volunteers/{volunteerId}/availability/recurrences/{recurrenceId}
 - POST /volunteers/{volunteerId}/availability/recurring
 
+- POST /assistant/messages
+- GET /assistant/conversations
+- GET /assistant/conversations/{id}
+- DELETE /assistant/conversations/{id}
+
 ## Endpoints eliminados
 
 ## Schemas con propiedades cambiadas

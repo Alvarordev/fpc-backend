@@ -46,6 +46,9 @@ export const envValidationSchema = Joi.object({
   SEED_STAGING_FORCE: Joi.boolean().optional(),
   GEMINI_API_KEY: Joi.string().trim().optional().allow(''),
   GEMINI_MODEL: Joi.string().trim().default('gemini-2.0-flash'),
+  GEMINI_ASSISTANT_MODELS: Joi.string()
+    .trim()
+    .default('gemini-3-flash-preview,gemini-2.5-flash'),
   PATIENT_SUMMARY_RATE_LIMIT: Joi.number().integer().min(1).default(10),
   PATIENT_SUMMARY_RATE_LIMIT_WINDOW_SECONDS: Joi.number()
     .integer()

@@ -8,5 +8,6 @@ import { HealthCentersService } from './health-centers.service';
   imports: [TypeOrmModule.forFeature([HealthCenter, UbigeoDistrict])],
   controllers: [HealthCentersController],
   providers: [HealthCentersService],
+  exports: [HealthCentersService],
 })
 export class HealthCentersModule {}

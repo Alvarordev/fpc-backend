@@ -12,6 +12,9 @@ import { CallCenterService } from '../modules/call-center/call-center.service';
 import { DashboardController } from '../modules/dashboard/dashboard.controller';
 import { DashboardIndicatorsService } from '../modules/dashboard/dashboard-indicators.service';
 import { DashboardService } from '../modules/dashboard/dashboard.service';
+import { AssistantController } from '../modules/assistant/assistant.controller';
+import { AssistantService } from '../modules/assistant/assistant.service';
+import { AssistantToolsService } from '../modules/assistant/assistant-tools.service';
 import { AuthController } from '../modules/auth/auth.controller';
 import { AuthService } from '../modules/auth/auth.service';
 import { PasswordResetService } from '../modules/auth/password-reset.service';
@@ -131,6 +134,7 @@ import { SurveysService } from '../modules/surveys/surveys.service';
     PsychooncologyCyclesController,
     ReferralsController,
     SurveysController,
+    AssistantController,
   ],
   providers: [
     { provide: AgentsService, useValue: {} },
@@ -142,6 +146,8 @@ import { SurveysService } from '../modules/surveys/surveys.service';
     { provide: DashboardIndicatorsService, useValue: {} },
     { provide: AuthService, useValue: {} },
     { provide: PasswordResetService, useValue: {} },
+    { provide: AssistantService, useValue: {} },
+    { provide: AssistantToolsService, useValue: {} },
     { provide: EnrollmentsService, useValue: {} },
     { provide: FollowUpsService, useValue: {} },
     { provide: HealthCentersService, useValue: {} },

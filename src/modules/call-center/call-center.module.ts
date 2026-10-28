@@ -15,5 +15,6 @@ import { CallCenterService } from './call-center.service';
   ],
   controllers: [CallCenterController],
   providers: [CallCenterService],
+  exports: [CallCenterService],
 })
 export class CallCenterModule {}

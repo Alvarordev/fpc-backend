@@ -10713,6 +10713,173 @@
           "surveys"
         ]
       }
+    },
+    "/assistant/messages": {
+      "post": {
+        "description": "Runs the agent with read-only tool calls and stores the question and answer. Patients are pseudonymised for the model and rehydrated in the response.",
+        "operationId": "AssistantController_ask",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskAssistantDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskAssistantResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          },
+          "404": {
+            "description": "No se encontró la conversación."
+          },
+          "503": {
+            "description": "Model not configured or unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ask the data assistant",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/assistant/conversations": {
+      "get": {
+        "operationId": "AssistantController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssistantConversationSummaryDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the current user's assistant conversations",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/assistant/conversations/{id}": {
+      "get": {
+        "operationId": "AssistantController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantConversationResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          },
+          "404": {
+            "description": "No se encontró la conversación."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an assistant conversation with its messages",
+        "tags": [
+          "assistant"
+        ]
+      },
+      "delete": {
+        "operationId": "AssistantController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          },
+          "404": {
+            "description": "No se encontró la conversación."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an assistant conversation",
+        "tags": [
+          "assistant"
+        ]
+      }
     }
   },
   "info": {
@@ -23933,6 +24100,200 @@
           "primaryPhone",
           "enrolledOn",
           "daysSinceEnrollment"
+        ]
+      },
+      "AskAssistantDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "maxLength": 2000,
+            "example": "¿Cuántos pacientes activos hay en Lima?"
+          },
+          "conversationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Omitir para empezar una conversación nueva."
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "AssistantSourceDto": {
+        "type": "object",
+        "properties": {
+          "tool": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "description": "Nombre legible de la fuente"
+          },
+          "args": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool",
+          "label",
+          "args",
+          "ok"
+        ]
+      },
+      "AssistantPatientMentionDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "P-001"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "patientId",
+          "name"
+        ]
+      },
+      "AssistantMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "enum": [
+              "USER",
+              "ASSISTANT"
+            ],
+            "type": "string"
+          },
+          "content": {
+            "type": "string",
+            "description": "Markdown con los nombres reales ya rehidratados"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantSourceDto"
+            }
+          },
+          "patients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantPatientMentionDto"
+            }
+          },
+          "isError": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "content",
+          "sources",
+          "patients",
+          "isError",
+          "createdAt"
+        ]
+      },
+      "AskAssistantResponseDto": {
+        "type": "object",
+        "properties": {
+          "conversationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "question": {
+            "$ref": "#/components/schemas/AssistantMessageResponseDto"
+          },
+          "answer": {
+            "$ref": "#/components/schemas/AssistantMessageResponseDto"
+          }
+        },
+        "required": [
+          "conversationId",
+          "question",
+          "answer"
+        ]
+      },
+      "AssistantConversationSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AssistantConversationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantMessageResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "createdAt",
+          "updatedAt",
+          "messages"
         ]
       }
     }

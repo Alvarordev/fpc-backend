@@ -38,5 +38,6 @@ import { User } from '../../database/entities/user.entity';
   ],
   controllers: [AlertsController],
   providers: [AlertsService, AlertEventsService, AlertSummaryService],
+  exports: [AlertsService],
 })
 export class AlertsModule {}
