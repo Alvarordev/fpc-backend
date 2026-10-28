@@ -23,7 +23,8 @@ import { PatientStatus } from './patient-status.enum';
   "\"activity_status\" IN ('ACTIVE', 'INACTIVE', 'REACTIVE')",
 )
 @Check(
-  "\"deactivation_reason\" IN ('DECEASED', 'WITHDREW_CONSENT', 'LOST_CONTACT', 'TRANSFERRED_OUT', 'OTHER')",
+  'CHK_patients_deactivation_reason',
+  "\"deactivation_reason\" IN ('VOLUNTARY', 'UNLOCATABLE', 'DECEASED', 'TRANSFERRED_OUT', 'OTHER')",
 )
 @Check(
   'CHK_patients_activity_deactivation',

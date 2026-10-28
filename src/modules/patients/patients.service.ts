@@ -16,11 +16,13 @@ import { DeactivationReason } from '../../database/entities/deactivation-reason.
 import { PatientActivityStatus } from '../../database/entities/patient-activity-status.enum';
 import { PatientDetails } from '../../database/entities/patient-details.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
+import { PatientHealthPhase } from '../../database/entities/patient-health-phase.enum';
 import { PatientHealthPhaseHistory } from '../../database/entities/patient-health-phase-history.entity';
 import { PatientHealthSubcategoryHistory } from '../../database/entities/patient-health-subcategory-history.entity';
 import {
   HEALTH_SUBCATEGORY_PHASE,
   ONCOLOGICAL_HEALTH_SUBCATEGORIES,
+  PatientHealthSubcategory,
 } from '../../database/entities/patient-health-subcategory.enum';
 import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
@@ -626,23 +628,25 @@ export class PatientsService {
 
   async deactivate(id: string, input: DeactivatePatientDto): Promise<Patient> {
     return this.dataSource.transaction(async (manager) => {
-      const patient = await this.findById(id);
+      const patient = await this.lockPatient(id, manager);
       await this.assertActivityFollowUp(id, input.followUpId, manager);
       const occurredAt = new Date();
-      const reasonDetail =
-        input.reason === DeactivationReason.OTHER ? (input.detail ?? null) : null;
+      const deceasedAt =
+        input.reason === DeactivationReason.DECEASED
+          ? (input.deceasedAt ?? null)
+          : null;
       patient.activityStatus = PatientActivityStatus.INACTIVE;
       patient.deactivationReason = input.reason;
-      patient.deactivationReasonDetail = reasonDetail;
+      patient.deactivationReasonDetail = null;
       patient.deactivatedAt = occurredAt;
-      patient.deceasedAt = input.deceasedAt ?? null;
+      patient.deceasedAt = deceasedAt;
       const deactivated = await manager.getRepository(Patient).save(patient);
       await this.recordActivity(manager, {
         patientId: id,
         status: PatientActivityStatus.INACTIVE,
         reason: input.reason,
-        reasonDetail,
-        deceasedAt: input.deceasedAt ?? null,
+        reasonDetail: null,
+        deceasedAt,
         followUpId: input.followUpId ?? null,
         occurredAt,
       });
@@ -655,28 +659,45 @@ export class PatientsService {
    * The deactivation stays in patient_activity_events; only the cached
    * columns on the patient are cleared.
    */
-  async reactivate(id: string, input: ReactivatePatientDto = {}): Promise<Patient> {
-    return this.dataSource.transaction(async (manager) => {
-      const patient = await this.findById(id);
-      await this.assertActivityFollowUp(id, input.followUpId, manager);
-      patient.activityStatus = PatientActivityStatus.REACTIVE;
-      patient.deactivationReason = null;
-      patient.deactivationReasonDetail = null;
-      patient.deactivatedAt = null;
-      patient.deceasedAt = null;
-      const reactivated = await manager.getRepository(Patient).save(patient);
-      await this.recordActivity(manager, {
-        patientId: id,
-        status: PatientActivityStatus.REACTIVE,
-        reason: null,
-        reasonDetail: null,
-        deceasedAt: null,
-        followUpId: input.followUpId ?? null,
-        occurredAt: new Date(),
-      });
-      await this.invalidations.markDirty(id, manager);
-      return reactivated;
+  async reactivate(
+    id: string,
+    input: ReactivatePatientDto = {},
+    manager?: EntityManager,
+  ): Promise<Patient> {
+    if (!manager)
+      return this.dataSource.transaction((transactionManager) =>
+        this.reactivate(id, input, transactionManager),
+      );
+    const patient = await this.lockPatient(id, manager);
+    await this.assertActivityFollowUp(id, input.followUpId, manager);
+    patient.activityStatus = PatientActivityStatus.REACTIVE;
+    patient.deactivationReason = null;
+    patient.deactivationReasonDetail = null;
+    patient.deactivatedAt = null;
+    patient.deceasedAt = null;
+    const reactivated = await manager.getRepository(Patient).save(patient);
+    await this.recordActivity(manager, {
+      patientId: id,
+      status: PatientActivityStatus.REACTIVE,
+      reason: null,
+      reasonDetail: null,
+      deceasedAt: null,
+      followUpId: input.followUpId ?? null,
+      occurredAt: new Date(),
     });
+    await this.invalidations.markDirty(id, manager);
+    return reactivated;
+  }
+
+  private async lockPatient(id: string, manager: EntityManager) {
+    const patient = await manager
+      .getRepository(Patient)
+      .createQueryBuilder('patient')
+      .setLock('pessimistic_write')
+      .where('patient.id = :id', { id })
+      .getOne();
+    if (!patient) throw new NotFoundException('Patient not found');
+    return patient;
   }
 
   private async assertActivityFollowUp(
@@ -794,6 +815,11 @@ export class PatientsService {
     ) {
       healthSubcategory = null;
     }
+    if (
+      !healthSubcategory &&
+      healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS
+    )
+      healthSubcategory = PatientHealthSubcategory.SIGNS_AND_SYMPTOMS_PATIENT;
 
     const {
       travelTimeToHospital,
@@ -806,7 +832,6 @@ export class PatientsService {
       shelterSepaProviderOther,
       transportationSepaProvider,
       transportationSepaProviderOther,
-      programDropoutReasonCode,
       healthPhase: _healthPhaseInput,
       healthSubcategory: _healthSubcategoryInput,
       ...rest
@@ -854,11 +879,6 @@ export class PatientsService {
       transportationSepaProvider,
       { otherText: transportationSepaProviderOther, manager },
     );
-    const resolvedDropout = await this.catalogValues.resolveOptional(
-      'program_dropout_reason',
-      programDropoutReasonCode,
-      { manager },
-    );
     const normalized = {
       ...rest,
       healthPhase,
@@ -884,9 +904,6 @@ export class PatientsService {
             transportationSepaProvider: resolvedTransport?.code ?? null,
             transportationSepaProviderOther: resolvedTransport?.other ?? null,
           }
-        : {}),
-      ...(programDropoutReasonCode !== undefined
-        ? { programDropoutReasonCode: resolvedDropout?.code ?? null }
         : {}),
     };
     const saved = await repository.save(

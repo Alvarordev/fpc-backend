@@ -6,7 +6,10 @@ import { FollowUp } from '../../database/entities/follow-up.entity';
 import { PatientAddress } from '../../database/entities/patient-address.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
 import { PatientDiagnosticStatusEvent } from '../../database/entities/patient-diagnostic-status-event.entity';
-import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
+import {
+  InsuranceType,
+  PatientInsurance,
+} from '../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
 import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-non-oncological-follow-up.entity';
 import { PatientPsychooncologySupportAssessment } from '../../database/entities/patient-psychooncology-support-assessment.entity';
@@ -34,6 +37,7 @@ import { PatientSocialNotesService } from '../patients/social-notes/patient-soci
 import { PatientNonOncologicalFollowUpsService } from '../patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 import { PatientDiagnosticStatusesService } from '../patients/diagnostic-status/patient-diagnostic-statuses.service';
 import { PatientsService } from '../patients/patients.service';
+import { PatientHealthSubcategoryService } from '../patients/health-subcategory/patient-health-subcategory.service';
 import type {
   CreateHistoricalFollowUpDto,
   HistoricalFollowUpTreatmentDto,
@@ -80,6 +84,7 @@ export interface HistoricalClinicalServices {
   addresses: PatientAddressesService;
   healthBackgroundAssessments: PatientHealthBackgroundAssessmentsService;
   socialNotes: PatientSocialNotesService;
+  subcategories: PatientHealthSubcategoryService;
 }
 
 export async function attachHistoricalClinicalData(
@@ -118,6 +123,14 @@ export async function attachHistoricalClinicalData(
     input.treatments ?? [],
     createdDiagnoses,
   );
+  if (input.treatments?.length)
+    await syncHistoricalSubcategory(
+      services,
+      manager,
+      patientId,
+      followUpId,
+      input.details,
+    );
 
   if (input.insurance)
     await services.insurance.create(
@@ -245,6 +258,15 @@ export async function upsertHistoricalClinicalData(
     );
   }
 
+  if (input.treatments?.length)
+    await syncHistoricalSubcategory(
+      services,
+      manager,
+      patientId,
+      followUpId,
+      input.details,
+    );
+
   if (input.insurance) {
     const { id, ...values } = input.insurance;
     if (id) {
@@ -256,7 +278,10 @@ export async function upsertHistoricalClinicalData(
         throw new NotFoundException(
           'Insurance not found for this historical follow-up',
         );
-      await repository.save(Object.assign(existing, values));
+      Object.assign(existing, values);
+      if (existing.insuranceType !== InsuranceType.ESSALUD)
+        existing.affiliatedViaSepa = null;
+      await repository.save(existing);
     } else {
       await services.insurance.create(
         patientId,
@@ -520,6 +545,25 @@ async function upsertHistoricalDetails(
   });
 }
 
+/** Derives the subcategory from treatments unless the load set it explicitly. */
+async function syncHistoricalSubcategory(
+  services: HistoricalClinicalServices,
+  manager: EntityManager,
+  patientId: string,
+  followUpId: string,
+  details: ClinicalCreateInput['details'],
+) {
+  if (details?.healthSubcategory) return;
+  const changedAt = await historicalFollowUpOccurredAt(
+    manager,
+    patientId,
+    followUpId,
+  );
+  await services.subcategories.syncFromTreatments(patientId, manager, {
+    ...(changedAt ? { changedAt } : {}),
+  });
+}
+
 async function persistTreatments(
   services: HistoricalClinicalServices,
   manager: EntityManager,
@@ -549,6 +593,7 @@ async function persistTreatments(
         diagnosisId,
       },
       manager,
+      { deriveSubcategory: false },
     );
   }
 }

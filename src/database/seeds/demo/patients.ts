@@ -132,7 +132,7 @@ export async function seedPatients(
 
   const lost = patientRows[ENROLLED_COUNT - 2];
   lost.activityStatus = PatientActivityStatus.INACTIVE;
-  lost.deactivationReason = DeactivationReason.LOST_CONTACT;
+  lost.deactivationReason = DeactivationReason.UNLOCATABLE;
   lost.deactivatedAt = addDays(now, -rng.int(30, 90));
 
   const patients = await manager.save(patientRows);
@@ -209,7 +209,7 @@ async function seedPatientDetails(
     .map(({ patient, healthCenter, healthPhase }) => {
       const department = healthCenter.department;
       const nativeLanguage = rng.pick(NATIVE_LANGUAGES);
-      const droppedOut = rng.bool(0.12);
+      rng.bool(0.12); // keeps the demo sequence stable
       const travelTimeLabel = rng.pick(TRAVEL_TIMES);
 
       return manager.create(PatientDetails, {
@@ -235,12 +235,6 @@ async function seedPatientDetails(
         receivesFinancialSupport: rng.maybeBool(0.3),
         hasConadisCard: rng.maybeBool(0.2),
         knowsAboutFissal: rng.maybeBool(0.4),
-        programDropoutReason: droppedOut
-          ? 'Se mudó de región y perdió contacto con el equipo.'
-          : null,
-        programDropoutDate: droppedOut
-          ? toDateOnly(addDays(now, -rng.int(15, 120)))
-          : null,
       });
     });
 

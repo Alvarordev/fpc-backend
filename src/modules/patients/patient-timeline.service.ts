@@ -75,15 +75,15 @@ const CANCER_STAGE_LABELS: Record<string, string> = {
 };
 
 const TREATMENT_SITUATION_LABELS: Record<string, string> = {
-  EN_CURSO: 'en curso',
-  PENDIENTE_DE_INICIO: 'pendiente de inicio',
-  INTERRUMPIDO: 'interrumpido',
-  FINALIZADO: 'finalizado',
-  SEARCHING: 'en búsqueda',
-  ABANDONED: 'abandonado',
-  DECEASED_DURING_TREATMENT: 'falleció durante el tratamiento',
-  NOT_APPLICABLE: 'no aplica',
-  REMISSION: 'en remisión',
+  EN_ESPERA: 'en espera',
+  EN_BUSQUEDA: 'en búsqueda',
+  EN_PROCESO: 'en proceso',
+  CULMINADO: 'culminado',
+  SUSPENDIDO: 'suspendido',
+  REMISION: 'en remisión',
+  ABANDONADO: 'abandonado',
+  FALLECIDO: 'falleció durante el tratamiento',
+  NO_APLICA: 'no aplica',
 };
 
 const INSURANCE_TYPE_LABELS: Record<string, string> = {

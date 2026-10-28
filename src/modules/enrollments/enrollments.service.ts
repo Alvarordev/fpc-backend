@@ -9,7 +9,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, QueryFailedError, Repository } from 'typeorm';
+import {
+  DataSource,
+  EntityManager,
+  QueryFailedError,
+  Repository,
+} from 'typeorm';
 import {
   enrollmentDbDriverError,
   translateEnrollmentQueryError,
@@ -43,6 +48,11 @@ import { PatientSisAffiliationService } from '../patients/clinical/sis-affiliati
 import { PatientTreatmentsService } from '../patients/clinical/treatments/patient-treatments.service';
 import { PatientSymptomReportsService } from '../patients/symptom-reports/patient-symptom-reports.service';
 import { PatientsService } from '../patients/patients.service';
+import { PatientHealthSubcategoryService } from '../patients/health-subcategory/patient-health-subcategory.service';
+import { savePatientOrDniConflict } from '../patients/patient-dni-conflict';
+import { PatientActivityStatus } from '../../database/entities/patient-activity-status.enum';
+import { PatientDetails } from '../../database/entities/patient-details.entity';
+import { PatientHealthSubcategory } from '../../database/entities/patient-health-subcategory.enum';
 import { PatientAddressesService } from '../patients/addresses/patient-addresses.service';
 import { PatientHealthBackgroundAssessmentsService } from '../patients/clinical/health-background/patient-health-background-assessments.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
@@ -104,6 +114,7 @@ export class EnrollmentsService {
     private readonly catalogValues: CatalogValueService,
     private readonly catalogs: CatalogsService,
     private readonly audit: AuditContextService,
+    private readonly subcategories: PatientHealthSubcategoryService,
   ) {}
 
   private readonly logger = new Logger(EnrollmentsService.name);
@@ -146,7 +157,6 @@ export class EnrollmentsService {
         details,
         insurance,
         sisAffiliation,
-        diagnosis,
         diagnoses,
         treatments,
         medicalAppointments,
@@ -179,7 +189,6 @@ export class EnrollmentsService {
       delete followUpValues.scheduledOn;
       delete followUpValues.completedOn;
       delete followUpValues.status;
-      const usesExplicitContacts = contacts !== undefined;
       this.validateContacts(contacts);
       this.validateClinicalBranches(input, options.historical ?? false);
       if (
@@ -190,36 +199,16 @@ export class EnrollmentsService {
           'Enrollment requires a cancer diagnosis or signs and symptoms phase',
         );
       }
-      if (Boolean(patientId) === Boolean(patientInput))
-        throw new BadRequestException(
-          'Provide exactly one of patientId or patient',
-        );
+      if (!patientId && !patientInput)
+        throw new BadRequestException('Provide patientId or patient');
       const hasCompanion = Boolean(companionId || companionInput);
       if (
-        !usesExplicitContacts &&
-        input.affiliationType === AffiliationType.SELF
-      ) {
-        if (companionInput?.isPrimaryInformant === true)
-          throw new BadRequestException(
-            'SELF enrollment companion cannot be the primary informant',
-          );
-      } else if (
         input.affiliationType === AffiliationType.FAMILY_FRIEND &&
         Boolean(companionId) === Boolean(companionInput)
-      ) {
+      )
         throw new BadRequestException(
           'FAMILY_FRIEND enrollment requires exactly one companion',
         );
-      } else if (
-        !usesExplicitContacts &&
-        input.affiliationType === AffiliationType.FAMILY_FRIEND &&
-        companionInput &&
-        companionInput.isPrimaryInformant !== true
-      ) {
-        throw new BadRequestException(
-          'FAMILY_FRIEND enrollment requires a primary informant',
-        );
-      }
       if (insurance?.insuranceType === InsuranceType.SIS && sisAffiliation)
         throw new ConflictException({
           code: 'SIS_AFFILIATION_CONFLICT',
@@ -227,7 +216,7 @@ export class EnrollmentsService {
             'Un paciente con SIS no puede tener además un trámite de afiliación al SIS.',
         });
 
-      const patient = patientId
+      let patient = patientId
         ? await manager
             .getRepository(Patient)
             .createQueryBuilder('patient')
@@ -236,15 +225,21 @@ export class EnrollmentsService {
             .getOne()
         : await this.patients.create(patientInput!, manager);
       if (!patient) throw new NotFoundException('Patient not found');
+      const reenrollment =
+        patientId && patient.status !== PatientStatus.UNENROLLED
+          ? await this.assertReenrollable(patient, manager, options)
+          : null;
+      if (patientId && patientInput) {
+        if (!reenrollment)
+          throw new BadRequestException(
+            'patient data can only accompany patientId when re-enrolling',
+          );
+        patient = await savePatientOrDniConflict(
+          manager.getRepository(Patient),
+          Object.assign(patient, patientInput),
+        );
+      }
       this.validateContactAgeRules(patient, contacts);
-      if (
-        patient.status !== PatientStatus.UNENROLLED &&
-        !(options.historical && Boolean(patientId))
-      )
-        throw new ConflictException({
-          code: 'PATIENT_ALREADY_ENROLLED',
-          message: 'El paciente ya está enrolado.',
-        });
       if (
         patient.role !== PatientRole.UNKNOWN &&
         patient.role !== PatientRole.PATIENT
@@ -262,19 +257,14 @@ export class EnrollmentsService {
       if (hasCompanion) {
         const isFamily =
           input.affiliationType === AffiliationType.FAMILY_FRIEND;
+        // Contact roles come only from contacts[]; the caller is linked plain.
         const normalizedCompanion = companionInput
           ? {
               ...companionInput,
               isPrimaryInformant: isFamily,
-              isPrimaryContact: usesExplicitContacts
-                ? false
-                : (companionInput.isPrimaryContact ?? isFamily),
-              contactRole: usesExplicitContacts
-                ? null
-                : companionInput.contactRole,
-              isCaregiver: usesExplicitContacts
-                ? (companionInput.isCaregiver ?? false)
-                : (companionInput.isCaregiver ?? true),
+              isPrimaryContact: false,
+              contactRole: null,
+              isCaregiver: companionInput.isCaregiver ?? false,
             }
           : undefined;
         companion = companionId
@@ -300,59 +290,51 @@ export class EnrollmentsService {
               {
                 existingCompanionId: companion.id,
                 isPrimaryInformant: isFamily,
-                isPrimaryContact: usesExplicitContacts ? false : isFamily,
+                isPrimaryContact: false,
                 contactRole: null,
-                isCaregiver: usesExplicitContacts ? false : true,
+                isCaregiver: false,
               },
               manager,
             );
           else if (isFamily) {
             link.isPrimaryInformant = true;
-            if (!usesExplicitContacts) {
-              link.contactRole = CompanionContactRole.PRIMARY;
-              link.isPrimaryContact = true;
-              link.isCaregiver = true;
-            }
             await links.save(link);
           }
         }
       }
 
-      if (usesExplicitContacts) {
-        const links = manager.getRepository(CompanionPatient);
-        await links.update(
-          { patientId: patient.id },
-          { contactRole: null, isPrimaryContact: false },
-        );
-        for (const contact of contacts) {
-          if (contact.source === EnrollmentContactSource.PATIENT) continue;
-          if (contact.source === EnrollmentContactSource.CALLER) {
-            if (!companion)
-              throw new BadRequestException(
-                'CALLER contact requires a companion caller',
-              );
-            const link = await links.findOneByOrFail({
-              patientId: patient.id,
-              companionId: companion.id,
-            });
-            link.contactRole = contact.role;
-            link.isPrimaryContact =
-              contact.role === CompanionContactRole.PRIMARY;
-            await links.save(link);
-            continue;
-          }
-          await this.patients.createCompanion(
-            patient.id,
-            {
-              ...contact.person!,
-              contactRole: contact.role,
-              isPrimaryContact: contact.role === CompanionContactRole.PRIMARY,
-              isPrimaryInformant: false,
-              isCaregiver: false,
-            },
-            manager,
-          );
+      const links = manager.getRepository(CompanionPatient);
+      await links.update(
+        { patientId: patient.id },
+        { contactRole: null, isPrimaryContact: false },
+      );
+      for (const contact of contacts) {
+        if (contact.source === EnrollmentContactSource.PATIENT) continue;
+        if (contact.source === EnrollmentContactSource.CALLER) {
+          if (!companion)
+            throw new BadRequestException(
+              'CALLER contact requires a companion caller',
+            );
+          const link = await links.findOneByOrFail({
+            patientId: patient.id,
+            companionId: companion.id,
+          });
+          link.contactRole = contact.role;
+          link.isPrimaryContact = contact.role === CompanionContactRole.PRIMARY;
+          await links.save(link);
+          continue;
         }
+        await this.patients.createCompanion(
+          patient.id,
+          {
+            ...contact.person!,
+            contactRole: contact.role,
+            isPrimaryContact: contact.role === CompanionContactRole.PRIMARY,
+            isPrimaryInformant: false,
+            isCaregiver: false,
+          },
+          manager,
+        );
       }
 
       await this.patients.upsertDetails(
@@ -392,6 +374,15 @@ export class EnrollmentsService {
           ? AuditContextKind.HISTORICAL_LOAD
           : AuditContextKind.FOLLOW_UP,
       );
+      if (reenrollment?.reactivate)
+        Object.assign(
+          patient,
+          await this.patients.reactivate(
+            patient.id,
+            { followUpId: followUp.id },
+            manager,
+          ),
+        );
       const enrollmentRepository = manager.getRepository(Enrollment);
       const resolvedEntrySource = await this.catalogValues.resolveOptional(
         'entry_source',
@@ -485,28 +476,24 @@ export class EnrollmentsService {
           manager,
         );
       const createdDiagnoses = new Map<string, PatientDiagnosis>();
-      const createdDiagnosisList: PatientDiagnosis[] = [];
-      for (const diagnosisInput of diagnoses ??
-        (diagnosis ? [diagnosis] : [])) {
+      for (const diagnosisInput of diagnoses ?? []) {
         const { clientRef, ...diagnosisValues } = diagnosisInput;
         const createdDiagnosis = await this.diagnoses.create(
           patient.id,
           { ...diagnosisValues, followUpId: followUp.id },
           manager,
         );
-        createdDiagnosisList.push(createdDiagnosis);
         if (clientRef) createdDiagnoses.set(clientRef, createdDiagnosis);
       }
       for (const treatment of treatments ?? []) {
-        const treatmentDiagnosis = diagnoses
-          ? createdDiagnoses.get(treatment.diagnosisRef ?? '')
-          : createdDiagnosisList[0];
+        const treatmentDiagnosis = createdDiagnoses.get(
+          treatment.diagnosisRef ?? '',
+        );
         if (!treatmentDiagnosis)
           throw new BadRequestException(
             'Enrollment treatment requires a valid diagnosis reference',
           );
-        const treatmentValues = { ...treatment };
-        delete treatmentValues.diagnosisRef;
+        const { diagnosisRef: _diagnosisRef, ...treatmentValues } = treatment;
         await this.treatments.create(
           patient.id,
           {
@@ -515,8 +502,20 @@ export class EnrollmentsService {
             diagnosisId: treatmentDiagnosis.id,
           },
           manager,
+          { deriveSubcategory: false },
         );
       }
+      if (
+        healthPhase === PatientHealthPhase.CANCER_DIAGNOSIS &&
+        !details?.healthSubcategory
+      )
+        await this.subcategories.syncFromTreatments(
+          patient.id,
+          manager,
+          options.historical && enrolledOn
+            ? { changedAt: new Date(`${enrolledOn}T12:00:00-05:00`) }
+            : {},
+        );
       if (healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS)
         await this.diagnosticStatuses.recordSearching(
           patient.id,
@@ -607,8 +606,7 @@ export class EnrollmentsService {
             phone: patient.primaryPhone,
             email: patient.email,
             diagnosis:
-              diagnosis?.diagnosis ??
-              diagnoses?.map(({ diagnosis: value }) => value).join(', ') ??
+              diagnoses?.map(({ diagnosis: value }) => value).join(', ') ||
               'En evaluación',
             // patient.role was just set to PATIENT above (the companion, if
             // any, is enrolled separately and never gets its own Registro).
@@ -696,8 +694,7 @@ export class EnrollmentsService {
     return updated;
   }
 
-  private validateContacts(contacts: EnrollmentContactInputDto[] | undefined) {
-    if (contacts === undefined) return;
+  private validateContacts(contacts: EnrollmentContactInputDto[]) {
     if (
       contacts.filter(
         (contact) => contact.role === CompanionContactRole.PRIMARY,
@@ -729,11 +726,34 @@ export class EnrollmentsService {
     }
   }
 
+  /**
+   * E5/E6: an enrolled patient who calls again gets a follow-up, unless they
+   * left the program or had cancer ruled out; then they enroll again.
+   */
+  private async assertReenrollable(
+    patient: Patient,
+    manager: EntityManager,
+    options: EnrollmentCreateOptions,
+  ): Promise<{ reactivate: boolean } | null> {
+    const reactivate = patient.activityStatus === PatientActivityStatus.INACTIVE;
+    if (reactivate) return { reactivate };
+    const details = await manager
+      .getRepository(PatientDetails)
+      .findOne({ where: { patientId: patient.id } });
+    if (details?.healthSubcategory === PatientHealthSubcategory.CANCER_RULED_OUT)
+      return { reactivate };
+    if (options.historical) return null;
+    throw new ConflictException({
+      code: 'PATIENT_ALREADY_ENROLLED',
+      message:
+        'El paciente ya está enrolado y activo; registra un seguimiento.',
+    });
+  }
+
   private validateContactAgeRules(
     patient: Patient,
-    contacts: EnrollmentContactInputDto[] | undefined,
+    contacts: EnrollmentContactInputDto[],
   ) {
-    if (!contacts) return;
     const primary = contacts.find(
       (contact) => contact.role === CompanionContactRole.PRIMARY,
     )!;
@@ -778,43 +798,27 @@ export class EnrollmentsService {
           'Psycho-oncology support assessment requires a self enrollment with a cancer diagnosis',
         );
     }
-    if (input.diagnosis && input.diagnoses)
-      throw new BadRequestException(
-        'Provide either diagnosis or diagnoses, not both',
-      );
     if (
       healthPhase === PatientHealthPhase.CANCER_DIAGNOSIS &&
-      !input.diagnosis &&
       !input.diagnoses?.length
     )
       throw new BadRequestException(
         'Cancer diagnosis enrollment requires at least one diagnosis',
       );
-    if (input.diagnoses) {
-      const refs = input.diagnoses.map(({ clientRef }) => clientRef);
-      if (refs.some((ref) => !ref))
+    const refs = (input.diagnoses ?? []).map(({ clientRef }) => clientRef);
+    if (refs.some((ref) => !ref))
+      throw new BadRequestException(
+        'Every enrollment diagnosis requires a clientRef',
+      );
+    if (new Set(refs).size !== refs.length)
+      throw new BadRequestException(
+        'Enrollment diagnosis clientRefs must be unique',
+      );
+    for (const treatment of input.treatments ?? [])
+      if (!treatment.diagnosisRef || !refs.includes(treatment.diagnosisRef))
         throw new BadRequestException(
-          'Every enrollment diagnosis requires a clientRef',
+          'Enrollment treatment diagnosisRef does not match a diagnosis',
         );
-      if (new Set(refs).size !== refs.length)
-        throw new BadRequestException(
-          'Enrollment diagnosis clientRefs must be unique',
-        );
-      for (const treatment of input.treatments ?? [])
-        if (!treatment.diagnosisRef)
-          throw new BadRequestException(
-            'Every enrollment treatment requires a diagnosisRef',
-          );
-      const diagnosisRefs = new Set(refs);
-      for (const treatment of input.treatments ?? [])
-        if (
-          treatment.diagnosisRef &&
-          !diagnosisRefs.has(treatment.diagnosisRef)
-        )
-          throw new BadRequestException(
-            'Enrollment treatment diagnosisRef does not match a diagnosis',
-          );
-    }
     if (healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS) {
       if (!symptomReport)
         throw new BadRequestException(
@@ -854,7 +858,7 @@ export class EnrollmentsService {
     }
     if (
       healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS &&
-      (input.diagnosis || input.diagnoses?.length || input.treatments?.length)
+      (input.diagnoses?.length || input.treatments?.length)
     )
       throw new BadRequestException(
         'Signs and symptoms enrollment cannot create formal diagnoses or treatments',

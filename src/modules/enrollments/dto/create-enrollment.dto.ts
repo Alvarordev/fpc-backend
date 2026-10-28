@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayNotEmpty,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -78,7 +79,7 @@ export class EnrollmentDiagnosisDto extends OmitType(
   @ApiProperty({
     required: false,
     description:
-      'Temporary client reference used to associate enrollment treatments; required for diagnoses[] and omitted only by the legacy diagnosis field',
+      'Temporary client reference used to associate treatments; required by enrollments',
   })
   @IsOptional()
   @IsString()
@@ -93,7 +94,7 @@ export class EnrollmentTreatmentDto extends OmitType(
   @ApiProperty({
     required: false,
     description:
-      'Temporary clientRef of the diagnosis for this treatment; required when diagnoses[] is used and omitted only for the legacy diagnosis field',
+      'Temporary clientRef of the diagnosis for this treatment; required by enrollments',
   })
   @IsOptional()
   @IsString()
@@ -135,6 +136,11 @@ export class EnrollmentNonOncologicalFollowUpDto extends OmitType(
 
 export class CreateEnrollmentDto {
   @IsOptional() @IsUUID() patientId?: string;
+  @ApiPropertyOptional({
+    type: CreatePatientDto,
+    description:
+      'New patient, or updated data of patientId when re-enrolling an inactive or cancer-ruled-out patient',
+  })
   @IsOptional()
   @ValidateNested()
   @Type(() => CreatePatientDto)
@@ -152,11 +158,12 @@ export class CreateEnrollmentDto {
   @ValidateNested()
   @Type(() => CreateCompanionDto)
   companion?: CreateCompanionDto;
-  @IsOptional()
+  @ApiProperty({ type: EnrollmentContactInputDto, isArray: true })
   @IsArray()
+  @ArrayNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => EnrollmentContactInputDto)
-  contacts?: EnrollmentContactInputDto[];
+  contacts!: EnrollmentContactInputDto[];
   @IsOptional()
   @ValidateNested()
   @Type(() => UpsertPatientDetailsDto)
@@ -169,10 +176,6 @@ export class CreateEnrollmentDto {
   @ValidateNested()
   @Type(() => EnrollmentSisAffiliationDto)
   sisAffiliation?: EnrollmentSisAffiliationDto;
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => EnrollmentDiagnosisDto)
-  diagnosis?: EnrollmentDiagnosisDto;
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })

@@ -336,10 +336,10 @@ export const TREATMENT_FREQUENCIES = [
 ] as const;
 
 export const TREATMENT_SITUATIONS = [
-  'EN_CURSO',
-  'PENDIENTE_DE_INICIO',
-  'INTERRUMPIDO',
-  'FINALIZADO',
+  'EN_PROCESO',
+  'EN_ESPERA',
+  'SUSPENDIDO',
+  'CULMINADO',
 ] as const;
 
 export const MEDICAL_SPECIALTIES = [

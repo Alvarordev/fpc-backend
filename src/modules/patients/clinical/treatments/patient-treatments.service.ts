@@ -20,6 +20,7 @@ import { normalizeDuration } from '../../../../shared/duration/duration.util';
 import { TreatmentMedicationsService } from './medications/treatment-medications.service';
 import { HealthCenter } from '../../../../database/entities/health-center.entity';
 import { CatalogValueService } from '../../../catalogs/catalog-value.service';
+import { PatientHealthSubcategoryService } from '../../health-subcategory/patient-health-subcategory.service';
 
 @Injectable()
 export class PatientTreatmentsService {
@@ -36,12 +37,15 @@ export class PatientTreatmentsService {
     private readonly medications: TreatmentMedicationsService,
     private readonly dataSource: DataSource,
     private readonly catalogValues: CatalogValueService,
+    private readonly subcategories: PatientHealthSubcategoryService,
   ) {}
 
   async create(
     patientId: string,
     input: CreatePatientTreatmentDto,
     manager?: EntityManager,
+    /** Batch writers (enrollment, historical load) derive once at the end. */
+    options: { deriveSubcategory?: boolean } = {},
   ): Promise<PatientTreatment> {
     await this.patients.assertPatientRole(
       patientId,
@@ -189,15 +193,15 @@ export class PatientTreatmentsService {
         // Reasons only apply to their situation; an update that does not send
         // them keeps the ones of the inherited version.
         treatmentAbandonmentReason:
-          situation === TreatmentSituation.ABANDONED
+          situation === TreatmentSituation.ABANDONADO
             ? input.treatmentAbandonmentReason
             : null,
         interruptionReason:
-          situation === TreatmentSituation.INTERRUMPIDO
+          situation === TreatmentSituation.SUSPENDIDO
             ? input.interruptionReason
             : null,
         interruptionReasonOther:
-          situation === TreatmentSituation.INTERRUMPIDO
+          situation === TreatmentSituation.SUSPENDIDO
             ? input.interruptionReasonOther
             : null,
         isReferred,
@@ -237,6 +241,8 @@ export class PatientTreatmentsService {
         );
       }
 
+      if (options.deriveSubcategory ?? true)
+        await this.subcategories.syncFromTreatments(patientId, entityManager);
       await this.invalidations.markDirty(patientId, entityManager);
       return treatment;
     };

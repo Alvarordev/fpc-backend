@@ -247,8 +247,6 @@ async function seedPatients(
         receivesFinancialSupport: index % 3 === 0,
         hasConadisCard: false,
         knowsAboutFissal: seed.isOncologicalPatient,
-        programDropoutReason: null,
-        programDropoutDate: null,
       });
     }),
   );
