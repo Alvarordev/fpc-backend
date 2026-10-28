@@ -1,3 +1,5 @@
+import { PatientActivityEvent } from '../../database/entities/patient-activity-event.entity';
+import { AuditContextService } from '../../shared/audit/audit-context.service';
 import {
   BadRequestException,
   ConflictException,
@@ -34,7 +36,10 @@ import { savePatientOrDniConflict } from './patient-dni-conflict';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CreateCompanionDto } from './dto/create-companion.dto';
 import { type PatientCreationInput } from './dto/create-patient.dto';
-import { DeactivatePatientDto } from './dto/deactivate-patient.dto';
+import {
+  DeactivatePatientDto,
+  ReactivatePatientDto,
+} from './dto/deactivate-patient.dto';
 import {
   ListPatientsDto,
   UNASSIGNED_HEALTH_SUBCATEGORY,
@@ -106,6 +111,7 @@ export class PatientsService {
     @InjectRepository(PatientNonOncologicalFollowUp)
     private readonly nonOncologicalFollowUpsRepository: Repository<PatientNonOncologicalFollowUp>,
     private readonly catalogValues: CatalogValueService,
+    private readonly audit: AuditContextService,
   ) {}
 
   assertCanRead(patientId: string, user: User): Promise<void> {
@@ -619,28 +625,88 @@ export class PatientsService {
   }
 
   async deactivate(id: string, input: DeactivatePatientDto): Promise<Patient> {
-    const patient = await this.findById(id);
-    patient.activityStatus = PatientActivityStatus.INACTIVE;
-    patient.deactivationReason = input.reason;
-    patient.deactivationReasonDetail =
-      input.reason === DeactivationReason.OTHER ? (input.detail ?? null) : null;
-    patient.deactivatedAt = new Date();
-    patient.deceasedAt = input.deceasedAt ?? null;
-    const deactivated = await this.patientsRepository.save(patient);
-    await this.invalidations.markDirty(id);
-    return deactivated;
+    return this.dataSource.transaction(async (manager) => {
+      const patient = await this.findById(id);
+      await this.assertActivityFollowUp(id, input.followUpId, manager);
+      const occurredAt = new Date();
+      const reasonDetail =
+        input.reason === DeactivationReason.OTHER ? (input.detail ?? null) : null;
+      patient.activityStatus = PatientActivityStatus.INACTIVE;
+      patient.deactivationReason = input.reason;
+      patient.deactivationReasonDetail = reasonDetail;
+      patient.deactivatedAt = occurredAt;
+      patient.deceasedAt = input.deceasedAt ?? null;
+      const deactivated = await manager.getRepository(Patient).save(patient);
+      await this.recordActivity(manager, {
+        patientId: id,
+        status: PatientActivityStatus.INACTIVE,
+        reason: input.reason,
+        reasonDetail,
+        deceasedAt: input.deceasedAt ?? null,
+        followUpId: input.followUpId ?? null,
+        occurredAt,
+      });
+      await this.invalidations.markDirty(id, manager);
+      return deactivated;
+    });
   }
 
-  async reactivate(id: string): Promise<Patient> {
-    const patient = await this.findById(id);
-    patient.activityStatus = PatientActivityStatus.REACTIVE;
-    patient.deactivationReason = null;
-    patient.deactivationReasonDetail = null;
-    patient.deactivatedAt = null;
-    patient.deceasedAt = null;
-    const reactivated = await this.patientsRepository.save(patient);
-    await this.invalidations.markDirty(id);
-    return reactivated;
+  /**
+   * The deactivation stays in patient_activity_events; only the cached
+   * columns on the patient are cleared.
+   */
+  async reactivate(id: string, input: ReactivatePatientDto = {}): Promise<Patient> {
+    return this.dataSource.transaction(async (manager) => {
+      const patient = await this.findById(id);
+      await this.assertActivityFollowUp(id, input.followUpId, manager);
+      patient.activityStatus = PatientActivityStatus.REACTIVE;
+      patient.deactivationReason = null;
+      patient.deactivationReasonDetail = null;
+      patient.deactivatedAt = null;
+      patient.deceasedAt = null;
+      const reactivated = await manager.getRepository(Patient).save(patient);
+      await this.recordActivity(manager, {
+        patientId: id,
+        status: PatientActivityStatus.REACTIVE,
+        reason: null,
+        reasonDetail: null,
+        deceasedAt: null,
+        followUpId: input.followUpId ?? null,
+        occurredAt: new Date(),
+      });
+      await this.invalidations.markDirty(id, manager);
+      return reactivated;
+    });
+  }
+
+  private async assertActivityFollowUp(
+    patientId: string,
+    followUpId: string | undefined,
+    manager: EntityManager,
+  ) {
+    if (
+      followUpId &&
+      !(await manager
+        .getRepository(FollowUp)
+        .existsBy({ id: followUpId, subjectPatientId: patientId }))
+    )
+      throw new NotFoundException('Follow-up not found');
+  }
+
+  private recordActivity(
+    manager: EntityManager,
+    event: Omit<
+      PatientActivityEvent,
+      'id' | 'patient' | 'followUp' | 'actor' | 'actorUserId' | 'createdAt'
+    >,
+  ) {
+    const events = manager.getRepository(PatientActivityEvent);
+    return events.save(
+      events.create({
+        ...event,
+        actorUserId: this.audit.current().actorUserId,
+      }),
+    );
   }
 
   async upsertDetails(

@@ -1,3 +1,5 @@
+import { AuditContextKind } from '../../shared/audit/audit-context';
+import { AuditContextService } from '../../shared/audit/audit-context.service';
 import {
   BadRequestException,
   ConflictException,
@@ -101,6 +103,7 @@ export class EnrollmentsService {
     private readonly webhooks: N8nTransactionalDispatchService,
     private readonly catalogValues: CatalogValueService,
     private readonly catalogs: CatalogsService,
+    private readonly audit: AuditContextService,
   ) {}
 
   private readonly logger = new Logger(EnrollmentsService.name);
@@ -379,6 +382,15 @@ export class EnrollmentsService {
           scheduledOn: options.historical ? historicalScheduledOn : undefined,
           completedOn: options.historical ? historicalCompletedOn : undefined,
         },
+      );
+      // Everything this enrollment writes (the new patient included) belongs
+      // to its follow-up in the change log.
+      await this.audit.attachFollowUp(
+        manager,
+        followUp.id,
+        options.historical
+          ? AuditContextKind.HISTORICAL_LOAD
+          : AuditContextKind.FOLLOW_UP,
       );
       const enrollmentRepository = manager.getRepository(Enrollment);
       const resolvedEntrySource = await this.catalogValues.resolveOptional(

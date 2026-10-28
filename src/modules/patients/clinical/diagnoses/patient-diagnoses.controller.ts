@@ -82,10 +82,9 @@ export class PatientDiagnosesController {
     @Param('patientId') patientId: string,
     @Param('diagnosisId') diagnosisId: string,
     @Body() dto: UpdatePatientDiagnosisDto,
-    @CurrentUser() user: User,
   ): Promise<PatientDiagnosisResponseDto> {
     return PatientDiagnosisResponseDto.from(
-      await this.service.update(patientId, diagnosisId, dto, user),
+      await this.service.update(patientId, diagnosisId, dto),
     );
   }
 

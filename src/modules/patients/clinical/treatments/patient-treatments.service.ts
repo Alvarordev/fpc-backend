@@ -155,6 +155,10 @@ export class PatientTreatmentsService {
         input.accessBarrierCode,
         { otherText: input.accessBarrierOther, manager: entityManager },
       );
+      const situation =
+        input.treatmentSituation !== undefined
+          ? (resolvedSituation?.code ?? null)
+          : (previousTreatment?.treatmentSituation ?? null);
       const values = {
         ...rest,
         treatmentType: resolvedType.code,
@@ -182,17 +186,19 @@ export class PatientTreatmentsService {
           : {}),
         patientId,
         seriesId,
+        // Reasons only apply to their situation; an update that does not send
+        // them keeps the ones of the inherited version.
         treatmentAbandonmentReason:
-          input.treatmentSituation === TreatmentSituation.ABANDONED
-            ? (input.treatmentAbandonmentReason ?? null)
+          situation === TreatmentSituation.ABANDONED
+            ? input.treatmentAbandonmentReason
             : null,
         interruptionReason:
-          input.treatmentSituation === TreatmentSituation.INTERRUMPIDO
-            ? (input.interruptionReason ?? null)
+          situation === TreatmentSituation.INTERRUMPIDO
+            ? input.interruptionReason
             : null,
         interruptionReasonOther:
-          input.treatmentSituation === TreatmentSituation.INTERRUMPIDO
-            ? (input.interruptionReasonOther ?? null)
+          situation === TreatmentSituation.INTERRUMPIDO
+            ? input.interruptionReasonOther
             : null,
         isReferred,
         sourceHealthCenterId: isReferred ? sourceHealthCenterId : null,
@@ -210,6 +216,7 @@ export class PatientTreatmentsService {
         { seriesId, isCurrent: true },
         values,
         entityManager,
+        { inherit: Boolean(previousTreatment) },
       );
 
       if (medicationInputs?.length) {

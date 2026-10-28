@@ -1,4 +1,8 @@
 import {
+  AuditContext,
+  AuditContextKind,
+} from '../../shared/audit/audit-context';
+import {
   Body,
   Controller,
   Delete,
@@ -57,6 +61,7 @@ import { HistoricalRecordsService } from './historical-records.service';
 @ApiTags('historical-records')
 @ApiBearerAuth()
 @Roles(UserRole.ADMIN)
+@AuditContext(AuditContextKind.HISTORICAL_LOAD)
 @ApiUnauthorizedResponse({ description: 'JWT missing, invalid, or expired' })
 export class HistoricalRecordsController {
   constructor(private readonly service: HistoricalRecordsService) {}

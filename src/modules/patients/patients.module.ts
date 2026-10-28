@@ -1,3 +1,7 @@
+import { ChangeLog } from '../../database/entities/change-log.entity';
+import { PatientChangeLogController } from './change-log/patient-change-log.controller';
+import { PatientChangeLogService } from './change-log/patient-change-log.service';
+import { PatientActivityEvent } from '../../database/entities/patient-activity-event.entity';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Enrollment } from '../../database/entities/enrollment.entity';
@@ -28,7 +32,6 @@ import { PatientDetails } from '../../database/entities/patient-details.entity';
 import { PatientHealthPhaseHistory } from '../../database/entities/patient-health-phase-history.entity';
 import { PatientHealthSubcategoryHistory } from '../../database/entities/patient-health-subcategory-history.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
-import { PatientDiagnosisRevision } from '../../database/entities/patient-diagnosis-revision.entity';
 import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
 import { PatientSisAffiliation } from '../../database/entities/patient-sis-affiliation.entity';
@@ -71,6 +74,8 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      ChangeLog,
+      PatientActivityEvent,
       Patient,
       PatientDetails,
       PatientHealthPhaseHistory,
@@ -78,7 +83,6 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
       PatientAddress,
       CompanionPatient,
       PatientDiagnosis,
-      PatientDiagnosisRevision,
       PatientInsurance,
       PatientMedicalAppointment,
       PatientSisAffiliation,
@@ -107,6 +111,7 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
   ],
   controllers: [
     PatientsController,
+    PatientChangeLogController,
     PatientDiagnosesController,
     PatientInsuranceController,
     PatientMedicalAppointmentsController,
@@ -124,6 +129,7 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
   ],
   providers: [
     PatientsService,
+    PatientChangeLogService,
     HistoryVersioningService,
     PatientDiagnosesService,
     PatientInsuranceService,

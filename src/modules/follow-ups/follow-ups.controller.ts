@@ -1,3 +1,4 @@
+import { AuditFollowUpParam } from '../../shared/audit/audit-context';
 import {
   Body,
   Controller,
@@ -113,6 +114,7 @@ export class FollowUpsController {
     return this.service.findOneForUser(id, user).then(this.toFollowUp);
   }
   @Patch(':id')
+  @AuditFollowUpParam('id')
   @Roles(...WRITE)
   @ApiOperation({ summary: 'Update a follow-up' })
   @ApiParam({ name: 'id', format: 'uuid' })
@@ -134,6 +136,7 @@ export class FollowUpsController {
       .then(this.toFollowUp);
   }
   @Post(':id/schedule-next')
+  @AuditFollowUpParam('id')
   @Roles(...WRITE)
   @ApiOperation({ summary: 'Schedule the next follow-up' })
   @ApiParam({ name: 'id', format: 'uuid' })
@@ -157,6 +160,7 @@ export class FollowUpsController {
       .then(this.toFollowUp);
   }
   @Post(':id/reminders')
+  @AuditFollowUpParam('id')
   @Roles(...WRITE)
   @ApiOperation({ summary: 'Create a reminder from a follow-up' })
   @ApiParam({ name: 'id', format: 'uuid' })

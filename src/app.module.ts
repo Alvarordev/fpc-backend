@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AuditModule } from './shared/audit/audit.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
@@ -94,6 +95,7 @@ import { HistoricalRecordsModule } from './modules/historical-records/historical
     CallCenterModule,
     DashboardModule,
     HistoricalRecordsModule,
+    AuditModule,
   ],
 })
 export class AppModule {}

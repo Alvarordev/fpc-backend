@@ -17,7 +17,6 @@ import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
 import { CreatePatientDiagnosisDto } from './dto/create-patient-diagnosis.dto';
 import { UpdatePatientDiagnosisDto } from './dto/update-patient-diagnosis.dto';
-import { PatientDiagnosisRevision } from '../../../../database/entities/patient-diagnosis-revision.entity';
 import { User } from '../../../../database/entities/user.entity';
 import {
   durationFromElapsedDays,
@@ -212,12 +211,11 @@ export class PatientDiagnosesService {
     patientId: string,
     diagnosisId: string,
     input: UpdatePatientDiagnosisDto,
-    user?: User,
     manager?: EntityManager,
   ): Promise<PatientDiagnosis> {
     if (!manager)
       return this.repository.manager.transaction((transactionManager) =>
-        this.update(patientId, diagnosisId, input, user, transactionManager),
+        this.update(patientId, diagnosisId, input, transactionManager),
       );
 
     await this.patients.assertPatientRole(
@@ -250,7 +248,7 @@ export class PatientDiagnosesService {
       throw new NotFoundException('Referred health center not found');
 
     const {
-      followUpId,
+      followUpId: _followUpId,
       changeReason,
       waitTimeForDiagnosis,
       diagnosisSpecialty,
@@ -317,27 +315,18 @@ export class PatientDiagnosesService {
       next.waitTimeSource = WaitTimeSource.COMPUTED;
     }
 
-    // Only fields that actually change are written and logged.
-    const previousValues: Record<string, unknown> = {};
+    // Only fields that actually change are written.
     const changes: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(next)) {
       const previous = (diagnosis as unknown as Record<string, unknown>)[key];
       if (JSON.stringify(previous ?? null) === JSON.stringify(value ?? null))
         continue;
-      previousValues[key] = previous ?? null;
       changes[key] = value;
     }
     if (Object.keys(changes).length === 0) return diagnosis;
 
-    const reason = changeReason.trim();
-    await manager.getRepository(PatientDiagnosisRevision).save({
-      diagnosisId: diagnosis.id,
-      followUpId,
-      changedById: user?.id ?? null,
-      changeReason: reason,
-      previousValues,
-    });
-    Object.assign(diagnosis, changes, { changeReason: reason });
+    // The audit trigger logs each overwritten field in change_log.
+    Object.assign(diagnosis, changes, { changeReason: changeReason.trim() });
     const saved = await diagnosisRepository.save(diagnosis);
     await this.invalidations.markDirty(patientId, manager);
     return saved;

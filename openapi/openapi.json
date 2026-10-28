@@ -4183,6 +4183,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReactivatePatientDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
@@ -14918,11 +14928,26 @@
           "deceasedAt": {
             "type": "string",
             "format": "date"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Follow-up in which the deactivation was decided"
           }
         },
         "required": [
           "reason"
         ]
+      },
+      "ReactivatePatientDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Follow-up in which the patient came back"
+          }
+        }
       },
       "CreatePatientDiagnosisDto": {
         "type": "object",

@@ -151,6 +151,8 @@ export class MedicalAppointmentsService {
         reminderId: existing.reminderId,
         changeReason: input.changeReason,
       }),
+      undefined,
+      { inherit: true },
     );
     await this.invalidations.markDirty(existing.patientId);
     return this.findOneOrThrow(appointment.id);

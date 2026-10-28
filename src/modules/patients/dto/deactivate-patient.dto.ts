@@ -3,6 +3,7 @@ import {
   IsDateString,
   IsIn,
   IsOptional,
+  IsUUID,
   Validate,
   ValidationArguments,
   ValidatorConstraint,
@@ -37,4 +38,22 @@ export class DeactivatePatientDto {
   @IsOptional()
   @IsDateString()
   deceasedAt?: string;
+
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description: 'Follow-up in which the deactivation was decided',
+  })
+  @IsOptional()
+  @IsUUID()
+  followUpId?: string;
+}
+
+export class ReactivatePatientDto {
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description: 'Follow-up in which the patient came back',
+  })
+  @IsOptional()
+  @IsUUID()
+  followUpId?: string;
 }
