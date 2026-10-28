@@ -74,6 +74,17 @@ import { HistoricalRecordsService } from '../modules/historical-records/historic
 import { PatientNonOncologicalFollowUpsController } from '../modules/patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.controller';
 import { PatientNonOncologicalFollowUpsService } from '../modules/patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 
+import { ExportsController } from '../modules/exports/exports.controller';
+import { ExportsService } from '../modules/exports/exports.service';
+import { PatientChangeLogController } from '../modules/patients/change-log/patient-change-log.controller';
+import { PatientChangeLogService } from '../modules/patients/change-log/patient-change-log.service';
+import { PsychooncologyCyclesController } from '../modules/psychooncology-appointments/psychooncology-cycles.controller';
+import { PsychooncologyCyclesService } from '../modules/psychooncology-appointments/psychooncology-cycles.service';
+import { ReferralsController } from '../modules/referrals/referrals.controller';
+import { ReferralsService } from '../modules/referrals/referrals.service';
+import { SurveysController } from '../modules/surveys/surveys.controller';
+import { SurveysService } from '../modules/surveys/surveys.service';
+
 // Controllers only need their route metadata to build the OpenAPI document.
 // Empty providers keep generation independent from infrastructure services.
 @Module({
@@ -114,6 +125,11 @@ import { PatientNonOncologicalFollowUpsService } from '../modules/patients/clini
     VolunteerCalendarController,
     HistoricalRecordsController,
     PatientNonOncologicalFollowUpsController,
+    ExportsController,
+    PatientChangeLogController,
+    PsychooncologyCyclesController,
+    ReferralsController,
+    SurveysController,
   ],
   providers: [
     { provide: AgentsService, useValue: {} },
@@ -155,6 +171,11 @@ import { PatientNonOncologicalFollowUpsService } from '../modules/patients/clini
     { provide: VolunteerCalendarService, useValue: {} },
     { provide: HistoricalRecordsService, useValue: {} },
     { provide: PatientNonOncologicalFollowUpsService, useValue: {} },
+    { provide: ExportsService, useValue: {} },
+    { provide: PatientChangeLogService, useValue: {} },
+    { provide: PsychooncologyCyclesService, useValue: {} },
+    { provide: ReferralsService, useValue: {} },
+    { provide: SurveysService, useValue: {} },
   ],
 })
 export class OpenApiModule {}

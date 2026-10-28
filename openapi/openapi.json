@@ -9733,6 +9733,905 @@
           "Patient non-oncological follow-ups"
         ]
       }
+    },
+    "/exports/patients": {
+      "get": {
+        "operationId": "ExportsController_exportPatients",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "month",
+              "type": "string",
+              "enum": [
+                "month",
+                "year"
+              ]
+            }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 2000,
+              "maximum": 2100,
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Required with period=month and year. Month is one-based.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 12,
+              "example": 8,
+              "type": "number"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive Lima calendar date. Use with to as an alternative to period/year/month.",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive Lima calendar date. Use with from.",
+            "schema": {
+              "example": "2026-02-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "Only America/Lima is supported.",
+            "schema": {
+              "default": "America/Lima",
+              "example": "America/Lima",
+              "type": "string",
+              "enum": [
+                "America/Lima"
+              ]
+            }
+          },
+          {
+            "name": "population",
+            "required": false,
+            "in": "query",
+            "description": "all_active: patients enrolled before the period end whose last activity event at that moment is ACTIVE/REACTIVE. active_in_period: those of all_active with an enrollment, completed follow-up or psycho-oncology session in the period. enrolled_in_period: first enrollment inside the period, whatever their status.",
+            "schema": {
+              "default": "all_active",
+              "type": "string",
+              "enum": [
+                "all_active",
+                "active_in_period",
+                "enrolled_in_period"
+              ]
+            }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Residence department of the primary address (catalog value, case and spaces ignored).",
+            "schema": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-zÑñ _-]+$",
+              "example": "LIMA",
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthCenterId",
+            "required": false,
+            "in": "query",
+            "description": "Primary health center of the patient.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "agentId",
+            "required": false,
+            "in": "query",
+            "description": "Patients with at least one follow-up handled by this agent.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthPhase",
+            "required": false,
+            "in": "query",
+            "description": "Current health phase of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CANCER_DIAGNOSIS",
+                "ANNUAL_CHECKUP",
+                "SIGNS_AND_SYMPTOMS"
+              ]
+            }
+          },
+          {
+            "name": "healthSubcategory",
+            "required": false,
+            "in": "query",
+            "description": "Current health subcategory of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SIGNS_AND_SYMPTOMS_PATIENT",
+                "ACTIVE_TREATMENT",
+                "UNDER_CONTROLS",
+                "TREATMENT_ABANDONED",
+                "PALLIATIVE_NO_ACTIVE_TREATMENT",
+                "CANCER_RULED_OUT"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Excel workbook"
+          },
+          "400": {
+            "description": "Invalid filters"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export patients and their records to Excel, one sheet per entity, with the dashboard filters",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
+    "/patients/{patientId}/change-log": {
+      "get": {
+        "operationId": "PatientChangeLogController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "followUpId",
+            "required": false,
+            "in": "query",
+            "description": "Only changes made in this follow-up",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeLogPageResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Field-level history of every change to the patient record",
+        "tags": [
+          "Patient change log"
+        ]
+      }
+    },
+    "/psychooncology-cycles": {
+      "get": {
+        "operationId": "PsychooncologyCyclesController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PsychooncologyCycleResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Patient is not accessible"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the psycho-oncology cycles of a patient",
+        "tags": [
+          "psychooncology-cycles"
+        ]
+      }
+    },
+    "/psychooncology-cycles/{id}/close": {
+      "patch": {
+        "operationId": "PsychooncologyCyclesController_close",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClosePsychooncologyCycleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PsychooncologyCycleResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid closing date"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Cycle not found"
+          },
+          "409": {
+            "description": "Cycle already closed or it still has scheduled sessions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Close a psycho-oncology cycle (completed, abandoned, not needed)",
+        "tags": [
+          "psychooncology-cycles"
+        ]
+      }
+    },
+    "/patients/{patientId}/referrals": {
+      "get": {
+        "operationId": "ReferralsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReferralResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Patient not assigned to volunteer"
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List patient referrals, newest first",
+        "tags": [
+          "Patient referrals"
+        ]
+      },
+      "post": {
+        "operationId": "ReferralsController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReferralDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator, foundation, or agent role required"
+          },
+          "404": {
+            "description": "Patient, health center, follow-up, or document not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a patient referral",
+        "tags": [
+          "Patient referrals"
+        ]
+      }
+    },
+    "/patients/{patientId}/referrals/route": {
+      "get": {
+        "operationId": "ReferralsController_route",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReferralResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Patient not assigned to volunteer"
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Patient's care route: referrals in chronological order",
+        "tags": [
+          "Patient referrals"
+        ]
+      }
+    },
+    "/patients/{patientId}/referrals/{id}": {
+      "get": {
+        "operationId": "ReferralsController_findOne",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Patient not assigned to volunteer"
+          },
+          "404": {
+            "description": "Patient or referral not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a patient referral",
+        "tags": [
+          "Patient referrals"
+        ]
+      },
+      "patch": {
+        "operationId": "ReferralsController_update",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReferralDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator, foundation, or agent role required"
+          },
+          "404": {
+            "description": "Referral or reference not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a patient referral",
+        "tags": [
+          "Patient referrals"
+        ]
+      },
+      "delete": {
+        "operationId": "ReferralsController_remove",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator, foundation, or agent role required"
+          },
+          "404": {
+            "description": "Referral not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a patient referral",
+        "tags": [
+          "Patient referrals"
+        ]
+      }
+    },
+    "/surveys": {
+      "post": {
+        "operationId": "SurveysController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSurveyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid survey link"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Patient, follow-up or session not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a satisfaction survey answer (1–5)",
+        "tags": [
+          "surveys"
+        ]
+      },
+      "get": {
+        "operationId": "SurveysController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ENROLLMENT",
+                "THREE_MONTHS",
+                "PSYCHOONCOLOGY",
+                "TALK"
+              ]
+            }
+          },
+          {
+            "name": "psychooncologyAppointmentId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SurveyResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List surveys. Volunteers only see psycho-oncology surveys.",
+        "tags": [
+          "surveys"
+        ]
+      }
+    },
+    "/surveys/script": {
+      "get": {
+        "operationId": "SurveysController_script",
+        "parameters": [
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ENROLLMENT",
+                "THREE_MONTHS",
+                "PSYCHOONCOLOGY",
+                "TALK"
+              ]
+            }
+          },
+          {
+            "name": "patientId",
+            "required": false,
+            "in": "query",
+            "description": "Fills the patient name and, for ENROLLMENT, picks the variant from the health phase.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "variant",
+            "required": false,
+            "in": "query",
+            "description": "ENROLLMENT only. Overrides the variant taken from the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DIAGNOSED",
+                "SIGNS_AND_SYMPTOMS"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyScriptResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the survey message ready to copy",
+        "tags": [
+          "surveys"
+        ]
+      }
+    },
+    "/surveys/pending/three-months": {
+      "get": {
+        "operationId": "SurveysController_pendingThreeMonths",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PendingThreeMonthSurveyDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Volunteers cannot see pending surveys"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Active patients enrolled 90 or more days ago without a three-month survey",
+        "tags": [
+          "surveys"
+        ]
+      }
     }
   },
   "info": {
@@ -22204,6 +23103,708 @@
             "nullable": true
           }
         }
+      },
+      "ChangeLogEntryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "changeSetId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Groups the changes saved together in one operation"
+          },
+          "entityType": {
+            "type": "string",
+            "description": "Table of the changed record"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operation": {
+            "enum": [
+              "INSERT",
+              "UPDATE",
+              "DELETE"
+            ],
+            "type": "string"
+          },
+          "field": {
+            "type": "string",
+            "nullable": true,
+            "description": "Changed column; null when the whole record was created or deleted"
+          },
+          "oldValue": {
+            "type": "object",
+            "nullable": true
+          },
+          "newValue": {
+            "type": "object",
+            "nullable": true
+          },
+          "context": {
+            "enum": [
+              "FOLLOW_UP",
+              "ADMIN_ADJUSTMENT",
+              "HISTORICAL_LOAD",
+              "SYSTEM"
+            ],
+            "type": "string"
+          },
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "actorUserId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "actorEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "changedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "changeSetId",
+          "entityType",
+          "entityId",
+          "operation",
+          "context",
+          "changedAt"
+        ]
+      },
+      "ChangeLogPageResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChangeLogEntryResponseDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ]
+      },
+      "PsychooncologyCycleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "openedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "closedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "closeReason": {
+            "nullable": true,
+            "enum": [
+              "COMPLETED",
+              "ABANDONED",
+              "NOT_NEEDED"
+            ],
+            "type": "string"
+          },
+          "closedById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "baseSessions": {
+            "type": "number",
+            "description": "Base sessions planned for a cycle"
+          },
+          "sessionCount": {
+            "type": "number",
+            "description": "Sessions not cancelled nor rescheduled"
+          },
+          "completedSessionCount": {
+            "type": "number"
+          },
+          "additionalSessionCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "openedAt",
+          "closedAt",
+          "closeReason",
+          "closedById",
+          "notes",
+          "baseSessions",
+          "sessionCount",
+          "completedSessionCount",
+          "additionalSessionCount",
+          "createdAt"
+        ]
+      },
+      "ClosePsychooncologyCycleDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "enum": [
+              "COMPLETED",
+              "ABANDONED",
+              "NOT_NEEDED"
+            ],
+            "type": "string"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Defaults to now; cannot be in the future"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 5000
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "ReferralHealthCenterDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "department": {
+            "type": "string"
+          },
+          "careCategory": {
+            "nullable": true,
+            "enum": [
+              "I-1",
+              "I-2",
+              "I-3",
+              "I-4",
+              "II-1",
+              "II-2",
+              "II-E",
+              "III-1",
+              "III-2",
+              "III-E"
+            ],
+            "type": "string"
+          },
+          "careLevel": {
+            "nullable": true,
+            "enum": [
+              "I",
+              "II",
+              "III"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "department",
+          "careCategory",
+          "careLevel"
+        ]
+      },
+      "ReferralResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "originHealthCenter": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReferralHealthCenterDto"
+              }
+            ]
+          },
+          "destinationHealthCenter": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReferralHealthCenterDto"
+              }
+            ]
+          },
+          "specialty": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "enum": [
+              "FORMAL",
+              "SELF"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "REQUESTED",
+              "ISSUED",
+              "ATTENDED",
+              "REJECTED",
+              "EXPIRED"
+            ],
+            "type": "string"
+          },
+          "requestedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "issuedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "attendedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "viaSepa": {
+            "type": "boolean"
+          },
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "referralSheetDocumentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "originHealthCenter",
+          "destinationHealthCenter",
+          "specialty",
+          "type",
+          "status",
+          "requestedOn",
+          "issuedOn",
+          "attendedOn",
+          "viaSepa",
+          "followUpId",
+          "referralSheetDocumentId",
+          "notes",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateReferralDto": {
+        "type": "object",
+        "properties": {
+          "originHealthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "destinationHealthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100,
+            "description": "medical_specialty catalog code"
+          },
+          "type": {
+            "enum": [
+              "FORMAL",
+              "SELF"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "REQUESTED",
+              "ISSUED",
+              "ATTENDED",
+              "REJECTED",
+              "EXPIRED"
+            ],
+            "type": "string",
+            "default": "REQUESTED"
+          },
+          "requestedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "issuedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "attendedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "viaSepa": {
+            "type": "boolean",
+            "default": false
+          },
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "referralSheetDocumentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid",
+            "description": "Patient document holding the referral sheet"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 5000
+          }
+        },
+        "required": [
+          "type",
+          "requestedOn"
+        ]
+      },
+      "UpdateReferralDto": {
+        "type": "object",
+        "properties": {
+          "originHealthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "destinationHealthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "specialty": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100,
+            "description": "medical_specialty catalog code"
+          },
+          "type": {
+            "enum": [
+              "FORMAL",
+              "SELF"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "REQUESTED",
+              "ISSUED",
+              "ATTENDED",
+              "REJECTED",
+              "EXPIRED"
+            ],
+            "type": "string",
+            "default": "REQUESTED"
+          },
+          "requestedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "issuedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "attendedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "viaSepa": {
+            "type": "boolean",
+            "default": false
+          },
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "referralSheetDocumentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid",
+            "description": "Patient document holding the referral sheet"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 5000
+          }
+        }
+      },
+      "CreateSurveyDto": {
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "ENROLLMENT",
+              "THREE_MONTHS",
+              "PSYCHOONCOLOGY",
+              "TALK"
+            ],
+            "type": "string"
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5,
+            "example": 5
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "channel": {
+            "enum": [
+              "CALL",
+              "WHATSAPP",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FORM"
+            ],
+            "type": "string"
+          },
+          "answeredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the patient answered. Defaults to now."
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "psychooncologyAppointmentId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Only for PSYCHOONCOLOGY surveys."
+          }
+        },
+        "required": [
+          "patientId",
+          "type",
+          "rating",
+          "channel"
+        ]
+      },
+      "SurveyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "ENROLLMENT",
+              "THREE_MONTHS",
+              "PSYCHOONCOLOGY",
+              "TALK"
+            ],
+            "type": "string"
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "channel": {
+            "enum": [
+              "CALL",
+              "WHATSAPP",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FORM"
+            ],
+            "type": "string"
+          },
+          "answeredAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "followUpId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "psychooncologyAppointmentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "actorUserId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "type",
+          "rating",
+          "comment",
+          "channel",
+          "answeredAt",
+          "followUpId",
+          "psychooncologyAppointmentId",
+          "actorUserId",
+          "createdAt"
+        ]
+      },
+      "SurveyScriptResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "ENROLLMENT",
+              "THREE_MONTHS",
+              "PSYCHOONCOLOGY",
+              "TALK"
+            ],
+            "type": "string"
+          },
+          "variant": {
+            "nullable": true,
+            "enum": [
+              "DIAGNOSED",
+              "SIGNS_AND_SYMPTOMS"
+            ],
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "variant",
+          "text"
+        ]
+      },
+      "PendingThreeMonthSurveyDto": {
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "documentNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "enrolledOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "daysSinceEnrollment": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "patientId",
+          "fullName",
+          "documentNumber",
+          "primaryPhone",
+          "enrolledOn",
+          "daysSinceEnrollment"
+        ]
       }
     }
   }
