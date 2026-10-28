@@ -7,6 +7,9 @@ export class AlertEventResponseDto {
   @ApiProperty({ format: 'uuid' }) alertId!: string;
   @ApiProperty({ format: 'uuid', nullable: true }) agentId!: string | null;
   @ApiProperty({ nullable: true }) agentName!: string | null;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  actorUserId!: string | null;
+  @ApiProperty({ nullable: true }) actorName!: string | null;
   @ApiProperty({ enum: AlertEventType }) eventType!: AlertEventType;
   @ApiProperty() title!: string;
   @ApiProperty({ nullable: true }) description!: string | null;

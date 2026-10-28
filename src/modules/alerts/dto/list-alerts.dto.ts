@@ -1,8 +1,6 @@
-import { IsBoolean, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  AlertCategory,
   AlertSeverity,
   AlertStatus,
 } from '../../../database/entities/alert.entity';
@@ -28,16 +26,18 @@ export class FindAlertsDto {
   @IsIn(Object.values(AlertSeverity))
   severity?: AlertSeverity;
 
-  @ApiPropertyOptional({ enum: AlertCategory })
+  @ApiPropertyOptional({ description: 'Code from the alert_category catalog' })
   @IsOptional()
-  @IsIn(Object.values(AlertCategory))
-  category?: AlertCategory;
+  @IsString()
+  category?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description: 'Alerts reported by this patient (any linked report)',
+  })
   @IsOptional()
-  @Type(() => Boolean)
-  @IsBoolean()
-  underReview?: boolean;
+  @IsUUID()
+  patientId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

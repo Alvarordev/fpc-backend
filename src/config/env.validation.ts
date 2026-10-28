@@ -63,6 +63,9 @@ export const envValidationSchema = Joi.object({
     .min(100)
     .max(30000)
     .default(5000),
+  // Blank disables outgoing email: messages are only logged.
+  RESEND_API_KEY: Joi.string().trim().optional().allow(''),
+  EMAIL_FROM: Joi.string().trim().optional().allow(''),
   PATIENT_DOCUMENT_STORAGE_DRIVER: Joi.when('NODE_ENV', {
     is: 'production',
     then: Joi.valid('r2').default('r2'),

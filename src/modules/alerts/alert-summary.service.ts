@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { User } from '../../database/entities/user.entity';
 import { Alert, AlertStatus } from '../../database/entities/alert.entity';
 import {
   AlertEvent,
@@ -50,8 +51,11 @@ function formatDate(date: Date): string {
  * deterministic Spanish template, not an actual model call.
  */
 export function buildExecutiveSummary(input: AlertSummaryInput): string {
-  const statusLabel =
-    input.status === AlertStatus.ACTIVE ? 'ACTIVA' : 'RESUELTA';
+  const statusLabel = {
+    [AlertStatus.REPORTED]: 'REPORTADA',
+    [AlertStatus.IN_REVIEW]: 'EN REVISIÓN',
+    [AlertStatus.RESOLVED]: 'RESUELTA',
+  }[input.status];
 
   let summary = '📋 RESUMEN EJECUTIVO IA:\n';
   summary += `La alerta '${input.title}' reportada en '${input.healthCenterName}' se encuentra actualmente en estado ${statusLabel} (Severidad: ${input.severity}). `;
@@ -90,14 +94,13 @@ export class AlertSummaryService {
     private readonly events: AlertEventsService,
   ) {}
 
-  async generate(id: string): Promise<Alert> {
+  async generate(id: string, user: User): Promise<Alert> {
     return this.dataSource.transaction(async (manager) => {
       const alert = await manager.getRepository(Alert).findOne({
         where: { id },
         relations: {
           healthCenter: true,
           createdBy: true,
-          resolvedBy: true,
           resolvedByUser: true,
         },
       });
@@ -126,15 +129,18 @@ export class AlertSummaryService {
         derivedEventDescription: derivedEvent?.description ?? null,
         commentsCount,
         resolvedAt: alert.resolvedAt,
-        resolvedByName:
-          alert.resolvedBy?.fullName ?? alert.resolvedByUser?.email ?? null,
+        resolvedByName: await this.events.nameFor(
+          alert.resolvedByUserId,
+          manager,
+        ),
       });
 
+      const actor = await this.events.actorFor(user, manager);
       alert.aiSummary = summary;
       await manager.getRepository(Alert).save(alert);
       await this.events.record(
         alert.id,
-        alert.createdById,
+        actor,
         AlertEventType.AI_SUMMARY_GENERATED,
         AI_SUMMARY_EVENT_TITLE,
         summary,

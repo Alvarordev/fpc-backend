@@ -5,7 +5,6 @@ import {
   IsEnum,
   IsOptional,
   IsString,
-  IsUUID,
   MaxLength,
   ValidateIf,
   ValidateNested,
@@ -28,8 +27,6 @@ export class CompleteReminderMedicalAppointmentDto {
 }
 
 export class CompleteReminderDto {
-  @IsOptional() @IsUUID() resultingFollowUpId?: string;
-
   @ValidateIf(
     (dto: CompleteReminderDto) => dto.medicalAppointment !== undefined,
   )

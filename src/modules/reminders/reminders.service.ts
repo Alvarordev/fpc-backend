@@ -4,10 +4,12 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, LessThanOrEqual, Repository } from 'typeorm';
 import { MedicalAppointmentStatus } from '../../database/entities/medical-appointment-status.enum';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
 import { ReminderKind } from '../../database/entities/reminder-kind.enum';
@@ -40,9 +42,29 @@ import type {
 } from '../historical-records/dto/create-historical-reminder.dto';
 import { normalizeReferralFields } from '../patients/clinical/medical-appointments/referral-fields';
 import { HealthCenter } from '../../database/entities/health-center.entity';
+import {
+  ReminderChannel,
+  ReminderDeliveryStatus,
+  ReminderLead,
+} from '../../database/entities/reminder-delivery.enums';
+import { EmailService } from '../../integrations/email/email.service';
+import { AuditContextService } from '../../shared/audit/audit-context.service';
+import { AuditContextKind } from '../../shared/audit/audit-context';
+import {
+  computeRemindAt,
+  createAppointmentReminder,
+  DEFAULT_APPOINTMENT_REMINDER_LEAD,
+  timeInLima,
+} from './appointment-reminder';
+import { buildReminderMessage } from './reminder-message';
+
+const DISPATCH_BATCH_SIZE = 50;
 
 @Injectable()
 export class RemindersService {
+  private readonly logger = new Logger(RemindersService.name);
+  private dispatching = false;
+
   constructor(
     @InjectRepository(Reminder)
     private readonly repository: Repository<Reminder>,
@@ -59,6 +81,8 @@ export class RemindersService {
     private readonly dataSource: DataSource,
     @Inject(forwardRef(() => FollowUpsService))
     private readonly followUpsService: FollowUpsService,
+    private readonly email: EmailService,
+    private readonly audit: AuditContextService,
   ) {}
 
   async create(input: CreateReminderDto, user: User) {
@@ -81,6 +105,10 @@ export class RemindersService {
       if (!input.description?.trim()) {
         throw new BadRequestException('description is required');
       }
+      if (input.lead)
+        throw new BadRequestException(
+          'lead is only allowed for medical appointment reminders',
+        );
       return this.repository.save(
         this.repository.create({
           subjectPatientId: input.subjectPatientId,
@@ -93,6 +121,10 @@ export class RemindersService {
           medicalAppointmentId: null,
           status: ReminderStatus.PENDING,
           completedOn: null,
+          channel: input.channel ?? ReminderChannel.MANUAL,
+          lead: null,
+          remindAt: new Date(input.remindAt ?? input.dueAt),
+          deliveryStatus: ReminderDeliveryStatus.PENDING,
           isHistorical: false,
         }),
       );
@@ -106,6 +138,7 @@ export class RemindersService {
       where: { id },
       relations: {
         medicalAppointment: { healthCenter: true },
+        subjectPatient: true,
       },
     });
     if (!item) throw new NotFoundException('Reminder not found');
@@ -152,16 +185,6 @@ export class RemindersService {
       )
         throw new BadRequestException(
           'Source follow-up must belong to the reminder patient',
-        );
-      if (
-        input.resultingFollowUpId &&
-        !(await followUps.existsBy({
-          id: input.resultingFollowUpId,
-          subjectPatientId: input.subjectPatientId,
-        }))
-      )
-        throw new BadRequestException(
-          'Resulting follow-up must belong to the reminder patient',
         );
 
       let medicalAppointmentId = input.medicalAppointmentId ?? null;
@@ -250,7 +273,6 @@ export class RemindersService {
           status: input.status,
           completedAt: null,
           completedOn: input.completedOn ?? null,
-          resultingFollowUpId: input.resultingFollowUpId ?? null,
           isHistorical: true,
           historicalLoadedById,
         }),
@@ -303,8 +325,6 @@ export class RemindersService {
       if (input.status !== undefined) item.status = input.status;
       if (input.createdFromFollowUpId !== undefined)
         item.createdFromFollowUpId = input.createdFromFollowUpId;
-      if (input.resultingFollowUpId !== undefined)
-        item.resultingFollowUpId = input.resultingFollowUpId;
 
       if (item.status !== ReminderStatus.DONE && item.completedOn)
         throw new BadRequestException(
@@ -405,16 +425,6 @@ export class RemindersService {
     await this.assertWriteScope(item, user);
     if (item.status !== ReminderStatus.PENDING)
       throw new BadRequestException('Only pending reminders can be completed');
-    if (
-      input.resultingFollowUpId &&
-      !(await this.followUps.existsBy({
-        id: input.resultingFollowUpId,
-        subjectPatientId: item.subjectPatientId,
-      }))
-    )
-      throw new BadRequestException(
-        'Resulting follow-up must belong to the reminder patient',
-      );
 
     if (item.kind === ReminderKind.MEDICAL_APPOINTMENT) {
       if (!input.medicalAppointment) {
@@ -433,7 +443,6 @@ export class RemindersService {
     item.status = ReminderStatus.DONE;
     item.completedAt = new Date();
     item.completedOn = dateOnlyInLima(new Date());
-    item.resultingFollowUpId = input.resultingFollowUpId ?? null;
     const saved = await this.repository.save(item);
     return this.findOne(saved.id);
   }
@@ -471,6 +480,13 @@ export class RemindersService {
     }
     if (input.description !== undefined) item.description = input.description;
     if (assignedAgentId) item.assignedAgentId = assignedAgentId;
+    if (input.channel) item.channel = input.channel;
+    if (input.dueAt || input.lead || input.remindAt) {
+      this.applySchedule(item, input);
+      item.deliveryStatus = ReminderDeliveryStatus.PENDING;
+      item.sentAt = null;
+      item.deliveryError = null;
+    }
 
     if (
       item.kind === ReminderKind.MEDICAL_APPOINTMENT &&
@@ -514,9 +530,12 @@ export class RemindersService {
   ) {
     const specialty = input.medicalAppointment!.specialty.trim();
     const dueAt = new Date(input.dueAt);
-    const appointmentDate = dateOnlyInLimaFromInput(input.dueAt);
-    const appointmentTime = dueAt.toISOString().slice(11, 16);
-    const description = input.description?.trim() || `Cita: ${specialty}`;
+    if (dueAt <= new Date())
+      throw new BadRequestException(
+        'Medical appointment reminders require a future appointment',
+      );
+    const lead = input.lead ?? DEFAULT_APPOINTMENT_REMINDER_LEAD;
+    computeRemindAt(dueAt, lead, input.remindAt);
 
     return this.dataSource.transaction(async (manager) => {
       const followUpId =
@@ -539,8 +558,8 @@ export class RemindersService {
           followUpId,
           specialty,
           healthCenterId: input.medicalAppointment!.healthCenterId ?? null,
-          appointmentDate,
-          appointmentTime,
+          appointmentDate: dateOnlyInLimaFromInput(input.dueAt),
+          appointmentTime: timeInLima(dueAt),
           isFirstConsultation:
             input.medicalAppointment!.isFirstConsultation ?? false,
           status: MedicalAppointmentStatus.SCHEDULED,
@@ -559,25 +578,18 @@ export class RemindersService {
         manager,
       );
 
-      const reminder = await manager.getRepository(Reminder).save(
-        manager.getRepository(Reminder).create({
-          subjectPatientId: input.subjectPatientId,
-          createdFromFollowUpId: input.createdFromFollowUpId ?? null,
-          assignedAgentId,
-          dueAt,
-          dueOn: dateOnlyInLimaFromInput(input.dueAt),
-          description,
-          kind: ReminderKind.MEDICAL_APPOINTMENT,
-          medicalAppointmentId: appointment.id,
-          status: ReminderStatus.PENDING,
-          completedOn: null,
-          isHistorical: false,
-        }),
-      );
-
-      await manager
-        .getRepository(PatientMedicalAppointment)
-        .update({ id: appointment.id }, { reminderId: reminder.id });
+      const reminder = await createAppointmentReminder(manager, appointment, {
+        lead,
+        remindAt: input.remindAt,
+        channel: input.channel,
+        description: input.description,
+        assignedAgentId,
+        createdFromFollowUpId: input.createdFromFollowUpId ?? null,
+      });
+      if (!reminder)
+        throw new BadRequestException(
+          'Medical appointment reminders require a future appointment',
+        );
 
       await this.invalidations.markDirty(input.subjectPatientId, manager);
       return manager.getRepository(Reminder).findOneOrFail({
@@ -587,6 +599,139 @@ export class RemindersService {
         },
       });
     });
+  }
+
+  private applySchedule(item: Reminder, input: UpdateReminderDto) {
+    if (input.dueAt) {
+      item.dueAt = new Date(input.dueAt);
+      item.dueOn = dateOnlyInLimaFromInput(input.dueAt);
+    }
+    if (item.kind !== ReminderKind.MEDICAL_APPOINTMENT) {
+      if (input.lead)
+        throw new BadRequestException(
+          'lead is only allowed for medical appointment reminders',
+        );
+      item.remindAt = new Date(input.remindAt ?? item.dueAt ?? Date.now());
+      return;
+    }
+    if (!item.dueAt)
+      throw new BadRequestException(
+        'A medical appointment reminder must have a due date',
+      );
+    const lead =
+      input.lead ??
+      (input.remindAt
+        ? ReminderLead.CUSTOM
+        : (item.lead ?? DEFAULT_APPOINTMENT_REMINDER_LEAD));
+    const custom =
+      input.remindAt ?? (lead === ReminderLead.CUSTOM ? item.remindAt : null);
+    const remindAt = computeRemindAt(item.dueAt, lead, custom);
+    const now = new Date();
+    item.lead = lead;
+    item.remindAt = remindAt < now ? now : remindAt;
+  }
+
+  async getMessage(id: string, user: User) {
+    const item = await this.findOne(id);
+    await this.access.assertCanRead(item.subjectPatientId, user);
+    const message = buildReminderMessage(item);
+    return {
+      reminderId: item.id,
+      patientName: item.subjectPatient?.fullName ?? null,
+      phone: item.subjectPatient?.primaryPhone ?? null,
+      email: item.subjectPatient?.email ?? null,
+      subject: message.subject,
+      text: message.text,
+    };
+  }
+
+  async sendEmail(id: string, user: User) {
+    const item = await this.findOne(id);
+    await this.assertWriteScope(item, user);
+    if (item.status !== ReminderStatus.PENDING || item.isHistorical)
+      throw new BadRequestException('Only pending reminders can be sent');
+    if (!item.subjectPatient?.email)
+      throw new BadRequestException('Patient has no email address');
+    await this.deliver(item);
+    return this.findOne(id);
+  }
+
+  async markSent(id: string, user: User) {
+    const item = await this.findOne(id);
+    await this.assertWriteScope(item, user);
+    if (item.status !== ReminderStatus.PENDING || item.isHistorical)
+      throw new BadRequestException('Only pending reminders can be marked');
+    item.deliveryStatus = ReminderDeliveryStatus.SENT;
+    item.sentAt = new Date();
+    item.deliveryError = null;
+    await this.repository.save(item);
+    return this.findOne(id);
+  }
+
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async dispatchDueEmails(): Promise<void> {
+    if (this.dispatching) return;
+    if (!this.email.enabled) {
+      this.logger.debug('Email delivery disabled, skipping due reminders');
+      return;
+    }
+    this.dispatching = true;
+    try {
+      await this.audit.run(
+        { actorUserId: null, context: AuditContextKind.SYSTEM },
+        async () => {
+          const due = await this.repository.find({
+            where: {
+              channel: ReminderChannel.EMAIL,
+              deliveryStatus: ReminderDeliveryStatus.PENDING,
+              status: ReminderStatus.PENDING,
+              isHistorical: false,
+              remindAt: LessThanOrEqual(new Date()),
+            },
+            relations: {
+              medicalAppointment: { healthCenter: true },
+              subjectPatient: true,
+            },
+            order: { remindAt: 'ASC' },
+            take: DISPATCH_BATCH_SIZE,
+          });
+          for (const item of due) await this.deliver(item);
+        },
+      );
+    } catch (error) {
+      this.logger.error(
+        error instanceof Error ? error.message : 'Reminder dispatch failed',
+      );
+    } finally {
+      this.dispatching = false;
+    }
+  }
+
+  private async deliver(item: Reminder) {
+    const email = item.subjectPatient?.email?.trim();
+    const message = buildReminderMessage(item);
+    const result = email
+      ? await this.email.send({
+          to: email,
+          subject: message.subject,
+          text: message.text,
+        })
+      : ({ status: 'FAILED', error: 'Patient has no email address' } as const);
+    const patch =
+      result.status === 'SENT'
+        ? {
+            deliveryStatus: ReminderDeliveryStatus.SENT,
+            sentAt: new Date(),
+            deliveryError: null,
+          }
+        : {
+            deliveryStatus: ReminderDeliveryStatus.FAILED,
+            deliveryError:
+              result.status === 'DISABLED'
+                ? 'Email delivery is not configured'
+                : result.error,
+          };
+    await this.repository.update({ id: item.id }, patch);
   }
 
   private async applyAppointmentCompletion(
@@ -734,8 +879,8 @@ export class RemindersService {
           input.healthCenterId !== undefined
             ? input.healthCenterId
             : existing.healthCenterId,
-        appointmentDate: dueAt.toISOString().slice(0, 10),
-        appointmentTime: dueAt.toISOString().slice(11, 16),
+        appointmentDate: dateOnlyInLima(dueAt),
+        appointmentTime: timeInLima(dueAt),
         nextAppointmentDate: existing.nextAppointmentDate,
         nextAppointmentSpecialty: existing.nextAppointmentSpecialty,
         hasReferralSheet: existing.hasReferralSheet,

@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  AlertCategory,
   AlertSeverity,
   AlertStatus,
 } from '../../../database/entities/alert.entity';
@@ -15,7 +14,11 @@ export class AlertResponseDto {
   ticketNumber!: string | null;
   @ApiProperty({ format: 'uuid' }) healthCenterId!: string;
   @ApiProperty() healthCenterName!: string;
-  @ApiProperty({ format: 'uuid' }) followUpId!: string;
+  @ApiProperty({
+    format: 'uuid',
+    description: 'Follow-up of the first report',
+  })
+  followUpId!: string;
   @ApiProperty({ format: 'uuid' }) createdById!: string;
   @ApiProperty() createdByName!: string;
   @ApiProperty({ format: 'uuid' }) patientId!: string;
@@ -26,14 +29,24 @@ export class AlertResponseDto {
   @ApiProperty() description!: string;
   @ApiProperty({ enum: AlertStatus }) status!: AlertStatus;
   @ApiProperty({ enum: AlertSeverity }) severity!: AlertSeverity;
-  @ApiProperty({ enum: AlertCategory }) category!: AlertCategory;
-  @ApiProperty() underReview!: boolean;
-  @ApiProperty({ nullable: true }) derivedTo!: string | null;
+  @ApiProperty({ description: 'Code from the alert_category catalog' })
+  category!: string;
+  @ApiProperty({ nullable: true }) categoryLabel!: string | null;
+  @ApiProperty({
+    nullable: true,
+    description: 'Code from the alert_derivation_entity catalog',
+  })
+  derivedTo!: string | null;
+  @ApiProperty({ nullable: true }) derivedToLabel!: string | null;
   @ApiProperty({ nullable: true }) derivationNotes!: string | null;
+  @ApiProperty({ format: 'date-time', nullable: true })
+  derivedAt!: Date | null;
+  @ApiProperty({ nullable: true }) resolutionNotes!: string | null;
+  @ApiProperty({ description: 'Number of linked patient reports' })
+  reportsCount!: number;
   @ApiProperty({ nullable: true }) aiSummary!: string | null;
   @ApiProperty({ format: 'date-time', nullable: true })
   resolvedAt!: Date | null;
-  @ApiProperty({ format: 'uuid', nullable: true }) resolvedById!: string | null;
   @ApiProperty({ format: 'uuid', nullable: true })
   resolvedByUserId!: string | null;
   @ApiProperty({ nullable: true }) resolvedByName!: string | null;

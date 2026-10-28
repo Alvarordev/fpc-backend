@@ -50,11 +50,6 @@ export class CreateHistoricalReminderDto {
   @IsUUID()
   createdFromFollowUpId?: string;
 
-  @ApiPropertyOptional({ format: 'uuid' })
-  @IsOptional()
-  @IsUUID()
-  resultingFollowUpId?: string;
-
   @ApiProperty()
   @IsString()
   @MaxLength(2000)
@@ -115,11 +110,6 @@ export class UpdateHistoricalReminderDto {
   @IsOptional()
   @IsUUID()
   createdFromFollowUpId?: string | null;
-
-  @ApiPropertyOptional({ format: 'uuid' })
-  @IsOptional()
-  @IsUUID()
-  resultingFollowUpId?: string | null;
 
   @ApiPropertyOptional({ type: HistoricalReminderMedicalAppointmentDto })
   @IsOptional()

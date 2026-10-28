@@ -15,18 +15,30 @@ import { Patient } from './patient.entity';
 import { PatientMedicalAppointment } from './patient-medical-appointment.entity';
 import { ReminderKind } from './reminder-kind.enum';
 import { ReminderStatus } from './reminder-status.enum';
+import {
+  ReminderChannel,
+  ReminderDeliveryStatus,
+  ReminderLead,
+} from './reminder-delivery.enums';
 import { User } from './user.entity';
 
 @Entity('reminders')
 @Check(`"status" IN ('PENDING','DONE','DISMISSED')`)
 @Check(`"kind" IN ('GENERIC','MEDICAL_APPOINTMENT')`)
+@Check(`"channel" IN ('EMAIL','MANUAL')`)
+@Check(`"lead" IS NULL OR "lead" IN ('TWO_HOURS','ONE_DAY','CUSTOM')`)
+@Check(`"delivery_status" IN ('PENDING','SENT','FAILED')`)
 @Index('IDX_reminders_subject_patient_id', ['subjectPatientId'])
 @Index('IDX_reminders_created_from_follow_up_id', ['createdFromFollowUpId'])
 @Index('IDX_reminders_assigned_agent_id', ['assignedAgentId'])
-@Index('IDX_reminders_resulting_follow_up_id', ['resultingFollowUpId'])
 @Index('IDX_reminders_medical_appointment_id', ['medicalAppointmentId'])
 @Index('IDX_reminders_status', ['status'])
 @Index('IDX_reminders_due_at', ['dueAt'])
+@Index('IDX_reminders_delivery_queue', [
+  'channel',
+  'deliveryStatus',
+  'remindAt',
+])
 @Index('IDX_reminders_due_on', ['subjectPatientId', 'dueOn', 'createdAt', 'id'])
 @Index('IDX_reminders_patient_due_timeline', [
   'subjectPatientId',
@@ -72,11 +84,23 @@ export class Reminder {
   completedAt!: Date | null;
   @Column({ name: 'completed_on', type: 'date', nullable: true })
   completedOn!: string | null;
-  @Column({ name: 'resulting_follow_up_id', type: 'uuid', nullable: true })
-  resultingFollowUpId!: string | null;
-  @ManyToOne(() => FollowUp)
-  @JoinColumn({ name: 'resulting_follow_up_id' })
-  resultingFollowUp!: FollowUp | null;
+  @Column({ type: 'varchar', length: 20, default: ReminderChannel.MANUAL })
+  channel!: ReminderChannel;
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  lead!: ReminderLead | null;
+  @Column({ name: 'remind_at', type: 'timestamptz', nullable: true })
+  remindAt!: Date | null;
+  @Column({
+    name: 'delivery_status',
+    type: 'varchar',
+    length: 20,
+    default: ReminderDeliveryStatus.PENDING,
+  })
+  deliveryStatus!: ReminderDeliveryStatus;
+  @Column({ name: 'sent_at', type: 'timestamptz', nullable: true })
+  sentAt!: Date | null;
+  @Column({ name: 'delivery_error', type: 'text', nullable: true })
+  deliveryError!: string | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })

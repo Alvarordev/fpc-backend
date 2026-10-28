@@ -26,6 +26,7 @@ import { Roles } from '../../shared/decorators/roles.decorator';
 import { User } from '../../database/entities/user.entity';
 import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
+import { toReminderResponse } from '../reminders/reminder-response.mapper';
 import { CreateReminderDto } from '../reminders/dto/create-reminder.dto';
 import { ReminderResponseDto } from '../reminders/dto/reminder-response.dto';
 import { CreateFollowUpDto } from './dto/create-follow-up.dto';
@@ -203,35 +204,6 @@ export class FollowUpsController {
   }
 
   private toReminder(this: void, item: Reminder): ReminderResponseDto {
-    const appointment = item.medicalAppointment;
-    return {
-      id: item.id,
-      subjectPatientId: item.subjectPatientId,
-      createdFromFollowUpId: item.createdFromFollowUpId,
-      assignedAgentId: item.assignedAgentId,
-      dueAt: item.dueAt,
-      dueOn: item.dueOn,
-      description: item.description,
-      kind: item.kind,
-      medicalAppointmentId: item.medicalAppointmentId,
-      medicalAppointment: appointment
-        ? {
-            id: appointment.id,
-            specialty: appointment.specialty,
-            healthCenterId: appointment.healthCenterId,
-            healthCenterName: appointment.healthCenter?.name ?? null,
-            appointmentDate: appointment.appointmentDate,
-            appointmentTime: appointment.appointmentTime,
-            status: appointment.status,
-            isFirstConsultation: appointment.isFirstConsultation,
-          }
-        : null,
-      status: item.status,
-      completedAt: item.completedAt,
-      completedOn: item.completedOn,
-      resultingFollowUpId: item.resultingFollowUpId,
-      createdAt: item.createdAt,
-      isHistorical: item.isHistorical,
-    };
+    return toReminderResponse(item);
   }
 }

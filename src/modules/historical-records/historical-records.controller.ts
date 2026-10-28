@@ -30,6 +30,7 @@ import { Enrollment } from '../../database/entities/enrollment.entity';
 import { FollowUp } from '../../database/entities/follow-up.entity';
 import { PsychooncologyAppointment } from '../../database/entities/psychooncology-appointment.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
+import { toReminderResponse } from '../reminders/reminder-response.mapper';
 import { User } from '../../database/entities/user.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
@@ -38,7 +39,6 @@ import { ApiErrorResponseDto } from '../../shared/filters/api-error-response.dto
 import { EnrollmentResponseDto } from '../enrollments/dto/enrollment-response.dto';
 import { FollowUpResponseDto } from '../follow-ups/dto/follow-up-response.dto';
 import {
-  ReminderMedicalAppointmentSummaryDto,
   ReminderResponseDto,
 } from '../reminders/dto/reminder-response.dto';
 import { PatientMedicalAppointmentResponseDto } from '../patients/clinical/medical-appointments/dto/patient-medical-appointment-response.dto';
@@ -279,38 +279,7 @@ export class HistoricalRecordsController {
   }
 
   private toReminderResponse(this: void, item: Reminder): ReminderResponseDto {
-    const appointment = item.medicalAppointment;
-    const medicalAppointment: ReminderMedicalAppointmentSummaryDto | null =
-      appointment
-        ? {
-            id: appointment.id,
-            specialty: appointment.specialty,
-            healthCenterId: appointment.healthCenterId,
-            healthCenterName: appointment.healthCenter?.name ?? null,
-            appointmentDate: appointment.appointmentDate,
-            appointmentTime: appointment.appointmentTime,
-            status: appointment.status,
-            isFirstConsultation: appointment.isFirstConsultation,
-          }
-        : null;
-    return {
-      id: item.id,
-      subjectPatientId: item.subjectPatientId,
-      createdFromFollowUpId: item.createdFromFollowUpId,
-      assignedAgentId: item.assignedAgentId,
-      dueAt: item.dueAt,
-      dueOn: item.dueOn,
-      description: item.description,
-      kind: item.kind,
-      medicalAppointmentId: item.medicalAppointmentId,
-      medicalAppointment,
-      status: item.status,
-      completedAt: item.completedAt,
-      completedOn: item.completedOn,
-      resultingFollowUpId: item.resultingFollowUpId,
-      createdAt: item.createdAt,
-      isHistorical: item.isHistorical,
-    };
+    return toReminderResponse(item);
   }
 
   private toPsychooncologyResponse(

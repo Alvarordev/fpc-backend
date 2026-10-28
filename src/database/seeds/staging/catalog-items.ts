@@ -1,4 +1,5 @@
 import type { CatalogKind } from '../../entities/catalog-item.entity';
+import { ALERT_CATALOG_SEEDS } from '../../../modules/alerts/alert-catalog-seeds';
 
 export interface CatalogItemSeed {
   kind: CatalogKind;
@@ -1352,4 +1353,5 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     sortOrder: 90,
     isSystem: true,
   },
+  ...ALERT_CATALOG_SEEDS.map((item) => ({ ...item, isSystem: true })),
 ];

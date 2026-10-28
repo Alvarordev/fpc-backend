@@ -583,11 +583,6 @@ export async function deleteHistoricalOwnedByFollowUp(
     { createdFromFollowUpId: null },
   );
   await manager.update(
-    Reminder,
-    { resultingFollowUpId: followUpId },
-    { resultingFollowUpId: null },
-  );
-  await manager.update(
     PsychooncologyAppointment,
     { followUpId },
     { followUpId: null },

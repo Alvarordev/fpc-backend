@@ -1,6 +1,7 @@
 import {
   IsBoolean,
   IsDateString,
+  IsEnum,
   IsOptional,
   IsString,
   IsUUID,
@@ -8,6 +9,10 @@ import {
   MaxLength,
 } from 'class-validator';
 import { APPOINTMENT_TIME_PATTERN } from './appointment-time';
+import {
+  ReminderChannel,
+  ReminderLead,
+} from '../../../../../database/entities/reminder-delivery.enums';
 
 export class CreateMedicalAppointmentDto {
   @IsUUID() patientId!: string;
@@ -27,4 +32,9 @@ export class CreateMedicalAppointmentDto {
   @IsOptional() @IsBoolean() isFirstConsultation?: boolean;
   @IsOptional() @IsBoolean() attendedViaSepa?: boolean;
   @IsOptional() @IsBoolean() referredViaSepa?: boolean;
+  // Reminder created for future appointments (defaults: ONE_DAY, EMAIL when
+  // the patient has an email).
+  @IsOptional() @IsEnum(ReminderLead) reminderLead?: ReminderLead;
+  @IsOptional() @IsDateString() reminderAt?: string;
+  @IsOptional() @IsEnum(ReminderChannel) reminderChannel?: ReminderChannel;
 }
