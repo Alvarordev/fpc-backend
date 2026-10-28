@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -28,9 +30,10 @@ import { CreateReminderDto } from './dto/create-reminder.dto';
 import { ListRemindersDto } from './dto/list-reminders.dto';
 import { UpdateReminderDto } from './dto/update-reminder.dto';
 import {
-  ReminderMedicalAppointmentSummaryDto,
+  ReminderMessageResponseDto,
   ReminderResponseDto,
 } from './dto/reminder-response.dto';
+import { toReminderResponse } from './reminder-response.mapper';
 import { RemindersService } from './reminders.service';
 import { UserRole } from '../../database/entities/user-role.enum';
 
@@ -93,13 +96,66 @@ export class RemindersController {
     return this.service.update(id, dto, user).then(this.toResponse);
   }
 
+  @Get(':id/message')
+  @Roles(...READ)
+  @ApiOperation({
+    summary: 'Get the reminder text ready to copy (manual WhatsApp delivery)',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: ReminderMessageResponseDto })
+  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  message(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ): Promise<ReminderMessageResponseDto> {
+    return this.service.getMessage(id, user);
+  }
+
+  @Post(':id/send-email')
+  @Roles(...WRITE)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Email the reminder to the patient now',
+    description:
+      'The outcome is stored in deliveryStatus (SENT or FAILED with deliveryError). When email is not configured the reminder ends as FAILED.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: ReminderResponseDto })
+  @ApiBadRequestResponse({
+    description: 'Reminder is not pending or the patient has no email',
+  })
+  @ApiForbiddenResponse({
+    description: 'Agents can only send their own reminders',
+  })
+  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  sendEmail(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.service.sendEmail(id, user).then(this.toResponse);
+  }
+
+  @Post(':id/mark-sent')
+  @Roles(...WRITE)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Mark a reminder as delivered manually (e.g. copied to WhatsApp)',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: ReminderResponseDto })
+  @ApiBadRequestResponse({ description: 'Reminder is not pending' })
+  @ApiForbiddenResponse({
+    description: 'Agents can only update their own reminders',
+  })
+  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  markSent(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.service.markSent(id, user).then(this.toResponse);
+  }
+
   @Patch(':id/complete')
   @Roles(...WRITE)
   @ApiOperation({ summary: 'Complete a pending reminder' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: ReminderResponseDto })
   @ApiBadRequestResponse({
-    description: 'Reminder is not pending or the follow-up is invalid',
+    description: 'Reminder is not pending',
   })
   @ApiForbiddenResponse({
     description: 'Agents can only complete their own reminders',
@@ -130,38 +186,6 @@ export class RemindersController {
   }
 
   private toResponse(this: void, item: Reminder): ReminderResponseDto {
-    const appointment = item.medicalAppointment;
-    const medicalAppointment: ReminderMedicalAppointmentSummaryDto | null =
-      appointment
-        ? {
-            id: appointment.id,
-            specialty: appointment.specialty,
-            healthCenterId: appointment.healthCenterId,
-            healthCenterName: appointment.healthCenter?.name ?? null,
-            appointmentDate: appointment.appointmentDate,
-            appointmentTime: appointment.appointmentTime,
-            status: appointment.status,
-            isFirstConsultation: appointment.isFirstConsultation,
-          }
-        : null;
-
-    return {
-      id: item.id,
-      subjectPatientId: item.subjectPatientId,
-      createdFromFollowUpId: item.createdFromFollowUpId,
-      assignedAgentId: item.assignedAgentId,
-      dueAt: item.dueAt,
-      dueOn: item.dueOn,
-      description: item.description,
-      kind: item.kind,
-      medicalAppointmentId: item.medicalAppointmentId,
-      medicalAppointment,
-      status: item.status,
-      completedAt: item.completedAt,
-      completedOn: item.completedOn,
-      resultingFollowUpId: item.resultingFollowUpId,
-      createdAt: item.createdAt,
-      isHistorical: item.isHistorical,
-    };
+    return toReminderResponse(item);
   }
 }

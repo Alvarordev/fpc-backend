@@ -81,17 +81,21 @@ export async function seedAlerts(
       severity: alertCase.severity,
       category: alertCase.category,
       ticketNumber,
-      status: isResolved ? AlertStatus.RESOLVED : AlertStatus.ACTIVE,
+      status: isResolved ? AlertStatus.RESOLVED : AlertStatus.REPORTED,
       resolvedAt: isResolved ? addDays(now, -rng.int(1, 15)) : null,
-      // Both resolver columns exist (the user one was added later); keep them
-      // pointing at the same person.
-      resolvedById: isResolved ? resolver.id : null,
       resolvedByUserId: isResolved ? resolver.userId : null,
     });
     plan.push({ row, isResolved, creator, resolver, ticketNumber });
   }
 
   const rows = await manager.save(plan.map(({ row }) => row));
+  await manager.query(
+    `INSERT INTO alert_reports (alert_id, patient_id, follow_up_id, reported_at)
+     SELECT a.id, f.subject_patient_id, a.follow_up_id, a.created_at
+       FROM alerts a JOIN follow_ups f ON f.id = a.follow_up_id
+      WHERE a.id = ANY($1::uuid[])`,
+    [rows.map((row) => row.id)],
+  );
 
   const events: AlertEvent[] = [];
   rows.forEach((row, index) => {

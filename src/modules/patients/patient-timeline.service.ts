@@ -135,7 +135,8 @@ const APPOINTMENT_MODALITY_LABELS: Record<string, string> = {
 };
 
 const ALERT_STATUS_LABELS: Record<string, string> = {
-  ACTIVE: 'activa',
+  REPORTED: 'reportada',
+  IN_REVIEW: 'en revisión',
   RESOLVED: 'resuelta',
 };
 
@@ -153,7 +154,6 @@ const ALERT_CATEGORY_LABELS: Record<string, string> = {
   TRANSPORT: 'transporte',
   ADMINISTRATIVE: 'administrativa',
   PSYCHOSOCIAL: 'psicosocial',
-  OTHER: 'otra',
 };
 
 const DOSE_UNIT_LABELS: Record<string, string> = {
@@ -849,7 +849,7 @@ export class PatientTimelineService {
       UNION ALL
 
       SELECT
-        alert_record.follow_up_id,
+        alert_report.follow_up_id,
         'ALERT'::text AS outcome_type,
         alert_record.id AS record_id,
         COALESCE(follow_up.occurred_at, alert_record.created_at) AS occurred_at,
@@ -860,11 +860,11 @@ export class PatientTimelineService {
           'severity', alert_record.severity,
           'category', alert_record.category,
           'ticketNumber', alert_record.ticket_number,
-          'underReview', alert_record.under_review,
           'derivedTo', alert_record.derived_to,
           'derivationNotes', alert_record.derivation_notes
         ) AS data
-      FROM alerts alert_record
+      FROM alert_reports alert_report
+      JOIN alerts alert_record ON alert_record.id = alert_report.alert_id
       LEFT JOIN (
         SELECT
           id,
@@ -876,8 +876,8 @@ export class PatientTimelineService {
             created_at
           ) AS occurred_at
         FROM follow_ups
-      ) follow_up ON follow_up.id = alert_record.follow_up_id
-      WHERE alert_record.follow_up_id = ANY($1::uuid[])
+      ) follow_up ON follow_up.id = alert_report.follow_up_id
+      WHERE alert_report.follow_up_id = ANY($1::uuid[])
 
       ORDER BY follow_up_id, occurred_at DESC, outcome_type ASC, record_id DESC
     `;
@@ -1168,7 +1168,6 @@ export class PatientTimelineService {
             mapValue(data, 'category', ALERT_CATEGORY_LABELS),
           ),
           optionalPart('Detalle', text(data, 'description')),
-          bool(data, 'underReview') ? 'Requiere revisión' : null,
           optionalPart('Derivada a', text(data, 'derivedTo')),
           optionalPart('Nota de derivación', text(data, 'derivationNotes')),
         ];

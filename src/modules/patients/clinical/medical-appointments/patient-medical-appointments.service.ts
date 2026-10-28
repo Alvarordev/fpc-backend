@@ -20,6 +20,7 @@ import { citaEnvelopeFor } from './cita-envelope';
 import { normalizeReferralFields } from './referral-fields';
 import type { CreateHistoricalMedicalAppointmentDto } from '../../../historical-records/dto/create-historical-medical-appointment.dto';
 import { CatalogValueService } from '../../../catalogs/catalog-value.service';
+import { createAppointmentReminder } from '../../../reminders/appointment-reminder';
 @Injectable()
 export class PatientMedicalAppointmentsService {
   constructor(
@@ -62,8 +63,9 @@ export class PatientMedicalAppointmentsService {
       input.nextAppointmentSpecialty,
       { otherText: input.nextAppointmentSpecialtyOther, manager },
     );
+    const { reminderLead, reminderAt, reminderChannel, ...fields } = input;
     const catalogued = {
-      ...normalizeReferralFields(input),
+      ...normalizeReferralFields(fields),
       specialty: specialty.code,
       specialtyOther: specialty.other,
       nextAppointmentSpecialty: nextSpecialty?.code ?? null,
@@ -84,6 +86,11 @@ export class PatientMedicalAppointmentsService {
           { patientId, specialty: specialty.code, isCurrent: true },
           catalogued,
         ));
+    await createAppointmentReminder(
+      manager ?? this.repository.manager,
+      appointment,
+      { lead: reminderLead, remindAt: reminderAt, channel: reminderChannel },
+    );
     await this.invalidations.markDirty(patientId, manager);
     if (dispatchWebhook)
       await this.webhooks.enqueue(

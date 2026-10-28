@@ -22,6 +22,10 @@ import { N8nTransactionalDispatchService } from '../../../../integrations/n8n/tr
 import { citaEnvelopeFor } from './cita-envelope';
 import { normalizeReferralFields } from './referral-fields';
 import { CatalogValueService } from '../../../catalogs/catalog-value.service';
+import {
+  createAppointmentReminder,
+  syncAppointmentReminder,
+} from '../../../reminders/appointment-reminder';
 
 @Injectable()
 export class MedicalAppointmentsService {
@@ -51,6 +55,7 @@ export class MedicalAppointmentsService {
       agent.id,
     );
 
+    const { reminderLead, reminderAt, reminderChannel, ...fields } = input;
     const specialty = await this.catalogValues.resolve(
       'medical_specialty',
       input.specialty,
@@ -70,7 +75,7 @@ export class MedicalAppointmentsService {
         isCurrent: true,
       },
       {
-        ...normalizeReferralFields(input),
+        ...normalizeReferralFields(fields),
         followUpId,
         specialty: specialty.code,
         specialtyOther: specialty.other,
@@ -79,6 +84,12 @@ export class MedicalAppointmentsService {
         status: MedicalAppointmentStatus.SCHEDULED,
       },
     );
+    await createAppointmentReminder(this.appointments.manager, appointment, {
+      assignedAgentId: agent.id,
+      lead: reminderLead,
+      remindAt: reminderAt,
+      channel: reminderChannel,
+    });
     await this.invalidations.markDirty(input.patientId);
     await this.webhooks.enqueue(citaEnvelopeFor(patient, appointment));
     return this.findOneOrThrow(appointment.id);
@@ -154,6 +165,8 @@ export class MedicalAppointmentsService {
       undefined,
       { inherit: true },
     );
+    if (appointment.status === MedicalAppointmentStatus.SCHEDULED)
+      await syncAppointmentReminder(this.appointments.manager, appointment);
     await this.invalidations.markDirty(existing.patientId);
     return this.findOneOrThrow(appointment.id);
   }

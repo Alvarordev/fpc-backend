@@ -13,13 +13,19 @@ import { AlertEventsService } from './alert-events.service';
 import { AlertSummaryService } from './alert-summary.service';
 import { PatientAccessModule } from '../patients/access/patient-access.module';
 import { N8nModule } from '../../integrations/n8n/n8n.module';
+import { EmailModule } from '../../integrations/email/email.module';
+import { CatalogsModule } from '../catalogs/catalogs.module';
+import { AlertReport } from '../../database/entities/alert-report.entity';
+import { User } from '../../database/entities/user.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Alert,
       AlertEvent,
+      AlertReport,
       Agent,
+      User,
       HealthCenter,
       FollowUp,
       Patient,
@@ -27,6 +33,8 @@ import { N8nModule } from '../../integrations/n8n/n8n.module';
     PatientAccessModule,
     ThrottlerModule,
     N8nModule,
+    EmailModule,
+    CatalogsModule,
   ],
   controllers: [AlertsController],
   providers: [AlertsService, AlertEventsService, AlertSummaryService],
