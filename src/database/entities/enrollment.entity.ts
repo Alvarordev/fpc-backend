@@ -28,10 +28,8 @@ export enum AffiliationType {
 @Index('IDX_enrollments_companion_id', ['companionId'])
 @Index('IDX_enrollments_enrolled_on', ['enrolledOn', 'createdAt', 'id'])
 @Index('IDX_enrollments_historical_loaded_by_id', ['historicalLoadedById'])
-@Index('UQ_enrollments_patient_id_operational', ['patientId'], {
-  unique: true,
-  where: '"is_historical" = false',
-})
+// A patient who left the program or had cancer ruled out enrolls again (E6).
+@Index('IDX_enrollments_patient_id', ['patientId'])
 export class Enrollment {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'patient_id', type: 'uuid' }) patientId!: string;

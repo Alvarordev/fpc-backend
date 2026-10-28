@@ -126,12 +126,6 @@ export class PatientDetailsResponseDto {
   knowsAboutFissal!: boolean | null;
 
   @ApiProperty({ nullable: true })
-  programDropoutReason!: string | null;
-
-  @ApiProperty({ format: 'date', nullable: true })
-  programDropoutDate!: string | null;
-
-  @ApiProperty({ nullable: true })
   transportationViaSepa!: boolean | null;
 
   @ApiProperty({ nullable: true })
@@ -154,9 +148,6 @@ export class PatientDetailsResponseDto {
 
   @ApiProperty({ format: 'date', nullable: true })
   attendedEducationalTalkAt!: string | null;
-
-  @ApiProperty({ nullable: true })
-  programDropoutReasonCode!: string | null;
 
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
@@ -207,8 +198,6 @@ export class PatientDetailsResponseDto {
       receivesFinancialSupport: details.receivesFinancialSupport,
       hasConadisCard: details.hasConadisCard,
       knowsAboutFissal: details.knowsAboutFissal,
-      programDropoutReason: details.programDropoutReason,
-      programDropoutDate: details.programDropoutDate,
       transportationViaSepa: details.transportationViaSepa,
       transportationSepaProvider: details.transportationSepaProvider,
       transportationSepaProviderOther: details.transportationSepaProviderOther,
@@ -217,7 +206,6 @@ export class PatientDetailsResponseDto {
       shelterSepaProviderOther: details.shelterSepaProviderOther,
       attendedEducationalTalk: details.attendedEducationalTalk,
       attendedEducationalTalkAt: details.attendedEducationalTalkAt,
-      programDropoutReasonCode: details.programDropoutReasonCode,
       createdAt: details.createdAt.toISOString(),
       updatedAt: details.updatedAt.toISOString(),
       healthPhaseHistory: history.map((history) =>

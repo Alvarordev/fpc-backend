@@ -152,12 +152,6 @@ export class PatientDetails {
   @Column({ name: 'knows_about_fissal', type: 'boolean', nullable: true })
   knowsAboutFissal!: boolean | null;
 
-  @Column({ name: 'program_dropout_reason', type: 'text', nullable: true })
-  programDropoutReason!: string | null;
-
-  @Column({ name: 'program_dropout_date', type: 'date', nullable: true })
-  programDropoutDate!: string | null;
-
   @Column({ name: 'transportation_via_sepa', type: 'boolean', nullable: true })
   transportationViaSepa!: boolean | null;
 
@@ -203,14 +197,6 @@ export class PatientDetails {
     nullable: true,
   })
   attendedEducationalTalkAt!: string | null;
-
-  @Column({
-    name: 'program_dropout_reason_code',
-    type: 'varchar',
-    length: 100,
-    nullable: true,
-  })
-  programDropoutReasonCode!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

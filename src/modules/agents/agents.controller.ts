@@ -33,6 +33,7 @@ export class AgentsController {
     return this.agentsService.create(input).then(this.toResponse);
   }
   @Get()
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT)
   @ApiOperation({ summary: 'List agents' })
   @ApiOkResponse({ type: AgentResponseDto, isArray: true })
   findAll() {
@@ -41,6 +42,7 @@ export class AgentsController {
       .then((items) => items.map(this.toResponse));
   }
   @Get(':id')
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT)
   @ApiOperation({ summary: 'Get an agent' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AgentResponseDto })

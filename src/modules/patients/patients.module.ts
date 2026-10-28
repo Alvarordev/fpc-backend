@@ -70,6 +70,7 @@ import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-n
 import { PatientNonOncologicalFollowUpsController } from './clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.controller';
 import { PatientNonOncologicalFollowUpsService } from './clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 import { ClinicalOwnershipService } from './clinical-ownership.service';
+import { PatientHealthSubcategoryService } from './health-subcategory/patient-health-subcategory.service';
 
 @Module({
   imports: [
@@ -147,6 +148,7 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
     PatientPsychooncologySupportAssessmentsService,
     PatientNonOncologicalFollowUpsService,
     ClinicalOwnershipService,
+    PatientHealthSubcategoryService,
   ],
   exports: [
     PatientsService,
@@ -166,6 +168,7 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
     PatientPsychooncologySupportAssessmentsService,
     PatientNonOncologicalFollowUpsService,
     ClinicalOwnershipService,
+    PatientHealthSubcategoryService,
   ],
 })
 export class PatientsModule {}

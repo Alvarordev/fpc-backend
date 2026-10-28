@@ -398,7 +398,7 @@ async function seedTreatments(
           changeReason:
             'Se completó el esquema y se avanzó a la siguiente fase.',
           notReceivingReason: null,
-          treatmentSituation: TreatmentSituation.FINALIZADO,
+          treatmentSituation: TreatmentSituation.CULMINADO,
           hasLatestPrescription: null,
           latestPrescriptionDate: null,
         }),
@@ -426,10 +426,10 @@ async function seedTreatments(
         : 'En espera de la aprobación del expediente FISSAL.',
       treatmentSituation: isReceiving
         ? rng.pick([
-            TreatmentSituation.EN_CURSO,
-            TreatmentSituation.INTERRUMPIDO,
+            TreatmentSituation.EN_PROCESO,
+            TreatmentSituation.SUSPENDIDO,
           ])
-        : TreatmentSituation.PENDIENTE_DE_INICIO,
+        : TreatmentSituation.EN_ESPERA,
       hasLatestPrescription: isReceiving ? rng.maybeBool(0.7) : null,
       latestPrescriptionDate:
         isReceiving && rng.bool(0.6)
@@ -460,7 +460,7 @@ async function seedTreatments(
           isCurrent: true,
           changeReason: null,
           notReceivingReason: null,
-          treatmentSituation: TreatmentSituation.EN_CURSO,
+          treatmentSituation: TreatmentSituation.EN_PROCESO,
           hasLatestPrescription: rng.maybeBool(0.7),
           latestPrescriptionDate: rng.bool(0.6)
             ? toDateOnly(addDays(now, -rng.int(5, 40)))

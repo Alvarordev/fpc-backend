@@ -1,9 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { FollowUp } from '../../../../database/entities/follow-up.entity';
 import { PatientRole } from '../../../../database/entities/patient-role.enum';
-import { PatientInsurance } from '../../../../database/entities/patient-insurance.entity';
+import {
+  InsuranceType,
+  PatientInsurance,
+} from '../../../../database/entities/patient-insurance.entity';
 import { HistoryVersioningService } from '../../history-versioning/history-versioning.service';
 import { PatientsService } from '../../patients.service';
 import { PatientSummaryInvalidationService } from '../../../patient-summaries/patient-summary-invalidation.service';
@@ -39,11 +46,18 @@ export class PatientInsuranceService {
       input.epsProvider,
       { manager },
     );
+    // SIS affiliations by SEPA live only in patient_sis_affiliation.
+    const isEssalud = insuranceType.code === InsuranceType.ESSALUD;
+    if (!isEssalud && input.affiliatedViaSepa)
+      throw new BadRequestException(
+        'affiliatedViaSepa only applies to ESSALUD; record SIS affiliations through sis-affiliation',
+      );
     const values = {
       ...input,
       patientId,
       insuranceType: insuranceType.code,
       epsProvider: epsProvider?.code ?? null,
+      affiliatedViaSepa: isEssalud ? (input.affiliatedViaSepa ?? null) : null,
     };
     const insurance = await (manager
       ? this.versioning.replaceCurrent(

@@ -15,6 +15,7 @@ import { PatientSisAffiliationService } from '../patients/clinical/sis-affiliati
 import { PatientTreatmentsService } from '../patients/clinical/treatments/patient-treatments.service';
 import { PatientDiagnosticStatusesService } from '../patients/diagnostic-status/patient-diagnostic-statuses.service';
 import { PatientsService } from '../patients/patients.service';
+import { PatientHealthSubcategoryService } from '../patients/health-subcategory/patient-health-subcategory.service';
 import { PatientSocialNotesService } from '../patients/social-notes/patient-social-notes.service';
 import { PatientSymptomReportsService } from '../patients/symptom-reports/patient-symptom-reports.service';
 import { PsychooncologyAppointmentsService } from '../psychooncology-appointments/psychooncology-appointments.service';
@@ -60,6 +61,7 @@ export class HistoricalRecordsService {
     addresses: PatientAddressesService,
     healthBackgroundAssessments: PatientHealthBackgroundAssessmentsService,
     socialNotes: PatientSocialNotesService,
+    subcategories: PatientHealthSubcategoryService,
   ) {
     this.clinical = {
       patients,
@@ -73,6 +75,7 @@ export class HistoricalRecordsService {
       addresses,
       healthBackgroundAssessments,
       socialNotes,
+      subcategories,
     };
   }
 
