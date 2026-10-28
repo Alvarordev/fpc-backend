@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
+  IsDateString,
   IsIn,
   IsOptional,
   IsString,
@@ -10,6 +11,7 @@ import {
 import {
   AppointmentBeneficiaryType,
   AppointmentModality,
+  AppointmentReminderMode,
 } from '../../../database/entities/psychooncology-appointment.entity';
 
 export class CreatePsychooncologyAppointmentDto {
@@ -28,7 +30,27 @@ export class CreatePsychooncologyAppointmentDto {
   @IsOptional()
   @IsUrl({ protocols: ['https'], require_protocol: true })
   zoomLink?: string;
-  @IsOptional() @IsBoolean() isAdditionalSession?: boolean;
+  @ApiPropertyOptional({
+    description:
+      'Required once the base cycle already has its 4 sessions (scheduled by an agent)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isAdditionalSession?: boolean;
   @IsIn(Object.values(AppointmentModality)) modality!: AppointmentModality;
   @IsOptional() @IsString() schedulingNotes?: string;
+  @ApiPropertyOptional({
+    enum: AppointmentReminderMode,
+    default: AppointmentReminderMode.MANUAL,
+  })
+  @IsOptional()
+  @IsIn(Object.values(AppointmentReminderMode))
+  reminderMode?: AppointmentReminderMode;
+  @ApiPropertyOptional({
+    format: 'date-time',
+    description: 'Required when reminderMode is CUSTOM',
+  })
+  @IsOptional()
+  @IsDateString()
+  remindAt?: string;
 }

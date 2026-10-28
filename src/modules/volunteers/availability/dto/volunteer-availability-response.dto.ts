@@ -9,6 +9,8 @@ export class VolunteerAvailabilityResponseDto {
     string | null;
   @ApiProperty({ example: '10:00:00', nullable: true }) endTime!: string | null;
   @ApiProperty({ enum: AvailabilityStatus }) status!: AvailabilityStatus;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  recurrenceId!: string | null;
   @ApiProperty() isHistorical!: boolean;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
 }
