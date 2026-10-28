@@ -52,7 +52,13 @@ Generado desde openapi/openapi.json. Fuente de verdad para adaptar el front.
 - PATCH /patients/{id}/companions/{companionId}/person
 - POST /patients/{id}/companions/{companionId}/convert-to-patient
 
+- GET /talk-interests
+- GET /patients/{id}/talk-interests
+- POST /patients/{id}/companions/{companionId}/talk-interests
+- DELETE /patients/{id}/talk-interests/{interestId}
+
 ## Endpoints eliminados
+- GET /family-talk-interests (reemplazado por GET /talk-interests)
 - PATCH /patients/{id}/reactivate (se reactiva solo con POST /follow-ups/{id}/reenrollment)
 
 ## Schemas con propiedades cambiadas
@@ -106,6 +112,8 @@ Generado desde openapi/openapi.json. Fuente de verdad para adaptar el front.
 - VolunteerCalendarAppointmentDto: +[] -[] enum cambiado en ['status']
 
 - POST /patients/{id}/companions devuelve CompanionResponseDto (antes PatientResponseDto); CompanionPatientResponseDto.companion es CompanionResponseDto. PatientRole ya no tiene COMPANION. relationship es un código del catálogo companion_relationship.
+
+- CreateEnrollmentFamilyTalkInterestDto: talkName → talk (código o nombre del catálogo educational_talk).
 
 ## Schemas nuevos
 - AlertAffectedPatientDto

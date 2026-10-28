@@ -65,8 +65,12 @@ export class EnrollmentFollowUpDto {
   @IsOptional() @IsDateString() completedAt?: string;
 }
 
+/** CH1: el familiar se empareja por nombre con un acompañante del paciente o se crea. */
 export class CreateEnrollmentFamilyTalkInterestDto {
-  @IsString() @MaxLength(255) talkName!: string;
+  @ApiProperty({ description: 'Código (o nombre) del catálogo educational_talk' })
+  @IsString()
+  @MaxLength(255)
+  talk!: string;
   @IsString() @MaxLength(255) familyMemberName!: string;
   @IsOptional() @IsString() @MaxLength(50) familyMemberPhone?: string;
   @IsOptional() @IsString() @MaxLength(255) familyMemberEmail?: string;

@@ -144,6 +144,15 @@ extraer del código y validar.
 
 - **CH1** Catálogo de charlas (solo nombre, sin fecha ni lugar). Se registra qué **acompañantes**
   están interesados. No se registra asistencia.
+  - **Implementado (2026-10-28).** Catálogo `educational_talk` (lo editan fundación y admin) y tabla
+    `companion_talk_interests` (acompañante, charla, paciente desde el que se registró, seguimiento,
+    autor; un interés por acompañante y charla). Reemplaza `enrollment_family_talk_interests`: cada
+    familiar se emparejó por nombre con un acompañante del paciente o se creó y vinculó; cada nombre de
+    charla pasó al catálogo. El enrolamiento sigue recibiendo `familyPreventionTalkInterests` con
+    nombre/teléfono/correo del familiar y `talk` (código o nombre del catálogo) y aplica la misma regla.
+  - Endpoints: `GET /talk-interests` (filtros charla y nombre), `GET /patients/:id/talk-interests`,
+    `POST /patients/:id/companions/:companionId/talk-interests`,
+    `DELETE /patients/:id/talk-interests/:interestId`. Se quitó `GET /family-talk-interests`.
 
 ## 10. Alertas
 

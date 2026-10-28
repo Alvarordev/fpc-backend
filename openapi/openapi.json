@@ -2978,17 +2978,28 @@
         ]
       }
     },
-    "/family-talk-interests": {
+    "/talk-interests": {
       "get": {
-        "description": "Returns interests collected during enrollment, with the related patient.",
-        "operationId": "FamilyTalkInterestsController_findAll",
+        "description": "CH1. Filter by talk (catalog code) or by companion/patient name.",
+        "operationId": "TalkInterestsController_findAll",
         "parameters": [
+          {
+            "name": "talk",
+            "required": false,
+            "in": "query",
+            "description": "Código del catálogo educational_talk",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
           {
             "name": "search",
             "required": false,
             "in": "query",
-            "description": "Search by family member name or patient name",
+            "description": "Nombre del acompañante o del paciente",
             "schema": {
+              "maxLength": 255,
               "type": "string"
             }
           },
@@ -3020,13 +3031,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FamilyTalkInterestListResponseDto"
+                  "$ref": "#/components/schemas/TalkInterestListResponseDto"
                 }
               }
             }
           },
           "401": {
-            "description": "JWT missing, invalid, or expired"
+            "description": ""
           },
           "403": {
             "description": ""
@@ -3037,9 +3048,171 @@
             "bearer": []
           }
         ],
-        "summary": "List family members interested in cancer prevention talks",
+        "summary": "List companions interested in prevention talks",
         "tags": [
-          "family-talk-interests"
+          "talk-interests"
+        ]
+      }
+    },
+    "/patients/{id}/talk-interests": {
+      "get": {
+        "operationId": "TalkInterestsController_findForPatient",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TalkInterestResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Talk interests of a patient's companions",
+        "tags": [
+          "talk-interests"
+        ]
+      }
+    },
+    "/patients/{id}/companions/{companionId}/talk-interests": {
+      "post": {
+        "operationId": "TalkInterestsController_create",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "companionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTalkInterestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TalkInterestResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Companion not linked, or follow-up not found"
+          },
+          "409": {
+            "description": "Already interested in that talk"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register a companion as interested in a talk",
+        "tags": [
+          "talk-interests"
+        ]
+      }
+    },
+    "/patients/{id}/talk-interests/{interestId}": {
+      "delete": {
+        "operationId": "TalkInterestsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "interestId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Interest not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a talk interest",
+        "tags": [
+          "talk-interests"
         ]
       }
     },
@@ -3816,7 +3989,8 @@
                 "alert_category",
                 "alert_derivation_entity",
                 "reenrollment_reason",
-                "companion_relationship"
+                "companion_relationship",
+                "educational_talk"
               ],
               "type": "string"
             }
@@ -14158,9 +14332,10 @@
       "CreateEnrollmentFamilyTalkInterestDto": {
         "type": "object",
         "properties": {
-          "talkName": {
+          "talk": {
             "type": "string",
-            "maxLength": 255
+            "maxLength": 255,
+            "description": "Código (o nombre) del catálogo educational_talk"
           },
           "familyMemberName": {
             "type": "string",
@@ -14176,7 +14351,7 @@
           }
         },
         "required": [
-          "talkName",
+          "talk",
           "familyMemberName"
         ]
       },
@@ -14508,24 +14683,31 @@
           "followUpQualityRating"
         ]
       },
-      "FamilyTalkInterestResponseDto": {
+      "TalkInterestResponseDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
           },
-          "talkName": {
+          "talk": {
             "type": "string"
           },
-          "familyMemberName": {
+          "talkLabel": {
             "type": "string"
           },
-          "familyMemberPhone": {
+          "companionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companionFullName": {
+            "type": "string"
+          },
+          "companionPhone": {
             "type": "string",
             "nullable": true
           },
-          "familyMemberEmail": {
+          "companionEmail": {
             "type": "string",
             "nullable": true
           },
@@ -14536,8 +14718,9 @@
           "patientFullName": {
             "type": "string"
           },
-          "enrollmentId": {
+          "followUpId": {
             "type": "string",
+            "nullable": true,
             "format": "uuid"
           },
           "createdAt": {
@@ -14547,23 +14730,22 @@
         },
         "required": [
           "id",
-          "talkName",
-          "familyMemberName",
-          "familyMemberPhone",
-          "familyMemberEmail",
+          "talk",
+          "talkLabel",
+          "companionId",
+          "companionFullName",
           "patientId",
           "patientFullName",
-          "enrollmentId",
           "createdAt"
         ]
       },
-      "FamilyTalkInterestListResponseDto": {
+      "TalkInterestListResponseDto": {
         "type": "object",
         "properties": {
           "data": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/FamilyTalkInterestResponseDto"
+              "$ref": "#/components/schemas/TalkInterestResponseDto"
             }
           },
           "total": {
@@ -14573,6 +14755,24 @@
         "required": [
           "data",
           "total"
+        ]
+      },
+      "CreateTalkInterestDto": {
+        "type": "object",
+        "properties": {
+          "talk": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Código (o nombre) del catálogo educational_talk"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Seguimiento en que se registró"
+          }
+        },
+        "required": [
+          "talk"
         ]
       },
       "CreateFollowUpDto": {
@@ -15721,7 +15921,8 @@
               "alert_category",
               "alert_derivation_entity",
               "reenrollment_reason",
-              "companion_relationship"
+              "companion_relationship",
+              "educational_talk"
             ],
             "type": "string"
           },

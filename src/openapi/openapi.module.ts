@@ -21,7 +21,8 @@ import { AuthController } from '../modules/auth/auth.controller';
 import { AuthService } from '../modules/auth/auth.service';
 import { PasswordResetService } from '../modules/auth/password-reset.service';
 import { EnrollmentsController } from '../modules/enrollments/enrollments.controller';
-import { FamilyTalkInterestsController } from '../modules/enrollments/family-talk-interests.controller';
+import { TalkInterestsController } from '../modules/talk-interests/talk-interests.controller';
+import { TalkInterestsService } from '../modules/talk-interests/talk-interests.service';
 import { EnrollmentsService } from '../modules/enrollments/enrollments.service';
 import { FollowUpsController } from '../modules/follow-ups/follow-ups.controller';
 import { FollowUpsService } from '../modules/follow-ups/follow-ups.service';
@@ -103,7 +104,7 @@ import { SurveysService } from '../modules/surveys/surveys.service';
     FoundationsController,
     AuthController,
     EnrollmentsController,
-    FamilyTalkInterestsController,
+    TalkInterestsController,
     FollowUpsController,
     HealthCentersController,
     CatalogsController,
@@ -151,6 +152,7 @@ import { SurveysService } from '../modules/surveys/surveys.service';
     { provide: PasswordResetService, useValue: {} },
     { provide: AssistantService, useValue: {} },
     { provide: ReenrollmentsService, useValue: {} },
+    { provide: TalkInterestsService, useValue: {} },
     { provide: AssistantToolsService, useValue: {} },
     { provide: EnrollmentsService, useValue: {} },
     { provide: FollowUpsService, useValue: {} },

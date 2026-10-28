@@ -1,8 +1,8 @@
+import { TalkInterestsModule } from '../talk-interests/talk-interests.module';
 import { FollowUpReenrollment } from '../../database/entities/follow-up-reenrollment.entity';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Enrollment } from '../../database/entities/enrollment.entity';
-import { EnrollmentFamilyTalkInterest } from '../../database/entities/enrollment-family-talk-interest.entity';
 import { Agent } from '../../database/entities/agent.entity';
 import { FollowUpsModule } from '../follow-ups/follow-ups.module';
 import { PatientsModule } from '../patients/patients.module';
@@ -10,7 +10,6 @@ import { PatientSummariesModule } from '../patient-summaries/patient-summaries.m
 import { N8nModule } from '../../integrations/n8n/n8n.module';
 import { CatalogsModule } from '../catalogs/catalogs.module';
 import { EnrollmentsController } from './enrollments.controller';
-import { FamilyTalkInterestsController } from './family-talk-interests.controller';
 import { EnrollmentsService } from './enrollments.service';
 
 import { ReenrollmentsController } from './reenrollments.controller';
@@ -20,7 +19,6 @@ import { ReenrollmentsService } from './reenrollments.service';
   imports: [
     TypeOrmModule.forFeature([
       Enrollment,
-      EnrollmentFamilyTalkInterest,
       Agent,
       FollowUpReenrollment,
     ]),
@@ -29,10 +27,10 @@ import { ReenrollmentsService } from './reenrollments.service';
     FollowUpsModule,
     N8nModule,
     CatalogsModule,
+    TalkInterestsModule,
   ],
   controllers: [
     EnrollmentsController,
-    FamilyTalkInterestsController,
     ReenrollmentsController,
   ],
   providers: [EnrollmentsService, ReenrollmentsService],

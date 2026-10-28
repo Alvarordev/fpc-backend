@@ -1,3 +1,4 @@
+import { TalkInterestsService } from '../talk-interests/talk-interests.service';
 import { Companion } from '../../database/entities/companion.entity';
 import { AuditContextKind } from '../../shared/audit/audit-context';
 import { AuditContextService } from '../../shared/audit/audit-context.service';
@@ -20,7 +21,6 @@ import {
   AffiliationType,
   Enrollment,
 } from '../../database/entities/enrollment.entity';
-import { EnrollmentFamilyTalkInterest } from '../../database/entities/enrollment-family-talk-interest.entity';
 import { FollowUpPurpose } from '../../database/entities/follow-up.enums';
 import { CompanionPatient } from '../../database/entities/companion-patient.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
@@ -84,12 +84,11 @@ export class EnrollmentsService {
   constructor(
     @InjectRepository(Enrollment)
     private readonly enrollments: Repository<Enrollment>,
-    @InjectRepository(EnrollmentFamilyTalkInterest)
-    private readonly familyTalkInterests: Repository<EnrollmentFamilyTalkInterest>,
     @InjectRepository(Agent)
     private readonly agents: Repository<Agent>,
     private readonly dataSource: DataSource,
     private readonly patients: PatientsService,
+    private readonly talkInterests: TalkInterestsService,
     private readonly followUps: FollowUpsService,
     private readonly insurance: PatientInsuranceService,
     private readonly diagnoses: PatientDiagnosesService,
@@ -416,15 +415,12 @@ export class EnrollmentsService {
           historicalLoadedById: historicalLoadedById ?? null,
         }),
       );
-      if (familyPreventionTalkInterests?.length)
-        await manager.getRepository(EnrollmentFamilyTalkInterest).save(
-          familyPreventionTalkInterests.map((interest) =>
-            manager.getRepository(EnrollmentFamilyTalkInterest).create({
-              ...interest,
-              enrollmentId: enrollment.id,
-            }),
-          ),
-        );
+      await this.talkInterests.recordForEnrollment(manager, {
+        patientId: patient.id,
+        followUpId: followUp.id,
+        userId,
+        interests: familyPreventionTalkInterests ?? [],
+      });
 
       if (insurance) {
         const currentInsurance = await manager
@@ -610,33 +606,6 @@ export class EnrollmentsService {
       where: { patientId },
       order: { enrolledOn: 'DESC', createdAt: 'DESC', id: 'DESC' },
     });
-  }
-
-  async findFamilyTalkInterests(filters: {
-    search?: string;
-    limit?: number;
-    offset?: number;
-  }) {
-    const limit = filters.limit ?? 50;
-    const offset = filters.offset ?? 0;
-    const query = this.familyTalkInterests
-      .createQueryBuilder('interest')
-      .innerJoinAndSelect('interest.enrollment', 'enrollment')
-      .innerJoinAndSelect('enrollment.patient', 'patient')
-      .orderBy('interest.createdAt', 'DESC')
-      .skip(offset)
-      .take(limit);
-
-    if (filters.search?.trim()) {
-      const search = `%${filters.search.trim()}%`;
-      query.andWhere(
-        '(interest.familyMemberName ILIKE :search OR patient.fullName ILIKE :search)',
-        { search },
-      );
-    }
-
-    const [data, total] = await query.getManyAndCount();
-    return { data, total };
   }
 
   async updateSurvey(

@@ -1,16 +1,11 @@
 import { AffiliationType, Enrollment } from '../../entities/enrollment.entity';
-import { EnrollmentFamilyTalkInterest } from '../../entities/enrollment-family-talk-interest.entity';
-import {
-  ENTRY_SOURCES,
-  FAMILY_TALKS,
-  FIRST_NAMES_FEMALE,
-  FIRST_NAMES_MALE,
-  LAST_NAMES,
-} from './catalog';
+import { CatalogItem } from '../../entities/catalog-item.entity';
+import { CompanionPatient } from '../../entities/companion-patient.entity';
+import { CompanionTalkInterest } from '../../entities/companion-talk-interest.entity';
+import { ENTRY_SOURCES, FAMILY_TALKS } from './catalog';
 import type { DemoContext } from './context';
 import type { PatientFollowUps } from './follow-ups';
 import { addMinutes, toDateOnly } from './rng';
-import { DEMO_EMAIL_DOMAIN } from './users';
 
 /** Keyed by patient id — the clinical-history step needs the enrollment back. */
 export async function seedEnrollments(
@@ -76,23 +71,39 @@ async function seedFamilyTalkInterests(
   { manager, rng }: DemoContext,
   enrollments: Enrollment[],
 ): Promise<void> {
-  const rows: EnrollmentFamilyTalkInterest[] = [];
+  // CH1: talks are a catalog and interest belongs to a linked companion.
+  await manager
+    .createQueryBuilder()
+    .insert()
+    .into(CatalogItem)
+    .values(
+      FAMILY_TALKS.map((label, index) => ({
+        kind: 'educational_talk' as const,
+        code: `DEMO_TALK_${index + 1}`,
+        label,
+        sortOrder: index + 1,
+        isActive: true,
+        isSystem: false,
+      })),
+    )
+    .orIgnore()
+    .execute();
 
+  const rows: CompanionTalkInterest[] = [];
   for (const enrollment of rng.pickN(enrollments, 4)) {
-    for (const talkName of rng.pickN(FAMILY_TALKS, rng.int(1, 2))) {
-      const familyMemberName = `${rng.pick([...FIRST_NAMES_FEMALE, ...FIRST_NAMES_MALE])} ${rng.pick(LAST_NAMES)}`;
+    const link = await manager.findOne(CompanionPatient, {
+      where: { patientId: enrollment.patientId },
+    });
+    if (!link) continue;
+    for (const index of rng.pickN([0, 1, 2, 3, 4], rng.int(1, 2)))
       rows.push(
-        manager.create(EnrollmentFamilyTalkInterest, {
-          enrollmentId: enrollment.id,
-          talkName,
-          familyMemberName,
-          familyMemberPhone: `+51 9${rng.int(10, 99)} ${rng.int(100, 999)} ${rng.int(100, 999)}`,
-          familyMemberEmail: rng.bool(0.5)
-            ? `${familyMemberName.split(' ')[0].toLowerCase()}.familiar@${DEMO_EMAIL_DOMAIN}`
-            : null,
+        manager.create(CompanionTalkInterest, {
+          companionId: link.companionId,
+          patientId: enrollment.patientId,
+          talk: `DEMO_TALK_${index + 1}`,
+          followUpId: enrollment.followUpId,
         }),
       );
-    }
   }
 
   await manager.save(rows);

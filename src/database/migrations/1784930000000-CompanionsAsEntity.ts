@@ -225,7 +225,7 @@ export class CompanionsAsEntity1784930000000 implements MigrationInterface {
     await queryRunner.query(`SELECT set_config('app.audit', '', true)`);
   }
 
-  public async down(): Promise<void> {
+  public down(): Promise<void> {
     // Volver a mezclar acompañantes y pacientes no es seguro una vez que se
     // crean acompañantes nuevos; se restaura desde respaldo.
     throw new Error(

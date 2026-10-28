@@ -37,6 +37,7 @@ export const CATALOG_KINDS = [
   'alert_derivation_entity',
   'reenrollment_reason',
   'companion_relationship',
+  'educational_talk',
 ] as const;
 
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
@@ -91,6 +92,7 @@ export const CATALOG_KIND_LABELS: Record<CatalogKind, string> = {
   alert_derivation_entity: 'Entidad de derivación de alertas',
   reenrollment_reason: 'Motivo de reenrolamiento',
   companion_relationship: 'Parentesco',
+  educational_talk: 'Charla de prevención',
 };
 
 export const RESERVED_CATALOG_CODE = 'OTRO';
