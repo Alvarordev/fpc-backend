@@ -131,13 +131,13 @@ export class PatientsService {
     const patient = await repository.findOne({
       where: { id: patientId },
     });
-    if (!patient) throw new NotFoundException('Patient not found');
+    if (!patient) throw new NotFoundException('No se encontró el paciente.');
     if (
       patient.role !== expectedRole ||
       (expectedStatus && patient.status !== expectedStatus)
     ) {
       throw new ConflictException(
-        'Patient does not meet the required role or status',
+        'El paciente no está en un estado que permita esta acción.',
       );
     }
     return patient;
@@ -239,7 +239,7 @@ export class PatientsService {
     });
     if (existing)
       throw new ConflictException(
-        'Companion is already linked to this patient',
+        'El acompañante ya está vinculado a este paciente.',
       );
     const contactRole = resolveContactRole(
       input.contactRole,
@@ -281,7 +281,7 @@ export class PatientsService {
         where: { id: linkId, patientId },
         relations: { companion: true },
       });
-      if (!link) throw new NotFoundException('Companion link not found');
+      if (!link) throw new NotFoundException('No se encontró el vínculo con el acompañante.');
       const contactRole = resolveContactRole(
         input.contactRole,
         input.isPrimaryContact,
@@ -498,7 +498,7 @@ export class PatientsService {
       where: { id },
       relations: { details: true },
     });
-    if (!patient) throw new NotFoundException('Patient not found');
+    if (!patient) throw new NotFoundException('No se encontró el paciente.');
     const stored = await this.summaries.findOneBy({ patientId: id });
     return Object.assign(patient, { summary: stored?.summary ?? null });
   }
@@ -601,7 +601,7 @@ export class PatientsService {
         order: { changedAt: 'DESC', id: 'DESC' },
       }),
     ]);
-    if (!patient) throw new NotFoundException('Patient not found');
+    if (!patient) throw new NotFoundException('No se encontró el paciente.');
     return Object.assign(patient, {
       summary: stored?.summary ?? null,
       diagnoses,
@@ -696,7 +696,7 @@ export class PatientsService {
       .setLock('pessimistic_write')
       .where('patient.id = :id', { id })
       .getOne();
-    if (!patient) throw new NotFoundException('Patient not found');
+    if (!patient) throw new NotFoundException('No se encontró el paciente.');
     return patient;
   }
 
@@ -711,7 +711,7 @@ export class PatientsService {
         .getRepository(FollowUp)
         .existsBy({ id: followUpId, subjectPatientId: patientId }))
     )
-      throw new NotFoundException('Follow-up not found');
+      throw new NotFoundException('No se encontró el seguimiento.');
   }
 
   private recordActivity(
@@ -757,7 +757,7 @@ export class PatientsService {
       });
       if (!healthCenter)
         throw new NotFoundException(
-          'Primary health center not found or inactive',
+          'El hospital principal no existe o está inactivo.',
         );
     }
     const details = await repository.findOne({
@@ -802,7 +802,7 @@ export class PatientsService {
         });
         if (!hasActiveDiagnosis) {
           throw new BadRequestException(
-            'An active diagnosis is required for this health subcategory',
+            'Esta subcategoría necesita un diagnóstico activo.',
           );
         }
       }

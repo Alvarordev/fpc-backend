@@ -55,7 +55,7 @@ export class CatalogsService {
 
   async findOne(id: string): Promise<CatalogItem> {
     const item = await this.catalogItems.findOne({ where: { id } });
-    if (!item) throw new NotFoundException('Catalog item not found');
+    if (!item) throw new NotFoundException('No se encontró el ítem del catálogo.');
     return item;
   }
 
@@ -64,10 +64,10 @@ export class CatalogsService {
     role: UserRole = UserRole.ADMIN,
   ): Promise<CatalogItem> {
     const code = input.code.trim();
-    if (!code) throw new BadRequestException('code is required');
+    if (!code) throw new BadRequestException('Completa el código.');
     if (code.toUpperCase() === RESERVED_CATALOG_CODE) {
       throw new BadRequestException(
-        `code ${RESERVED_CATALOG_CODE} is reserved and cannot be created`,
+        `El código ${RESERVED_CATALOG_CODE} está reservado; usa otro.`,
       );
     }
     this.assertCanEdit(input.kind, role);
@@ -77,7 +77,7 @@ export class CatalogsService {
     });
     if (existing) {
       throw new ConflictException(
-        `Catalog item already exists for kind=${input.kind} code=${code}`,
+        `Ya existe un ítem con el código ${code} en este catálogo.`,
       );
     }
 
@@ -123,7 +123,7 @@ export class CatalogsService {
     this.assertCanEdit(item.kind, role);
     if (item.isSystem) {
       throw new BadRequestException(
-        'System catalog items cannot be archived; deactivate via PATCH if needed',
+        'Un ítem del sistema no se puede archivar; puedes desactivarlo.',
       );
     }
     item.isActive = false;
@@ -137,7 +137,7 @@ export class CatalogsService {
     actor: User,
   ): Promise<CatalogMerge> {
     if (sourceId === targetId)
-      throw new BadRequestException('Cannot merge an item into itself');
+      throw new BadRequestException('No puedes fusionar un ítem consigo mismo.');
 
     return this.dataSource.transaction(async (manager) => {
       const items = manager.getRepository(CatalogItem);
@@ -152,19 +152,19 @@ export class CatalogsService {
         }),
       ]);
       if (!source || !target)
-        throw new NotFoundException('Catalog item not found');
+        throw new NotFoundException('No se encontró el ítem del catálogo.');
       if (source.kind !== target.kind)
         throw new BadRequestException(
-          'Only items of the same catalog kind can be merged',
+          'Solo se pueden fusionar ítems del mismo catálogo.',
         );
       if (source.isSystem)
         throw new BadRequestException(
-          'System catalog items cannot be merged into another item',
+          'Un ítem del sistema no se puede fusionar.',
         );
       if (source.metadata?.mergedInto)
-        throw new ConflictException('Catalog item was already merged');
+        throw new ConflictException('Ese ítem ya fue fusionado.');
       if (!target.isActive)
-        throw new BadRequestException('Target catalog item is archived');
+        throw new BadRequestException('El ítem destino está archivado.');
 
       const affectedRows: Record<string, number> = {};
       for (const reference of CATALOG_REFERENCES[source.kind] ?? []) {
@@ -229,7 +229,7 @@ export class CatalogsService {
     if (role === UserRole.ADMIN || role === UserRole.FOUNDATION) return;
     if (role === UserRole.AGENT && isOpenCatalogKind(kind)) return;
     throw new ForbiddenException(
-      'Only administrators or the foundation can edit this catalog kind',
+      'Solo un administrador o la fundación pueden editar este catálogo.',
     );
   }
 

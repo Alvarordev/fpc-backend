@@ -49,7 +49,7 @@ export class MedicalAppointmentsService {
     );
     const agent = await this.agents.findOne({ where: { userId: user.id } });
     if (!agent)
-      throw new BadRequestException('Authenticated user has no agent profile');
+      throw new BadRequestException('Tu usuario no tiene perfil de agente.');
     const followUpId = await this.followUps.resolveOrCreateForPatient(
       input.patientId,
       agent.id,
@@ -97,7 +97,7 @@ export class MedicalAppointmentsService {
 
   async update(id: string, input: UpdateMedicalAppointmentDto) {
     const existing = await this.appointments.findOne({ where: { id } });
-    if (!existing) throw new NotFoundException('Medical appointment not found');
+    if (!existing) throw new NotFoundException('No se encontró la cita médica.');
 
     const appointment = await this.versioning.replaceCurrent(
       PatientMedicalAppointment,
@@ -219,7 +219,7 @@ export class MedicalAppointmentsService {
       .where('appointment.id = :id', { id })
       .getOne();
     if (!appointment)
-      throw new NotFoundException('Medical appointment not found');
+      throw new NotFoundException('No se encontró la cita médica.');
     return appointment;
   }
 }

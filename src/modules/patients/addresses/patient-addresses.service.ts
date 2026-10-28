@@ -124,7 +124,7 @@ export class PatientAddressesService {
       const address = await repository.findOne({
         where: { id: addressId, patientId },
       });
-      if (!address) throw new NotFoundException('Address not found');
+      if (!address) throw new NotFoundException('No se encontró la dirección.');
       if (input.isPrimary) {
         await repository
           .createQueryBuilder()
@@ -144,7 +144,7 @@ export class PatientAddressesService {
     const address = await this.repository.findOne({
       where: { id: addressId, patientId },
     });
-    if (!address) throw new NotFoundException('Address not found');
+    if (!address) throw new NotFoundException('No se encontró la dirección.');
     address.isActive = false;
     address.isPrimary = false;
     await this.repository.save(address);

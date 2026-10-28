@@ -35,7 +35,7 @@ export class PatientSisAffiliationService {
         subjectPatientId: patientId,
       }))
     )
-      throw new NotFoundException('Follow-up not found');
+      throw new NotFoundException('No se encontró el seguimiento.');
     const repository =
       manager?.getRepository(PatientSisAffiliation) ?? this.repository;
     const affiliation = await repository.save(

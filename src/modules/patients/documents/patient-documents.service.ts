@@ -134,7 +134,7 @@ export class PatientDocumentsService {
     } catch {
       await this.cleanupFailedUpload(documentId, storageKey);
       throw new ServiceUnavailableException(
-        'Document storage is temporarily unavailable',
+        'El almacenamiento de documentos no está disponible. Intenta de nuevo en unos minutos.',
       );
     }
 
@@ -146,7 +146,7 @@ export class PatientDocumentsService {
           { status: PatientDocumentStatus.ACTIVE },
         );
         if (result.affected !== 1) {
-          throw new ConflictException('Document upload could not be finalized');
+          throw new ConflictException('No se pudo terminar de subir el documento.');
         }
 
         return repository.findOneByOrFail({ id: documentId });
@@ -167,7 +167,7 @@ export class PatientDocumentsService {
 
     if (query.diagnosisId && query.treatmentId) {
       throw new BadRequestException(
-        'diagnosisId and treatmentId cannot be combined',
+        'Vincula el documento a un diagnóstico o a un tratamiento, no a ambos.',
       );
     }
 
@@ -208,10 +208,10 @@ export class PatientDocumentsService {
 
     const document = await this.findByPatientAndId(patientId, documentId);
     if (!document || document.status === PatientDocumentStatus.PENDING) {
-      throw new NotFoundException('Document not found');
+      throw new NotFoundException('No se encontró el documento.');
     }
     if (document.status === PatientDocumentStatus.ARCHIVED) {
-      throw new GoneException('Document has been archived');
+      throw new GoneException('El documento fue archivado.');
     }
 
     try {
@@ -224,11 +224,11 @@ export class PatientDocumentsService {
     } catch (error) {
       if (error instanceof PatientDocumentStorageNotFoundError) {
         throw new ServiceUnavailableException(
-          'Document content is unavailable',
+          'El contenido del documento no está disponible.',
         );
       }
       throw new ServiceUnavailableException(
-        'Document storage is temporarily unavailable',
+        'El almacenamiento de documentos no está disponible. Intenta de nuevo en unos minutos.',
       );
     }
   }
@@ -243,7 +243,7 @@ export class PatientDocumentsService {
 
     const document = await this.findByPatientAndId(patientId, documentId);
     if (!document || document.status === PatientDocumentStatus.PENDING) {
-      throw new NotFoundException('Document not found');
+      throw new NotFoundException('No se encontró el documento.');
     }
     if (document.status === PatientDocumentStatus.ARCHIVED) return document;
 
@@ -286,14 +286,14 @@ export class PatientDocumentsService {
   ): Promise<void> {
     if (input.diagnosisId && input.treatmentId) {
       throw new BadRequestException(
-        'A document can only have one clinical association',
+        'Un documento solo puede vincularse a un registro clínico.',
       );
     }
 
     if (input.documentType === PatientDocumentType.MEDICAL_REPORT) {
       if (!input.diagnosisId || input.treatmentId) {
         throw new BadRequestException(
-          'Medical reports require a diagnosis association',
+          'Un informe médico debe vincularse a un diagnóstico.',
         );
       }
       if (
@@ -302,7 +302,7 @@ export class PatientDocumentsService {
           patientId,
         }))
       ) {
-        throw new NotFoundException('Diagnosis not found');
+        throw new NotFoundException('No se encontró el diagnóstico.');
       }
       return;
     }
@@ -310,7 +310,7 @@ export class PatientDocumentsService {
     if (input.documentType === PatientDocumentType.PRESCRIPTION) {
       if (!input.treatmentId || input.diagnosisId) {
         throw new BadRequestException(
-          'Prescriptions require a treatment association',
+          'Una receta debe vincularse a un tratamiento.',
         );
       }
       if (
@@ -319,7 +319,7 @@ export class PatientDocumentsService {
           patientId,
         }))
       ) {
-        throw new NotFoundException('Treatment not found');
+        throw new NotFoundException('No se encontró el tratamiento.');
       }
       return;
     }
@@ -327,7 +327,7 @@ export class PatientDocumentsService {
     if (PATIENT_LEVEL_DOCUMENT_TYPES.has(input.documentType)) {
       if (input.diagnosisId || input.treatmentId) {
         throw new BadRequestException(
-          'Patient-level documents cannot have a clinical association',
+          'Un documento general del paciente no se vincula a un registro clínico.',
         );
       }
       return;
@@ -335,11 +335,11 @@ export class PatientDocumentsService {
 
     if (input.diagnosisId || input.treatmentId) {
       throw new BadRequestException(
-        'Other documents cannot have a clinical association',
+        'Un documento de tipo «Otro» no se vincula a un registro clínico.',
       );
     }
     if (!input.description?.trim()) {
-      throw new BadRequestException('Other documents require a description');
+      throw new BadRequestException('Agrega una descripción al documento.');
     }
   }
 
@@ -352,7 +352,7 @@ export class PatientDocumentsService {
 
   private assertCanManage(user: User): void {
     if (!DOCUMENT_ROLES.has(user.role)) {
-      throw new ForbiddenException('You cannot access patient documents');
+      throw new ForbiddenException('No tienes acceso a los documentos del paciente.');
     }
   }
 

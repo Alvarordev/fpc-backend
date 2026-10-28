@@ -41,12 +41,12 @@ export class VolunteerAvailabilityService {
     const today = dateOnlyInLima(new Date());
     const startDate = input.startDate ?? today;
     if (startDate < today)
-      throw new BadRequestException('startDate cannot be in the past');
+      throw new BadRequestException('La fecha de inicio no puede estar en el pasado.');
     if (input.endDate < startDate)
-      throw new BadRequestException('endDate must be on or after startDate');
+      throw new BadRequestException('La fecha de fin no puede ser anterior a la de inicio.');
     const [startHour, startMinute] = input.startTime.split(':').map(Number);
     if (startHour * 60 + startMinute + input.hours * 60 > 24 * 60)
-      throw new BadRequestException('The block must end within the same day');
+      throw new BadRequestException('El bloque debe terminar el mismo día.');
 
     const days = new Set(input.daysOfWeek);
     const wanted: { date: string; startTime: string; endTime: string }[] = [];
@@ -54,7 +54,7 @@ export class VolunteerAvailabilityService {
     const end = new Date(`${input.endDate}T00:00:00.000Z`);
     if ((end.getTime() - cursor.getTime()) / 86_400_000 > MAX_RECURRENCE_DAYS)
       throw new BadRequestException(
-        `A recurring block can span at most ${MAX_RECURRENCE_DAYS} days`,
+        `Una serie de horarios puede abarcar como máximo ${MAX_RECURRENCE_DAYS} días.`,
       );
     for (; cursor <= end; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
       if (!days.has(cursor.getUTCDay())) continue;
@@ -70,7 +70,7 @@ export class VolunteerAvailabilityService {
     }
     if (!wanted.length)
       throw new BadRequestException(
-        'No date in the range matches the given days of the week',
+        'Ninguna fecha del rango cae en los días elegidos.',
       );
 
     const existing = await this.availability
@@ -133,7 +133,7 @@ export class VolunteerAvailabilityService {
         today: dateOnlyInLima(new Date()),
       })
       .getMany();
-    if (!slots.length) throw new NotFoundException('Recurrence not found');
+    if (!slots.length) throw new NotFoundException('No se encontró la serie de horarios.');
     const free = slots.filter(
       (slot) => slot.status === AvailabilityStatus.AVAILABLE,
     );
@@ -154,7 +154,7 @@ export class VolunteerAvailabilityService {
   ) {
     await this.assertScope(volunteerId, user);
     if (input.endTime <= input.startTime)
-      throw new BadRequestException('End time must be after start time');
+      throw new BadRequestException('La hora de fin debe ser posterior a la de inicio.');
 
     const conflicting = await this.availability
       .createQueryBuilder('availability')
@@ -169,7 +169,7 @@ export class VolunteerAvailabilityService {
       .getExists();
     if (conflicting)
       throw new ConflictException(
-        'Availability slot overlaps an existing slot',
+        'El horario se cruza con otro que ya existe.',
       );
 
     try {
@@ -186,7 +186,7 @@ export class VolunteerAvailabilityService {
         error instanceof QueryFailedError &&
         ['23505', '23P01'].includes(databaseError.driverError?.code ?? '')
       )
-        throw new ConflictException('Availability slot already exists');
+        throw new ConflictException('Ya existe un horario en ese momento.');
       throw error;
     }
   }
@@ -204,9 +204,9 @@ export class VolunteerAvailabilityService {
     const item = await this.availability.findOne({
       where: { id, volunteerId, isHistorical: false },
     });
-    if (!item) throw new NotFoundException('Availability slot not found');
+    if (!item) throw new NotFoundException('No se encontró el horario.');
     if (item.status === AvailabilityStatus.RESERVED)
-      throw new ConflictException('Reserved availability cannot be removed');
+      throw new ConflictException('No puedes eliminar un horario que ya tiene una cita.');
     await this.availability.remove(item);
   }
 
@@ -214,16 +214,16 @@ export class VolunteerAvailabilityService {
     const volunteer = await this.volunteers.findOne({
       where: { id: volunteerId },
     });
-    if (!volunteer) throw new NotFoundException('Volunteer not found');
+    if (!volunteer) throw new NotFoundException('No se encontró el voluntario.');
     if (volunteer.isAnonymous)
       throw new BadRequestException(
-        'Anonymous volunteers cannot have availability',
+        'El voluntario anónimo no puede tener disponibilidad.',
       );
     if (!volunteer.isActive)
-      throw new ConflictException('Volunteer is inactive');
+      throw new ConflictException('El voluntario está inactivo.');
     if (user.role === UserRole.VOLUNTEER && volunteer.userId !== user.id)
       throw new ForbiddenException(
-        'Volunteers can only manage their own availability',
+        'Solo puedes gestionar tu propia disponibilidad.',
       );
     return volunteer;
   }

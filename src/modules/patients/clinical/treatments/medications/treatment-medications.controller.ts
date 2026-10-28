@@ -54,7 +54,7 @@ export class TreatmentMedicationsController {
   @ApiBadRequestResponse({ description: 'Invalid request payload' })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Treatment not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el tratamiento.' })
   async create(
     @Param('patientId') patientId: string,
     @Param('treatmentId') treatmentId: string,
@@ -92,7 +92,7 @@ export class TreatmentMedicationsController {
   @ApiOkResponse({ type: TreatmentMedicationResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Medication not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el medicamento.' })
   async update(
     @Param('patientId') patientId: string,
     @Param('treatmentId') treatmentId: string,
@@ -114,7 +114,7 @@ export class TreatmentMedicationsController {
   @ApiNoContentResponse()
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Medication not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el medicamento.' })
   async deactivate(
     @Param('patientId') patientId: string,
     @Param('treatmentId') treatmentId: string,

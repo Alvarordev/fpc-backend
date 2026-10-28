@@ -55,13 +55,13 @@ export class PatientSymptomReportsService {
         subjectPatientId: patientId,
       }))
     )
-      throw new NotFoundException('Follow-up not found');
+      throw new NotFoundException('No se encontró el seguimiento.');
     const enrollments = manager?.getRepository(Enrollment) ?? this.enrollments;
     if (
       input.enrollmentId &&
       !(await enrollments.existsBy({ id: input.enrollmentId, patientId }))
     )
-      throw new NotFoundException('Enrollment not found');
+      throw new NotFoundException('No se encontró el enrolamiento.');
     const repository =
       manager?.getRepository(PatientSymptomReport) ?? this.repository;
     const normalized = this.validateAndNormalize(input);
@@ -106,7 +106,7 @@ export class PatientSymptomReportsService {
 
     if (input.hasDiscomfort === false && !present(input.checkupMotivation))
       throw new BadRequestException(
-        'checkupMotivation is required when the patient has no discomfort',
+        'Si el paciente no tiene molestias, indica el motivo del chequeo.',
       );
     if (input.hasDiscomfort === true) normalized.checkupMotivation = undefined;
 
@@ -119,12 +119,12 @@ export class PatientSymptomReportsService {
     } else if (input.hasRequestedMedicalConsultation === true) {
       if (!input.consultationStatus)
         throw new BadRequestException(
-          'consultationStatus is required when a consultation was requested',
+          'Indica el estado de la consulta.',
         );
       if (input.consultationStatus === MedicalConsultationStatus.NOT_OBTAINED) {
         if (!present(input.consultationNotObtainedReason))
           throw new BadRequestException(
-            'consultationNotObtainedReason is required for NOT_OBTAINED',
+            'Indica por qué no se obtuvo la consulta.',
           );
         normalized.healthCenterId = undefined;
         normalized.specialty = undefined;
@@ -132,7 +132,7 @@ export class PatientSymptomReportsService {
       } else {
         if (!input.healthCenterId || !present(input.specialty))
           throw new BadRequestException(
-            'healthCenterId and specialty are required for scheduled or attended consultations',
+            'Selecciona el establecimiento y la especialidad de la consulta.',
           );
         normalized.consultationNotObtainedReason = undefined;
       }
@@ -143,7 +143,7 @@ export class PatientSymptomReportsService {
         input.noMedicalConsultationReason?.trim();
       if (!normalized.noMedicalConsultationReason)
         throw new BadRequestException(
-          'noMedicalConsultationReason is required when no consultation was made',
+          'Indica por qué no tuvo consulta médica.',
         );
       normalized.firstConsultationDate = undefined;
       normalized.isAwaitingDiagnosis = undefined;
@@ -159,30 +159,30 @@ export class PatientSymptomReportsService {
       normalized.noMedicalConsultationReason = undefined;
       if (!input.healthCenterId || !present(input.specialty))
         throw new BadRequestException(
-          'healthCenterId and specialty are required when a consultation was made',
+          'Selecciona el establecimiento y la especialidad de la consulta.',
         );
       if (!input.firstConsultationDate)
         throw new BadRequestException(
-          'firstConsultationDate is required when a consultation was made',
+          'Indica la fecha de la primera consulta.',
         );
       if (input.nextConsultationDate && !present(input.nextConsultationSpecialty))
         throw new BadRequestException(
-          'nextConsultationSpecialty is required when nextConsultationDate is set',
+          'Indica la especialidad de la próxima consulta.',
         );
       if (input.hasReferral === undefined)
         throw new BadRequestException(
-          'hasReferral is required when a consultation was made',
+          'Indica si hubo referencia.',
         );
       if (input.hasReferral === true && !input.referredHealthCenterId)
         throw new BadRequestException(
-          'referredHealthCenterId is required when a referral exists',
+          'Selecciona el establecimiento de referencia.',
         );
       if (
         input.hasReferral === false &&
         !present(input.referralNotProvidedReason)
       )
         throw new BadRequestException(
-          'referralNotProvidedReason is required when there is no referral',
+          'Indica por qué no hubo referencia.',
         );
       if (input.hasReferral !== true)
         normalized.referredHealthCenterId = undefined;
@@ -190,7 +190,7 @@ export class PatientSymptomReportsService {
         normalized.referralNotProvidedReason = undefined;
       if (typeof input.hasReceivedDiagnosis !== 'boolean')
         throw new BadRequestException(
-          'hasReceivedDiagnosis is required when a consultation was made',
+          'Indica si recibió un diagnóstico.',
         );
     } else if (
       (input.hasReferral !== undefined && input.hasReferral !== null) ||
@@ -200,7 +200,7 @@ export class PatientSymptomReportsService {
         input.isAwaitingDiagnosis !== null)
     ) {
       throw new BadRequestException(
-        'hasMedicalConsultation is required with the consultation details',
+        'Indica si el paciente tuvo consulta médica.',
       );
     }
 
@@ -209,7 +209,7 @@ export class PatientSymptomReportsService {
       !present(input.reportedDiagnosis)
     )
       throw new BadRequestException(
-        'reportedDiagnosis is required when a diagnosis was received',
+        'Indica el diagnóstico recibido.',
       );
     if (input.hasReceivedDiagnosis === false)
       normalized.reportedDiagnosis = undefined;
@@ -224,13 +224,13 @@ export class PatientSymptomReportsService {
         !input.reportedTreatmentFrequency
       )
         throw new BadRequestException(
-          'reportedTreatment and reportedTreatmentFrequency are required when treatment is being received',
+          'Indica el tratamiento y su frecuencia.',
         );
       normalized.notReceivingTreatmentReason = undefined;
     } else if (input.isReceivingReportedTreatment === false) {
       if (!present(input.notReceivingTreatmentReason))
         throw new BadRequestException(
-          'notReceivingTreatmentReason is required when treatment is not being received',
+          'Indica por qué no recibe tratamiento.',
         );
       normalized.reportedTreatment = undefined;
       normalized.reportedTreatmentFrequency = undefined;

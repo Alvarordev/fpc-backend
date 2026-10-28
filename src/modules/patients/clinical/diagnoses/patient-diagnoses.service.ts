@@ -55,7 +55,7 @@ export class PatientDiagnosesService {
         subjectPatientId: patientId,
       }))
     )
-      throw new NotFoundException('Follow-up not found');
+      throw new NotFoundException('No se encontró el seguimiento.');
 
     const {
       mode,
@@ -72,7 +72,7 @@ export class PatientDiagnosesService {
       mode !== PatientDiagnosisMode.REPLACE
     )
       throw new BadRequestException(
-        'Diagnosis creation mode must be PARALLEL or REPLACE',
+        'Indica si el diagnóstico se agrega o reemplaza a otro.',
       );
     if (
       input.referredHealthCenterId &&
@@ -80,13 +80,13 @@ export class PatientDiagnosesService {
         manager?.getRepository(HealthCenter) ?? this.healthCenters
       ).existsBy({ id: input.referredHealthCenterId, isActive: true }))
     )
-      throw new NotFoundException('Referred health center not found');
+      throw new NotFoundException('No se encontró el establecimiento de referencia.');
     if (
       mode === PatientDiagnosisMode.PARALLEL &&
       replacementDiagnosisId !== undefined
     )
       throw new BadRequestException(
-        'replacementDiagnosisId is only valid when mode is REPLACE',
+        'Solo se elige un diagnóstico a reemplazar al reemplazar.',
       );
 
     const diagnosisRepository =
@@ -95,19 +95,19 @@ export class PatientDiagnosesService {
     if (mode === PatientDiagnosisMode.REPLACE) {
       if (!replacementDiagnosisId)
         throw new BadRequestException(
-          'replacementDiagnosisId is required when mode is REPLACE',
+          'Selecciona el diagnóstico a reemplazar.',
         );
       replacementDiagnosis = await diagnosisRepository.findOne({
         where: { id: replacementDiagnosisId },
       });
       if (!replacementDiagnosis)
-        throw new NotFoundException('Replacement diagnosis not found');
+        throw new NotFoundException('No se encontró el diagnóstico a reemplazar.');
       if (replacementDiagnosis.patientId !== patientId)
         throw new ConflictException(
-          'Replacement diagnosis does not belong to patient',
+          'El diagnóstico a reemplazar no es de este paciente.',
         );
       if (!replacementDiagnosis.isCurrent)
-        throw new ConflictException('Replacement diagnosis is not active');
+        throw new ConflictException('El diagnóstico a reemplazar no está activo.');
     }
 
     let waitTime = normalizeDuration(waitTimeForDiagnosis);
@@ -119,7 +119,7 @@ export class PatientDiagnosesService {
       const diagnosed = new Date(diagnosisDate);
       if (first > diagnosed)
         throw new BadRequestException(
-          'firstSymptomsDate must not be after diagnosisDate',
+          'La fecha de primeros síntomas no puede ser posterior al diagnóstico.',
         );
       if (waitTimeForDiagnosis === undefined) {
         const days = Math.round(
@@ -230,22 +230,22 @@ export class PatientDiagnosesService {
         subjectPatientId: patientId,
       }))
     )
-      throw new NotFoundException('Follow-up not found');
+      throw new NotFoundException('No se encontró el seguimiento.');
 
     const diagnosisRepository = manager.getRepository(PatientDiagnosis);
     const diagnosis = await diagnosisRepository.findOne({
       where: { id: diagnosisId, patientId },
     });
-    if (!diagnosis) throw new NotFoundException('Diagnosis not found');
+    if (!diagnosis) throw new NotFoundException('No se encontró el diagnóstico.');
     if (!diagnosis.isCurrent)
-      throw new ConflictException('Only an active diagnosis can be corrected');
+      throw new ConflictException('Solo se puede corregir un diagnóstico activo.');
     if (
       input.referredHealthCenterId &&
       !(await manager
         .getRepository(HealthCenter)
         .existsBy({ id: input.referredHealthCenterId, isActive: true }))
     )
-      throw new NotFoundException('Referred health center not found');
+      throw new NotFoundException('No se encontró el establecimiento de referencia.');
 
     const {
       followUpId: _followUpId,
@@ -296,7 +296,7 @@ export class PatientDiagnosesService {
       new Date(firstSymptomsDate) > new Date(diagnosisDate)
     )
       throw new BadRequestException(
-        'firstSymptomsDate must not be after diagnosisDate',
+        'La fecha de primeros síntomas no puede ser posterior al diagnóstico.',
       );
     if (waitTimeForDiagnosis !== undefined) {
       next.waitTimeForDiagnosis = normalizeDuration(waitTimeForDiagnosis);

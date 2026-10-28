@@ -157,7 +157,7 @@ export class PsychooncologyAppointmentsController {
     description: 'Invalid status transition or reminder',
   })
   @ApiConflictResponse({
-    description: 'Cancelled or rescheduled appointments cannot be updated',
+    description: 'No se puede modificar una cita cancelada o reprogramada.',
   })
   @ApiForbiddenResponse({
     description: 'The role cannot edit some of the given fields',

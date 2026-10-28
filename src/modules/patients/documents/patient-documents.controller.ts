@@ -85,7 +85,7 @@ export class PatientDocumentsController {
   @ApiForbiddenResponse()
   @ApiNotFoundResponse({ description: 'Patient or association not found' })
   @ApiResponse({ status: 413, description: 'File is too large' })
-  @ApiResponse({ status: 415, description: 'File type is not supported' })
+  @ApiResponse({ status: 415, description: 'Ese tipo de archivo no está permitido. Usa PDF, imagen o Word.' })
   async create(
     @Param('patientId', new ParseUUIDPipe()) patientId: string,
     @Body() input: CreatePatientDocumentDto,
@@ -115,7 +115,7 @@ export class PatientDocumentsController {
   @ApiBadRequestResponse({ description: 'Invalid filters' })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async findAll(
     @Param('patientId', new ParseUUIDPipe()) patientId: string,
     @Query() query: ListPatientDocumentsDto,
@@ -140,8 +140,8 @@ export class PatientDocumentsController {
   })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Document not found' })
-  @ApiGoneResponse({ description: 'Document has been archived' })
+  @ApiNotFoundResponse({ description: 'No se encontró el documento.' })
+  @ApiGoneResponse({ description: 'El documento fue archivado.' })
   async content(
     @Param('patientId', new ParseUUIDPipe()) patientId: string,
     @Param('documentId', new ParseUUIDPipe()) documentId: string,
@@ -167,7 +167,7 @@ export class PatientDocumentsController {
   @ApiOkResponse({ type: PatientDocumentResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Document not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el documento.' })
   async archive(
     @Param('patientId', new ParseUUIDPipe()) patientId: string,
     @Param('documentId', new ParseUUIDPipe()) documentId: string,

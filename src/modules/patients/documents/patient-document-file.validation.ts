@@ -36,12 +36,12 @@ export async function validatePatientDocumentFile(
   maxBytes = DEFAULT_MAX_FILE_BYTES,
 ): Promise<ValidatedPatientDocumentFile> {
   if (!file?.buffer || file.buffer.length === 0) {
-    throw new BadRequestException('A non-empty file is required');
+    throw new BadRequestException('Selecciona un archivo que no esté vacío.');
   }
 
   if (file.buffer.length > maxBytes) {
     throw new PayloadTooLargeException(
-      `File exceeds the maximum size of ${maxBytes} bytes`,
+      `El archivo supera el tamaño máximo de ${Math.round(maxBytes / 1024 / 1024)} MB.`,
     );
   }
 
@@ -50,7 +50,7 @@ export async function validatePatientDocumentFile(
   const rule = FILE_RULES[extension as keyof typeof FILE_RULES];
 
   if (!rule) {
-    throw new UnsupportedMediaTypeException('File type is not supported');
+    throw new UnsupportedMediaTypeException('Ese tipo de archivo no está permitido. Usa PDF, imagen o Word.');
   }
 
   const clientMediaType = file.mimetype?.toLowerCase().split(';', 1)[0];
@@ -59,7 +59,7 @@ export async function validatePatientDocumentFile(
     clientMediaType !== rule.mediaType &&
     clientMediaType !== 'application/octet-stream'
   ) {
-    throw new UnsupportedMediaTypeException('File MIME type is not supported');
+    throw new UnsupportedMediaTypeException('Ese tipo de archivo no está permitido. Usa PDF, imagen o Word.');
   }
 
   const validSignature =
@@ -68,7 +68,7 @@ export async function validatePatientDocumentFile(
       : hasExpectedSignature(file.buffer, extension);
 
   if (!validSignature) {
-    throw new UnsupportedMediaTypeException('File content is not valid');
+    throw new UnsupportedMediaTypeException('El archivo está dañado o no coincide con su tipo.');
   }
 
   return {

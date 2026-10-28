@@ -62,7 +62,7 @@ export class ReferralsService {
 
   async create(patientId: string, input: CreateReferralDto) {
     if (!(await this.patients.existsBy({ id: patientId })))
-      throw new NotFoundException('Patient not found');
+      throw new NotFoundException('No se encontró el paciente.');
     const values = await this.prepare(patientId, {
       status: ReferralStatus.REQUESTED,
       viaSepa: false,
@@ -98,7 +98,7 @@ export class ReferralsService {
       where: { id, patientId },
       relations: RELATIONS,
     });
-    if (!referral) throw new NotFoundException('Referral not found');
+    if (!referral) throw new NotFoundException('No se encontró la derivación.');
     return referral;
   }
 
@@ -116,13 +116,13 @@ export class ReferralsService {
       (await this.healthCenters.countBy({ id: In(centerIds) })) !==
         new Set(centerIds).size
     )
-      throw new NotFoundException('Health center not found');
+      throw new NotFoundException('No se encontró el establecimiento.');
     if (
       input.originHealthCenterId &&
       input.originHealthCenterId === input.destinationHealthCenterId
     )
       throw new BadRequestException(
-        'Origin and destination health centers must differ',
+        'El origen y el destino deben ser establecimientos distintos.',
       );
 
     if (
@@ -132,7 +132,7 @@ export class ReferralsService {
         subjectPatientId: patientId,
       }))
     )
-      throw new NotFoundException('Follow-up not found');
+      throw new NotFoundException('No se encontró el seguimiento.');
 
     if (input.referralSheetDocumentId) {
       const exists = await this.documents.existsBy({
@@ -141,14 +141,14 @@ export class ReferralsService {
         status: Not(PatientDocumentStatus.ARCHIVED),
       });
       if (!exists)
-        throw new NotFoundException('Referral sheet document not found');
+        throw new NotFoundException('No se encontró la hoja de referencia.');
       const reused = await this.referrals.existsBy({
         referralSheetDocumentId: input.referralSheetDocumentId,
         ...(currentId ? { id: Not(currentId) } : {}),
       });
       if (reused)
         throw new BadRequestException(
-          'This document is already attached to another referral',
+          'Ese documento ya está vinculado a otra derivación.',
         );
     }
 
@@ -160,11 +160,11 @@ export class ReferralsService {
     const issuedOn = input.issuedOn ?? null;
     const attendedOn = input.attendedOn ?? null;
     if (issuedOn && issuedOn < input.requestedOn)
-      throw new BadRequestException('issuedOn cannot be before requestedOn');
+      throw new BadRequestException('La fecha de emisión no puede ser anterior a la de solicitud.');
     if (attendedOn && attendedOn < input.requestedOn)
-      throw new BadRequestException('attendedOn cannot be before requestedOn');
+      throw new BadRequestException('La fecha de atención no puede ser anterior a la de solicitud.');
     if (input.status === ReferralStatus.ATTENDED && !attendedOn)
-      throw new BadRequestException('attendedOn is required for ATTENDED');
+      throw new BadRequestException('Indica la fecha de atención.');
 
     return {
       originHealthCenterId: input.originHealthCenterId ?? null,

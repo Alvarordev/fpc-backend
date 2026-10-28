@@ -82,7 +82,7 @@ export class HealthCentersService {
       .addSelect(this.patientCountSubquery(), 'patientCount')
       .where('health_center.id = :id', { id });
     const [item] = await this.withPatientCounts(query);
-    if (!item) throw new NotFoundException('Health center not found');
+    if (!item) throw new NotFoundException('No se encontró el establecimiento.');
     return item;
   }
 
@@ -103,7 +103,7 @@ export class HealthCentersService {
       input.ubigeoDistrictCode &&
       !(await this.districts.existsBy({ ineiCode: input.ubigeoDistrictCode }))
     )
-      throw new BadRequestException('Unknown ubigeo district code');
+      throw new BadRequestException('El ubigeo del distrito no existe.');
     if (
       input.renipressCode &&
       (await this.repository.existsBy({
@@ -112,7 +112,7 @@ export class HealthCentersService {
       }))
     )
       throw new ConflictException(
-        'Another health center already uses this RENIPRESS code',
+        'Otro establecimiento ya usa ese código RENIPRESS.',
       );
   }
 

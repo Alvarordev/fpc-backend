@@ -51,7 +51,7 @@ export class PatientSummaryPayloadService {
       where: { id: patientId },
       relations: { details: true },
     });
-    if (!patient) throw new NotFoundException('Patient not found');
+    if (!patient) throw new NotFoundException('No se encontró el paciente.');
 
     const [
       diagnoses,

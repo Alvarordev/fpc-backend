@@ -172,14 +172,14 @@ export class FollowUpsService {
           ? dateOnlyInLimaFromInput(input.completedAt)
           : null;
     if (scheduledAt && completedAt && completedAt < scheduledAt)
-      throw new BadRequestException('completedAt cannot be before scheduledAt');
+      throw new BadRequestException('La fecha de realización no puede ser anterior a la programada.');
     if (
       input.scheduledAt &&
       scheduledOn &&
       dateOnlyInLimaFromInput(input.scheduledAt) !== scheduledOn
     )
       throw new BadRequestException(
-        'scheduledAt must belong to scheduledOn in America/Lima',
+        'La hora programada no coincide con su fecha.',
       );
     if (
       input.completedAt &&
@@ -187,10 +187,10 @@ export class FollowUpsService {
       dateOnlyInLimaFromInput(input.completedAt) !== completedOn
     )
       throw new BadRequestException(
-        'completedAt must belong to completedOn in America/Lima',
+        'La hora de realización no coincide con su fecha.',
       );
     if (!isDateOnlyRangeValid(scheduledOn, completedOn))
-      throw new BadRequestException('completedOn cannot be before scheduledOn');
+      throw new BadRequestException('La fecha de realización no puede ser anterior a la programada.');
     const followUp = await followUps.save(
       followUps.create({
         ...input,
@@ -288,7 +288,7 @@ export class FollowUpsService {
     const item = await this.findOne(id, manager);
     if (!item.isHistorical)
       throw new BadRequestException(
-        'Only historical follow-ups can be updated via historical-records',
+        'Desde carga histórica solo se editan seguimientos históricos.',
       );
     if (input.interlocutorId) {
       await this.assertInterlocutor(
@@ -301,7 +301,7 @@ export class FollowUpsService {
     if (input.agentId !== undefined) {
       const agents = manager?.getRepository(Agent) ?? this.agents;
       if (!(await agents.existsBy({ id: input.agentId })))
-        throw new NotFoundException('Agent not found');
+        throw new NotFoundException('No se encontró el agente.');
       item.agentId = input.agentId;
     }
     if (input.type !== undefined) item.type = input.type;
@@ -319,9 +319,9 @@ export class FollowUpsService {
       item.completedAt &&
       item.completedAt < item.scheduledAt
     )
-      throw new BadRequestException('completedAt cannot be before scheduledAt');
+      throw new BadRequestException('La fecha de realización no puede ser anterior a la programada.');
     if (!isDateOnlyRangeValid(item.scheduledOn, item.completedOn))
-      throw new BadRequestException('completedOn cannot be before scheduledOn');
+      throw new BadRequestException('La fecha de realización no puede ser anterior a la programada.');
     const saved = await followUps.save(item);
     await this.invalidations.markDirty(saved.subjectPatientId, manager);
     return saved;
@@ -347,7 +347,7 @@ export class FollowUpsService {
     );
     if (patientIds.size !== 1) {
       throw new BadRequestException(
-        'All follow-ups in a batch must belong to the same patient',
+        'Todos los seguimientos planificados deben ser del mismo paciente.',
       );
     }
 
@@ -358,7 +358,7 @@ export class FollowUpsService {
         : Number.NaN;
       if (!Number.isFinite(scheduledAt) || scheduledAt <= now) {
         throw new BadRequestException(
-          'Batch follow-ups must have a future scheduledAt and cannot be completed',
+          'Los seguimientos planificados deben tener una fecha futura.',
         );
       }
     }
@@ -374,7 +374,7 @@ export class FollowUpsService {
         );
         if (createdFollowUp.status !== FollowUpStatus.SCHEDULED) {
           throw new BadRequestException(
-            'Batch follow-ups must have a future scheduledAt and cannot be completed',
+            'Los seguimientos planificados deben tener una fecha futura.',
           );
         }
         created.push(createdFollowUp);
@@ -386,7 +386,7 @@ export class FollowUpsService {
     const item = await (
       manager?.getRepository(FollowUp) ?? this.followUps
     ).findOne({ where: { id }, relations: { subjectPatient: true } });
-    if (!item) throw new NotFoundException('Follow-up not found');
+    if (!item) throw new NotFoundException('No se encontró el seguimiento.');
     return item;
   }
   async findOneForUser(id: string, user: User) {
@@ -405,7 +405,7 @@ export class FollowUpsService {
       await this.assertWriteScope(followUp, user.id, user.role, manager);
       if (followUp.status === FollowUpStatus.CANCELLED)
         throw new BadRequestException(
-          'Cancelled follow-ups cannot receive attempts; reschedule instead',
+          'Un seguimiento cancelado no admite intentos; reprográmalo.',
         );
       const occurredAt = input.occurredAt
         ? new Date(input.occurredAt)
@@ -440,12 +440,12 @@ export class FollowUpsService {
       await this.assertWriteScope(current, user.id, user.role, manager);
       if (!RESCHEDULABLE.includes(current.status))
         throw new BadRequestException(
-          'Only overdue or cancelled follow-ups can be rescheduled',
+          'Solo se puede reprogramar un seguimiento vencido o cancelado.',
         );
       if (current.nextFollowUpId)
-        throw new BadRequestException('Follow-up was already rescheduled');
+        throw new BadRequestException('El seguimiento ya fue reprogramado.');
       if (new Date(input.scheduledAt).getTime() <= Date.now())
-        throw new BadRequestException('scheduledAt must be in the future');
+        throw new BadRequestException('La fecha programada debe ser futura.');
       const next = await this.create(
         {
           subjectPatientId: current.subjectPatientId,
@@ -518,7 +518,7 @@ export class FollowUpsService {
       const agent = await this.agents.findOne({ where: { userId: user.id } });
       if (!agent)
         throw new BadRequestException(
-          'Authenticated user has no agent profile',
+          'Tu usuario no tiene perfil de agente.',
         );
       query.andWhere('follow_up.agent_id = :agentId', {
         agentId: queryInput.agentId ?? agent.id,
@@ -597,7 +597,7 @@ export class FollowUpsService {
         ? dateOnlyInLimaFromInput(input.completedAt)
         : null;
     if (!isDateOnlyRangeValid(item.scheduledOn, item.completedOn))
-      throw new BadRequestException('completedOn cannot be before scheduledOn');
+      throw new BadRequestException('La fecha de realización no puede ser anterior a la programada.');
     const followUp = await this.followUps.save(item);
     await this.invalidations.markDirty(followUp.subjectPatientId);
     return followUp;
@@ -631,17 +631,17 @@ export class FollowUpsService {
       const agent = await agents.findOne({ where: { userId } });
       if (!agent)
         throw new BadRequestException(
-          'Authenticated user has no agent profile',
+          'Tu usuario no tiene perfil de agente.',
         );
       if (requestedAgentId && requestedAgentId !== agent.id)
         throw new ForbiddenException(
-          'Agents cannot assign follow-ups to others',
+          'No puedes asignar seguimientos a otro agente.',
         );
       return agent.id;
     }
-    if (!requestedAgentId) throw new BadRequestException('agentId is required');
+    if (!requestedAgentId) throw new BadRequestException('Selecciona el agente responsable.');
     if (!(await agents.existsBy({ id: requestedAgentId })))
-      throw new NotFoundException('Agent not found');
+      throw new NotFoundException('No se encontró el agente.');
     return requestedAgentId;
   }
   private async assertWriteScope(
@@ -654,10 +654,10 @@ export class FollowUpsService {
     const agents = manager?.getRepository(Agent) ?? this.agents;
     const agent = await agents.findOne({ where: { userId } });
     if (!agent)
-      throw new BadRequestException('Authenticated user has no agent profile');
+      throw new BadRequestException('Tu usuario no tiene perfil de agente.');
     if (followUp.agentId !== agent.id)
       throw new ForbiddenException(
-        'Agents can only modify their own follow-ups',
+        'Solo puedes modificar tus propios seguimientos.',
       );
   }
   private async assertPatients(
@@ -667,7 +667,7 @@ export class FollowUpsService {
     const patients = manager?.getRepository(Patient) ?? this.patients;
     for (const id of ids)
       if (!(await patients.existsBy({ id })))
-        throw new NotFoundException('Patient not found');
+        throw new NotFoundException('No se encontró el paciente.');
   }
 
   private async assertInterlocutor(
@@ -685,7 +685,7 @@ export class FollowUpsService {
     });
     if (!linked)
       throw new BadRequestException(
-        'Interlocutor must be the patient or a linked companion',
+        'El interlocutor debe ser el paciente o un acompañante vinculado.',
       );
   }
 }

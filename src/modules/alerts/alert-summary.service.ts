@@ -104,7 +104,7 @@ export class AlertSummaryService {
           resolvedByUser: true,
         },
       });
-      if (!alert) throw new NotFoundException('Alert not found');
+      if (!alert) throw new NotFoundException('No se encontró la alerta.');
 
       const alertEvents = await manager.getRepository(AlertEvent).find({
         where: { alertId: id },

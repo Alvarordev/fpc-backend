@@ -156,14 +156,14 @@ export class CallCenterService {
   async reassign(input: ReassignFollowUpsDto) {
     return this.dataSource.transaction(async (manager) => {
       if (!(await manager.getRepository(Agent).existsBy({ id: input.agentId })))
-        throw new NotFoundException('Agent not found');
+        throw new NotFoundException('No se encontró el agente.');
       const followUps = manager.getRepository(FollowUp);
       const items = await followUps.findBy({ id: In(input.followUpIds) });
       if (items.length !== input.followUpIds.length)
-        throw new NotFoundException('Follow-up not found');
+        throw new NotFoundException('No se encontró el seguimiento.');
       if (!items.every(isPending))
         throw new BadRequestException(
-          'Only scheduled or overdue follow-ups can be reassigned',
+          'Solo se puede reasignar un seguimiento programado o vencido.',
         );
       const changed = items.filter((item) => item.agentId !== input.agentId);
       for (const item of changed) {

@@ -59,8 +59,8 @@ export class RemindersController {
   @ApiBadRequestResponse({
     description: 'Required agent assignment is missing',
   })
-  @ApiForbiddenResponse({ description: 'Agents cannot reassign reminders' })
-  @ApiNotFoundResponse({ description: 'Agent not found' })
+  @ApiForbiddenResponse({ description: 'No puedes reasignar recordatorios.' })
+  @ApiNotFoundResponse({ description: 'No se encontró el agente.' })
   create(@Body() dto: CreateReminderDto, @CurrentUser() user: User) {
     return this.service.create(dto, user).then(this.toResponse);
   }
@@ -83,7 +83,7 @@ export class RemindersController {
   @ApiOperation({ summary: 'Update a pending reminder' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: ReminderResponseDto })
-  @ApiBadRequestResponse({ description: 'Closed reminders cannot be edited' })
+  @ApiBadRequestResponse({ description: 'No se puede editar un recordatorio cerrado.' })
   @ApiForbiddenResponse({
     description: 'Agents can only update their own reminders',
   })
@@ -103,7 +103,7 @@ export class RemindersController {
   })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: ReminderMessageResponseDto })
-  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
   message(
     @Param('id') id: string,
     @CurrentUser() user: User,
@@ -127,7 +127,7 @@ export class RemindersController {
   @ApiForbiddenResponse({
     description: 'Agents can only send their own reminders',
   })
-  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
   sendEmail(@Param('id') id: string, @CurrentUser() user: User) {
     return this.service.sendEmail(id, user).then(this.toResponse);
   }
@@ -144,7 +144,7 @@ export class RemindersController {
   @ApiForbiddenResponse({
     description: 'Agents can only update their own reminders',
   })
-  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
   markSent(@Param('id') id: string, @CurrentUser() user: User) {
     return this.service.markSent(id, user).then(this.toResponse);
   }
@@ -160,7 +160,7 @@ export class RemindersController {
   @ApiForbiddenResponse({
     description: 'Agents can only complete their own reminders',
   })
-  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
   complete(
     @Param('id') id: string,
     @Body() dto: CompleteReminderDto,
@@ -175,12 +175,12 @@ export class RemindersController {
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: ReminderResponseDto })
   @ApiBadRequestResponse({
-    description: 'Only pending reminders can be dismissed',
+    description: 'Solo se puede descartar un recordatorio pendiente.',
   })
   @ApiForbiddenResponse({
     description: 'Agents can only dismiss their own reminders',
   })
-  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
   dismiss(@Param('id') id: string, @CurrentUser() user: User) {
     return this.service.dismiss(id, user).then(this.toResponse);
   }

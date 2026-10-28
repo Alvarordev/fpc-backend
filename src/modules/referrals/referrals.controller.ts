@@ -54,7 +54,7 @@ export class ReferralsController {
   @ApiOperation({ summary: 'List patient referrals, newest first' })
   @ApiOkResponse({ type: ReferralResponseDto, isArray: true })
   @ApiForbiddenResponse({ description: 'Patient not assigned to volunteer' })
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async findAll(
     @Param('patientId', ParseUUIDPipe) patientId: string,
     @CurrentUser() user: User,
@@ -71,7 +71,7 @@ export class ReferralsController {
   })
   @ApiOkResponse({ type: ReferralResponseDto, isArray: true })
   @ApiForbiddenResponse({ description: 'Patient not assigned to volunteer' })
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async route(
     @Param('patientId', ParseUUIDPipe) patientId: string,
     @CurrentUser() user: User,
@@ -145,7 +145,7 @@ export class ReferralsController {
   @ApiForbiddenResponse({
     description: 'Administrator, foundation, or agent role required',
   })
-  @ApiNotFoundResponse({ description: 'Referral not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la derivación.' })
   async remove(
     @Param('patientId', ParseUUIDPipe) patientId: string,
     @Param('id', ParseUUIDPipe) id: string,

@@ -37,7 +37,7 @@ export class SurveysService {
         .getRepository(Patient)
         .findOne({ where: { id: input.patientId } });
       if (!patient || patient.role !== PatientRole.PATIENT)
-        throw new NotFoundException('Patient not found');
+        throw new NotFoundException('No se encontró el paciente.');
       if (
         input.followUpId &&
         !(await manager.getRepository(FollowUp).existsBy({
@@ -45,11 +45,11 @@ export class SurveysService {
           subjectPatientId: input.patientId,
         }))
       )
-        throw new NotFoundException('Follow-up not found');
+        throw new NotFoundException('No se encontró el seguimiento.');
       if (input.psychooncologyAppointmentId) {
         if (input.type !== SurveyType.PSYCHOONCOLOGY)
           throw new BadRequestException(
-            'psychooncologyAppointmentId is only valid for PSYCHOONCOLOGY surveys',
+            'La sesión solo se vincula a encuestas de psicooncología.',
           );
         if (
           !(await manager.getRepository(PsychooncologyAppointment).existsBy({
@@ -57,14 +57,14 @@ export class SurveysService {
             patientId: input.patientId,
           }))
         )
-          throw new NotFoundException('Psycho-oncology appointment not found');
+          throw new NotFoundException('No se encontró la cita de psicooncología.');
         if (
           await manager.getRepository(Survey).existsBy({
             psychooncologyAppointmentId: input.psychooncologyAppointmentId,
           })
         )
           throw new BadRequestException(
-            'This psycho-oncology session already has a survey',
+            'Esta sesión de psicooncología ya tiene encuesta.',
           );
       }
       const repository = manager.getRepository(Survey);
@@ -109,7 +109,7 @@ export class SurveysService {
       const patient = await this.dataSource
         .getRepository(Patient)
         .findOne({ where: { id: query.patientId } });
-      if (!patient) throw new NotFoundException('Patient not found');
+      if (!patient) throw new NotFoundException('No se encontró el paciente.');
       name = patient.fullName.split(' ')[0] ?? '';
       if (!variant && query.type === SurveyType.ENROLLMENT) {
         const details = await this.dataSource

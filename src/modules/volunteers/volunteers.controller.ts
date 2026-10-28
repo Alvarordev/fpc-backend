@@ -52,7 +52,7 @@ export class VolunteersController {
   @Roles(UserRole.VOLUNTEER)
   @ApiOperation({ summary: 'Get the profile of the authenticated volunteer' })
   @ApiOkResponse({ type: VolunteerResponseDto })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   findMe(@CurrentUser() user: User) {
     return this.volunteersService.findByUser(user.id).then(this.toResponse);
   }
@@ -61,9 +61,9 @@ export class VolunteersController {
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: VolunteerResponseDto })
   @ApiForbiddenResponse({
-    description: 'Volunteers can only view their own profile',
+    description: 'Solo puedes ver tu propio perfil.',
   })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   findOne(@Param('id') id: string, @CurrentUser() user: User) {
     return this.volunteersService.findVisible(id, user).then(this.toResponse);
   }
@@ -75,7 +75,7 @@ export class VolunteersController {
   @ApiForbiddenResponse({
     description: 'Administrator or foundation role required',
   })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   update(@Param('id') id: string, @Body() input: UpdateVolunteerDto) {
     return this.volunteersService.update(id, input).then(this.toResponse);
   }
@@ -91,7 +91,7 @@ export class VolunteersController {
   @ApiForbiddenResponse({
     description: 'Administrator or foundation role required',
   })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   deactivate(@Param('id') id: string) {
     return this.volunteersService.deactivate(id).then(this.toResponse);
   }
@@ -107,7 +107,7 @@ export class VolunteersController {
   @ApiForbiddenResponse({
     description: 'Administrator or foundation role required',
   })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   pause(@Param('id') id: string) {
     return this.volunteersService
       .setAvailability(id, false)
@@ -121,7 +121,7 @@ export class VolunteersController {
   @ApiForbiddenResponse({
     description: 'Administrator or foundation role required',
   })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   resume(@Param('id') id: string) {
     return this.volunteersService
       .setAvailability(id, true)

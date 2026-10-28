@@ -45,14 +45,14 @@ export class VolunteerAvailabilityController {
   @ApiOperation({ summary: 'Create a volunteer availability slot' })
   @ApiParam({ name: 'volunteerId', format: 'uuid' })
   @ApiCreatedResponse({ type: VolunteerAvailabilityResponseDto })
-  @ApiBadRequestResponse({ description: 'End time must be after start time' })
+  @ApiBadRequestResponse({ description: 'La hora de fin debe ser posterior a la de inicio.' })
   @ApiConflictResponse({
     description: 'Volunteer is inactive or the slot overlaps an existing slot',
   })
   @ApiForbiddenResponse({
-    description: 'Volunteers can only manage their own availability',
+    description: 'Solo puedes gestionar tu propia disponibilidad.',
   })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   create(
     @Param('volunteerId') volunteerId: string,
     @Body() dto: CreateVolunteerAvailabilityDto,
@@ -69,11 +69,11 @@ export class VolunteerAvailabilityController {
   @ApiParam({ name: 'volunteerId', format: 'uuid' })
   @ApiCreatedResponse({ type: RecurringAvailabilityResponseDto })
   @ApiBadRequestResponse({ description: 'Invalid range, days, or hours' })
-  @ApiConflictResponse({ description: 'Volunteer is inactive' })
+  @ApiConflictResponse({ description: 'El voluntario está inactivo.' })
   @ApiForbiddenResponse({
-    description: 'Volunteers can only manage their own availability',
+    description: 'Solo puedes gestionar tu propia disponibilidad.',
   })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   async createRecurring(
     @Param('volunteerId') volunteerId: string,
     @Body() dto: CreateRecurringAvailabilityDto,
@@ -92,7 +92,7 @@ export class VolunteerAvailabilityController {
   @ApiParam({ name: 'recurrenceId', format: 'uuid' })
   @ApiOkResponse({ type: RemoveRecurrenceResponseDto })
   @ApiForbiddenResponse({
-    description: 'Volunteers can only manage their own availability',
+    description: 'Solo puedes gestionar tu propia disponibilidad.',
   })
   @ApiNotFoundResponse({ description: 'Volunteer or recurrence not found' })
   removeRecurrence(
@@ -108,11 +108,11 @@ export class VolunteerAvailabilityController {
   @ApiOperation({ summary: 'List a volunteer availability slots' })
   @ApiParam({ name: 'volunteerId', format: 'uuid' })
   @ApiOkResponse({ type: VolunteerAvailabilityResponseDto, isArray: true })
-  @ApiConflictResponse({ description: 'Volunteer is inactive' })
+  @ApiConflictResponse({ description: 'El voluntario está inactivo.' })
   @ApiForbiddenResponse({
     description: 'Volunteers can only view their own availability',
   })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   findAll(
     @Param('volunteerId') volunteerId: string,
     @CurrentUser() user: User,
@@ -132,7 +132,7 @@ export class VolunteerAvailabilityController {
     description: 'Volunteer is inactive or availability is reserved',
   })
   @ApiForbiddenResponse({
-    description: 'Volunteers can only manage their own availability',
+    description: 'Solo puedes gestionar tu propia disponibilidad.',
   })
   @ApiNotFoundResponse({
     description: 'Volunteer or availability slot not found',

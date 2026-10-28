@@ -69,7 +69,7 @@ export class SurveysController {
   @Roles(...WRITE)
   @ApiOperation({ summary: 'Get the survey message ready to copy' })
   @ApiOkResponse({ type: SurveyScriptResponseDto })
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   script(
     @Query() query: SurveyScriptQueryDto,
   ): Promise<SurveyScriptResponseDto> {

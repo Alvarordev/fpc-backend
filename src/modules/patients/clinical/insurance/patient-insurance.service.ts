@@ -50,7 +50,7 @@ export class PatientInsuranceService {
     const isEssalud = insuranceType.code === InsuranceType.ESSALUD;
     if (!isEssalud && input.affiliatedViaSepa)
       throw new BadRequestException(
-        'affiliatedViaSepa only applies to ESSALUD; record SIS affiliations through sis-affiliation',
+        '«Afiliado por SEPA» solo aplica a EsSalud; la afiliación al SIS se registra aparte.',
       );
     const values = {
       ...input,
@@ -98,6 +98,6 @@ export class PatientInsuranceService {
         subjectPatientId: patientId,
       }))
     )
-      throw new NotFoundException('Follow-up not found');
+      throw new NotFoundException('No se encontró el seguimiento.');
   }
 }

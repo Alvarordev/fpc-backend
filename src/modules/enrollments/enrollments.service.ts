@@ -196,18 +196,18 @@ export class EnrollmentsService {
         healthPhase !== PatientHealthPhase.SIGNS_AND_SYMPTOMS
       ) {
         throw new BadRequestException(
-          'Enrollment requires a cancer diagnosis or signs and symptoms phase',
+          'Elige si el paciente tiene diagnóstico de cáncer o signos y síntomas.',
         );
       }
       if (!patientId && !patientInput)
-        throw new BadRequestException('Provide patientId or patient');
+        throw new BadRequestException('Selecciona o registra al paciente.');
       const hasCompanion = Boolean(companionId || companionInput);
       if (
         input.affiliationType === AffiliationType.FAMILY_FRIEND &&
         Boolean(companionId) === Boolean(companionInput)
       )
         throw new BadRequestException(
-          'FAMILY_FRIEND enrollment requires exactly one companion',
+          'Si quien enrola es familiar o amigo, registra un acompañante.',
         );
       if (insurance?.insuranceType === InsuranceType.SIS && sisAffiliation)
         throw new ConflictException({
@@ -224,7 +224,7 @@ export class EnrollmentsService {
             .where('patient.id = :id', { id: patientId })
             .getOne()
         : await this.patients.create(patientInput!, manager);
-      if (!patient) throw new NotFoundException('Patient not found');
+      if (!patient) throw new NotFoundException('No se encontró el paciente.');
       const reenrollment =
         patientId && patient.status !== PatientStatus.UNENROLLED
           ? await this.assertReenrollable(patient, manager, options)
@@ -232,7 +232,7 @@ export class EnrollmentsService {
       if (patientId && patientInput) {
         if (!reenrollment)
           throw new BadRequestException(
-            'patient data can only accompany patientId when re-enrolling',
+            'Los datos del paciente solo se envían al reenrolar.',
           );
         patient = await savePatientOrDniConflict(
           manager.getRepository(Patient),
@@ -313,7 +313,7 @@ export class EnrollmentsService {
         if (contact.source === EnrollmentContactSource.CALLER) {
           if (!companion)
             throw new BadRequestException(
-              'CALLER contact requires a companion caller',
+              'Selecciona al acompañante que llamó.',
             );
           const link = await links.findOneByOrFail({
             patientId: patient.id,
@@ -404,7 +404,7 @@ export class EnrollmentsService {
           subItem.parentCode !== resolvedEntrySource.code
         ) {
           throw new BadRequestException(
-            'entrySubSource does not belong to the selected entrySource',
+            'El subcanal no corresponde al canal de ingreso elegido.',
           );
         }
       }
@@ -491,7 +491,7 @@ export class EnrollmentsService {
         );
         if (!treatmentDiagnosis)
           throw new BadRequestException(
-            'Enrollment treatment requires a valid diagnosis reference',
+            'Cada tratamiento debe estar vinculado a un diagnóstico.',
           );
         const { diagnosisRef: _diagnosisRef, ...treatmentValues } = treatment;
         await this.treatments.create(
@@ -674,17 +674,17 @@ export class EnrollmentsService {
       where: { id },
       relations: { followUp: true },
     });
-    if (!enrollment) throw new NotFoundException('Enrollment not found');
+    if (!enrollment) throw new NotFoundException('No se encontró el enrolamiento.');
 
     if (userRole === 'AGENT') {
       const agent = await this.agents.findOne({ where: { userId } });
       if (!agent)
         throw new BadRequestException(
-          'Authenticated user has no agent profile',
+          'Tu usuario no tiene perfil de agente.',
         );
       if (enrollment.followUp.agentId !== agent.id)
         throw new ForbiddenException(
-          'Agents can only update their own enrollment',
+          'Solo puedes modificar tus propios enrolamientos.',
         );
     }
 
@@ -701,7 +701,7 @@ export class EnrollmentsService {
       ).length !== 1
     )
       throw new BadRequestException(
-        'contacts must contain exactly one PRIMARY contact',
+        'Registra un único contacto principal.',
       );
     if (
       contacts.filter(
@@ -709,7 +709,7 @@ export class EnrollmentsService {
       ).length > 1
     )
       throw new BadRequestException(
-        'contacts may contain the CALLER source only once',
+        'Solo puede haber una persona que llamó.',
       );
     for (const contact of contacts) {
       if (
@@ -717,12 +717,12 @@ export class EnrollmentsService {
         contact.role !== CompanionContactRole.PRIMARY
       )
         throw new BadRequestException(
-          'PATIENT can only be the PRIMARY contact',
+          'El paciente solo puede ser el contacto principal.',
         );
       if (contact.source === EnrollmentContactSource.NEW && !contact.person)
-        throw new BadRequestException('NEW contact requires person');
+        throw new BadRequestException('Completa los datos del nuevo contacto.');
       if (contact.source !== EnrollmentContactSource.NEW && contact.person)
-        throw new BadRequestException('Only NEW contact accepts person');
+        throw new BadRequestException('Solo un contacto nuevo admite datos de persona.');
     }
   }
 
@@ -760,11 +760,11 @@ export class EnrollmentsService {
     if (primary.source !== EnrollmentContactSource.PATIENT) return;
     if (!patient.primaryPhone?.trim())
       throw new BadRequestException(
-        'PATIENT cannot be the primary contact without a phone number',
+        'Para que el paciente sea el contacto principal, registra su teléfono.',
       );
     if (!patient.birthDate || this.isMinor(patient.birthDate))
       throw new BadRequestException(
-        'PATIENT can only be the primary contact for an adult patient',
+        'El paciente solo puede ser contacto principal si es mayor de edad.',
       );
   }
 
@@ -789,13 +789,13 @@ export class EnrollmentsService {
     if (input.psychooncologySupportAssessment) {
       if (healthPhase !== PatientHealthPhase.CANCER_DIAGNOSIS)
         throw new BadRequestException(
-          'Psycho-oncology support assessment requires a cancer diagnosis',
+          'La evaluación de psicooncología necesita un diagnóstico de cáncer.',
         );
       // Historical records may carry the patient's answers even when a
       // relative made the call; live enrollments ask the patient directly.
       if (!historical && input.affiliationType !== AffiliationType.SELF)
         throw new BadRequestException(
-          'Psycho-oncology support assessment requires a self enrollment with a cancer diagnosis',
+          'La evaluación de psicooncología solo aplica si el propio paciente se enrola con diagnóstico de cáncer.',
         );
     }
     if (
@@ -803,35 +803,35 @@ export class EnrollmentsService {
       !input.diagnoses?.length
     )
       throw new BadRequestException(
-        'Cancer diagnosis enrollment requires at least one diagnosis',
+        'Registra al menos un diagnóstico.',
       );
     const refs = (input.diagnoses ?? []).map(({ clientRef }) => clientRef);
     if (refs.some((ref) => !ref))
       throw new BadRequestException(
-        'Every enrollment diagnosis requires a clientRef',
+        'Hay un diagnóstico incompleto en el enrolamiento.',
       );
     if (new Set(refs).size !== refs.length)
       throw new BadRequestException(
-        'Enrollment diagnosis clientRefs must be unique',
+        'Hay diagnósticos repetidos en el enrolamiento.',
       );
     for (const treatment of input.treatments ?? [])
       if (!treatment.diagnosisRef || !refs.includes(treatment.diagnosisRef))
         throw new BadRequestException(
-          'Enrollment treatment diagnosisRef does not match a diagnosis',
+          'Un tratamiento está vinculado a un diagnóstico que no existe.',
         );
     if (healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS) {
       if (!symptomReport)
         throw new BadRequestException(
-          'Signs and symptoms enrollment requires a symptom report',
+          'Registra los síntomas del paciente.',
         );
       if (symptomReport.hasDiscomfort === undefined)
         throw new BadRequestException(
-          'Signs and symptoms enrollment requires a discomfort answer',
+          'Indica si el paciente tiene molestias.',
         );
       if (symptomReport.hasMedicalConsultation !== undefined) {
         if (typeof symptomReport.hasMedicalConsultation !== 'boolean')
           throw new BadRequestException(
-            'Signs and symptoms enrollment requires a medical consultation answer',
+            'Indica si el paciente tuvo consulta médica.',
           );
         if (
           symptomReport.hasMedicalConsultation === true &&
@@ -839,20 +839,20 @@ export class EnrollmentsService {
             typeof symptomReport.hasReceivedDiagnosis !== 'boolean')
         )
           throw new BadRequestException(
-            'A completed consultation requires referral and diagnosis answers',
+            'Si la consulta se realizó, indica si hubo referencia y diagnóstico.',
           );
       } else {
         if (typeof symptomReport.hasRequestedMedicalConsultation !== 'boolean')
           throw new BadRequestException(
-            'Signs and symptoms enrollment requires a consultation request answer',
+            'Indica si se pidió una consulta.',
           );
         if (typeof symptomReport.hasReceivedDiagnosis !== 'boolean')
           throw new BadRequestException(
-            'Signs and symptoms enrollment requires a diagnosis answer',
+            'Indica si recibió un diagnóstico.',
           );
         if (typeof symptomReport.isReceivingReportedTreatment !== 'boolean')
           throw new BadRequestException(
-            'Signs and symptoms enrollment requires a treatment answer',
+            'Indica si el paciente recibe tratamiento.',
           );
       }
     }
@@ -861,34 +861,34 @@ export class EnrollmentsService {
       (input.diagnoses?.length || input.treatments?.length)
     )
       throw new BadRequestException(
-        'Signs and symptoms enrollment cannot create formal diagnoses or treatments',
+        'Un paciente con signos y síntomas no puede tener diagnósticos ni tratamientos formales.',
       );
     if (healthPhase === PatientHealthPhase.CANCER_DIAGNOSIS) {
       if (typeof input.currentlyAttendingConsultations !== 'boolean')
         throw new BadRequestException(
-          'Cancer diagnosis enrollment requires a consultation attendance answer',
+          'Indica si el paciente asiste a sus consultas.',
         );
       if (typeof input.currentlyReceivingTreatment !== 'boolean')
         throw new BadRequestException(
-          'Cancer diagnosis enrollment requires a current treatment answer',
+          'Indica si el paciente recibe tratamiento.',
         );
       if (input.currentlyAttendingConsultations === true) {
         if (medicalAppointments?.length !== 1)
           throw new BadRequestException(
-            'Attending consultations requires exactly one appointment',
+            'Registra una cita para la consulta.',
           );
         if (!medicalAppointments[0].healthCenterId)
           throw new BadRequestException(
-            'Attending consultations requires a health center',
+            'Selecciona el establecimiento donde se atiende.',
           );
       } else if (input.currentlyAttendingConsultations === false) {
         if (medicalAppointments?.length)
           throw new BadRequestException(
-            'No appointment is allowed when the patient does not attend consultations',
+            'Si el paciente no asiste a consultas, no registres una cita.',
           );
         if (!input.notAttendingConsultationsNote?.trim())
           throw new BadRequestException(
-            'Not attending consultations requires a note',
+            'Si el paciente no asiste a consultas, agrega una nota.',
           );
       }
       if (
@@ -896,14 +896,14 @@ export class EnrollmentsService {
         !input.notReceivingTreatmentReason?.trim()
       )
         throw new BadRequestException(
-          'Not receiving treatment requires a reason',
+          'Indica por qué el paciente no recibe tratamiento.',
         );
       if (
         input.currentlyReceivingTreatment === false &&
         input.treatments?.length
       )
         throw new BadRequestException(
-          'A patient not receiving treatment cannot include treatments',
+          'Si el paciente no recibe tratamiento, no registres tratamientos.',
         );
     }
     if (symptomReport?.hasMedicalConsultation !== undefined) {
@@ -912,14 +912,14 @@ export class EnrollmentsService {
         medicalAppointments?.length
       )
         throw new BadRequestException(
-          'A patient without a medical consultation cannot include an appointment',
+          'Si el paciente no tuvo consulta médica, no registres una cita.',
         );
       return;
     }
     if (symptomReport?.hasRequestedMedicalConsultation === false) {
       if (medicalAppointments?.length)
         throw new BadRequestException(
-          'No appointment is allowed when no consultation was requested',
+          'Si no se pidió consulta, no registres una cita.',
         );
       return;
     }
@@ -929,7 +929,7 @@ export class EnrollmentsService {
     ) {
       if (medicalAppointments?.length)
         throw new BadRequestException(
-          'NOT_OBTAINED consultation cannot include an appointment',
+          'Si no se obtuvo la consulta, no registres una cita.',
         );
       return;
     }
@@ -942,7 +942,7 @@ export class EnrollmentsService {
     if (!medicalAppointments?.length) return;
     if (medicalAppointments.length !== 1)
       throw new BadRequestException(
-        'Scheduled or attended consultation requires exactly one appointment',
+        'Registra la cita de la consulta.',
       );
     const appointment = medicalAppointments[0];
     if (
@@ -951,25 +951,25 @@ export class EnrollmentsService {
       appointment.specialty !== symptomReport.specialty
     )
       throw new BadRequestException(
-        'Consultation appointment must include the same establishment, specialty, and a date',
+        'La cita de la consulta debe tener el mismo establecimiento, la especialidad y una fecha.',
       );
     if (
       symptomReport.consultationStatus === MedicalConsultationStatus.SCHEDULED
     ) {
       if (appointment.hasReferralSheet !== undefined)
         throw new BadRequestException(
-          'Referral information is only allowed for attended consultations',
+          'La referencia solo se registra si la consulta se realizó.',
         );
     } else if (appointment.hasReferralSheet === undefined) {
       throw new BadRequestException(
-        'Attended consultation requires a referral sheet answer',
+        'Indica si hubo hoja de referencia.',
       );
     } else if (
       appointment.hasReferralSheet === false &&
       !appointment.referralNotProvidedReason?.trim()
     ) {
       throw new BadRequestException(
-        'Attended consultation requires a reason when no referral sheet was provided',
+        'Si no hubo hoja de referencia, indica el motivo.',
       );
     }
   }

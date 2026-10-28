@@ -212,7 +212,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Diagnosis not found for this historical follow-up',
+          'No se encontró el diagnóstico de este seguimiento histórico.',
         );
       const updatable = Object.fromEntries(
         Object.entries(values).filter(
@@ -241,7 +241,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Treatment not found for this historical follow-up',
+          'No se encontró el tratamiento de este seguimiento histórico.',
         );
       if (diagnosisId) existing.diagnosisId = diagnosisId;
       Object.assign(existing, values);
@@ -276,7 +276,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Insurance not found for this historical follow-up',
+          'No se encontró el seguro de este seguimiento histórico.',
         );
       Object.assign(existing, values);
       if (existing.insuranceType !== InsuranceType.ESSALUD)
@@ -300,7 +300,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'SIS affiliation not found for this historical follow-up',
+          'No se encontró la afiliación al SIS de este seguimiento histórico.',
         );
       await repository.save(Object.assign(existing, values));
     } else {
@@ -321,7 +321,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Symptom report not found for this historical follow-up',
+          'No se encontró el reporte de síntomas de este seguimiento histórico.',
         );
       await repository.save(Object.assign(existing, values));
     } else {
@@ -370,7 +370,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Health background assessment not found for this historical follow-up',
+          'No se encontraron los antecedentes de salud de este seguimiento histórico.',
         );
       Object.assign(existing, values);
       await repository.save(existing);
@@ -431,7 +431,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing || existing.followUpId !== followUpId)
         throw new NotFoundException(
-          'Address not found for this historical follow-up',
+          'No se encontró la dirección de este seguimiento histórico.',
         );
       await repository.save(
         repository.merge(
@@ -457,7 +457,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Social note not found for this historical follow-up',
+          'No se encontró la nota social de este seguimiento histórico.',
         );
       await repository.save(Object.assign(existing, values));
     } else {
@@ -580,7 +580,7 @@ async function persistTreatments(
         : undefined);
     if (!diagnosisId)
       throw new BadRequestException(
-        'Historical treatment requires diagnosisId or a valid diagnosisRef',
+        'El tratamiento histórico debe estar vinculado a un diagnóstico.',
       );
     const treatmentValues = { ...treatment };
     delete treatmentValues.diagnosisRef;

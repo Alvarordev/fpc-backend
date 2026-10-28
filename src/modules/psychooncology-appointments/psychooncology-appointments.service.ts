@@ -94,9 +94,9 @@ export class PsychooncologyAppointmentsService {
       const patient = await patients.findOne({
         where: { id: input.patientId },
       });
-      if (!patient) throw new NotFoundException('Patient not found');
+      if (!patient) throw new NotFoundException('No se encontró el paciente.');
       if (patient.role !== PatientRole.PATIENT)
-        throw new ConflictException('Only a patient can have an appointment');
+        throw new ConflictException('Solo un paciente puede tener una cita.');
 
       const followUp = input.followUpId
         ? await manager.getRepository(FollowUp).findOne({
@@ -108,12 +108,12 @@ export class PsychooncologyAppointmentsService {
         : null;
       if (input.followUpId && !followUp)
         throw new BadRequestException(
-          'Follow-up does not belong to the patient',
+          'El seguimiento no pertenece a este paciente.',
         );
 
       if (!isDateOnlyRangeValid(input.scheduledOn, input.completedOn))
         throw new BadRequestException(
-          'completedOn cannot be before scheduledOn',
+          'La fecha de realización no puede ser anterior a la programada.',
         );
       if (
         input.scheduledAt &&
@@ -121,14 +121,14 @@ export class PsychooncologyAppointmentsService {
         new Date(input.completedAt) < new Date(input.scheduledAt)
       )
         throw new BadRequestException(
-          'completedAt cannot be before scheduledAt',
+          'La fecha de realización no puede ser anterior a la programada.',
         );
       if (
         input.scheduledAt &&
         dateOnlyInLimaFromInput(input.scheduledAt) !== input.scheduledOn
       )
         throw new BadRequestException(
-          'scheduledAt must belong to scheduledOn in America/Lima',
+          'La hora programada no coincide con su fecha.',
         );
       if (
         input.completedAt &&
@@ -136,28 +136,28 @@ export class PsychooncologyAppointmentsService {
         dateOnlyInLimaFromInput(input.completedAt) !== input.completedOn
       )
         throw new BadRequestException(
-          'completedAt must belong to completedOn in America/Lima',
+          'La hora de realización no coincide con su fecha.',
         );
       if (input.modality === AppointmentModality.CALL && input.zoomLink)
         throw new BadRequestException(
-          'Zoom link is only allowed for video call appointments',
+          'El enlace de Zoom solo aplica a videollamadas.',
         );
 
       if (input.volunteerId && input.useAnonymousVolunteer)
         throw new BadRequestException(
-          'Provide volunteerId or useAnonymousVolunteer, not both',
+          'Elige un voluntario o el voluntario anónimo, no ambos.',
         );
       if (!input.volunteerId && input.useAnonymousVolunteer !== true)
         throw new BadRequestException(
-          'Provide volunteerId or set useAnonymousVolunteer to true',
+          'Selecciona un voluntario.',
         );
       const volunteer = input.volunteerId
         ? await volunteers.findOne({ where: { id: input.volunteerId } })
         : await volunteers.findOne({ where: { isAnonymous: true } });
-      if (!volunteer) throw new NotFoundException('Volunteer not found');
+      if (!volunteer) throw new NotFoundException('No se encontró el voluntario.');
       if (input.volunteerId && volunteer.isAnonymous)
         throw new BadRequestException(
-          'Anonymous volunteer must be selected with useAnonymousVolunteer',
+          'Para usar el voluntario anónimo, márcalo como anónimo.',
         );
 
       const beneficiary = await this.resolveBeneficiary(
@@ -241,24 +241,24 @@ export class PsychooncologyAppointmentsService {
         relations: { volunteer: true, availability: true },
       });
       if (!appointment)
-        throw new NotFoundException('Psycho-oncology appointment not found');
+        throw new NotFoundException('No se encontró la cita de psicooncología.');
       if (!appointment.isHistorical)
         throw new BadRequestException(
-          'Only historical psycho-oncology appointments can be updated via historical-records',
+          'Desde carga histórica solo se editan citas de psicooncología históricas.',
         );
 
       if (input.volunteerId && input.useAnonymousVolunteer)
         throw new BadRequestException(
-          'Provide volunteerId or useAnonymousVolunteer, not both',
+          'Elige un voluntario o el voluntario anónimo, no ambos.',
         );
       if (input.volunteerId || input.useAnonymousVolunteer === true) {
         const volunteer = input.volunteerId
           ? await volunteers.findOne({ where: { id: input.volunteerId } })
           : await volunteers.findOne({ where: { isAnonymous: true } });
-        if (!volunteer) throw new NotFoundException('Volunteer not found');
+        if (!volunteer) throw new NotFoundException('No se encontró el voluntario.');
         if (input.volunteerId && volunteer.isAnonymous)
           throw new BadRequestException(
-            'Anonymous volunteer must be selected with useAnonymousVolunteer',
+            'Para usar el voluntario anónimo, márcalo como anónimo.',
           );
         appointment.volunteerId = volunteer.id;
         const availability = await availabilities.findOne({
@@ -290,7 +290,7 @@ export class PsychooncologyAppointmentsService {
           });
           if (!followUp)
             throw new BadRequestException(
-              'Follow-up does not belong to the patient',
+              'El seguimiento no pertenece a este paciente.',
             );
           appointment.followUpId = followUp.id;
         } else {
@@ -360,7 +360,7 @@ export class PsychooncologyAppointmentsService {
         !isDateOnlyRangeValid(appointment.scheduledOn, appointment.completedOn)
       )
         throw new BadRequestException(
-          'completedOn cannot be before scheduledOn',
+          'La fecha de realización no puede ser anterior a la programada.',
         );
 
       await appointments.save(appointment);
@@ -426,7 +426,7 @@ export class PsychooncologyAppointmentsService {
       relations: { patient: true, companion: true, volunteer: true },
     });
     if (!appointment)
-      throw new NotFoundException('Psycho-oncology appointment not found');
+      throw new NotFoundException('No se encontró la cita de psicooncología.');
     await this.access.assertCanRead(appointment.patientId, user);
     return appointment;
   }
@@ -496,7 +496,7 @@ export class PsychooncologyAppointmentsService {
   async cancel(id: string) {
     return this.dataSource.transaction(async (manager) => {
       const appointment = await this.lockAppointment(manager, id);
-      this.assertPending(appointment, 'cancelled');
+      this.assertPending(appointment, 'cancelar');
       const availability = await this.lockAvailability(
         manager,
         appointment.availabilityId,
@@ -518,10 +518,10 @@ export class PsychooncologyAppointmentsService {
     return this.dataSource.transaction(async (manager) => {
       const repository = manager.getRepository(PsychooncologyAppointment);
       const original = await this.lockAppointment(manager, id);
-      this.assertPending(original, 'rescheduled');
+      this.assertPending(original, 'reprogramar');
       if (original.isHistorical)
         throw new ConflictException(
-          'Historical appointments cannot be rescheduled',
+          'Una cita histórica no se puede reprogramar.',
         );
 
       const modality = input.modality ?? original.modality;
@@ -529,7 +529,7 @@ export class PsychooncologyAppointmentsService {
       const next = await this.reserveSlot(manager, input.availabilityId);
       if (next.availability.id === original.availabilityId)
         throw new ConflictException(
-          'The appointment already uses this availability slot',
+          'La cita ya usa ese horario.',
         );
 
       const current = await this.lockAvailability(
@@ -616,7 +616,7 @@ export class PsychooncologyAppointmentsService {
 
   async markReminderSent(id: string, user: User) {
     const appointment = await this.findOne(id, user);
-    this.assertPending(appointment, 'reminded');
+    this.assertPending(appointment, 'recordar');
     this.assertReminderSendable(appointment);
     appointment.reminderSentAt = new Date();
     await this.appointments.update(appointment.id, {
@@ -629,7 +629,7 @@ export class PsychooncologyAppointmentsService {
     const appointment = await this.findOne(id, user);
     if (appointment.status !== AppointmentStatus.NO_SHOW)
       throw new ConflictException(
-        'Only no-show appointments can be marked as managed',
+        'Solo una inasistencia se puede marcar como gestionada.',
       );
     if (!appointment.noShowManagedAt) {
       await this.appointments.update(appointment.id, {
@@ -731,7 +731,7 @@ export class PsychooncologyAppointmentsService {
       )
     )
       throw new ConflictException(
-        'Cancelled or rescheduled appointments cannot be updated',
+        'No se puede modificar una cita cancelada o reprogramada.',
       );
 
     const changed = Object.entries(input)
@@ -740,12 +740,12 @@ export class PsychooncologyAppointmentsService {
     if (user.role === UserRole.VOLUNTEER) {
       if (changed.some((key) => !RESULT_KEYS.has(key)))
         throw new ForbiddenException(
-          'Volunteers can only record the results of their sessions',
+          'Solo puedes registrar el resultado de tus sesiones.',
         );
     } else if (user.role === UserRole.AGENT) {
       if (changed.some((key) => RESULT_KEYS.has(key)))
         throw new ForbiddenException(
-          'Session results are recorded by the volunteer, foundation or administrators',
+          'El resultado de la sesión lo registra el voluntario, la fundación o un administrador.',
         );
     }
 
@@ -757,10 +757,10 @@ export class PsychooncologyAppointmentsService {
           AppointmentStatus.NO_SHOW,
         ].includes(appointment.status)
       )
-        throw new BadRequestException('Invalid appointment status transition');
+        throw new BadRequestException('La cita no puede pasar a ese estado.');
       if (appointment.scheduledAt && appointment.scheduledAt > new Date())
         throw new BadRequestException(
-          'A session cannot be resolved before it starts',
+          'No puedes registrar el resultado de una sesión antes de que empiece.',
         );
     }
   }
@@ -768,7 +768,7 @@ export class PsychooncologyAppointmentsService {
   private assertPending(appointment: PsychooncologyAppointment, verb: string) {
     if (!PENDING_APPOINTMENT_STATUSES.includes(appointment.status))
       throw new ConflictException(
-        `Only scheduled or overdue appointments can be ${verb}`,
+        `Solo se puede ${verb} una cita programada o vencida.`,
       );
   }
 
@@ -778,7 +778,7 @@ export class PsychooncologyAppointmentsService {
       !appointment.zoomLink
     )
       throw new ConflictException(
-        'Add the Zoom link before sending the reminder of a video call session',
+        'Agrega el enlace de Zoom antes de enviar el recordatorio de una videollamada.',
       );
   }
 
@@ -792,16 +792,16 @@ export class PsychooncologyAppointmentsService {
     if (mode === AppointmentReminderMode.CUSTOM) {
       if (!customRemindAt)
         throw new BadRequestException(
-          'remindAt is required for a custom reminder',
+          'Indica la fecha del recordatorio personalizado.',
         );
       remindAt = new Date(customRemindAt);
       if (scheduledAt && remindAt >= scheduledAt)
         throw new BadRequestException(
-          'remindAt must be before the session starts',
+          'El recordatorio debe ser antes de la sesión.',
         );
     } else if (customRemindAt) {
       throw new BadRequestException(
-        'remindAt is only allowed for a custom reminder',
+        'La fecha del recordatorio solo aplica al recordatorio personalizado.',
       );
     } else if (scheduledAt && mode === AppointmentReminderMode.TWO_HOURS) {
       remindAt = new Date(scheduledAt.getTime() - 2 * 60 * 60 * 1000);
@@ -854,18 +854,18 @@ export class PsychooncologyAppointmentsService {
     const availability = await this.lockAvailability(manager, availabilityId);
     if (availability.isHistorical)
       throw new ConflictException(
-        'Historical availability cannot be used for future appointments',
+        'Un horario histórico no sirve para citas futuras.',
       );
     if (availability.status !== AvailabilityStatus.AVAILABLE)
-      throw new ConflictException('Availability slot is already reserved');
+      throw new ConflictException('Ese horario ya está reservado.');
 
     const volunteer = await manager.getRepository(Volunteer).findOne({
       where: { id: availability.volunteerId },
       relations: { user: true },
     });
-    if (!volunteer) throw new NotFoundException('Volunteer not found');
+    if (!volunteer) throw new NotFoundException('No se encontró el voluntario.');
     if (!volunteer.isActive || volunteer.user?.isActive === false)
-      throw new ConflictException('Volunteer is inactive');
+      throw new ConflictException('El voluntario está inactivo.');
     const scheduledAt = this.slotDate(availability);
     availability.status = AvailabilityStatus.RESERVED;
     await manager.getRepository(VolunteerAvailability).save(availability);
@@ -895,9 +895,9 @@ export class PsychooncologyAppointmentsService {
       .setLock('pessimistic_write')
       .where('patient.id = :id', { id: input.patientId })
       .getOne();
-    if (!patient) throw new NotFoundException('Patient not found');
+    if (!patient) throw new NotFoundException('No se encontró el paciente.');
     if (patient.role !== PatientRole.PATIENT)
-      throw new ConflictException('Only a patient can have an appointment');
+      throw new ConflictException('Solo un paciente puede tener una cita.');
 
     const followUp = input.followUpId
       ? await manager.getRepository(FollowUp).findOne({
@@ -905,7 +905,7 @@ export class PsychooncologyAppointmentsService {
         })
       : null;
     if (input.followUpId && !followUp)
-      throw new BadRequestException('Follow-up does not belong to the patient');
+      throw new BadRequestException('El seguimiento no pertenece a este paciente.');
 
     const beneficiary = await this.resolveBeneficiary(
       manager,
@@ -935,7 +935,7 @@ export class PsychooncologyAppointmentsService {
       baseSessions >= PSYCHOONCOLOGY_BASE_CYCLE_SESSIONS
     )
       throw new ConflictException(
-        `The cycle already has its ${PSYCHOONCOLOGY_BASE_CYCLE_SESSIONS} base sessions; schedule it as an additional session`,
+        `El ciclo ya tiene sus ${PSYCHOONCOLOGY_BASE_CYCLE_SESSIONS} sesiones base; agéndala como sesión adicional.`,
       );
 
     const { availability, volunteer, scheduledAt } = await this.reserveSlot(
@@ -993,7 +993,7 @@ export class PsychooncologyAppointmentsService {
       .getOne()
       .then((appointment) => {
         if (!appointment)
-          throw new NotFoundException('Psycho-oncology appointment not found');
+          throw new NotFoundException('No se encontró la cita de psicooncología.');
         return appointment;
       });
   }
@@ -1020,7 +1020,7 @@ export class PsychooncologyAppointmentsService {
     if (resolvedType === AppointmentBeneficiaryType.PATIENT) {
       if (companionId !== undefined && companionId !== null) {
         throw new BadRequestException(
-          'A patient session cannot include a companion',
+          'Una sesión del paciente no puede incluir un acompañante.',
         );
       }
       return {
@@ -1032,7 +1032,7 @@ export class PsychooncologyAppointmentsService {
 
     if (!companionId) {
       throw new BadRequestException(
-        'A companion is required for a companion session',
+        'Selecciona el acompañante para una sesión de acompañante.',
       );
     }
 
@@ -1040,14 +1040,14 @@ export class PsychooncologyAppointmentsService {
       where: { id: companionId },
     });
     if (!companion || companion.role !== PatientRole.COMPANION) {
-      throw new NotFoundException('Companion not found');
+      throw new NotFoundException('No se encontró el acompañante.');
     }
 
     const link = await manager.getRepository(CompanionPatient).findOne({
       where: { patientId, companionId },
     });
     if (!link) {
-      throw new BadRequestException('Companion does not belong to the patient');
+      throw new BadRequestException('El acompañante no está vinculado a este paciente.');
     }
 
     return {
@@ -1063,7 +1063,7 @@ export class PsychooncologyAppointmentsService {
   }) {
     if (input.modality === AppointmentModality.CALL && input.zoomLink)
       throw new BadRequestException(
-        'Zoom link is only allowed for video call appointments',
+        'El enlace de Zoom solo aplica a videollamadas.',
       );
   }
 
@@ -1075,7 +1075,7 @@ export class PsychooncologyAppointmentsService {
       .where('availability.id = :id', { id })
       .getOne();
     if (!availability)
-      throw new NotFoundException('Availability slot not found');
+      throw new NotFoundException('No se encontró el horario.');
     return availability;
   }
 
@@ -1085,21 +1085,21 @@ export class PsychooncologyAppointmentsService {
     );
     if (Number.isNaN(scheduledAt.valueOf()))
       throw new BadRequestException(
-        'Availability slot has an invalid date or time',
+        'El horario tiene una fecha u hora inválida.',
       );
     if (scheduledAt <= new Date())
-      throw new ConflictException('Availability slot has already passed');
+      throw new ConflictException('Ese horario ya pasó.');
     return scheduledAt;
   }
 
   private async assertUpdateScope(id: string, user: User) {
     const appointment = await this.appointments.findOne({ where: { id } });
     if (!appointment)
-      throw new NotFoundException('Psycho-oncology appointment not found');
+      throw new NotFoundException('No se encontró la cita de psicooncología.');
     const volunteerId = await this.access.volunteerIdFor(user);
     if (volunteerId && appointment.volunteerId !== volunteerId)
       throw new ForbiddenException(
-        'Volunteers can only modify their own appointments',
+        'Solo puedes modificar tus propias citas.',
       );
   }
 }

@@ -133,7 +133,7 @@ export class FollowUpsController {
   @ApiForbiddenResponse({
     description: 'Patient is not assigned to the volunteer',
   })
-  @ApiNotFoundResponse({ description: 'Follow-up not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el seguimiento.' })
   findOne(@Param('id') id: string, @CurrentUser() user: User) {
     return this.service.findOneForUser(id, user).then(this.toFollowUp);
   }
@@ -149,7 +149,7 @@ export class FollowUpsController {
   @ApiForbiddenResponse({
     description: 'Agents can only update their own follow-ups',
   })
-  @ApiNotFoundResponse({ description: 'Follow-up not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el seguimiento.' })
   update(
     @Param('id') id: string,
     @Body() dto: UpdateFollowUpDto,
@@ -195,9 +195,9 @@ export class FollowUpsController {
   @ApiCreatedResponse({ type: FollowUpAttemptResponseDto })
   @ApiBadRequestResponse({ description: 'The follow-up is cancelled' })
   @ApiForbiddenResponse({
-    description: 'Agents can only modify their own follow-ups',
+    description: 'Solo puedes modificar tus propios seguimientos.',
   })
-  @ApiNotFoundResponse({ description: 'Follow-up not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el seguimiento.' })
   attempt(
     @Param('id') id: string,
     @Body() dto: CreateFollowUpAttemptDto,
@@ -220,7 +220,7 @@ export class FollowUpsController {
       'The follow-up is not overdue or cancelled, was already rescheduled, or the date is in the past',
   })
   @ApiForbiddenResponse({
-    description: 'Agents can only modify their own follow-ups',
+    description: 'Solo puedes modificar tus propios seguimientos.',
   })
   @ApiNotFoundResponse({ description: 'Follow-up or agent not found' })
   reschedule(

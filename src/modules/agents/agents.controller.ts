@@ -28,7 +28,7 @@ export class AgentsController {
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create an agent' })
   @ApiCreatedResponse({ type: AgentResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
+  @ApiForbiddenResponse({ description: 'Esta acción la puede hacer solo un administrador.' })
   create(@Body() input: CreateAgentDto) {
     return this.agentsService.create(input).then(this.toResponse);
   }
@@ -46,7 +46,7 @@ export class AgentsController {
   @ApiOperation({ summary: 'Get an agent' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AgentResponseDto })
-  @ApiNotFoundResponse({ description: 'Agent not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el agente.' })
   findOne(@Param('id') id: string) {
     return this.agentsService.findById(id).then(this.toResponse);
   }
@@ -55,8 +55,8 @@ export class AgentsController {
   @ApiOperation({ summary: 'Update an agent' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AgentResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  @ApiNotFoundResponse({ description: 'Agent not found' })
+  @ApiForbiddenResponse({ description: 'Esta acción la puede hacer solo un administrador.' })
+  @ApiNotFoundResponse({ description: 'No se encontró el agente.' })
   update(@Param('id') id: string, @Body() input: UpdateAgentDto) {
     return this.agentsService.update(id, input).then(this.toResponse);
   }
@@ -65,8 +65,8 @@ export class AgentsController {
   @ApiOperation({ summary: 'Deactivate an agent' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AgentResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  @ApiNotFoundResponse({ description: 'Agent not found' })
+  @ApiForbiddenResponse({ description: 'Esta acción la puede hacer solo un administrador.' })
+  @ApiNotFoundResponse({ description: 'No se encontró el agente.' })
   deactivate(@Param('id') id: string) {
     return this.agentsService.deactivate(id).then(this.toResponse);
   }

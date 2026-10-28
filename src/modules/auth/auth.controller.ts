@@ -38,7 +38,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Log in with email and password' })
   @ApiCreatedResponse({ type: LoginResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
+  @ApiUnauthorizedResponse({ description: 'Correo o contraseña incorrectos.' })
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) response: Response,
@@ -67,7 +67,7 @@ export class AuthController {
     summary: 'Rotate the refresh token and issue an access token',
   })
   @ApiCreatedResponse({ type: RefreshResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Invalid refresh token' })
+  @ApiUnauthorizedResponse({ description: 'Tu sesión expiró. Vuelve a iniciar sesión.' })
   async refresh(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
@@ -77,7 +77,7 @@ export class AuthController {
         this.authService.getRefreshCookieName()
       ] as string | undefined;
       if (!refreshToken) {
-        throw new UnauthorizedException('Invalid refresh token');
+        throw new UnauthorizedException('Tu sesión expiró. Vuelve a iniciar sesión.');
       }
 
       const result = await this.authService.refresh(refreshToken);

@@ -28,7 +28,7 @@ export class VolunteerCalendarService {
     to: string,
   ): Promise<VolunteerCalendarResponseDto> {
     if (from > to)
-      throw new BadRequestException('from must be on or before to');
+      throw new BadRequestException('La fecha «Desde» no puede ser posterior a «Hasta».');
 
     const endExclusive = new Date(`${to}T00:00:00.000Z`);
     endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);

@@ -77,7 +77,7 @@ export class HealthCentersController {
   @ApiOperation({ summary: 'Get a health center' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: HealthCenterResponseDto })
-  @ApiNotFoundResponse({ description: 'Health center not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el establecimiento.' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.findOne(id).then(this.toResponse);
   }
@@ -89,7 +89,7 @@ export class HealthCentersController {
   @ApiForbiddenResponse({
     description: 'Administrator, foundation, or agent role required',
   })
-  @ApiNotFoundResponse({ description: 'Health center not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el establecimiento.' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateHealthCenterDto,

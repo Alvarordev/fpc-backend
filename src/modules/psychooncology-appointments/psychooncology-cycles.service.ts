@@ -48,10 +48,10 @@ export class PsychooncologyCyclesService {
         .where('cycle.id = :id', { id })
         .getOne();
       if (!cycle)
-        throw new NotFoundException('Psycho-oncology cycle not found');
+        throw new NotFoundException('No se encontró el ciclo de psicooncología.');
       await this.access.assertCanRead(cycle.patientId, user);
       if (cycle.closedAt)
-        throw new ConflictException('Psycho-oncology cycle is already closed');
+        throw new ConflictException('El ciclo de psicooncología ya está cerrado.');
       const pending = await manager
         .getRepository(PsychooncologyAppointment)
         .existsBy({
@@ -60,14 +60,14 @@ export class PsychooncologyCyclesService {
         });
       if (pending)
         throw new ConflictException(
-          'Cancel or resolve the scheduled sessions of the cycle before closing it',
+          'Antes de cerrar el ciclo, cancela o registra sus sesiones programadas.',
         );
       const closedAt = input.closedAt ? new Date(input.closedAt) : new Date();
       if (closedAt > new Date())
-        throw new BadRequestException('closedAt cannot be in the future');
+        throw new BadRequestException('La fecha de cierre no puede ser futura.');
       if (closedAt < cycle.openedAt)
         throw new BadRequestException(
-          'closedAt cannot be before the cycle was opened',
+          'La fecha de cierre no puede ser anterior a la apertura del ciclo.',
         );
       cycle.closedAt = closedAt;
       cycle.closeReason = input.reason;

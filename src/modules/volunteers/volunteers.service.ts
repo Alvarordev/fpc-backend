@@ -66,14 +66,14 @@ export class VolunteersService {
       where: { userId },
       relations: { user: true },
     });
-    if (!volunteer) throw new NotFoundException('Volunteer not found');
+    if (!volunteer) throw new NotFoundException('No se encontró el voluntario.');
     return volunteer;
   }
   async findVisible(id: string, user: User): Promise<Volunteer> {
     const volunteer = await this.findById(id);
     if (user.role === UserRole.VOLUNTEER && volunteer.userId !== user.id)
       throw new ForbiddenException(
-        'Volunteers can only view their own profile',
+        'Solo puedes ver tu propio perfil.',
       );
     return volunteer;
   }
@@ -82,7 +82,7 @@ export class VolunteersService {
       where: { id },
       relations: { user: true },
     });
-    if (!volunteer) throw new NotFoundException('Volunteer not found');
+    if (!volunteer) throw new NotFoundException('No se encontró el voluntario.');
     return volunteer;
   }
   async update(id: string, input: UpdateVolunteerDto): Promise<Volunteer> {

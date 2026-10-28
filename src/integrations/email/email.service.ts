@@ -36,7 +36,8 @@ export class EmailService {
     const to = (Array.isArray(message.to) ? message.to : [message.to])
       .map((address) => address.trim())
       .filter(Boolean);
-    if (to.length === 0) return { status: 'FAILED', error: 'No recipients' };
+    if (to.length === 0)
+      return { status: 'FAILED', error: 'No hay destinatario para el correo.' };
 
     if (!this.enabled) {
       this.logger.log({
@@ -66,9 +67,15 @@ export class EmailService {
         signal: controller.signal,
       });
       if (!response.ok) {
-        const error = `Resend returned ${response.status}`;
-        this.logger.warn({ message: error, subject: message.subject });
-        return { status: 'FAILED', error };
+        this.logger.warn({
+          message: `Resend returned ${response.status}`,
+          subject: message.subject,
+        });
+        return {
+          status: 'FAILED',
+          error:
+            'El proveedor de correo rechazó el envío. Revisa la dirección del paciente o intenta más tarde.',
+        };
       }
       const body = (await response.json().catch(() => null)) as {
         id?: string;
@@ -77,7 +84,11 @@ export class EmailService {
     } catch (error) {
       const reason = error instanceof Error ? error.message : 'unknown error';
       this.logger.warn({ message: reason, subject: message.subject });
-      return { status: 'FAILED', error: reason };
+      return {
+        status: 'FAILED',
+        error:
+          'No se pudo conectar con el proveedor de correo. Intenta más tarde.',
+      };
     } finally {
       clearTimeout(timeout);
     }

@@ -63,7 +63,7 @@ export function normalizeDuration(
   if (dto.valueMin === undefined) {
     if (!dto.label || dto.valueMax !== undefined)
       throw new BadRequestException(
-        'A duration without valueMin requires a label and no valueMax',
+        'Una duración sin valor mínimo necesita una etiqueta y no puede tener valor máximo.',
       );
     duration.valueMin = null;
     duration.valueMax = null;
@@ -77,7 +77,7 @@ export function normalizeDuration(
   const valueMax = dto.valueMax ?? dto.valueMin;
   if (valueMax < dto.valueMin) {
     throw new BadRequestException(
-      'valueMax must be greater than or equal to valueMin',
+      'El valor máximo no puede ser menor que el mínimo.',
     );
   }
 
@@ -94,7 +94,7 @@ export function normalizeDuration(
 
 export function durationFromElapsedDays(days: number): DurationDto {
   if (!Number.isFinite(days) || days < 0)
-    throw new BadRequestException('Elapsed days must be a non-negative number');
+    throw new BadRequestException('Los días transcurridos no pueden ser negativos.');
 
   if (days < 60) return { valueMin: days, unit: DurationUnit.DAY };
   if (days < 730)

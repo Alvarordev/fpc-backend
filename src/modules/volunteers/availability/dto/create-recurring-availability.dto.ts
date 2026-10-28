@@ -27,7 +27,7 @@ export class CreateRecurringAvailabilityDto {
 
   @ApiProperty({ example: '09:00', description: 'Start of the block (HH:mm)' })
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
-    message: 'startTime must be HH:mm',
+    message: 'La hora de inicio debe tener el formato HH:mm.',
   })
   startTime!: string;
 

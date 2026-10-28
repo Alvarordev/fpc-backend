@@ -105,7 +105,7 @@ export class PatientsController {
   @ApiCreatedResponse({ type: PatientResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   @ApiConflictResponse({ description: 'Patient cannot have companions' })
   async createCompanion(
     @Param('id') id: string,
@@ -212,7 +212,7 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientSummaryResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async summary(
     @Param('id') id: string,
     @CurrentUser() user: User,
@@ -232,7 +232,7 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientSummaryResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async refreshSummary(
     @Param('id') id: string,
     @CurrentUser() user: User,
@@ -254,7 +254,7 @@ export class PatientsController {
   @ApiForbiddenResponse({
     description: 'Patient is not assigned to the volunteer',
   })
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   timelineForPatient(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Query() query: PatientTimelineQueryDto,
@@ -270,7 +270,7 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientDetailsWithSummaryResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async findOne(
     @Param('id') id: string,
     @CurrentUser() user: User,
@@ -287,7 +287,7 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async update(
     @Param('id') id: string,
     @Body() input: UpdatePatientDto,
@@ -304,7 +304,7 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async deactivate(
     @Param('id') id: string,
     @Body() input: DeactivatePatientDto,
@@ -321,7 +321,7 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async reactivate(
     @Param('id') id: string,
     @Body() input: ReactivatePatientDto,
@@ -341,7 +341,7 @@ export class PatientsController {
   @ApiBadRequestResponse({
     description: 'An active diagnosis is required for this subcategory',
   })
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   @ApiConflictResponse({
     description: 'Patient does not have the required role',
   })

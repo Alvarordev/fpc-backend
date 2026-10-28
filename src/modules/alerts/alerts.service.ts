@@ -65,6 +65,15 @@ import {
 // Treatment situation of an ongoing treatment (formerly EN_CURSO).
 const TREATMENT_IN_PROGRESS = 'EN_PROCESO';
 
+const NON_NULLABLE_FIELD_LABELS: Record<string, string> = {
+  title: 'el título',
+  description: 'la descripción',
+  healthCenterId: 'el establecimiento',
+  status: 'el estado',
+  severity: 'la severidad',
+  category: 'la categoría',
+};
+
 const NON_NULLABLE_UPDATE_FIELDS = [
   'title',
   'description',
@@ -104,9 +113,9 @@ export class AlertsService {
   async create(input: CreateAlertDto, user: User) {
     const actor = await this.events.actorFor(user);
     if (!actor.agentId)
-      throw new BadRequestException('Authenticated user has no agent profile');
+      throw new BadRequestException('Tu usuario no tiene perfil de agente.');
     if (!(await this.healthCenters.existsBy({ id: input.healthCenterId })))
-      throw new NotFoundException('Health center not found');
+      throw new NotFoundException('No se encontró el establecimiento.');
 
     const alert = await this.dataSource.transaction(async (manager) => {
       const category = await this.catalogValues.resolve(
@@ -222,7 +231,7 @@ export class AlertsService {
     const query = this.baseQuery().where('alert.id = :id', { id });
     await this.access.scopeQuery(query, 'follow_up.subject_patient_id', user);
     const alert = await query.getOne();
-    if (!alert) throw new NotFoundException('Alert not found');
+    if (!alert) throw new NotFoundException('No se encontró la alerta.');
     await this.withReportCounts([alert]);
     return alert;
   }
@@ -241,7 +250,7 @@ export class AlertsService {
         alert.description = input.description!;
       if (input.healthCenterId !== undefined) {
         if (!(await this.healthCenters.existsBy({ id: input.healthCenterId! })))
-          throw new NotFoundException('Health center not found');
+          throw new NotFoundException('No se encontró el establecimiento.');
         alert.healthCenterId = input.healthCenterId!;
       }
       if (input.severity !== undefined) alert.severity = input.severity!;
@@ -271,7 +280,9 @@ export class AlertsService {
 
   async resolve(id: string, input: ResolveAlertDto, user: User) {
     if (user.role !== UserRole.FOUNDATION)
-      throw new ForbiddenException('Foundation role required');
+      throw new ForbiddenException(
+        'Esta acción la puede hacer solo la fundación.',
+      );
     await this.findOne(id, user);
     const actor = await this.events.actorFor(user);
 
@@ -387,7 +398,7 @@ export class AlertsService {
         })
       )
         throw new ConflictException(
-          'Follow-up is already linked to this alert',
+          'Ese seguimiento ya está vinculado a la alerta.',
         );
       const report = await repository.save(
         repository.create({
@@ -489,7 +500,9 @@ export class AlertsService {
 
   async remove(id: string, user: User): Promise<void> {
     if (user.role !== UserRole.ADMIN)
-      throw new ForbiddenException('Administrator role required');
+      throw new ForbiddenException(
+        'Esta acción la puede hacer solo un administrador.',
+      );
     await this.findOne(id, user);
     await this.alerts.delete(id);
   }
@@ -501,7 +514,7 @@ export class AlertsService {
     const alert = await this.baseQuery()
       .where('alert.ticket_number = :ticketNumber', { ticketNumber })
       .getOne();
-    if (!alert) throw new NotFoundException('Alert not found');
+    if (!alert) throw new NotFoundException('No se encontró la alerta.');
     return alert;
   }
 
@@ -559,9 +572,9 @@ export class AlertsService {
       .setLock('pessimistic_write')
       .where('alert.id = :id', { id })
       .getOne();
-    if (!alert) throw new NotFoundException('Alert not found');
+    if (!alert) throw new NotFoundException('No se encontró la alerta.');
     if (alert.status === AlertStatus.RESOLVED)
-      throw new ConflictException('Alert is already resolved');
+      throw new ConflictException('La alerta ya está resuelta.');
     return alert;
   }
 
@@ -593,7 +606,9 @@ export class AlertsService {
   private assertNoInvalidNulls(input: UpdateAlertDto): void {
     for (const field of NON_NULLABLE_UPDATE_FIELDS) {
       if (input[field] === null)
-        throw new BadRequestException(`${field} cannot be null`);
+        throw new BadRequestException(
+          `Completa ${NON_NULLABLE_FIELD_LABELS[field] ?? 'los datos obligatorios'}.`,
+        );
     }
   }
 
@@ -641,7 +656,8 @@ export class AlertsService {
         where: { id: input.followUpId },
         select: { id: true, subjectPatientId: true },
       });
-      if (!followUp) throw new NotFoundException('Follow-up not found');
+      if (!followUp)
+        throw new NotFoundException('No se encontró el seguimiento.');
       return followUp;
     }
     if (!input.subjectPatientId)
@@ -649,15 +665,13 @@ export class AlertsService {
         'subjectPatientId is required when followUpId is not provided',
       );
     if (!actor.agentId)
-      throw new BadRequestException(
-        'followUpId is required for users without an agent profile',
-      );
+      throw new BadRequestException('Selecciona el seguimiento.');
     const interlocutorId = input.interlocutorId ?? input.subjectPatientId;
     const patientCount = await manager.getRepository(Patient).count({
       where: [{ id: input.subjectPatientId }, { id: interlocutorId }],
     });
     if (patientCount !== (interlocutorId === input.subjectPatientId ? 1 : 2))
-      throw new NotFoundException('Patient not found');
+      throw new NotFoundException('No se encontró el paciente.');
 
     const followUp = await manager.getRepository(FollowUp).save(
       manager.getRepository(FollowUp).create({

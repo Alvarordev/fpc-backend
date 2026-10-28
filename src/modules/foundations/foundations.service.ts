@@ -52,7 +52,7 @@ export class FoundationsService {
       relations: { user: true },
     });
     if (!foundation)
-      throw new NotFoundException('Foundation profile not found');
+      throw new NotFoundException('No se encontró el perfil de fundación.');
     return foundation;
   }
 

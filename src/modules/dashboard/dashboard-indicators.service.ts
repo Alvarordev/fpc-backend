@@ -555,28 +555,28 @@ export class DashboardIndicatorsService {
     if (query.from || query.to) {
       if (!query.from || !query.to)
         throw new BadRequestException(
-          'from and to must be provided together for dashboard indicators',
+          'Completa las dos fechas del rango.',
         );
       if (query.period || query.year || query.month)
         throw new BadRequestException(
-          'Use either from/to or period/year/month for dashboard indicators',
+          'Elige un periodo o un rango de fechas, no ambos.',
         );
       if (query.from >= query.to)
-        throw new BadRequestException('from must be before to');
+        throw new BadRequestException('La fecha «Desde» debe ser anterior a «Hasta».');
       return this.boundsFromDates(query.from, query.to);
     }
 
     if (!query.period || query.year === undefined)
       throw new BadRequestException(
-        'Provide period/year/month or from/to for dashboard indicators',
+        'Elige un periodo o un rango de fechas.',
       );
     if (query.period === DashboardPeriod.MONTH && query.month === undefined)
       throw new BadRequestException(
-        'month is required when period=month for dashboard indicators',
+        'Elige el mes.',
       );
     if (query.period === DashboardPeriod.YEAR && query.month !== undefined)
       throw new BadRequestException(
-        'month is only allowed when period=month for dashboard indicators',
+        'El mes solo aplica al periodo mensual.',
       );
 
     const month = query.period === DashboardPeriod.MONTH ? query.month! : 1;

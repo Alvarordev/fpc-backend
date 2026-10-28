@@ -34,10 +34,10 @@ export function computeRemindAt(
 ): Date {
   if (lead === ReminderLead.CUSTOM) {
     if (!customRemindAt)
-      throw new BadRequestException('remindAt is required for a CUSTOM lead');
+      throw new BadRequestException('Indica la fecha del recordatorio personalizado.');
     const custom = new Date(customRemindAt);
     if (custom > startsAt)
-      throw new BadRequestException('remindAt cannot be after the appointment');
+      throw new BadRequestException('El recordatorio no puede ser posterior a la cita.');
     return custom;
   }
   const leadMs =

@@ -113,7 +113,7 @@ export class HistoricalRecordsController {
     description: 'Historical follow-up update is invalid',
   })
   @ApiForbiddenResponse({ description: 'Only administrators may load history' })
-  @ApiNotFoundResponse({ description: 'Follow-up not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el seguimiento.' })
   updateFollowUp(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() input: UpdateHistoricalFollowUpDto,
@@ -134,7 +134,7 @@ export class HistoricalRecordsController {
     description: 'The follow-up is not historical or belongs to an enrollment',
   })
   @ApiForbiddenResponse({ description: 'Only administrators may load history' })
-  @ApiNotFoundResponse({ description: 'Follow-up not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el seguimiento.' })
   deleteFollowUp(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.deleteFollowUp(id);
   }
@@ -163,7 +163,7 @@ export class HistoricalRecordsController {
     description: 'Historical reminder update is invalid',
   })
   @ApiForbiddenResponse({ description: 'Only administrators may load history' })
-  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
   updateReminder(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() input: UpdateHistoricalReminderDto,

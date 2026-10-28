@@ -65,13 +65,13 @@ export class PatientTreatmentsService {
           subjectPatientId: patientId,
         }),
       ]);
-      if (!diagnosis) throw new NotFoundException('Diagnosis not found');
+      if (!diagnosis) throw new NotFoundException('No se encontró el diagnóstico.');
       if (diagnosis.patientId !== patientId)
-        throw new ConflictException('Diagnosis does not belong to patient');
-      if (!followUp) throw new NotFoundException('Follow-up not found');
+        throw new ConflictException('El diagnóstico no pertenece a este paciente.');
+      if (!followUp) throw new NotFoundException('No se encontró el seguimiento.');
 
       if (input.startDate && input.endDate && input.endDate < input.startDate)
-        throw new BadRequestException('endDate must be on or after startDate');
+        throw new BadRequestException('La fecha de fin no puede ser anterior a la de inicio.');
 
       let previousTreatment: PatientTreatment | null = null;
       let seriesId = input.seriesId;
@@ -80,7 +80,7 @@ export class PatientTreatmentsService {
           where: { seriesId, patientId, isCurrent: true },
         });
         if (!previousTreatment)
-          throw new NotFoundException('Treatment series not found');
+          throw new NotFoundException('No se encontró el tratamiento.');
       } else {
         seriesId = crypto.randomUUID();
       }
@@ -100,15 +100,15 @@ export class PatientTreatmentsService {
 
       if (isReferred && (!sourceHealthCenterId || !receivingHealthCenterId))
         throw new BadRequestException(
-          'Referred treatments require source and receiving health centers',
+          'Un tratamiento referido necesita hospital de origen y receptor.',
         );
       if (isReferred && sourceHealthCenterId === receivingHealthCenterId)
         throw new BadRequestException(
-          'Source and receiving health centers must be different',
+          'El hospital de origen y el receptor deben ser distintos.',
         );
       if (!isReferred && sourceHealthCenterId)
         throw new BadRequestException(
-          'A non-referred treatment cannot have a source health center',
+          'Un tratamiento no referido no puede tener hospital de origen.',
         );
 
       const healthCenterIds = [
@@ -120,7 +120,7 @@ export class PatientTreatmentsService {
           .getRepository(HealthCenter)
           .find({ where: { id: In(healthCenterIds), isActive: true } });
         if (activeHealthCenters.length !== new Set(healthCenterIds).size)
-          throw new NotFoundException('Health center not found or inactive');
+          throw new NotFoundException('El establecimiento no existe o está inactivo.');
       }
 
       const { medications: medicationInputs, treatmentTypeOther, ...rest } = input;

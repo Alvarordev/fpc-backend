@@ -144,7 +144,7 @@ export class CatalogsController {
     description:
       'Administrator, foundation, or agent role required; agents limited to open kinds',
   })
-  @ApiNotFoundResponse({ description: 'Catalog item not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el ítem del catálogo.' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() input: UpdateCatalogItemDto,
@@ -165,7 +165,7 @@ export class CatalogsController {
     description:
       'Administrator, foundation, or agent role required; agents limited to open kinds',
   })
-  @ApiNotFoundResponse({ description: 'Catalog item not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el ítem del catálogo.' })
   archive(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.service.archive(id, user.role).then(this.toResponse);
   }
@@ -184,9 +184,9 @@ export class CatalogsController {
     description:
       'Different kinds, same item, system source item, or archived target',
   })
-  @ApiConflictResponse({ description: 'Catalog item was already merged' })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  @ApiNotFoundResponse({ description: 'Catalog item not found' })
+  @ApiConflictResponse({ description: 'Ese ítem ya fue fusionado.' })
+  @ApiForbiddenResponse({ description: 'Esta acción la puede hacer solo un administrador.' })
+  @ApiNotFoundResponse({ description: 'No se encontró el ítem del catálogo.' })
   merge(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('targetId', ParseUUIDPipe) targetId: string,

@@ -109,7 +109,7 @@ export class AlertsController {
   })
   @ApiParam({ name: 'ticketNumber' })
   @ApiOkResponse({ type: AlertTicketLookupResponseDto })
-  @ApiNotFoundResponse({ description: 'Alert not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la alerta.' })
   async findByTicket(@Param('ticketNumber') ticketNumber: string) {
     const alert = await this.service.findByTicket(ticketNumber);
     const events = await this.service.findEventsForAlert(alert.id);
@@ -125,7 +125,7 @@ export class AlertsController {
   @ApiOperation({ summary: 'Get an alert' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AlertResponseDto })
-  @ApiNotFoundResponse({ description: 'Alert not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la alerta.' })
   findOne(@Param('id') id: string, @CurrentUser() user: User) {
     return this.service.findOne(id, user).then(this.toResponse);
   }
@@ -143,7 +143,7 @@ export class AlertsController {
     description:
       'A field was set to null or the category is not in the catalog',
   })
-  @ApiConflictResponse({ description: 'Alert is already resolved' })
+  @ApiConflictResponse({ description: 'La alerta ya está resuelta.' })
   @ApiForbiddenResponse({
     description: 'Administrator, agent, or foundation role required',
   })
@@ -166,9 +166,9 @@ export class AlertsController {
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AlertResponseDto })
   @ApiBadRequestResponse({ description: 'resolutionNotes is required' })
-  @ApiForbiddenResponse({ description: 'Foundation role required' })
-  @ApiConflictResponse({ description: 'Alert is already resolved' })
-  @ApiNotFoundResponse({ description: 'Alert not found' })
+  @ApiForbiddenResponse({ description: 'Esta acción la puede hacer solo la fundación.' })
+  @ApiConflictResponse({ description: 'La alerta ya está resuelta.' })
+  @ApiNotFoundResponse({ description: 'No se encontró la alerta.' })
   resolve(
     @Param('id') id: string,
     @Body() dto: ResolveAlertDto,
@@ -187,8 +187,8 @@ export class AlertsController {
   @ApiBadRequestResponse({
     description: 'The entity is not in the alert_derivation_entity catalog',
   })
-  @ApiConflictResponse({ description: 'Alert is already resolved' })
-  @ApiNotFoundResponse({ description: 'Alert not found' })
+  @ApiConflictResponse({ description: 'La alerta ya está resuelta.' })
+  @ApiNotFoundResponse({ description: 'No se encontró la alerta.' })
   derive(
     @Param('id') id: string,
     @Body() dto: DeriveAlertDto,
@@ -202,7 +202,7 @@ export class AlertsController {
   @ApiOperation({ summary: 'List the patient reports linked to an alert' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AlertReportResponseDto, isArray: true })
-  @ApiNotFoundResponse({ description: 'Alert not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la alerta.' })
   findReports(@Param('id') id: string, @CurrentUser() user: User) {
     return this.service
       .findReports(id, user)
@@ -243,7 +243,7 @@ export class AlertsController {
   })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AlertAffectedPatientsResponseDto })
-  @ApiNotFoundResponse({ description: 'Alert not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la alerta.' })
   affectedPatients(
     @Param('id') id: string,
     @CurrentUser() user: User,
@@ -261,7 +261,7 @@ export class AlertsController {
   })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AlertNotifyPatientsResponseDto })
-  @ApiNotFoundResponse({ description: 'Alert not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la alerta.' })
   notifyAffectedPatients(
     @Param('id') id: string,
     @CurrentUser() user: User,
@@ -275,8 +275,8 @@ export class AlertsController {
   @ApiOperation({ summary: 'Delete an alert' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiNoContentResponse()
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  @ApiNotFoundResponse({ description: 'Alert not found' })
+  @ApiForbiddenResponse({ description: 'Esta acción la puede hacer solo un administrador.' })
+  @ApiNotFoundResponse({ description: 'No se encontró la alerta.' })
   remove(@Param('id') id: string, @CurrentUser() user: User) {
     return this.service.remove(id, user);
   }
@@ -286,7 +286,7 @@ export class AlertsController {
   @ApiOperation({ summary: 'List an alert timeline events' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: AlertEventResponseDto, isArray: true })
-  @ApiNotFoundResponse({ description: 'Alert not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la alerta.' })
   findEvents(@Param('id') id: string, @CurrentUser() user: User) {
     return this.service
       .findEvents(id, user)
@@ -304,7 +304,7 @@ export class AlertsController {
   @ApiForbiddenResponse({
     description: 'Administrator, agent, or foundation role required',
   })
-  @ApiNotFoundResponse({ description: 'Alert not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la alerta.' })
   addEvent(
     @Param('id') id: string,
     @Body() dto: CreateAlertEventDto,
@@ -328,7 +328,7 @@ export class AlertsController {
   @ApiForbiddenResponse({
     description: 'Administrator, agent, or foundation role required',
   })
-  @ApiNotFoundResponse({ description: 'Alert not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la alerta.' })
   async aiSummary(@Param('id') id: string, @CurrentUser() user: User) {
     await this.service.findOne(id, user);
     await this.summaryService.generate(id, user);

@@ -32,7 +32,7 @@ export class PatientChangeLogController {
   @ApiOkResponse({ type: ChangeLogPageResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   findAll(
     @Param('patientId', new ParseUUIDPipe()) patientId: string,
     @Query() query: ChangeLogQueryDto,
