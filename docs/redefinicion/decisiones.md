@@ -328,6 +328,9 @@ Revisión de fórmula (D4) pendiente para todos los ✅.
 - **H5** Fuente de establecimientos: el archivo local de la carpeta "Establecimientos de Salud CENEPRED…".
   La importación debe **conciliar** con los hospitales ya creados en prod (ligados a pacientes,
   diagnósticos, tratamientos, citas): emparejar, no duplicar ni romper referencias.
+- **H5b (2026-10-28) En pausa.** No se corre `scripts/import-health-centers.ts` ni el emparejamiento
+  con CENEPRED; se retoma con una revisión más cuidadosa (simulacro en prod, planilla de revisión,
+  categoría MINSA desde RENIPRESS). Mientras tanto los hospitales se mantienen como hoy, cargados a mano.
 
 ## 17c. Permisos por rol (validado 2026-10-27)
 
