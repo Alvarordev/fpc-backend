@@ -14,6 +14,7 @@ import { DashboardIndicatorsService } from '../modules/dashboard/dashboard-indic
 import { DashboardService } from '../modules/dashboard/dashboard.service';
 import { AuthController } from '../modules/auth/auth.controller';
 import { AuthService } from '../modules/auth/auth.service';
+import { PasswordResetService } from '../modules/auth/password-reset.service';
 import { EnrollmentsController } from '../modules/enrollments/enrollments.controller';
 import { FamilyTalkInterestsController } from '../modules/enrollments/family-talk-interests.controller';
 import { EnrollmentsService } from '../modules/enrollments/enrollments.service';
@@ -140,6 +141,7 @@ import { SurveysService } from '../modules/surveys/surveys.service';
     { provide: DashboardService, useValue: {} },
     { provide: DashboardIndicatorsService, useValue: {} },
     { provide: AuthService, useValue: {} },
+    { provide: PasswordResetService, useValue: {} },
     { provide: EnrollmentsService, useValue: {} },
     { provide: FollowUpsService, useValue: {} },
     { provide: HealthCentersService, useValue: {} },

@@ -80,7 +80,9 @@ export class AuthService {
       });
 
       if (!currentToken) {
-        throw new UnauthorizedException('Tu sesión expiró. Vuelve a iniciar sesión.');
+        throw new UnauthorizedException(
+          'Tu sesión expiró. Vuelve a iniciar sesión.',
+        );
       }
 
       if (currentToken.replacedById) {
@@ -101,7 +103,9 @@ export class AuthService {
         !user ||
         !user.isActive
       ) {
-        throw new UnauthorizedException('Tu sesión expiró. Vuelve a iniciar sesión.');
+        throw new UnauthorizedException(
+          'Tu sesión expiró. Vuelve a iniciar sesión.',
+        );
       }
 
       const nextToken = await this.createRefreshToken(user, repository);
@@ -116,7 +120,9 @@ export class AuthService {
     });
 
     if (!result) {
-      throw new UnauthorizedException('Tu sesión expiró. Vuelve a iniciar sesión.');
+      throw new UnauthorizedException(
+        'Tu sesión expiró. Vuelve a iniciar sesión.',
+      );
     }
 
     return result;
