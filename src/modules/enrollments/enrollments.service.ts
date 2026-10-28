@@ -476,8 +476,25 @@ export class EnrollmentsService {
           manager,
         );
       const createdDiagnoses = new Map<string, PatientDiagnosis>();
+      // A re-enrolled patient keeps their current diagnoses: the same cancer
+      // reported again is reused instead of duplicated.
+      const currentDiagnoses = reenrollment
+        ? await manager
+            .getRepository(PatientDiagnosis)
+            .findBy({ patientId: patient.id, isCurrent: true })
+        : [];
       for (const diagnosisInput of diagnoses ?? []) {
         const { clientRef, ...diagnosisValues } = diagnosisInput;
+        const existing = currentDiagnoses.find(
+          (current) =>
+            current.diagnosis === diagnosisValues.diagnosis &&
+            (current.diagnosisOther ?? null) ===
+              (diagnosisValues.diagnosisOther ?? null),
+        );
+        if (existing) {
+          if (clientRef) createdDiagnoses.set(clientRef, existing);
+          continue;
+        }
         const createdDiagnosis = await this.diagnoses.create(
           patient.id,
           { ...diagnosisValues, followUpId: followUp.id },

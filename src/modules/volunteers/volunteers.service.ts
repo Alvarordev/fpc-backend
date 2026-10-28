@@ -115,9 +115,12 @@ export class VolunteersService {
     return saved;
   }
 
-  /** P9: future sessions of a leaving volunteer must be reassigned. */
+  /**
+   * P9: future sessions of a leaving volunteer must be reassigned. The team
+   * sees them in GET /psychooncology-appointments/needs-reassignment; hospital
+   * alerts (AL2) are not the channel for this.
+   */
   private flagFutureSessions(volunteerId: string, needsReassignment: boolean) {
-    // TODO(alerts): raise an alert for the team once the alerts module exposes it.
     return this.dataSource.transaction((manager) =>
       manager
         .createQueryBuilder()
