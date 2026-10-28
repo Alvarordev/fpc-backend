@@ -42,6 +42,16 @@ extraer del código y validar.
 - **E6** Si el paciente estaba dado de baja o con cáncer descartado → se reactiva y sus datos se
   actualizan con los nuevos (los anteriores quedan en el historial por campo).
 - **Pendiente:** definir datos obligatorios del enrolamiento.
+- **E-R (2026-10-28) Reenrolamiento.** Un paciente **inactivo** vuelve al programa con un seguimiento
+  de propósito `REENROLLMENT`, no repitiendo el enrolamiento. El seguimiento pide motivo (catálogo
+  `reenrollment_reason`), canal de ingreso (`entry_source`/`entry_sub_source`), situación de salud
+  (fase y subcategoría) y la confirmación de que se revisaron teléfono, dirección, seguro y contacto
+  principal (se corrigen con sus pantallas de siempre). Al registrarlo
+  (`POST /follow-ups/:id/reenrollment`) se actualiza la fase, se reactiva al paciente ligado al
+  seguimiento y este queda realizado. Los pacientes con cáncer descartado no se reenrolan: siguen con
+  sus seguimientos. El wizard ya no reenrola (solo la carga histórica usa ese camino); si el DNI es de
+  un inactivo, lleva a este seguimiento. En indicadores se cuenta aparte (`reenrolledInPeriod`, grupo
+  abandono); "enrolados" sigue siendo el primer enrolamiento.
 
 ## 3. Acompañantes
 

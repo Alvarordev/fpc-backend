@@ -15,6 +15,8 @@ import { DashboardService } from '../modules/dashboard/dashboard.service';
 import { AssistantController } from '../modules/assistant/assistant.controller';
 import { AssistantService } from '../modules/assistant/assistant.service';
 import { AssistantToolsService } from '../modules/assistant/assistant-tools.service';
+import { ReenrollmentsController } from '../modules/enrollments/reenrollments.controller';
+import { ReenrollmentsService } from '../modules/enrollments/reenrollments.service';
 import { AuthController } from '../modules/auth/auth.controller';
 import { AuthService } from '../modules/auth/auth.service';
 import { PasswordResetService } from '../modules/auth/password-reset.service';
@@ -135,6 +137,7 @@ import { SurveysService } from '../modules/surveys/surveys.service';
     ReferralsController,
     SurveysController,
     AssistantController,
+    ReenrollmentsController,
   ],
   providers: [
     { provide: AgentsService, useValue: {} },
@@ -147,6 +150,7 @@ import { SurveysService } from '../modules/surveys/surveys.service';
     { provide: AuthService, useValue: {} },
     { provide: PasswordResetService, useValue: {} },
     { provide: AssistantService, useValue: {} },
+    { provide: ReenrollmentsService, useValue: {} },
     { provide: AssistantToolsService, useValue: {} },
     { provide: EnrollmentsService, useValue: {} },
     { provide: FollowUpsService, useValue: {} },

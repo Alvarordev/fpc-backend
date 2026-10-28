@@ -309,6 +309,12 @@ export class DashboardAbandonmentResponseDto {
     description: 'Patients whose deactivation happened inside the period.',
   })
   dropoutsInPeriod!: number;
+
+  @ApiProperty({
+    description:
+      'Patients re-enrolled inside the period (REENROLLMENT follow-up). Not counted as enrolled.',
+  })
+  reenrolledInPeriod!: number;
 }
 
 export class DashboardSurveySummaryDto {

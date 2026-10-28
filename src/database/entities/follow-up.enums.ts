@@ -18,6 +18,8 @@ export enum FollowUpPurpose {
   ENROLLMENT = 'ENROLLMENT',
   FOLLOW_UP = 'FOLLOW_UP',
   PSYCHOONCOLOGY_REFERRAL = 'PSYCHOONCOLOGY_REFERRAL',
+  /** Paciente inactivo que vuelve al programa: se reactiva desde este seguimiento. */
+  REENROLLMENT = 'REENROLLMENT',
   OTHER = 'OTHER',
 }
 export enum FollowUpAttemptOutcome {

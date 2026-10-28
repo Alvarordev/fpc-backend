@@ -51,8 +51,6 @@ import { PatientsService } from '../patients/patients.service';
 import { PatientHealthSubcategoryService } from '../patients/health-subcategory/patient-health-subcategory.service';
 import { savePatientOrDniConflict } from '../patients/patient-dni-conflict';
 import { PatientActivityStatus } from '../../database/entities/patient-activity-status.enum';
-import { PatientDetails } from '../../database/entities/patient-details.entity';
-import { PatientHealthSubcategory } from '../../database/entities/patient-health-subcategory.enum';
 import { PatientAddressesService } from '../patients/addresses/patient-addresses.service';
 import { PatientHealthBackgroundAssessmentsService } from '../patients/clinical/health-background/patient-health-background-assessments.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
@@ -227,7 +225,7 @@ export class EnrollmentsService {
       if (!patient) throw new NotFoundException('No se encontró el paciente.');
       const reenrollment =
         patientId && patient.status !== PatientStatus.UNENROLLED
-          ? await this.assertReenrollable(patient, manager, options)
+          ? this.assertReenrollable(patient, options)
           : null;
       if (patientId && patientInput) {
         if (!reenrollment)
@@ -747,24 +745,32 @@ export class EnrollmentsService {
    * E5/E6: an enrolled patient who calls again gets a follow-up, unless they
    * left the program or had cancer ruled out; then they enroll again.
    */
-  private async assertReenrollable(
+  /**
+   * Re-enrolling an existing patient through the enrollment flow is only for
+   * the historical load. Inactive patients come back with a REENROLLMENT
+   * follow-up (ReenrollmentsService); ruled-out patients get regular follow-ups.
+   */
+  private assertReenrollable(
     patient: Patient,
-    manager: EntityManager,
     options: EnrollmentCreateOptions,
-  ): Promise<{ reactivate: boolean } | null> {
-    const reactivate = patient.activityStatus === PatientActivityStatus.INACTIVE;
-    if (reactivate) return { reactivate };
-    const details = await manager
-      .getRepository(PatientDetails)
-      .findOne({ where: { patientId: patient.id } });
-    if (details?.healthSubcategory === PatientHealthSubcategory.CANCER_RULED_OUT)
-      return { reactivate };
-    if (options.historical) return null;
-    throw new ConflictException({
-      code: 'PATIENT_ALREADY_ENROLLED',
-      message:
-        'El paciente ya está enrolado y activo; registra un seguimiento.',
-    });
+  ): { reactivate: boolean } {
+    if (options.historical)
+      return {
+        reactivate: patient.activityStatus === PatientActivityStatus.INACTIVE,
+      };
+    throw new ConflictException(
+      patient.activityStatus === PatientActivityStatus.INACTIVE
+        ? {
+            code: 'PATIENT_REENROLL_VIA_FOLLOW_UP',
+            message:
+              'Este paciente está inactivo. Reenrólalo con un seguimiento de reenrolamiento desde su ficha.',
+          }
+        : {
+            code: 'PATIENT_ALREADY_ENROLLED',
+            message:
+              'El paciente ya está enrolado y activo; registra un seguimiento.',
+          },
+    );
   }
 
   private validateContactAgeRules(

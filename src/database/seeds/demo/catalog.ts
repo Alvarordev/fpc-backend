@@ -429,6 +429,9 @@ export const FOLLOW_UP_NOTES = {
     'La cuidadora principal presenta agotamiento; se ofrece apoyo psicológico.',
     'Paciente solicita apoyo emocional tras el cambio de esquema de tratamiento.',
   ],
+  REENROLLMENT: [
+    'El paciente retoma contacto con el programa tras su baja; se revisan sus datos y se reenrola.',
+  ],
   OTHER: [
     'Llamada de cortesía por fechas festivas.',
     'Se actualizaron los datos de contacto del paciente.',

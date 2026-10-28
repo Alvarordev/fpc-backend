@@ -17,6 +17,7 @@ import {
   FollowUpStatus,
   FollowUpType,
 } from '../../database/entities/follow-up.enums';
+import { PatientActivityStatus } from '../../database/entities/patient-activity-status.enum';
 import { FollowUp } from '../../database/entities/follow-up.entity';
 import { FollowUpAttempt } from '../../database/entities/follow-up-attempt.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
@@ -149,6 +150,17 @@ export class FollowUpsService {
       input.interlocutorId,
       manager,
     );
+    if (
+      input.purpose === FollowUpPurpose.REENROLLMENT &&
+      !options.isHistorical &&
+      !(await (manager?.getRepository(Patient) ?? this.patients).existsBy({
+        id: input.subjectPatientId,
+        activityStatus: PatientActivityStatus.INACTIVE,
+      }))
+    )
+      throw new BadRequestException(
+        'Solo se puede reenrolar a un paciente inactivo.',
+      );
     const agents = manager?.getRepository(Agent) ?? this.agents;
     const followUps = manager?.getRepository(FollowUp) ?? this.followUps;
     const agentId = await this.resolveAgentId(
@@ -644,7 +656,7 @@ export class FollowUpsService {
       throw new NotFoundException('No se encontró el agente.');
     return requestedAgentId;
   }
-  private async assertWriteScope(
+  async assertWriteScope(
     followUp: FollowUp,
     userId: string,
     userRole: string,

@@ -3814,7 +3814,8 @@
                 "location_share_status",
                 "temporary_housing_type",
                 "alert_category",
-                "alert_derivation_entity"
+                "alert_derivation_entity",
+                "reenrollment_reason"
               ],
               "type": "string"
             }
@@ -10880,6 +10881,109 @@
           "assistant"
         ]
       }
+    },
+    "/follow-ups/{id}/reenrollment": {
+      "post": {
+        "description": "Stores reason, entry source and health situation, updates the health phase, reactivates the patient linked to the follow-up and marks it completed.",
+        "operationId": "ReenrollmentsController_create",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Follow-up id",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReenrollmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReenrollmentResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": "Agents can only use their own follow-ups"
+          },
+          "404": {
+            "description": "No se encontró el seguimiento."
+          },
+          "409": {
+            "description": "Already re-enrolled, or the patient is not inactive"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Re-enroll an inactive patient from a REENROLLMENT follow-up",
+        "tags": [
+          "follow-ups"
+        ]
+      },
+      "get": {
+        "operationId": "ReenrollmentsController_find",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Follow-up id",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReenrollmentResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "404": {
+            "description": "No reenrollment for this follow-up"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the re-enrollment recorded in a follow-up",
+        "tags": [
+          "follow-ups"
+        ]
+      }
     }
   },
   "info": {
@@ -11575,6 +11679,7 @@
               "ENROLLMENT",
               "FOLLOW_UP",
               "PSYCHOONCOLOGY_REFERRAL",
+              "REENROLLMENT",
               "OTHER"
             ],
             "type": "string"
@@ -12072,6 +12177,10 @@
           "dropoutsInPeriod": {
             "type": "number",
             "description": "Patients whose deactivation happened inside the period."
+          },
+          "reenrolledInPeriod": {
+            "type": "number",
+            "description": "Patients re-enrolled inside the period (REENROLLMENT follow-up). Not counted as enrolled."
           }
         },
         "required": [
@@ -12082,7 +12191,8 @@
           "deceased",
           "transferredOut",
           "other",
-          "dropoutsInPeriod"
+          "dropoutsInPeriod",
+          "reenrolledInPeriod"
         ]
       },
       "DashboardCrossItemDto": {
@@ -14425,6 +14535,7 @@
               "ENROLLMENT",
               "FOLLOW_UP",
               "PSYCHOONCOLOGY_REFERRAL",
+              "REENROLLMENT",
               "OTHER"
             ],
             "type": "string"
@@ -14556,6 +14667,7 @@
               "ENROLLMENT",
               "FOLLOW_UP",
               "PSYCHOONCOLOGY_REFERRAL",
+              "REENROLLMENT",
               "OTHER"
             ],
             "type": "string"
@@ -14661,6 +14773,7 @@
               "ENROLLMENT",
               "FOLLOW_UP",
               "PSYCHOONCOLOGY_REFERRAL",
+              "REENROLLMENT",
               "OTHER"
             ]
           },
@@ -15534,7 +15647,8 @@
               "location_share_status",
               "temporary_housing_type",
               "alert_category",
-              "alert_derivation_entity"
+              "alert_derivation_entity",
+              "reenrollment_reason"
             ],
             "type": "string"
           },
@@ -16042,6 +16156,7 @@
               "ENROLLMENT",
               "FOLLOW_UP",
               "PSYCHOONCOLOGY_REFERRAL",
+              "REENROLLMENT",
               "OTHER"
             ],
             "type": "string"
@@ -21940,6 +22055,7 @@
               "ENROLLMENT",
               "FOLLOW_UP",
               "PSYCHOONCOLOGY_REFERRAL",
+              "REENROLLMENT",
               "OTHER"
             ],
             "type": "string"
@@ -22678,6 +22794,7 @@
               "ENROLLMENT",
               "FOLLOW_UP",
               "PSYCHOONCOLOGY_REFERRAL",
+              "REENROLLMENT",
               "OTHER"
             ],
             "type": "string"
@@ -24294,6 +24411,137 @@
           "createdAt",
           "updatedAt",
           "messages"
+        ]
+      },
+      "CreateReenrollmentDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Código del catálogo reenrollment_reason"
+          },
+          "entrySource": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Código del catálogo entry_source"
+          },
+          "entrySubSource": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Código del catálogo entry_sub_source"
+          },
+          "healthPhase": {
+            "enum": [
+              "CANCER_DIAGNOSIS",
+              "SIGNS_AND_SYMPTOMS"
+            ],
+            "type": "string"
+          },
+          "healthSubcategory": {
+            "enum": [
+              "SIGNS_AND_SYMPTOMS_PATIENT",
+              "ACTIVE_TREATMENT",
+              "UNDER_CONTROLS",
+              "TREATMENT_ABANDONED",
+              "PALLIATIVE_NO_ACTIVE_TREATMENT",
+              "CANCER_RULED_OUT"
+            ],
+            "type": "string"
+          },
+          "contactDataConfirmed": {
+            "type": "boolean",
+            "description": "El agente revisó teléfono, dirección, seguro y contacto principal (se editan con sus endpoints).",
+            "example": true
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "reason",
+          "entrySource",
+          "healthPhase",
+          "contactDataConfirmed"
+        ]
+      },
+      "ReenrollmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "reasonLabel": {
+            "type": "string"
+          },
+          "entrySource": {
+            "type": "string"
+          },
+          "entrySubSource": {
+            "type": "string",
+            "nullable": true
+          },
+          "healthPhase": {
+            "enum": [
+              "CANCER_DIAGNOSIS",
+              "ANNUAL_CHECKUP",
+              "SIGNS_AND_SYMPTOMS"
+            ],
+            "type": "string"
+          },
+          "healthSubcategory": {
+            "nullable": true,
+            "enum": [
+              "SIGNS_AND_SYMPTOMS_PATIENT",
+              "ACTIVE_TREATMENT",
+              "UNDER_CONTROLS",
+              "TREATMENT_ABANDONED",
+              "PALLIATIVE_NO_ACTIVE_TREATMENT",
+              "CANCER_RULED_OUT"
+            ],
+            "type": "string"
+          },
+          "contactDataConfirmedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "followUpId",
+          "patientId",
+          "reason",
+          "reasonLabel",
+          "entrySource",
+          "healthPhase",
+          "contactDataConfirmedAt",
+          "createdAt"
         ]
       }
     }

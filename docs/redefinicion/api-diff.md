@@ -46,6 +46,9 @@ Generado desde openapi/openapi.json. Fuente de verdad para adaptar el front.
 - GET /assistant/conversations/{id}
 - DELETE /assistant/conversations/{id}
 
+- POST /follow-ups/{id}/reenrollment
+- GET /follow-ups/{id}/reenrollment
+
 ## Endpoints eliminados
 
 ## Schemas con propiedades cambiadas
@@ -67,7 +70,8 @@ Generado desde openapi/openapi.json. Fuente de verdad para adaptar el front.
 - CreatePatientMedicalAppointmentDto: +['reminderAt', 'reminderChannel', 'reminderLead'] -[]
 - CreatePsychooncologyAppointmentDto: +['remindAt', 'reminderMode'] -[]
 - CreateReminderDto: +['channel', 'lead', 'remindAt'] -[]
-- DashboardAbandonmentResponseDto: +['dropoutsInPeriod', 'transferredOut'] -[]
+- DashboardAbandonmentResponseDto: +['dropoutsInPeriod', 'transferredOut', 'reenrolledInPeriod'] -[]
+- FollowUpPurpose: +REENROLLMENT; catálogo nuevo reenrollment_reason; POST /enrollments con un paciente inactivo responde 409 PATIENT_REENROLL_VIA_FOLLOW_UP
 - DashboardAdherenceResponseDto: +['treatmentAbandonmentReasons'] -[]
 - DashboardDemographicsResponseDto: +['insuranceTypeAtEnrollment'] -[]
 - DashboardEpidemiologyResponseDto: +['diagnosisByDepartment', 'diagnosisByStage'] -[]

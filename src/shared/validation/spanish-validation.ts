@@ -97,6 +97,8 @@ const FIELD_LABELS: Record<string, string> = {
   zoneType: 'la zonificación',
   healthPhase: 'la fase de salud',
   healthSubcategory: 'la subcategoría',
+  entrySource: 'el punto de ingreso',
+  entrySubSource: 'cómo se enteró',
   zoomLink: 'el enlace de Zoom',
   from: 'la fecha «Desde»',
   to: 'la fecha «Hasta»',
@@ -183,7 +185,13 @@ function collect(errors: ValidationError[], out: string[]): void {
         error.value === undefined ||
         error.value === null ||
         (typeof error.value === 'string' && error.value.trim() === '');
-      out.push(messageFor(error.property, key, missing));
+      // Un mensaje propio del DTO (ya en español) gana al genérico.
+      const custom = error.constraints[key];
+      out.push(
+        custom && !/\b(must|should|each value)\b/i.test(custom)
+          ? custom
+          : messageFor(error.property, key, missing),
+      );
     }
     if (error.children?.length) collect(error.children, out);
   }

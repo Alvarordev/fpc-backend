@@ -471,6 +471,8 @@ export class DashboardIndicatorsService {
           other: 'Motivo OTHER (solo datos legados).',
           dropoutsInPeriod:
             'Inactivos al cierre cuyo evento de baja ocurrio dentro del periodo.',
+          reenrolledInPeriod:
+            'Pacientes reenrolados en el periodo (seguimiento de reenrolamiento). No suman en enrolados.',
         },
         options,
       ),
@@ -481,6 +483,7 @@ export class DashboardIndicatorsService {
       transferredOut: metrics.transferredOut ?? 0,
       other: metrics.other ?? 0,
       dropoutsInPeriod: metrics.dropoutsInPeriod ?? 0,
+      reenrolledInPeriod: metrics.reenrolledInPeriod ?? 0,
     };
   }
 
@@ -1324,6 +1327,10 @@ export class DashboardIndicatorsService {
         UNION ALL SELECT 'other', ${count('OTHER')} FROM dropouts
         UNION ALL SELECT 'dropoutsInPeriod',
           COUNT(*) FILTER (WHERE status_changed_at >= ${p.from})::float FROM dropouts
+        UNION ALL SELECT 'reenrolledInPeriod', COUNT(DISTINCT r.patient_id)::float
+          FROM follow_up_reenrollments r
+          JOIN cohort ON cohort.patient_id = r.patient_id
+          WHERE r.created_at >= ${p.from} AND r.created_at < ${p.to}
       ) metrics
     `;
   }

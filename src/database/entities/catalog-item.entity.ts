@@ -35,6 +35,7 @@ export const CATALOG_KINDS = [
   'temporary_housing_type',
   'alert_category',
   'alert_derivation_entity',
+  'reenrollment_reason',
 ] as const;
 
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
@@ -86,6 +87,7 @@ export const CATALOG_KIND_LABELS: Record<CatalogKind, string> = {
   temporary_housing_type: 'Tipo de vivienda provisional',
   alert_category: 'Categoría de alerta',
   alert_derivation_entity: 'Entidad de derivación de alertas',
+  reenrollment_reason: 'Motivo de reenrolamiento',
 };
 
 export const RESERVED_CATALOG_CODE = 'OTRO';

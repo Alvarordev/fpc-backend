@@ -42,8 +42,15 @@ export const CATALOG_REFERENCES: Partial<
     { table: 'patient_diagnoses', column: 'diagnosis' },
     { table: 'patient_diagnostic_status_events', column: 'reported_diagnosis' },
   ],
-  entry_source: [{ table: 'enrollments', column: 'entry_source' }],
-  entry_sub_source: [{ table: 'enrollments', column: 'entry_sub_source' }],
+  entry_source: [
+    { table: 'enrollments', column: 'entry_source' },
+    { table: 'follow_up_reenrollments', column: 'entry_source' },
+  ],
+  entry_sub_source: [
+    { table: 'enrollments', column: 'entry_sub_source' },
+    { table: 'follow_up_reenrollments', column: 'entry_sub_source' },
+  ],
+  reenrollment_reason: [{ table: 'follow_up_reenrollments', column: 'reason' }],
   zone_type: [{ table: 'patient_details', column: 'zone_type' }],
   care_program: [{ table: 'patient_treatments', column: 'care_program' }],
   access_barrier: [
