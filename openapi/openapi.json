@@ -56,7 +56,8 @@
             "schema": {
               "type": "string",
               "enum": [
-                "ACTIVE",
+                "REPORTED",
+                "IN_REVIEW",
                 "RESOLVED"
               ]
             }
@@ -96,26 +97,19 @@
             "name": "category",
             "required": false,
             "in": "query",
+            "description": "Code from the alert_category catalog",
             "schema": {
-              "type": "string",
-              "enum": [
-                "GENERAL",
-                "MEDICATION_SHORTAGE",
-                "APPOINTMENT_DELAY",
-                "INSURANCE_COVERAGE",
-                "TRANSPORT",
-                "ADMINISTRATIVE",
-                "PSYCHOSOCIAL",
-                "OTHER"
-              ]
+              "type": "string"
             }
           },
           {
-            "name": "underReview",
+            "name": "patientId",
             "required": false,
             "in": "query",
+            "description": "Alerts reported by this patient (any linked report)",
             "schema": {
-              "type": "boolean"
+              "format": "uuid",
+              "type": "string"
             }
           },
           {
@@ -242,7 +236,7 @@
         ]
       },
       "patch": {
-        "description": "Patch semantics: omitted fields are left unchanged. Explicit null is only accepted for derivedTo and derivationNotes. Use PATCH /alerts/:id/resolve to resolve an alert — setting status to RESOLVED here is rejected.",
+        "description": "Patch semantics: omitted fields are left unchanged; null is rejected. status moves between REPORTED and IN_REVIEW (recorded in the timeline). Use /resolve and /derive for those actions.",
         "operationId": "AlertsController_update",
         "parameters": [
           {
@@ -277,7 +271,7 @@
             }
           },
           "400": {
-            "description": "A non-nullable field was set to null, or status was set to RESOLVED"
+            "description": "A field was set to null or the category is not in the catalog"
           },
           "401": {
             "description": "JWT missing, invalid, or expired"
@@ -287,6 +281,9 @@
           },
           "404": {
             "description": "Alert, health center, or follow-up not found"
+          },
+          "409": {
+            "description": "Alert is already resolved"
           }
         },
         "security": [
@@ -351,6 +348,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveAlertDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
@@ -363,13 +370,13 @@
             }
           },
           "400": {
-            "description": "The authenticated user has no agent profile"
+            "description": "resolutionNotes is required"
           },
           "401": {
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator or agent role required"
+            "description": "Foundation role required"
           },
           "404": {
             "description": "Alert not found"
@@ -383,7 +390,256 @@
             "bearer": []
           }
         ],
-        "summary": "Resolve an alert",
+        "summary": "Resolve an alert, recording the procedure followed",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/{id}/derive": {
+      "patch": {
+        "operationId": "AlertsController_derive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeriveAlertDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The entity is not in the alert_derivation_entity catalog"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Alert not found"
+          },
+          "409": {
+            "description": "Alert is already resolved"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Derive an alert to an external entity (catalog) with a note",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/{id}/reports": {
+      "get": {
+        "operationId": "AlertsController_findReports",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertReportResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Alert not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the patient reports linked to an alert",
+        "tags": [
+          "alerts"
+        ]
+      },
+      "post": {
+        "description": "Pass followUpId, or subjectPatientId to create a completed follow-up (agents only).",
+        "operationId": "AlertsController_linkReport",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkAlertReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertReportResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Neither followUpId nor subjectPatientId was provided"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Alert, follow-up or patient not found"
+          },
+          "409": {
+            "description": "Alert is resolved or the follow-up is already linked"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Link another patient report (follow-up) to an existing alert",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/{id}/affected-patients": {
+      "get": {
+        "operationId": "AlertsController_affectedPatients",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertAffectedPatientsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Alert not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Patients with an ongoing (EN_PROCESO) treatment at the alert hospital, with a message ready to copy",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/{id}/affected-patients/notify": {
+      "post": {
+        "operationId": "AlertsController_notifyAffectedPatients",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertNotifyPatientsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Alert not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Email the alert notice to affected patients that have an email",
         "tags": [
           "alerts"
         ]
@@ -520,7 +776,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator or agent role required"
+            "description": "Administrator, agent, or foundation role required"
           },
           "404": {
             "description": "Alert not found"
@@ -539,6 +795,7 @@
     },
     "/call-center/workload": {
       "get": {
+        "description": "Pending follow-ups and reminders, with per-agent counts for today, this week and overdue.",
         "operationId": "CallCenterController_workload",
         "parameters": [],
         "responses": {
@@ -556,7 +813,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator role required"
+            "description": "Administrator or foundation role required"
           }
         },
         "security": [
@@ -565,6 +822,55 @@
           }
         ],
         "summary": "Get pending call center workload",
+        "tags": [
+          "call-center"
+        ]
+      }
+    },
+    "/call-center/reassign": {
+      "post": {
+        "operationId": "CallCenterController_reassign",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReassignFollowUpsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReassignFollowUpsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A follow-up is not scheduled or overdue"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          },
+          "404": {
+            "description": "Agent or follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reassign pending follow-ups to another agent",
         "tags": [
           "call-center"
         ]
@@ -648,7 +954,7 @@
             "name": "population",
             "required": false,
             "in": "query",
-            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "description": "all_active: patients enrolled before the period end whose last activity event at that moment is ACTIVE/REACTIVE. active_in_period: those of all_active with an enrollment, completed follow-up or psycho-oncology session in the period. enrolled_in_period: first enrollment inside the period, whatever their status.",
             "schema": {
               "default": "all_active",
               "type": "string",
@@ -663,12 +969,63 @@
             "name": "department",
             "required": false,
             "in": "query",
-            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "description": "Residence department of the primary address (catalog value, case and spaces ignored).",
             "schema": {
               "maxLength": 80,
               "pattern": "^[A-Za-zÑñ _-]+$",
               "example": "LIMA",
               "type": "string"
+            }
+          },
+          {
+            "name": "healthCenterId",
+            "required": false,
+            "in": "query",
+            "description": "Primary health center of the patient.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "agentId",
+            "required": false,
+            "in": "query",
+            "description": "Patients with at least one follow-up handled by this agent.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthPhase",
+            "required": false,
+            "in": "query",
+            "description": "Current health phase of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CANCER_DIAGNOSIS",
+                "ANNUAL_CHECKUP",
+                "SIGNS_AND_SYMPTOMS"
+              ]
+            }
+          },
+          {
+            "name": "healthSubcategory",
+            "required": false,
+            "in": "query",
+            "description": "Current health subcategory of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SIGNS_AND_SYMPTOMS_PATIENT",
+                "ACTIVE_TREATMENT",
+                "UNDER_CONTROLS",
+                "TREATMENT_ABANDONED",
+                "PALLIATIVE_NO_ACTIVE_TREATMENT",
+                "CANCER_RULED_OUT"
+              ]
             }
           }
         ],
@@ -782,7 +1139,7 @@
             "name": "population",
             "required": false,
             "in": "query",
-            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "description": "all_active: patients enrolled before the period end whose last activity event at that moment is ACTIVE/REACTIVE. active_in_period: those of all_active with an enrollment, completed follow-up or psycho-oncology session in the period. enrolled_in_period: first enrollment inside the period, whatever their status.",
             "schema": {
               "default": "all_active",
               "type": "string",
@@ -797,12 +1154,63 @@
             "name": "department",
             "required": false,
             "in": "query",
-            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "description": "Residence department of the primary address (catalog value, case and spaces ignored).",
             "schema": {
               "maxLength": 80,
               "pattern": "^[A-Za-zÑñ _-]+$",
               "example": "LIMA",
               "type": "string"
+            }
+          },
+          {
+            "name": "healthCenterId",
+            "required": false,
+            "in": "query",
+            "description": "Primary health center of the patient.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "agentId",
+            "required": false,
+            "in": "query",
+            "description": "Patients with at least one follow-up handled by this agent.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthPhase",
+            "required": false,
+            "in": "query",
+            "description": "Current health phase of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CANCER_DIAGNOSIS",
+                "ANNUAL_CHECKUP",
+                "SIGNS_AND_SYMPTOMS"
+              ]
+            }
+          },
+          {
+            "name": "healthSubcategory",
+            "required": false,
+            "in": "query",
+            "description": "Current health subcategory of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SIGNS_AND_SYMPTOMS_PATIENT",
+                "ACTIVE_TREATMENT",
+                "UNDER_CONTROLS",
+                "TREATMENT_ABANDONED",
+                "PALLIATIVE_NO_ACTIVE_TREATMENT",
+                "CANCER_RULED_OUT"
+              ]
             }
           }
         ],
@@ -916,7 +1324,7 @@
             "name": "population",
             "required": false,
             "in": "query",
-            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "description": "all_active: patients enrolled before the period end whose last activity event at that moment is ACTIVE/REACTIVE. active_in_period: those of all_active with an enrollment, completed follow-up or psycho-oncology session in the period. enrolled_in_period: first enrollment inside the period, whatever their status.",
             "schema": {
               "default": "all_active",
               "type": "string",
@@ -931,12 +1339,63 @@
             "name": "department",
             "required": false,
             "in": "query",
-            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "description": "Residence department of the primary address (catalog value, case and spaces ignored).",
             "schema": {
               "maxLength": 80,
               "pattern": "^[A-Za-zÑñ _-]+$",
               "example": "LIMA",
               "type": "string"
+            }
+          },
+          {
+            "name": "healthCenterId",
+            "required": false,
+            "in": "query",
+            "description": "Primary health center of the patient.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "agentId",
+            "required": false,
+            "in": "query",
+            "description": "Patients with at least one follow-up handled by this agent.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthPhase",
+            "required": false,
+            "in": "query",
+            "description": "Current health phase of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CANCER_DIAGNOSIS",
+                "ANNUAL_CHECKUP",
+                "SIGNS_AND_SYMPTOMS"
+              ]
+            }
+          },
+          {
+            "name": "healthSubcategory",
+            "required": false,
+            "in": "query",
+            "description": "Current health subcategory of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SIGNS_AND_SYMPTOMS_PATIENT",
+                "ACTIVE_TREATMENT",
+                "UNDER_CONTROLS",
+                "TREATMENT_ABANDONED",
+                "PALLIATIVE_NO_ACTIVE_TREATMENT",
+                "CANCER_RULED_OUT"
+              ]
             }
           }
         ],
@@ -1050,7 +1509,7 @@
             "name": "population",
             "required": false,
             "in": "query",
-            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "description": "all_active: patients enrolled before the period end whose last activity event at that moment is ACTIVE/REACTIVE. active_in_period: those of all_active with an enrollment, completed follow-up or psycho-oncology session in the period. enrolled_in_period: first enrollment inside the period, whatever their status.",
             "schema": {
               "default": "all_active",
               "type": "string",
@@ -1065,12 +1524,63 @@
             "name": "department",
             "required": false,
             "in": "query",
-            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "description": "Residence department of the primary address (catalog value, case and spaces ignored).",
             "schema": {
               "maxLength": 80,
               "pattern": "^[A-Za-zÑñ _-]+$",
               "example": "LIMA",
               "type": "string"
+            }
+          },
+          {
+            "name": "healthCenterId",
+            "required": false,
+            "in": "query",
+            "description": "Primary health center of the patient.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "agentId",
+            "required": false,
+            "in": "query",
+            "description": "Patients with at least one follow-up handled by this agent.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthPhase",
+            "required": false,
+            "in": "query",
+            "description": "Current health phase of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CANCER_DIAGNOSIS",
+                "ANNUAL_CHECKUP",
+                "SIGNS_AND_SYMPTOMS"
+              ]
+            }
+          },
+          {
+            "name": "healthSubcategory",
+            "required": false,
+            "in": "query",
+            "description": "Current health subcategory of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SIGNS_AND_SYMPTOMS_PATIENT",
+                "ACTIVE_TREATMENT",
+                "UNDER_CONTROLS",
+                "TREATMENT_ABANDONED",
+                "PALLIATIVE_NO_ACTIVE_TREATMENT",
+                "CANCER_RULED_OUT"
+              ]
             }
           }
         ],
@@ -1184,7 +1694,7 @@
             "name": "population",
             "required": false,
             "in": "query",
-            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "description": "all_active: patients enrolled before the period end whose last activity event at that moment is ACTIVE/REACTIVE. active_in_period: those of all_active with an enrollment, completed follow-up or psycho-oncology session in the period. enrolled_in_period: first enrollment inside the period, whatever their status.",
             "schema": {
               "default": "all_active",
               "type": "string",
@@ -1199,12 +1709,63 @@
             "name": "department",
             "required": false,
             "in": "query",
-            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "description": "Residence department of the primary address (catalog value, case and spaces ignored).",
             "schema": {
               "maxLength": 80,
               "pattern": "^[A-Za-zÑñ _-]+$",
               "example": "LIMA",
               "type": "string"
+            }
+          },
+          {
+            "name": "healthCenterId",
+            "required": false,
+            "in": "query",
+            "description": "Primary health center of the patient.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "agentId",
+            "required": false,
+            "in": "query",
+            "description": "Patients with at least one follow-up handled by this agent.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthPhase",
+            "required": false,
+            "in": "query",
+            "description": "Current health phase of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CANCER_DIAGNOSIS",
+                "ANNUAL_CHECKUP",
+                "SIGNS_AND_SYMPTOMS"
+              ]
+            }
+          },
+          {
+            "name": "healthSubcategory",
+            "required": false,
+            "in": "query",
+            "description": "Current health subcategory of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SIGNS_AND_SYMPTOMS_PATIENT",
+                "ACTIVE_TREATMENT",
+                "UNDER_CONTROLS",
+                "TREATMENT_ABANDONED",
+                "PALLIATIVE_NO_ACTIVE_TREATMENT",
+                "CANCER_RULED_OUT"
+              ]
             }
           }
         ],
@@ -1318,7 +1879,7 @@
             "name": "population",
             "required": false,
             "in": "query",
-            "description": "Denominator for estado indicators. Flujo metrics stay period-scoped.",
+            "description": "all_active: patients enrolled before the period end whose last activity event at that moment is ACTIVE/REACTIVE. active_in_period: those of all_active with an enrollment, completed follow-up or psycho-oncology session in the period. enrolled_in_period: first enrollment inside the period, whatever their status.",
             "schema": {
               "default": "all_active",
               "type": "string",
@@ -1333,12 +1894,63 @@
             "name": "department",
             "required": false,
             "in": "query",
-            "description": "Optional residence department filter (uppercase catalog value). Applies to demographics and epidemiology.",
+            "description": "Residence department of the primary address (catalog value, case and spaces ignored).",
             "schema": {
               "maxLength": 80,
               "pattern": "^[A-Za-zÑñ _-]+$",
               "example": "LIMA",
               "type": "string"
+            }
+          },
+          {
+            "name": "healthCenterId",
+            "required": false,
+            "in": "query",
+            "description": "Primary health center of the patient.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "agentId",
+            "required": false,
+            "in": "query",
+            "description": "Patients with at least one follow-up handled by this agent.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthPhase",
+            "required": false,
+            "in": "query",
+            "description": "Current health phase of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CANCER_DIAGNOSIS",
+                "ANNUAL_CHECKUP",
+                "SIGNS_AND_SYMPTOMS"
+              ]
+            }
+          },
+          {
+            "name": "healthSubcategory",
+            "required": false,
+            "in": "query",
+            "description": "Current health subcategory of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SIGNS_AND_SYMPTOMS_PATIENT",
+                "ACTIVE_TREATMENT",
+                "UNDER_CONTROLS",
+                "TREATMENT_ABANDONED",
+                "PALLIATIVE_NO_ACTIVE_TREATMENT",
+                "CANCER_RULED_OUT"
+              ]
             }
           }
         ],
@@ -1369,6 +1981,191 @@
           }
         ],
         "summary": "Get epidemiological dashboard indicators",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/dashboard/indicators/satisfaction": {
+      "get": {
+        "operationId": "DashboardController_getSatisfaction",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "month",
+              "type": "string",
+              "enum": [
+                "month",
+                "year"
+              ]
+            }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 2000,
+              "maximum": 2100,
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Required with period=month and year. Month is one-based.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 12,
+              "example": 8,
+              "type": "number"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive Lima calendar date. Use with to as an alternative to period/year/month.",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive Lima calendar date. Use with from.",
+            "schema": {
+              "example": "2026-02-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "Only America/Lima is supported.",
+            "schema": {
+              "default": "America/Lima",
+              "example": "America/Lima",
+              "type": "string",
+              "enum": [
+                "America/Lima"
+              ]
+            }
+          },
+          {
+            "name": "population",
+            "required": false,
+            "in": "query",
+            "description": "all_active: patients enrolled before the period end whose last activity event at that moment is ACTIVE/REACTIVE. active_in_period: those of all_active with an enrollment, completed follow-up or psycho-oncology session in the period. enrolled_in_period: first enrollment inside the period, whatever their status.",
+            "schema": {
+              "default": "all_active",
+              "type": "string",
+              "enum": [
+                "all_active",
+                "active_in_period",
+                "enrolled_in_period"
+              ]
+            }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Residence department of the primary address (catalog value, case and spaces ignored).",
+            "schema": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-zÑñ _-]+$",
+              "example": "LIMA",
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthCenterId",
+            "required": false,
+            "in": "query",
+            "description": "Primary health center of the patient.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "agentId",
+            "required": false,
+            "in": "query",
+            "description": "Patients with at least one follow-up handled by this agent.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthPhase",
+            "required": false,
+            "in": "query",
+            "description": "Current health phase of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CANCER_DIAGNOSIS",
+                "ANNUAL_CHECKUP",
+                "SIGNS_AND_SYMPTOMS"
+              ]
+            }
+          },
+          {
+            "name": "healthSubcategory",
+            "required": false,
+            "in": "query",
+            "description": "Current health subcategory of the patient.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SIGNS_AND_SYMPTOMS_PATIENT",
+                "ACTIVE_TREATMENT",
+                "UNDER_CONTROLS",
+                "TREATMENT_ABANDONED",
+                "PALLIATIVE_NO_ACTIVE_TREATMENT",
+                "CANCER_RULED_OUT"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSatisfactionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The indicator period or timezone is invalid"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get satisfaction survey indicators (c1–c4)",
         "tags": [
           "dashboard"
         ]
@@ -2214,6 +3011,7 @@
         ]
       },
       "get": {
+        "description": "Agents see every follow-up of a patient when patientId is given; otherwise only their own unless agentId is given.",
         "operationId": "FollowUpsController_findAll",
         "parameters": [
           {
@@ -2243,7 +3041,8 @@
                 "SCHEDULED",
                 "COMPLETED",
                 "CANCELLED",
-                "NO_ANSWER"
+                "NO_ANSWER",
+                "OVERDUE"
               ],
               "type": "string"
             }
@@ -2376,7 +3175,7 @@
             "bearer": []
           }
         ],
-        "summary": "Get a follow-up",
+        "summary": "Get a follow-up with its attempts",
         "tags": [
           "follow-ups"
         ]
@@ -2493,6 +3292,126 @@
           }
         ],
         "summary": "Schedule the next follow-up",
+        "tags": [
+          "follow-ups"
+        ]
+      }
+    },
+    "/follow-ups/{id}/attempts": {
+      "post": {
+        "description": "A CONTACTED attempt completes the follow-up; a failed one marks it NO_ANSWER unless it was already completed.",
+        "operationId": "FollowUpsController_attempt",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFollowUpAttemptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowUpAttemptResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The follow-up is cancelled"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only modify their own follow-ups"
+          },
+          "404": {
+            "description": "Follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a contact attempt",
+        "tags": [
+          "follow-ups"
+        ]
+      }
+    },
+    "/follow-ups/{id}/reschedule": {
+      "post": {
+        "description": "Creates a new scheduled follow-up linked through nextFollowUpId.",
+        "operationId": "FollowUpsController_reschedule",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleFollowUpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowUpResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The follow-up is not overdue or cancelled, was already rescheduled, or the date is in the past"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only modify their own follow-ups"
+          },
+          "404": {
+            "description": "Follow-up or agent not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reschedule an overdue or cancelled follow-up",
         "tags": [
           "follow-ups"
         ]
@@ -2619,6 +3538,27 @@
                 "true",
                 "false"
               ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "careLevel",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "I",
+                "II",
+                "III"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
               "type": "string"
             }
           }
@@ -2791,7 +3731,9 @@
                 "chemotherapy_route",
                 "surgical_procedure",
                 "location_share_status",
-                "temporary_housing_type"
+                "temporary_housing_type",
+                "alert_category",
+                "alert_derivation_entity"
               ],
               "type": "string"
             }
@@ -2853,7 +3795,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator, foundation, or agent role required; non-admins limited to open kinds"
+            "description": "Administrator, foundation, or agent role required; agents limited to open kinds"
           }
         },
         "security": [
@@ -2861,7 +3803,7 @@
             "bearer": []
           }
         ],
-        "summary": "Create a catalog item (agents/foundation: open kinds only)",
+        "summary": "Create a catalog item (agents: open kinds only)",
         "tags": [
           "catalogs"
         ]
@@ -2910,6 +3852,52 @@
         ]
       }
     },
+    "/catalogs/merges": {
+      "get": {
+        "operationId": "CatalogsController_findMerges",
+        "parameters": [
+          {
+            "name": "itemId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CatalogMergeResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator or foundation role required"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List catalog merges, newest first",
+        "tags": [
+          "catalogs"
+        ]
+      }
+    },
     "/catalogs/{id}": {
       "patch": {
         "operationId": "CatalogsController_update",
@@ -2949,7 +3937,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator role required"
+            "description": "Administrator, foundation, or agent role required; agents limited to open kinds"
           },
           "404": {
             "description": "Catalog item not found"
@@ -2960,7 +3948,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update a catalog item",
+        "summary": "Update a catalog item (agents: open kinds only)",
         "tags": [
           "catalogs"
         ]
@@ -2995,7 +3983,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator role required"
+            "description": "Administrator, foundation, or agent role required; agents limited to open kinds"
           },
           "404": {
             "description": "Catalog item not found"
@@ -3006,7 +3994,70 @@
             "bearer": []
           }
         ],
-        "summary": "Archive (soft-deactivate) a non-system catalog item",
+        "summary": "Archive (soft-deactivate) a non-system catalog item (agents: open kinds only)",
+        "tags": [
+          "catalogs"
+        ]
+      }
+    },
+    "/catalogs/{id}/merge-into/{targetId}": {
+      "post": {
+        "operationId": "CatalogsController_merge",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Duplicate item",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetId",
+            "required": true,
+            "in": "path",
+            "description": "Item to keep",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogMergeResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Different kinds, same item, system source item, or archived target"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Administrator role required"
+          },
+          "404": {
+            "description": "Catalog item not found"
+          },
+          "409": {
+            "description": "Catalog item was already merged"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Merge a duplicate catalog item into another: re-points every stored reference and archives the duplicate",
         "tags": [
           "catalogs"
         ]
@@ -6194,6 +7245,7 @@
     },
     "/psychooncology-appointments": {
       "post": {
+        "description": "Opens a care cycle when the patient has none. After the 4 base sessions, only additional sessions can be scheduled.",
         "operationId": "PsychooncologyAppointmentsController_create",
         "parameters": [],
         "requestBody": {
@@ -6218,19 +7270,16 @@
             }
           },
           "400": {
-            "description": "The follow-up does not belong to the patient"
+            "description": "Invalid companion, follow-up, or reminder"
           },
           "401": {
             "description": "JWT missing, invalid, or expired"
-          },
-          "403": {
-            "description": "Volunteers can only schedule appointments from their own availability"
           },
           "404": {
             "description": "Patient, follow-up, availability slot, or volunteer not found"
           },
           "409": {
-            "description": "Availability slot is reserved or volunteer is inactive"
+            "description": "Slot reserved or past, volunteer inactive, or base cycle already full"
           }
         },
         "security": [
@@ -6238,7 +7287,7 @@
             "bearer": []
           }
         ],
-        "summary": "Schedule a psycho-oncology appointment",
+        "summary": "Schedule a psycho-oncology appointment on a free slot",
         "tags": [
           "psychooncology-appointments"
         ]
@@ -6265,6 +7314,15 @@
             }
           },
           {
+            "name": "cycleId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
             "name": "status",
             "required": false,
             "in": "query",
@@ -6272,10 +7330,20 @@
               "enum": [
                 "SCHEDULED",
                 "COMPLETED",
+                "NO_SHOW",
                 "CANCELLED",
-                "NO_ANSWER"
+                "RESCHEDULED",
+                "OVERDUE"
               ],
               "type": "string"
+            }
+          },
+          {
+            "name": "needsReassignment",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -6306,6 +7374,82 @@
           }
         ],
         "summary": "List psycho-oncology appointments",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      }
+    },
+    "/psychooncology-appointments/needs-reassignment": {
+      "get": {
+        "operationId": "PsychooncologyAppointmentsController_findNeedingReassignment",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PsychooncologyAppointmentResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List pending sessions of deactivated volunteers to reassign",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      }
+    },
+    "/psychooncology-appointments/patients/{patientId}/unmanaged-no-shows": {
+      "get": {
+        "operationId": "PsychooncologyAppointmentsController_findUnmanagedNoShows",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnmanagedNoShowsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Patient is not accessible"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Whether a patient has no-show sessions nobody followed up yet",
         "tags": [
           "psychooncology-appointments"
         ]
@@ -6360,6 +7504,7 @@
         ]
       },
       "patch": {
+        "description": "Volunteers only record results (status COMPLETED/NO_SHOW and session fields) of their own sessions; agents only edit logistics.",
         "operationId": "PsychooncologyAppointmentsController_update",
         "parameters": [
           {
@@ -6394,19 +7539,19 @@
             }
           },
           "400": {
-            "description": "Invalid appointment status transition"
+            "description": "Invalid status transition or reminder"
           },
           "401": {
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Volunteers have limited update permissions"
+            "description": "The role cannot edit some of the given fields"
           },
           "404": {
-            "description": "Appointment or availability slot not found"
+            "description": "Appointment not found"
           },
           "409": {
-            "description": "Closed appointments cannot be updated"
+            "description": "Cancelled or rescheduled appointments cannot be updated"
           }
         },
         "security": [
@@ -6449,10 +7594,10 @@
             "description": "JWT missing, invalid, or expired"
           },
           "404": {
-            "description": "Appointment or availability slot not found"
+            "description": "Appointment not found"
           },
           "409": {
-            "description": "Closed appointments cannot be cancelled"
+            "description": "Only scheduled or overdue appointments can be cancelled"
           }
         },
         "security": [
@@ -6461,6 +7606,192 @@
           }
         ],
         "summary": "Cancel a psycho-oncology appointment",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      }
+    },
+    "/psychooncology-appointments/{id}/reschedule": {
+      "post": {
+        "description": "The slot may belong to another volunteer. The original session becomes RESCHEDULED and links to the returned new session.",
+        "operationId": "PsychooncologyAppointmentsController_reschedule",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReschedulePsychooncologyAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PsychooncologyAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Appointment or slot not found"
+          },
+          "409": {
+            "description": "Appointment not pending, slot reserved or past, or volunteer inactive"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reschedule a session to another free slot",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      }
+    },
+    "/psychooncology-appointments/{id}/reminder": {
+      "get": {
+        "operationId": "PsychooncologyAppointmentsController_reminder",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentReminderResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "409": {
+            "description": "Video call session without Zoom link"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the ready-to-copy reminder of a session",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      }
+    },
+    "/psychooncology-appointments/{id}/reminder/sent": {
+      "patch": {
+        "operationId": "PsychooncologyAppointmentsController_markReminderSent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentReminderResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "409": {
+            "description": "Session not pending, or video call without Zoom link"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark the session reminder as sent manually",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      }
+    },
+    "/psychooncology-appointments/{id}/no-show-managed": {
+      "patch": {
+        "operationId": "PsychooncologyAppointmentsController_markNoShowManaged",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PsychooncologyAppointmentResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "409": {
+            "description": "The session is not a no-show"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark a no-show session as managed",
         "tags": [
           "psychooncology-appointments"
         ]
@@ -6618,6 +7949,148 @@
         ]
       }
     },
+    "/reminders/{id}/message": {
+      "get": {
+        "operationId": "RemindersController_message",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderMessageResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Reminder not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the reminder text ready to copy (manual WhatsApp delivery)",
+        "tags": [
+          "reminders"
+        ]
+      }
+    },
+    "/reminders/{id}/send-email": {
+      "post": {
+        "description": "The outcome is stored in deliveryStatus (SENT or FAILED with deliveryError). When email is not configured the reminder ends as FAILED.",
+        "operationId": "RemindersController_sendEmail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Reminder is not pending or the patient has no email"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only send their own reminders"
+          },
+          "404": {
+            "description": "Reminder not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Email the reminder to the patient now",
+        "tags": [
+          "reminders"
+        ]
+      }
+    },
+    "/reminders/{id}/mark-sent": {
+      "post": {
+        "operationId": "RemindersController_markSent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Reminder is not pending"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Agents can only update their own reminders"
+          },
+          "404": {
+            "description": "Reminder not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark a reminder as delivered manually (e.g. copied to WhatsApp)",
+        "tags": [
+          "reminders"
+        ]
+      }
+    },
     "/reminders/{id}/complete": {
       "patch": {
         "operationId": "RemindersController_complete",
@@ -6654,7 +8127,7 @@
             }
           },
           "400": {
-            "description": "Reminder is not pending or the follow-up is invalid"
+            "description": "Reminder is not pending"
           },
           "401": {
             "description": "JWT missing, invalid, or expired"
@@ -7040,6 +8513,123 @@
         ]
       }
     },
+    "/volunteers/{volunteerId}/availability/recurring": {
+      "post": {
+        "operationId": "VolunteerAvailabilityController_createRecurring",
+        "parameters": [
+          {
+            "name": "volunteerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecurringAvailabilityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringAvailabilityResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid range, days, or hours"
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Volunteers can only manage their own availability"
+          },
+          "404": {
+            "description": "Volunteer not found"
+          },
+          "409": {
+            "description": "Volunteer is inactive"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a weekly availability block split into 1-hour slots",
+        "tags": [
+          "volunteer-availability"
+        ]
+      }
+    },
+    "/volunteers/{volunteerId}/availability/recurrences/{recurrenceId}": {
+      "delete": {
+        "operationId": "VolunteerAvailabilityController_removeRecurrence",
+        "parameters": [
+          {
+            "name": "volunteerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "recurrenceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveRecurrenceResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Volunteers can only manage their own availability"
+          },
+          "404": {
+            "description": "Volunteer or recurrence not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove the free future slots of a recurring block",
+        "tags": [
+          "volunteer-availability"
+        ]
+      }
+    },
     "/volunteers/{volunteerId}/availability/{id}": {
       "delete": {
         "operationId": "VolunteerAvailabilityController_remove",
@@ -7120,7 +8710,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator role required"
+            "description": "Administrator or foundation role required"
           }
         },
         "security": [
@@ -7152,6 +8742,9 @@
           },
           "401": {
             "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Volunteers cannot list volunteers"
           }
         },
         "security": [
@@ -7160,6 +8753,39 @@
           }
         ],
         "summary": "List volunteers",
+        "tags": [
+          "volunteers"
+        ]
+      }
+    },
+    "/volunteers/me": {
+      "get": {
+        "operationId": "VolunteersController_findMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "404": {
+            "description": "Volunteer not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the profile of the authenticated volunteer",
         "tags": [
           "volunteers"
         ]
@@ -7192,6 +8818,9 @@
           },
           "401": {
             "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Volunteers can only view their own profile"
           },
           "404": {
             "description": "Volunteer not found"
@@ -7245,7 +8874,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator role required"
+            "description": "Administrator or foundation role required"
           },
           "404": {
             "description": "Volunteer not found"
@@ -7264,6 +8893,7 @@
     },
     "/volunteers/{id}/deactivate": {
       "patch": {
+        "description": "Future sessions of the volunteer are flagged as needing reassignment.",
         "operationId": "VolunteersController_deactivate",
         "parameters": [
           {
@@ -7291,7 +8921,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator role required"
+            "description": "Administrator or foundation role required"
           },
           "404": {
             "description": "Volunteer not found"
@@ -7310,6 +8940,7 @@
     },
     "/volunteers/{id}/pause": {
       "patch": {
+        "description": "Future sessions of the volunteer are flagged as needing reassignment.",
         "operationId": "VolunteersController_pause",
         "parameters": [
           {
@@ -7337,7 +8968,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator role required"
+            "description": "Administrator or foundation role required"
           },
           "404": {
             "description": "Volunteer not found"
@@ -7383,7 +9014,7 @@
             "description": "JWT missing, invalid, or expired"
           },
           "403": {
-            "description": "Administrator role required"
+            "description": "Administrator or foundation role required"
           },
           "404": {
             "description": "Volunteer not found"
@@ -8124,6 +9755,16 @@
       "CreateAlertDto": {
         "type": "object",
         "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Existing follow-up the report comes from"
+          },
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required when followUpId is omitted; a follow-up is created"
+          },
           "severity": {
             "enum": [
               "HIGH",
@@ -8133,29 +9774,19 @@
             "type": "string"
           },
           "category": {
-            "enum": [
-              "GENERAL",
-              "MEDICATION_SHORTAGE",
-              "APPOINTMENT_DELAY",
-              "INSURANCE_COVERAGE",
-              "TRANSPORT",
-              "ADMINISTRATIVE",
-              "PSYCHOSOCIAL",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "maxLength": 100,
+            "description": "Code from the alert_category catalog. Defaults to GENERAL."
           },
           "healthCenterId": {
             "type": "string",
             "format": "uuid"
           },
-          "followUpId": {
-            "type": "string",
-            "format": "uuid"
+          "title": {
+            "type": "string"
           },
-          "subjectPatientId": {
-            "type": "string",
-            "format": "uuid"
+          "description": {
+            "type": "string"
           },
           "interlocutorId": {
             "type": "string",
@@ -8173,12 +9804,6 @@
             ]
           },
           "followUpNotes": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "description": {
             "type": "string"
           }
         },
@@ -8209,7 +9834,8 @@
           },
           "followUpId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Follow-up of the first report"
           },
           "createdById": {
             "type": "string",
@@ -8241,7 +9867,8 @@
           },
           "status": {
             "enum": [
-              "ACTIVE",
+              "REPORTED",
+              "IN_REVIEW",
               "RESOLVED"
             ],
             "type": "string"
@@ -8255,28 +9882,38 @@
             "type": "string"
           },
           "category": {
-            "enum": [
-              "GENERAL",
-              "MEDICATION_SHORTAGE",
-              "APPOINTMENT_DELAY",
-              "INSURANCE_COVERAGE",
-              "TRANSPORT",
-              "ADMINISTRATIVE",
-              "PSYCHOSOCIAL",
-              "OTHER"
-            ],
-            "type": "string"
+            "type": "string",
+            "description": "Code from the alert_category catalog"
           },
-          "underReview": {
-            "type": "boolean"
+          "categoryLabel": {
+            "type": "string",
+            "nullable": true
           },
           "derivedTo": {
+            "type": "string",
+            "nullable": true,
+            "description": "Code from the alert_derivation_entity catalog"
+          },
+          "derivedToLabel": {
             "type": "string",
             "nullable": true
           },
           "derivationNotes": {
             "type": "string",
             "nullable": true
+          },
+          "derivedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "resolutionNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "reportsCount": {
+            "type": "number",
+            "description": "Number of linked patient reports"
           },
           "aiSummary": {
             "type": "string",
@@ -8286,11 +9923,6 @@
             "format": "date-time",
             "type": "string",
             "nullable": true
-          },
-          "resolvedById": {
-            "type": "string",
-            "nullable": true,
-            "format": "uuid"
           },
           "resolvedByUserId": {
             "type": "string",
@@ -8327,12 +9959,15 @@
           "status",
           "severity",
           "category",
-          "underReview",
+          "categoryLabel",
           "derivedTo",
+          "derivedToLabel",
           "derivationNotes",
+          "derivedAt",
+          "resolutionNotes",
+          "reportsCount",
           "aiSummary",
           "resolvedAt",
-          "resolvedById",
           "resolvedByUserId",
           "resolvedByName",
           "createdAt",
@@ -8359,6 +9994,15 @@
             "type": "string",
             "nullable": true
           },
+          "actorUserId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "actorName": {
+            "type": "string",
+            "nullable": true
+          },
           "eventType": {
             "enum": [
               "CREATED",
@@ -8366,7 +10010,9 @@
               "DERIVED",
               "COMMENT",
               "AI_SUMMARY_GENERATED",
-              "RESOLVED"
+              "RESOLVED",
+              "REPORT_LINKED",
+              "PATIENTS_NOTIFIED"
             ],
             "type": "string"
           },
@@ -8387,6 +10033,8 @@
           "alertId",
           "agentId",
           "agentName",
+          "actorUserId",
+          "actorName",
           "eventType",
           "title",
           "description",
@@ -8431,30 +10079,14 @@
             "nullable": true,
             "format": "uuid"
           },
-          "followUpId": {
-            "type": "string",
-            "nullable": true,
-            "format": "uuid"
-          },
           "status": {
             "nullable": true,
             "enum": [
-              "ACTIVE",
-              "RESOLVED"
+              "REPORTED",
+              "IN_REVIEW"
             ],
-            "type": "string"
-          },
-          "underReview": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "derivedTo": {
             "type": "string",
-            "nullable": true
-          },
-          "derivationNotes": {
-            "type": "string",
-            "nullable": true
+            "description": "Use PATCH /alerts/:id/resolve to resolve an alert"
           },
           "severity": {
             "nullable": true,
@@ -8466,20 +10098,217 @@
             "type": "string"
           },
           "category": {
+            "type": "string",
             "nullable": true,
+            "maxLength": 100,
+            "description": "Code from the alert_category catalog"
+          }
+        }
+      },
+      "ResolveAlertDto": {
+        "type": "object",
+        "properties": {
+          "resolutionNotes": {
+            "type": "string",
+            "description": "Procedure followed to resolve the alert"
+          }
+        },
+        "required": [
+          "resolutionNotes"
+        ]
+      },
+      "DeriveAlertDto": {
+        "type": "object",
+        "properties": {
+          "entityCode": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Code from the alert_derivation_entity catalog"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "entityCode",
+          "notes"
+        ]
+      },
+      "AlertReportResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "alertId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientFullName": {
+            "type": "string"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reportedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reportedByUserId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "reportedByEmail": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "alertId",
+          "patientId",
+          "patientFullName",
+          "followUpId",
+          "reportedAt",
+          "reportedByUserId",
+          "reportedByEmail"
+        ]
+      },
+      "LinkAlertReportDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Existing follow-up the report comes from"
+          },
+          "subjectPatientId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required when followUpId is omitted; a follow-up is created"
+          },
+          "interlocutorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpType": {
+            "type": "string",
             "enum": [
-              "GENERAL",
-              "MEDICATION_SHORTAGE",
-              "APPOINTMENT_DELAY",
-              "INSURANCE_COVERAGE",
-              "TRANSPORT",
-              "ADMINISTRATIVE",
-              "PSYCHOSOCIAL",
-              "OTHER"
-            ],
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ]
+          },
+          "followUpNotes": {
             "type": "string"
           }
         }
+      },
+      "AlertAffectedPatientDto": {
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "dni": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "patientId",
+          "fullName",
+          "dni",
+          "phone",
+          "email"
+        ]
+      },
+      "AlertAffectedPatientsResponseDto": {
+        "type": "object",
+        "properties": {
+          "alertId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "healthCenterName": {
+            "type": "string"
+          },
+          "patients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlertAffectedPatientDto"
+            }
+          },
+          "subject": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "description": "Plain text ready to copy (e.g. WhatsApp)"
+          }
+        },
+        "required": [
+          "alertId",
+          "healthCenterId",
+          "healthCenterName",
+          "patients",
+          "subject",
+          "text"
+        ]
+      },
+      "AlertNotifyPatientsResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalPatients": {
+            "type": "number"
+          },
+          "withEmail": {
+            "type": "number"
+          },
+          "sent": {
+            "type": "number"
+          },
+          "failed": {
+            "type": "number"
+          },
+          "emailEnabled": {
+            "type": "boolean",
+            "description": "False when email delivery is not configured"
+          }
+        },
+        "required": [
+          "totalPatients",
+          "withEmail",
+          "sent",
+          "failed",
+          "emailEnabled"
+        ]
       },
       "CreateAlertEventDto": {
         "type": "object",
@@ -8511,6 +10340,52 @@
           "fullName"
         ]
       },
+      "CallCenterPendingCountsDto": {
+        "type": "object",
+        "properties": {
+          "today": {
+            "type": "number",
+            "description": "Due today (America/Lima)"
+          },
+          "week": {
+            "type": "number",
+            "description": "Due from today through Sunday"
+          },
+          "overdue": {
+            "type": "number",
+            "description": "Due before today and still pending"
+          }
+        },
+        "required": [
+          "today",
+          "week",
+          "overdue"
+        ]
+      },
+      "CallCenterAgentLoadDto": {
+        "type": "object",
+        "properties": {
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "followUps": {
+            "$ref": "#/components/schemas/CallCenterPendingCountsDto"
+          },
+          "reminders": {
+            "$ref": "#/components/schemas/CallCenterPendingCountsDto"
+          }
+        },
+        "required": [
+          "agentId",
+          "fullName",
+          "followUps",
+          "reminders"
+        ]
+      },
       "CallCenterFollowUpDto": {
         "type": "object",
         "properties": {
@@ -8528,6 +10403,13 @@
           "agentId": {
             "type": "string",
             "format": "uuid"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "OVERDUE"
+            ],
+            "type": "string"
           },
           "type": {
             "enum": [
@@ -8554,6 +10436,11 @@
             "format": "date-time",
             "type": "string",
             "nullable": true
+          },
+          "scheduledOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
           }
         },
         "required": [
@@ -8561,9 +10448,11 @@
           "subjectPatientId",
           "subjectPatientName",
           "agentId",
+          "status",
           "type",
           "purpose",
-          "scheduledAt"
+          "scheduledAt",
+          "scheduledOn"
         ]
       },
       "CallCenterReminderDto": {
@@ -8590,6 +10479,11 @@
           "dueAt": {
             "format": "date-time",
             "type": "string"
+          },
+          "dueOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
           }
         },
         "required": [
@@ -8598,7 +10492,8 @@
           "subjectPatientName",
           "assignedAgentId",
           "description",
-          "dueAt"
+          "dueAt",
+          "dueOn"
         ]
       },
       "CallCenterWorkloadResponseDto": {
@@ -8610,7 +10505,23 @@
               "$ref": "#/components/schemas/CallCenterAgentDto"
             }
           },
+          "today": {
+            "type": "string",
+            "format": "date"
+          },
+          "weekEnd": {
+            "type": "string",
+            "format": "date",
+            "description": "Sunday of the current week"
+          },
+          "load": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CallCenterAgentLoadDto"
+            }
+          },
           "scheduledFollowUps": {
+            "description": "Scheduled and overdue follow-ups",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CallCenterFollowUpDto"
@@ -8625,8 +10536,44 @@
         },
         "required": [
           "agents",
+          "today",
+          "weekEnd",
+          "load",
           "scheduledFollowUps",
           "pendingReminders"
+        ]
+      },
+      "ReassignFollowUpsDto": {
+        "type": "object",
+        "properties": {
+          "followUpIds": {
+            "minItems": 1,
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "followUpIds",
+          "agentId"
+        ]
+      },
+      "ReassignFollowUpsResponseDto": {
+        "type": "object",
+        "properties": {
+          "reassigned": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "reassigned"
         ]
       },
       "DashboardIndicatorMetaDto": {
@@ -8648,6 +10595,13 @@
           "definition": {
             "type": "string"
           },
+          "definitions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Formula and source of each indicator, keyed by field name."
+          },
           "population": {
             "type": "string"
           },
@@ -8664,6 +10618,7 @@
           "to",
           "timezone",
           "definition",
+          "definitions",
           "population",
           "populationCount",
           "enrolledBeforePeriod"
@@ -8761,6 +10716,9 @@
           },
           "epsProvider": {
             "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
+          "insuranceTypeAtEnrollment": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
           }
         },
         "required": [
@@ -8776,7 +10734,8 @@
           "requiresTranslation",
           "isWorking",
           "insuranceType",
-          "epsProvider"
+          "epsProvider",
+          "insuranceTypeAtEnrollment"
         ]
       },
       "DashboardManagementResponseDto": {
@@ -8847,7 +10806,7 @@
           "avgDaysEnrollmentToSis": {
             "type": "number",
             "nullable": true,
-            "description": "Average days from enrollment to SIS affiliation for patients whose current insurance is SIS and whose affiliation date differs from enrollment. Null when unknown."
+            "description": "Average, one value per patient, of days from first enrollment to the first SIS affiliation achieved via SEPA. Negative intervals are ignored. Null when unknown."
           },
           "avgDaysPrimaryCareToDiagnosis": {
             "type": "number",
@@ -8916,6 +10875,9 @@
           "abandonedWithBarriers": {
             "type": "number"
           },
+          "treatmentAbandonmentReasons": {
+            "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
+          },
           "interruptedAdverseReaction": {
             "type": "number"
           },
@@ -8931,6 +10893,7 @@
           "withAccessBarriers",
           "orientedRegardingBarriers",
           "abandonedWithBarriers",
+          "treatmentAbandonmentReasons",
           "interruptedAdverseReaction",
           "palliativeNoActiveTreatment"
         ]
@@ -8953,8 +10916,15 @@
           "deceased": {
             "type": "number"
           },
+          "transferredOut": {
+            "type": "number"
+          },
           "other": {
             "type": "number"
+          },
+          "dropoutsInPeriod": {
+            "type": "number",
+            "description": "Patients whose deactivation happened inside the period."
           }
         },
         "required": [
@@ -8963,7 +10933,31 @@
           "voluntary",
           "unlocatable",
           "deceased",
-          "other"
+          "transferredOut",
+          "other",
+          "dropoutsInPeriod"
+        ]
+      },
+      "DashboardCrossItemDto": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "type": "string",
+            "example": "Cáncer de mama"
+          },
+          "column": {
+            "type": "string",
+            "example": "LIMA"
+          },
+          "count": {
+            "type": "number",
+            "example": 7
+          }
+        },
+        "required": [
+          "row",
+          "column",
+          "count"
         ]
       },
       "DashboardEpidemiologyEventsDto": {
@@ -9006,6 +11000,20 @@
           "currentDiagnosticStatuses": {
             "$ref": "#/components/schemas/DashboardIndicatorDistributionDto"
           },
+          "diagnosisByDepartment": {
+            "description": "Current diagnoses (row) by residence department (column).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardCrossItemDto"
+            }
+          },
+          "diagnosisByStage": {
+            "description": "Current diagnoses (row) by cancer stage (column).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardCrossItemDto"
+            }
+          },
           "events": {
             "$ref": "#/components/schemas/DashboardEpidemiologyEventsDto"
           }
@@ -9017,7 +11025,61 @@
           "currentTreatmentTypes",
           "currentTreatmentSituations",
           "currentDiagnosticStatuses",
+          "diagnosisByDepartment",
+          "diagnosisByStage",
           "events"
+        ]
+      },
+      "DashboardSurveySummaryDto": {
+        "type": "object",
+        "properties": {
+          "average": {
+            "type": "number",
+            "nullable": true,
+            "example": 4.5
+          },
+          "responses": {
+            "type": "number"
+          },
+          "distribution": {
+            "description": "Answers per rating, from 1 to 5.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardIndicatorItemDto"
+            }
+          }
+        },
+        "required": [
+          "average",
+          "responses",
+          "distribution"
+        ]
+      },
+      "DashboardSatisfactionResponseDto": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/DashboardIndicatorMetaDto"
+          },
+          "enrollment": {
+            "$ref": "#/components/schemas/DashboardSurveySummaryDto"
+          },
+          "threeMonths": {
+            "$ref": "#/components/schemas/DashboardSurveySummaryDto"
+          },
+          "talk": {
+            "$ref": "#/components/schemas/DashboardSurveySummaryDto"
+          },
+          "psychooncology": {
+            "$ref": "#/components/schemas/DashboardSurveySummaryDto"
+          }
+        },
+        "required": [
+          "meta",
+          "enrollment",
+          "threeMonths",
+          "talk",
+          "psychooncology"
         ]
       },
       "DashboardMetaDto": {
@@ -9541,6 +11603,81 @@
           "primaryPhone"
         ]
       },
+      "EnrollmentContactPersonDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "primaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "documentType": {
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
+          },
+          "dni": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "birthDate": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "maxLength": 10
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "relationship": {
+            "type": "string",
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "fullName",
+          "primaryPhone",
+          "relationship"
+        ]
+      },
+      "EnrollmentContactInputDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "enum": [
+              "PRIMARY",
+              "SECONDARY"
+            ],
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "PATIENT",
+              "CALLER",
+              "NEW"
+            ],
+            "type": "string"
+          },
+          "person": {
+            "$ref": "#/components/schemas/EnrollmentContactPersonDto"
+          }
+        },
+        "required": [
+          "role",
+          "source"
+        ]
+      },
       "EnrollmentFollowUpDto": {
         "type": "object",
         "properties": {
@@ -9640,81 +11777,6 @@
         "required": [
           "fullName",
           "primaryPhone"
-        ]
-      },
-      "EnrollmentContactPersonDto": {
-        "type": "object",
-        "properties": {
-          "fullName": {
-            "type": "string",
-            "maxLength": 255
-          },
-          "primaryPhone": {
-            "type": "string",
-            "maxLength": 50
-          },
-          "secondaryPhone": {
-            "type": "string",
-            "maxLength": 50
-          },
-          "documentType": {
-            "enum": [
-              "DNI",
-              "CE",
-              "CPP"
-            ],
-            "type": "string"
-          },
-          "dni": {
-            "type": "string",
-            "maxLength": 20
-          },
-          "birthDate": {
-            "type": "string"
-          },
-          "gender": {
-            "type": "string",
-            "maxLength": 10
-          },
-          "hasWhatsapp": {
-            "type": "boolean"
-          },
-          "relationship": {
-            "type": "string",
-            "maxLength": 50
-          }
-        },
-        "required": [
-          "fullName",
-          "primaryPhone",
-          "relationship"
-        ]
-      },
-      "EnrollmentContactInputDto": {
-        "type": "object",
-        "properties": {
-          "role": {
-            "enum": [
-              "PRIMARY",
-              "SECONDARY"
-            ],
-            "type": "string"
-          },
-          "source": {
-            "enum": [
-              "PATIENT",
-              "CALLER",
-              "NEW"
-            ],
-            "type": "string"
-          },
-          "person": {
-            "$ref": "#/components/schemas/EnrollmentContactPersonDto"
-          }
-        },
-        "required": [
-          "role",
-          "source"
         ]
       },
       "DurationDto": {
@@ -9829,13 +11891,6 @@
           "knowsAboutFissal": {
             "type": "boolean"
           },
-          "programDropoutReason": {
-            "type": "string"
-          },
-          "programDropoutDate": {
-            "type": "string",
-            "format": "date"
-          },
           "transportationViaSepa": {
             "type": "boolean"
           },
@@ -9862,10 +11917,6 @@
           "attendedEducationalTalkAt": {
             "type": "string",
             "format": "date"
-          },
-          "programDropoutReasonCode": {
-            "type": "string",
-            "maxLength": 100
           }
         }
       },
@@ -9880,6 +11931,10 @@
             "type": "string",
             "maxLength": 100
           },
+          "affiliatedViaSepa": {
+            "type": "boolean",
+            "description": "ESSALUD activation achieved by SEPA. SIS affiliations by SEPA belong to sis-affiliation."
+          },
           "changeReason": {
             "type": "string"
           },
@@ -9888,9 +11943,6 @@
           },
           "endDate": {
             "type": "string"
-          },
-          "affiliatedViaSepa": {
-            "type": "boolean"
           }
         },
         "required": [
@@ -10006,7 +12058,7 @@
           "clientRef": {
             "type": "string",
             "maxLength": 100,
-            "description": "Temporary client reference used to associate enrollment treatments; required for diagnoses[] and omitted only by the legacy diagnosis field"
+            "description": "Temporary client reference used to associate treatments; required by enrollments"
           }
         },
         "required": [
@@ -10193,7 +12245,7 @@
           "diagnosisRef": {
             "type": "string",
             "maxLength": 100,
-            "description": "Temporary clientRef of the diagnosis for this treatment; required when diagnoses[] is used and omitted only for the legacy diagnosis field"
+            "description": "Temporary clientRef of the diagnosis for this treatment; required by enrollments"
           }
         },
         "required": [
@@ -10264,6 +12316,24 @@
               "COMPLETED",
               "CANCELLED",
               "NO_ANSWER"
+            ],
+            "type": "string"
+          },
+          "reminderLead": {
+            "enum": [
+              "TWO_HOURS",
+              "ONE_DAY",
+              "CUSTOM"
+            ],
+            "type": "string"
+          },
+          "reminderAt": {
+            "type": "string"
+          },
+          "reminderChannel": {
+            "enum": [
+              "EMAIL",
+              "MANUAL"
             ],
             "type": "string"
           }
@@ -10736,9 +12806,24 @@
       "CreateEnrollmentDto": {
         "type": "object",
         "properties": {
+          "patient": {
+            "description": "New patient, or updated data of patientId when re-enrolling an inactive or cancer-ruled-out patient",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreatePatientDto"
+              }
+            ]
+          },
           "healthPhase": {
             "type": "string",
             "maxLength": 100
+          },
+          "contacts": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentContactInputDto"
+            }
           },
           "currentlyAttendingConsultations": {
             "type": "boolean",
@@ -10758,9 +12843,6 @@
             "type": "string",
             "format": "uuid"
           },
-          "patient": {
-            "$ref": "#/components/schemas/CreatePatientDto"
-          },
           "followUp": {
             "$ref": "#/components/schemas/EnrollmentFollowUpDto"
           },
@@ -10778,12 +12860,6 @@
           "companion": {
             "$ref": "#/components/schemas/CreateCompanionDto"
           },
-          "contacts": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EnrollmentContactInputDto"
-            }
-          },
           "details": {
             "$ref": "#/components/schemas/UpsertPatientDetailsDto"
           },
@@ -10792,9 +12868,6 @@
           },
           "sisAffiliation": {
             "$ref": "#/components/schemas/EnrollmentSisAffiliationDto"
-          },
-          "diagnosis": {
-            "$ref": "#/components/schemas/EnrollmentDiagnosisDto"
           },
           "diagnoses": {
             "type": "array",
@@ -10879,6 +12952,7 @@
         },
         "required": [
           "healthPhase",
+          "contacts",
           "followUp",
           "affiliationType"
         ]
@@ -11177,6 +13251,66 @@
           "purpose"
         ]
       },
+      "FollowUpAttemptResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "channel": {
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ],
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "CONTACTED",
+              "NO_ANSWER",
+              "WRONG_NUMBER",
+              "REJECTED"
+            ],
+            "type": "string"
+          },
+          "occurredAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "actorUserId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "followUpId",
+          "channel",
+          "outcome",
+          "occurredAt",
+          "actorUserId",
+          "notes",
+          "createdAt"
+        ]
+      },
       "FollowUpResponseDto": {
         "type": "object",
         "properties": {
@@ -11216,7 +13350,8 @@
               "SCHEDULED",
               "COMPLETED",
               "CANCELLED",
-              "NO_ANSWER"
+              "NO_ANSWER",
+              "OVERDUE"
             ],
             "type": "string"
           },
@@ -11269,6 +13404,13 @@
           },
           "isHistorical": {
             "type": "boolean"
+          },
+          "attempts": {
+            "description": "Only returned by GET /follow-ups/:id",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FollowUpAttemptResponseDto"
+            }
           }
         },
         "required": [
@@ -11373,7 +13515,8 @@
               "SCHEDULED",
               "COMPLETED",
               "CANCELLED",
-              "NO_ANSWER"
+              "NO_ANSWER",
+              "OVERDUE"
             ]
           },
           "scheduledAt": {
@@ -11383,6 +13526,74 @@
             "type": "string"
           }
         }
+      },
+      "CreateFollowUpAttemptDto": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ],
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "CONTACTED",
+              "NO_ANSWER",
+              "WRONG_NUMBER",
+              "REJECTED"
+            ],
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Defaults to now"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "outcome"
+        ]
+      },
+      "RescheduleFollowUpDto": {
+        "type": "object",
+        "properties": {
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Defaults to the original agent; agents always reschedule to themselves"
+          },
+          "type": {
+            "enum": [
+              "WHATSAPP",
+              "CALL",
+              "VIDEO_CALL",
+              "EMAIL",
+              "IN_PERSON",
+              "FACEBOOK"
+            ],
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "scheduledAt"
+        ]
       },
       "CreateReminderMedicalAppointmentDto": {
         "type": "object",
@@ -11406,6 +13617,28 @@
       "CreateReminderDto": {
         "type": "object",
         "properties": {
+          "channel": {
+            "enum": [
+              "EMAIL",
+              "MANUAL"
+            ],
+            "type": "string",
+            "description": "Defaults to EMAIL for appointment reminders of patients with an email, MANUAL otherwise"
+          },
+          "lead": {
+            "enum": [
+              "TWO_HOURS",
+              "ONE_DAY",
+              "CUSTOM"
+            ],
+            "type": "string",
+            "description": "How long before the appointment (dueAt) to remind. Defaults to ONE_DAY. Only for MEDICAL_APPOINTMENT reminders."
+          },
+          "remindAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Required when lead is CUSTOM. For GENERIC reminders defaults to dueAt."
+          },
           "subjectPatientId": {
             "type": "string",
             "format": "uuid"
@@ -11564,10 +13797,44 @@
             "nullable": true,
             "format": "date"
           },
-          "resultingFollowUpId": {
+          "channel": {
+            "enum": [
+              "EMAIL",
+              "MANUAL"
+            ],
+            "type": "string"
+          },
+          "lead": {
+            "nullable": true,
+            "enum": [
+              "TWO_HOURS",
+              "ONE_DAY",
+              "CUSTOM"
+            ],
+            "type": "string"
+          },
+          "remindAt": {
+            "format": "date-time",
             "type": "string",
             "nullable": true,
-            "format": "uuid"
+            "description": "When the reminder should be sent to the patient"
+          },
+          "deliveryStatus": {
+            "enum": [
+              "PENDING",
+              "SENT",
+              "FAILED"
+            ],
+            "type": "string"
+          },
+          "sentAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryError": {
+            "type": "string",
+            "nullable": true
           },
           "createdAt": {
             "format": "date-time",
@@ -11590,7 +13857,12 @@
           "status",
           "completedAt",
           "completedOn",
-          "resultingFollowUpId",
+          "channel",
+          "lead",
+          "remindAt",
+          "deliveryStatus",
+          "sentAt",
+          "deliveryError",
           "createdAt",
           "isHistorical"
         ]
@@ -11603,7 +13875,6 @@
             "maxLength": 255
           },
           "department": {
-            "type": "string",
             "enum": [
               "AMAZONAS",
               "ANCASH",
@@ -11630,17 +13901,53 @@
               "TACNA",
               "TUMBES",
               "UCAYALI"
-            ]
+            ],
+            "type": "string"
           },
-          "category": {
+          "careCategory": {
+            "nullable": true,
+            "enum": [
+              "I-1",
+              "I-2",
+              "I-3",
+              "I-4",
+              "II-1",
+              "II-2",
+              "II-E",
+              "III-1",
+              "III-2",
+              "III-E"
+            ],
+            "type": "string"
+          },
+          "institution": {
+            "nullable": true,
+            "enum": [
+              "MINSA",
+              "ESSALUD",
+              "FFAA_PNP",
+              "PRIVADO",
+              "GOBIERNO_REGIONAL",
+              "OTRO"
+            ],
+            "type": "string"
+          },
+          "ubigeoDistrictCode": {
             "type": "string",
-            "maxLength": 50
+            "nullable": true,
+            "pattern": "^\\d{6}$",
+            "description": "INEI district code"
+          },
+          "renipressCode": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^\\d{1,20}$",
+            "description": "RENIPRESS code"
           }
         },
         "required": [
           "name",
-          "department",
-          "category"
+          "department"
         ]
       },
       "HealthCenterResponseDto": {
@@ -11686,7 +13993,48 @@
             ],
             "type": "string"
           },
-          "category": {
+          "careCategory": {
+            "nullable": true,
+            "enum": [
+              "I-1",
+              "I-2",
+              "I-3",
+              "I-4",
+              "II-1",
+              "II-2",
+              "II-E",
+              "III-1",
+              "III-2",
+              "III-E"
+            ],
+            "type": "string"
+          },
+          "careLevel": {
+            "nullable": true,
+            "enum": [
+              "I",
+              "II",
+              "III"
+            ],
+            "type": "string"
+          },
+          "institution": {
+            "nullable": true,
+            "enum": [
+              "MINSA",
+              "ESSALUD",
+              "FFAA_PNP",
+              "PRIVADO",
+              "GOBIERNO_REGIONAL",
+              "OTRO"
+            ],
+            "type": "string"
+          },
+          "ubigeoDistrictCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "renipressCode": {
             "type": "string",
             "nullable": true
           },
@@ -11711,7 +14059,11 @@
           "name",
           "slug",
           "department",
-          "category",
+          "careCategory",
+          "careLevel",
+          "institution",
+          "ubigeoDistrictCode",
+          "renipressCode",
           "isActive",
           "patientCount",
           "createdAt",
@@ -11726,7 +14078,6 @@
             "maxLength": 255
           },
           "department": {
-            "type": "string",
             "enum": [
               "AMAZONAS",
               "ANCASH",
@@ -11753,11 +14104,48 @@
               "TACNA",
               "TUMBES",
               "UCAYALI"
-            ]
+            ],
+            "type": "string"
           },
-          "category": {
+          "careCategory": {
+            "nullable": true,
+            "enum": [
+              "I-1",
+              "I-2",
+              "I-3",
+              "I-4",
+              "II-1",
+              "II-2",
+              "II-E",
+              "III-1",
+              "III-2",
+              "III-E"
+            ],
+            "type": "string"
+          },
+          "institution": {
+            "nullable": true,
+            "enum": [
+              "MINSA",
+              "ESSALUD",
+              "FFAA_PNP",
+              "PRIVADO",
+              "GOBIERNO_REGIONAL",
+              "OTRO"
+            ],
+            "type": "string"
+          },
+          "ubigeoDistrictCode": {
             "type": "string",
-            "maxLength": 50
+            "nullable": true,
+            "pattern": "^\\d{6}$",
+            "description": "INEI district code"
+          },
+          "renipressCode": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^\\d{1,20}$",
+            "description": "RENIPRESS code"
           },
           "isActive": {
             "type": "boolean"
@@ -11949,7 +14337,9 @@
               "chemotherapy_route",
               "surgical_procedure",
               "location_share_status",
-              "temporary_housing_type"
+              "temporary_housing_type",
+              "alert_category",
+              "alert_derivation_entity"
             ],
             "type": "string"
           },
@@ -11980,6 +14370,59 @@
           "kind",
           "code",
           "label"
+        ]
+      },
+      "CatalogMergeResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "sourceItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceCode": {
+            "type": "string"
+          },
+          "targetCode": {
+            "type": "string"
+          },
+          "actorUserId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "affectedRows": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Re-pointed rows per table.column"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "sourceItemId",
+          "targetItemId",
+          "sourceCode",
+          "targetCode",
+          "actorUserId",
+          "affectedRows",
+          "createdAt"
         ]
       },
       "UpdateCatalogItemDto": {
@@ -12065,6 +14508,24 @@
           },
           "referredViaSepa": {
             "type": "boolean"
+          },
+          "reminderLead": {
+            "type": "string",
+            "enum": [
+              "TWO_HOURS",
+              "ONE_DAY",
+              "CUSTOM"
+            ]
+          },
+          "reminderAt": {
+            "type": "string"
+          },
+          "reminderChannel": {
+            "type": "string",
+            "enum": [
+              "EMAIL",
+              "MANUAL"
+            ]
           }
         },
         "required": [
@@ -12360,7 +14821,8 @@
               "SCHEDULED",
               "COMPLETED",
               "CANCELLED",
-              "NO_ANSWER"
+              "NO_ANSWER",
+              "OVERDUE"
             ],
             "type": "string"
           },
@@ -12526,8 +14988,10 @@
             "enum": [
               "SCHEDULED",
               "COMPLETED",
+              "NO_SHOW",
               "CANCELLED",
-              "NO_ANSWER"
+              "RESCHEDULED",
+              "OVERDUE"
             ],
             "type": "string"
           },
@@ -12709,9 +15173,9 @@
           "deactivationReason": {
             "nullable": true,
             "enum": [
+              "VOLUNTARY",
+              "UNLOCATABLE",
               "DECEASED",
-              "WITHDREW_CONSENT",
-              "LOST_CONTACT",
               "TRANSFERRED_OUT",
               "OTHER"
             ],
@@ -13038,9 +15502,9 @@
           "deactivationReason": {
             "nullable": true,
             "enum": [
+              "VOLUNTARY",
+              "UNLOCATABLE",
               "DECEASED",
-              "WITHDREW_CONSENT",
-              "LOST_CONTACT",
               "TRANSFERRED_OUT",
               "OTHER"
             ],
@@ -13390,15 +15854,6 @@
             "type": "boolean",
             "nullable": true
           },
-          "programDropoutReason": {
-            "type": "string",
-            "nullable": true
-          },
-          "programDropoutDate": {
-            "type": "string",
-            "nullable": true,
-            "format": "date"
-          },
           "transportationViaSepa": {
             "type": "boolean",
             "nullable": true
@@ -13431,10 +15886,6 @@
             "type": "string",
             "nullable": true,
             "format": "date"
-          },
-          "programDropoutReasonCode": {
-            "type": "string",
-            "nullable": true
           },
           "createdAt": {
             "type": "string",
@@ -13475,8 +15926,6 @@
           "receivesFinancialSupport",
           "hasConadisCard",
           "knowsAboutFissal",
-          "programDropoutReason",
-          "programDropoutDate",
           "transportationViaSepa",
           "transportationSepaProvider",
           "transportationSepaProviderOther",
@@ -13485,7 +15934,6 @@
           "shelterSepaProviderOther",
           "attendedEducationalTalk",
           "attendedEducationalTalkAt",
-          "programDropoutReasonCode",
           "createdAt",
           "updatedAt",
           "healthPhaseHistory"
@@ -14727,9 +17175,9 @@
           "deactivationReason": {
             "nullable": true,
             "enum": [
+              "VOLUNTARY",
+              "UNLOCATABLE",
               "DECEASED",
-              "WITHDREW_CONSENT",
-              "LOST_CONTACT",
               "TRANSFERRED_OUT",
               "OTHER"
             ],
@@ -14914,15 +17362,11 @@
         "properties": {
           "reason": {
             "enum": [
+              "VOLUNTARY",
+              "UNLOCATABLE",
               "DECEASED",
-              "WITHDREW_CONSENT",
-              "LOST_CONTACT",
-              "TRANSFERRED_OUT",
-              "OTHER"
+              "TRANSFERRED_OUT"
             ],
-            "type": "string"
-          },
-          "detail": {
             "type": "string"
           },
           "deceasedAt": {
@@ -15134,6 +17578,10 @@
             "type": "string",
             "maxLength": 100
           },
+          "affiliatedViaSepa": {
+            "type": "boolean",
+            "description": "ESSALUD activation achieved by SEPA. SIS affiliations by SEPA belong to sis-affiliation."
+          },
           "followUpId": {
             "type": "string",
             "format": "uuid"
@@ -15146,9 +17594,6 @@
           },
           "endDate": {
             "type": "string"
-          },
-          "affiliatedViaSepa": {
-            "type": "boolean"
           }
         },
         "required": [
@@ -15225,6 +17670,24 @@
               "COMPLETED",
               "CANCELLED",
               "NO_ANSWER"
+            ]
+          },
+          "reminderLead": {
+            "type": "string",
+            "enum": [
+              "TWO_HOURS",
+              "ONE_DAY",
+              "CUSTOM"
+            ]
+          },
+          "reminderAt": {
+            "type": "string"
+          },
+          "reminderChannel": {
+            "type": "string",
+            "enum": [
+              "EMAIL",
+              "MANUAL"
             ]
           }
         },
@@ -16532,6 +18995,25 @@
             "nullable": true,
             "format": "uuid"
           },
+          "isAdditionalSession": {
+            "type": "boolean",
+            "description": "Required once the base cycle already has its 4 sessions (scheduled by an agent)"
+          },
+          "reminderMode": {
+            "enum": [
+              "TWO_HOURS",
+              "ONE_DAY",
+              "CUSTOM",
+              "MANUAL"
+            ],
+            "type": "string",
+            "default": "MANUAL"
+          },
+          "remindAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Required when reminderMode is CUSTOM"
+          },
           "patientId": {
             "type": "string",
             "format": "uuid"
@@ -16550,9 +19032,6 @@
           "zoomLink": {
             "type": "string",
             "format": "uri"
-          },
-          "isAdditionalSession": {
-            "type": "boolean"
           },
           "modality": {
             "type": "string",
@@ -16641,8 +19120,10 @@
             "enum": [
               "SCHEDULED",
               "COMPLETED",
+              "NO_SHOW",
               "CANCELLED",
-              "NO_ANSWER"
+              "RESCHEDULED",
+              "OVERDUE"
             ],
             "type": "string"
           },
@@ -16704,6 +19185,49 @@
             "type": "string",
             "nullable": true
           },
+          "cycleId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "rescheduledToId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid",
+            "description": "Session that replaced this one when RESCHEDULED"
+          },
+          "needsReassignment": {
+            "type": "boolean"
+          },
+          "reminderMode": {
+            "enum": [
+              "TWO_HOURS",
+              "ONE_DAY",
+              "CUSTOM",
+              "MANUAL"
+            ],
+            "type": "string"
+          },
+          "remindAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "reminderSentAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "noShowManagedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "noShowManagedById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string"
@@ -16745,9 +19269,49 @@
           "noAnswerNote",
           "satisfactionRating",
           "satisfactionComment",
+          "cycleId",
+          "rescheduledToId",
+          "needsReassignment",
+          "reminderMode",
+          "remindAt",
+          "reminderSentAt",
+          "noShowManagedAt",
+          "noShowManagedById",
           "createdAt",
           "updatedAt",
           "isHistorical"
+        ]
+      },
+      "UnmanagedNoShowsResponseDto": {
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "hasUnmanagedNoShows": {
+            "type": "boolean"
+          },
+          "count": {
+            "type": "number"
+          },
+          "appointmentIds": {
+            "type": "array",
+            "items": {
+              "required": true,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        },
+        "required": [
+          "patientId",
+          "hasUnmanagedNoShows",
+          "count",
+          "appointmentIds"
         ]
       },
       "UpdatePsychooncologyAppointmentDto": {
@@ -16766,17 +19330,26 @@
             "format": "uuid"
           },
           "status": {
-            "type": "string",
             "enum": [
-              "SCHEDULED",
               "COMPLETED",
-              "CANCELLED",
-              "NO_ANSWER"
-            ]
-          },
-          "availabilityId": {
+              "NO_SHOW"
+            ],
             "type": "string",
-            "format": "uuid"
+            "description": "Session result. Cancel and reschedule have their own endpoints."
+          },
+          "reminderMode": {
+            "enum": [
+              "TWO_HOURS",
+              "ONE_DAY",
+              "CUSTOM",
+              "MANUAL"
+            ],
+            "type": "string"
+          },
+          "remindAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Required when reminderMode is CUSTOM"
           },
           "modality": {
             "type": "string",
@@ -16792,6 +19365,9 @@
           },
           "patientEmail": {
             "type": "string"
+          },
+          "isAdditionalSession": {
+            "type": "boolean"
           },
           "schedulingNotes": {
             "type": "string",
@@ -16828,9 +19404,108 @@
           }
         }
       },
+      "ReschedulePsychooncologyAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "availabilityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Free availability slot; it may belong to another volunteer"
+          },
+          "modality": {
+            "enum": [
+              "CALL",
+              "VIDEO_CALL"
+            ],
+            "type": "string"
+          },
+          "zoomLink": {
+            "type": "string",
+            "format": "uri",
+            "description": "Defaults to the current link when the volunteer does not change"
+          },
+          "reminderMode": {
+            "enum": [
+              "TWO_HOURS",
+              "ONE_DAY",
+              "CUSTOM",
+              "MANUAL"
+            ],
+            "type": "string"
+          },
+          "remindAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "schedulingNotes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "availabilityId"
+        ]
+      },
+      "AppointmentReminderResponseDto": {
+        "type": "object",
+        "properties": {
+          "appointmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "message": {
+            "type": "string",
+            "description": "Ready-to-copy reminder text for the patient"
+          },
+          "reminderMode": {
+            "enum": [
+              "TWO_HOURS",
+              "ONE_DAY",
+              "CUSTOM",
+              "MANUAL"
+            ],
+            "type": "string"
+          },
+          "remindAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "reminderSentAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "appointmentId",
+          "message",
+          "reminderMode",
+          "remindAt",
+          "reminderSentAt"
+        ]
+      },
       "UpdateReminderDto": {
         "type": "object",
         "properties": {
+          "channel": {
+            "enum": [
+              "EMAIL",
+              "MANUAL"
+            ],
+            "type": "string"
+          },
+          "lead": {
+            "enum": [
+              "TWO_HOURS",
+              "ONE_DAY",
+              "CUSTOM"
+            ],
+            "type": "string"
+          },
+          "remindAt": {
+            "type": "string",
+            "format": "date-time"
+          },
           "assignedAgentId": {
             "type": "string",
             "format": "uuid"
@@ -16846,6 +19521,42 @@
             "format": "uuid"
           }
         }
+      },
+      "ReminderMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "reminderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientName": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "subject": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "description": "Plain text ready to copy (e.g. WhatsApp)"
+          }
+        },
+        "required": [
+          "reminderId",
+          "patientName",
+          "phone",
+          "email",
+          "subject",
+          "text"
+        ]
       },
       "CompleteReminderMedicalAppointmentDto": {
         "type": "object",
@@ -16896,10 +19607,6 @@
       "CompleteReminderDto": {
         "type": "object",
         "properties": {
-          "resultingFollowUpId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "medicalAppointment": {
             "$ref": "#/components/schemas/CompleteReminderMedicalAppointmentDto"
           }
@@ -17064,6 +19771,11 @@
             ],
             "type": "string"
           },
+          "recurrenceId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
           "isHistorical": {
             "type": "boolean"
           },
@@ -17079,8 +19791,96 @@
           "startTime",
           "endTime",
           "status",
+          "recurrenceId",
           "isHistorical",
           "createdAt"
+        ]
+      },
+      "CreateRecurringAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "daysOfWeek": {
+            "minItems": 1,
+            "maxItems": 7,
+            "description": "Days of the week, 0 = Sunday … 6 = Saturday",
+            "example": [
+              1,
+              3
+            ],
+            "type": "array",
+            "items": {
+              "type": "number",
+              "maximum": 6,
+              "minimum": 0
+            }
+          },
+          "startTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "example": "09:00",
+            "description": "Start of the block (HH:mm)"
+          },
+          "hours": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 12,
+            "description": "Hours of the block; it is split into 1-hour slots"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Defaults to today"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "daysOfWeek",
+          "startTime",
+          "hours",
+          "endDate"
+        ]
+      },
+      "RecurringAvailabilityResponseDto": {
+        "type": "object",
+        "properties": {
+          "recurrenceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "created": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VolunteerAvailabilityResponseDto"
+            }
+          },
+          "skipped": {
+            "type": "number",
+            "description": "Slots skipped because they overlap existing availability"
+          }
+        },
+        "required": [
+          "recurrenceId",
+          "created",
+          "skipped"
+        ]
+      },
+      "RemoveRecurrenceResponseDto": {
+        "type": "object",
+        "properties": {
+          "removed": {
+            "type": "number"
+          },
+          "keptReserved": {
+            "type": "number",
+            "description": "Reserved slots kept because they are booked"
+          }
+        },
+        "required": [
+          "removed",
+          "keptReserved"
         ]
       },
       "CreateVolunteerDto": {
@@ -17351,8 +20151,10 @@
             "enum": [
               "SCHEDULED",
               "COMPLETED",
+              "NO_SHOW",
               "CANCELLED",
-              "NO_ANSWER"
+              "RESCHEDULED",
+              "OVERDUE"
             ],
             "type": "string"
           },
@@ -17498,7 +20300,8 @@
               "SCHEDULED",
               "COMPLETED",
               "CANCELLED",
-              "NO_ANSWER"
+              "NO_ANSWER",
+              "OVERDUE"
             ],
             "type": "string"
           },
@@ -17535,6 +20338,13 @@
             "type": "string",
             "maxLength": 100
           },
+          "contacts": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentContactInputDto"
+            }
+          },
           "currentlyAttendingConsultations": {
             "type": "boolean",
             "description": "Enrollment snapshot only. Current consultation status is owned by patient_medical_appointments, not this flag."
@@ -17567,12 +20377,6 @@
           "companion": {
             "$ref": "#/components/schemas/CreateCompanionDto"
           },
-          "contacts": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EnrollmentContactInputDto"
-            }
-          },
           "details": {
             "$ref": "#/components/schemas/UpsertPatientDetailsDto"
           },
@@ -17581,9 +20385,6 @@
           },
           "sisAffiliation": {
             "$ref": "#/components/schemas/EnrollmentSisAffiliationDto"
-          },
-          "diagnosis": {
-            "$ref": "#/components/schemas/EnrollmentDiagnosisDto"
           },
           "diagnoses": {
             "type": "array",
@@ -17678,6 +20479,7 @@
         },
         "required": [
           "healthPhase",
+          "contacts",
           "affiliationType",
           "enrolledOn",
           "followUp"
@@ -17801,7 +20603,7 @@
           "diagnosisRef": {
             "type": "string",
             "maxLength": 100,
-            "description": "Temporary clientRef of the diagnosis for this treatment; required when diagnoses[] is used and omitted only for the legacy diagnosis field"
+            "description": "Temporary clientRef of the diagnosis for this treatment; required by enrollments"
           },
           "diagnosisId": {
             "type": "string",
@@ -17952,7 +20754,8 @@
               "SCHEDULED",
               "COMPLETED",
               "CANCELLED",
-              "NO_ANSWER"
+              "NO_ANSWER",
+              "OVERDUE"
             ],
             "type": "string"
           },
@@ -18110,7 +20913,7 @@
           "clientRef": {
             "type": "string",
             "maxLength": 100,
-            "description": "Temporary client reference used to associate enrollment treatments; required for diagnoses[] and omitted only by the legacy diagnosis field"
+            "description": "Temporary client reference used to associate treatments; required by enrollments"
           },
           "id": {
             "type": "string",
@@ -18240,7 +21043,7 @@
           "diagnosisRef": {
             "type": "string",
             "maxLength": 100,
-            "description": "Temporary clientRef of the diagnosis for this treatment; required when diagnoses[] is used and omitted only for the legacy diagnosis field"
+            "description": "Temporary clientRef of the diagnosis for this treatment; required by enrollments"
           },
           "diagnosisId": {
             "type": "string",
@@ -18465,6 +21268,10 @@
             "type": "string",
             "maxLength": 100
           },
+          "affiliatedViaSepa": {
+            "type": "boolean",
+            "description": "ESSALUD activation achieved by SEPA. SIS affiliations by SEPA belong to sis-affiliation."
+          },
           "changeReason": {
             "type": "string"
           },
@@ -18473,9 +21280,6 @@
           },
           "endDate": {
             "type": "string"
-          },
-          "affiliatedViaSepa": {
-            "type": "boolean"
           },
           "id": {
             "type": "string",
@@ -18688,7 +21492,8 @@
               "SCHEDULED",
               "COMPLETED",
               "CANCELLED",
-              "NO_ANSWER"
+              "NO_ANSWER",
+              "OVERDUE"
             ],
             "type": "string"
           },
@@ -18853,10 +21658,6 @@
             "type": "string",
             "format": "uuid"
           },
-          "resultingFollowUpId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "description": {
             "type": "string",
             "maxLength": 2000
@@ -18921,11 +21722,6 @@
             "type": "string"
           },
           "createdFromFollowUpId": {
-            "type": "string",
-            "nullable": true,
-            "format": "uuid"
-          },
-          "resultingFollowUpId": {
             "type": "string",
             "nullable": true,
             "format": "uuid"
@@ -19075,8 +21871,10 @@
             "enum": [
               "SCHEDULED",
               "COMPLETED",
+              "NO_SHOW",
               "CANCELLED",
-              "NO_ANSWER"
+              "RESCHEDULED",
+              "OVERDUE"
             ],
             "type": "string"
           },
@@ -19198,8 +21996,10 @@
             "enum": [
               "SCHEDULED",
               "COMPLETED",
+              "NO_SHOW",
               "CANCELLED",
-              "NO_ANSWER"
+              "RESCHEDULED",
+              "OVERDUE"
             ],
             "type": "string"
           },
