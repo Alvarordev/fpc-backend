@@ -41,6 +41,8 @@ export class VolunteerAvailability {
     default: AvailabilityStatus.AVAILABLE,
   })
   status!: AvailabilityStatus;
+  @Column({ name: 'recurrence_id', type: 'uuid', nullable: true })
+  recurrenceId!: string | null;
   @Column({ name: 'is_historical', type: 'boolean', default: false })
   isHistorical!: boolean;
   @Column({ name: 'historical_loaded_by_id', type: 'uuid', nullable: true })

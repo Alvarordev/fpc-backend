@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   AppointmentBeneficiaryType,
   AppointmentModality,
+  AppointmentReminderMode,
   AppointmentStatus,
 } from '../../../database/entities/psychooncology-appointment.entity';
 
@@ -41,6 +42,23 @@ export class PsychooncologyAppointmentResponseDto {
   @ApiProperty({ nullable: true, minimum: 1, maximum: 5 })
   satisfactionRating!: number | null;
   @ApiProperty({ nullable: true }) satisfactionComment!: string | null;
+  @ApiProperty({ format: 'uuid', nullable: true }) cycleId!: string | null;
+  @ApiProperty({
+    format: 'uuid',
+    nullable: true,
+    description: 'Session that replaced this one when RESCHEDULED',
+  })
+  rescheduledToId!: string | null;
+  @ApiProperty() needsReassignment!: boolean;
+  @ApiProperty({ enum: AppointmentReminderMode })
+  reminderMode!: AppointmentReminderMode;
+  @ApiProperty({ format: 'date-time', nullable: true }) remindAt!: Date | null;
+  @ApiProperty({ format: 'date-time', nullable: true })
+  reminderSentAt!: Date | null;
+  @ApiProperty({ format: 'date-time', nullable: true })
+  noShowManagedAt!: Date | null;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  noShowManagedById!: string | null;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
   @ApiProperty({ format: 'date-time' }) updatedAt!: Date;
   @ApiProperty() isHistorical!: boolean;

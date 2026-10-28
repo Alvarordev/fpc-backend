@@ -18,6 +18,11 @@ import { UserRole } from '../../../database/entities/user-role.enum';
 import { User } from '../../../database/entities/user.entity';
 import { VolunteerAvailability } from '../../../database/entities/volunteer-availability.entity';
 import { CreateVolunteerAvailabilityDto } from './dto/create-volunteer-availability.dto';
+import { CreateRecurringAvailabilityDto } from './dto/create-recurring-availability.dto';
+import {
+  RecurringAvailabilityResponseDto,
+  RemoveRecurrenceResponseDto,
+} from './dto/recurring-availability-response.dto';
 import { VolunteerAvailabilityResponseDto } from './dto/volunteer-availability-response.dto';
 import { VolunteerAvailabilityService } from './volunteer-availability.service';
 
@@ -54,6 +59,48 @@ export class VolunteerAvailabilityController {
     @CurrentUser() user: User,
   ) {
     return this.service.create(volunteerId, dto, user).then(this.toResponse);
+  }
+
+  @Post('recurring')
+  @Roles(...ACCESS)
+  @ApiOperation({
+    summary: 'Create a weekly availability block split into 1-hour slots',
+  })
+  @ApiParam({ name: 'volunteerId', format: 'uuid' })
+  @ApiCreatedResponse({ type: RecurringAvailabilityResponseDto })
+  @ApiBadRequestResponse({ description: 'Invalid range, days, or hours' })
+  @ApiConflictResponse({ description: 'Volunteer is inactive' })
+  @ApiForbiddenResponse({
+    description: 'Volunteers can only manage their own availability',
+  })
+  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  async createRecurring(
+    @Param('volunteerId') volunteerId: string,
+    @Body() dto: CreateRecurringAvailabilityDto,
+    @CurrentUser() user: User,
+  ): Promise<RecurringAvailabilityResponseDto> {
+    const result = await this.service.createRecurring(volunteerId, dto, user);
+    return { ...result, created: result.created.map(this.toResponse) };
+  }
+
+  @Delete('recurrences/:recurrenceId')
+  @Roles(...ACCESS)
+  @ApiOperation({
+    summary: 'Remove the free future slots of a recurring block',
+  })
+  @ApiParam({ name: 'volunteerId', format: 'uuid' })
+  @ApiParam({ name: 'recurrenceId', format: 'uuid' })
+  @ApiOkResponse({ type: RemoveRecurrenceResponseDto })
+  @ApiForbiddenResponse({
+    description: 'Volunteers can only manage their own availability',
+  })
+  @ApiNotFoundResponse({ description: 'Volunteer or recurrence not found' })
+  removeRecurrence(
+    @Param('volunteerId') volunteerId: string,
+    @Param('recurrenceId') recurrenceId: string,
+    @CurrentUser() user: User,
+  ): Promise<RemoveRecurrenceResponseDto> {
+    return this.service.removeRecurrence(recurrenceId, volunteerId, user);
   }
 
   @Get()
@@ -109,6 +156,7 @@ export class VolunteerAvailabilityController {
       startTime: item.startTime,
       endTime: item.endTime,
       status: item.status,
+      recurrenceId: item.recurrenceId,
       isHistorical: item.isHistorical,
       createdAt: item.createdAt,
     };

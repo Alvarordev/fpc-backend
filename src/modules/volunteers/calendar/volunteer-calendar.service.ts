@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
-  AppointmentStatus,
+  PENDING_APPOINTMENT_STATUSES,
   PsychooncologyAppointment,
 } from '../../../database/entities/psychooncology-appointment.entity';
 import { VolunteerAvailability } from '../../../database/entities/volunteer-availability.entity';
@@ -47,8 +47,8 @@ export class VolunteerCalendarService {
       this.appointments
         .createQueryBuilder('appointment')
         .innerJoinAndSelect('appointment.patient', 'patient')
-        .where('appointment.status = :status', {
-          status: AppointmentStatus.SCHEDULED,
+        .where('appointment.status IN (:...statuses)', {
+          statuses: PENDING_APPOINTMENT_STATUSES,
         })
         .andWhere('appointment.is_historical = false')
         .andWhere('appointment.scheduled_at IS NOT NULL')
