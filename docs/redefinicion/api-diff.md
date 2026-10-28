@@ -50,6 +50,7 @@ Generado desde openapi/openapi.json. Fuente de verdad para adaptar el front.
 - GET /follow-ups/{id}/reenrollment
 
 ## Endpoints eliminados
+- PATCH /patients/{id}/reactivate (se reactiva solo con POST /follow-ups/{id}/reenrollment)
 
 ## Schemas con propiedades cambiadas
 - AlertEventResponseDto: +['actorName', 'actorUserId'] -[] enum cambiado en ['eventType']
@@ -71,7 +72,7 @@ Generado desde openapi/openapi.json. Fuente de verdad para adaptar el front.
 - CreatePsychooncologyAppointmentDto: +['remindAt', 'reminderMode'] -[]
 - CreateReminderDto: +['channel', 'lead', 'remindAt'] -[]
 - DashboardAbandonmentResponseDto: +['dropoutsInPeriod', 'transferredOut', 'reenrolledInPeriod'] -[]
-- FollowUpPurpose: +REENROLLMENT; catálogo nuevo reenrollment_reason; POST /enrollments con un paciente inactivo responde 409 PATIENT_REENROLL_VIA_FOLLOW_UP
+- FollowUpPurpose: +REENROLLMENT; catálogo nuevo reenrollment_reason; POST /enrollments y la carga histórica con un paciente ya enrolado responden 409 (PATIENT_REENROLL_VIA_FOLLOW_UP si está inactivo, PATIENT_ALREADY_ENROLLED si no); patientId + patient juntos ya no se admiten
 - DashboardAdherenceResponseDto: +['treatmentAbandonmentReasons'] -[]
 - DashboardDemographicsResponseDto: +['insuranceTypeAtEnrollment'] -[]
 - DashboardEpidemiologyResponseDto: +['diagnosisByDepartment', 'diagnosisByStage'] -[]

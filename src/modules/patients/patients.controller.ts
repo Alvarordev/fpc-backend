@@ -31,7 +31,6 @@ import { LinkCompanionDto } from './dto/link-companion.dto';
 import { UpdateCompanionLinkDto } from './dto/update-companion-link.dto';
 import {
   DeactivatePatientDto,
-  ReactivatePatientDto,
 } from './dto/deactivate-patient.dto';
 import { ListPatientsDto } from './dto/list-patients.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
@@ -311,23 +310,6 @@ export class PatientsController {
   ): Promise<PatientResponseDto> {
     return PatientResponseDto.from(
       await this.patientsService.deactivate(id, input),
-    );
-  }
-
-  @Patch(':id/reactivate')
-  @Roles(...PATIENT_WRITE_ROLES)
-  @ApiOperation({ summary: 'Reactivate a patient' })
-  @ApiParam({ name: 'id', format: 'uuid' })
-  @ApiOkResponse({ type: PatientResponseDto })
-  @ApiUnauthorizedResponse()
-  @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
-  async reactivate(
-    @Param('id') id: string,
-    @Body() input: ReactivatePatientDto,
-  ): Promise<PatientResponseDto> {
-    return PatientResponseDto.from(
-      await this.patientsService.reactivate(id, input),
     );
   }
 

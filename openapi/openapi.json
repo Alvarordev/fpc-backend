@@ -5302,62 +5302,6 @@
         ]
       }
     },
-    "/patients/{id}/reactivate": {
-      "patch": {
-        "operationId": "PatientsController_reactivate",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReactivatePatientDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PatientResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": ""
-          },
-          "403": {
-            "description": ""
-          },
-          "404": {
-            "description": "No se encontró el paciente."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Reactivate a patient",
-        "tags": [
-          "Patients"
-        ]
-      }
-    },
     "/patients/{id}/details": {
       "put": {
         "operationId": "PatientsController_upsertDetails",
@@ -18692,16 +18636,6 @@
         "required": [
           "reason"
         ]
-      },
-      "ReactivatePatientDto": {
-        "type": "object",
-        "properties": {
-          "followUpId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Follow-up in which the patient came back"
-          }
-        }
       },
       "CreatePatientDiagnosisDto": {
         "type": "object",

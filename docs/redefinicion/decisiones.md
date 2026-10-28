@@ -49,8 +49,9 @@ extraer del código y validar.
   principal (se corrigen con sus pantallas de siempre). Al registrarlo
   (`POST /follow-ups/:id/reenrollment`) se actualiza la fase, se reactiva al paciente ligado al
   seguimiento y este queda realizado. Los pacientes con cáncer descartado no se reenrolan: siguen con
-  sus seguimientos. El wizard ya no reenrola (solo la carga histórica usa ese camino); si el DNI es de
-  un inactivo, lleva a este seguimiento. En indicadores se cuenta aparte (`reenrolledInPeriod`, grupo
+  sus seguimientos. Es el **único** camino para reactivar: se quitó `PATCH /patients/:id/reactivate`, y
+  ni el wizard ni la carga histórica reenrolan (enrolar a un paciente ya enrolado responde 409); si el
+  DNI es de un inactivo, el wizard lleva a este seguimiento. En indicadores se cuenta aparte (`reenrolledInPeriod`, grupo
   abandono); "enrolados" sigue siendo el primer enrolamiento.
 
 ## 3. Acompañantes

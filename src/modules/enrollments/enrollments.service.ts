@@ -11,7 +11,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   DataSource,
-  EntityManager,
   QueryFailedError,
   Repository,
 } from 'typeorm';
@@ -49,7 +48,6 @@ import { PatientTreatmentsService } from '../patients/clinical/treatments/patien
 import { PatientSymptomReportsService } from '../patients/symptom-reports/patient-symptom-reports.service';
 import { PatientsService } from '../patients/patients.service';
 import { PatientHealthSubcategoryService } from '../patients/health-subcategory/patient-health-subcategory.service';
-import { savePatientOrDniConflict } from '../patients/patient-dni-conflict';
 import { PatientActivityStatus } from '../../database/entities/patient-activity-status.enum';
 import { PatientAddressesService } from '../patients/addresses/patient-addresses.service';
 import { PatientHealthBackgroundAssessmentsService } from '../patients/clinical/health-background/patient-health-background-assessments.service';
@@ -223,20 +221,12 @@ export class EnrollmentsService {
             .getOne()
         : await this.patients.create(patientInput!, manager);
       if (!patient) throw new NotFoundException('No se encontró el paciente.');
-      const reenrollment =
-        patientId && patient.status !== PatientStatus.UNENROLLED
-          ? this.assertReenrollable(patient, options)
-          : null;
-      if (patientId && patientInput) {
-        if (!reenrollment)
-          throw new BadRequestException(
-            'Los datos del paciente solo se envían al reenrolar.',
-          );
-        patient = await savePatientOrDniConflict(
-          manager.getRepository(Patient),
-          Object.assign(patient, patientInput),
+      if (patientId && patient.status !== PatientStatus.UNENROLLED)
+        this.rejectEnrolledPatient(patient);
+      if (patientId && patientInput)
+        throw new BadRequestException(
+          'Los datos del paciente solo se envían al registrar uno nuevo.',
         );
-      }
       this.validateContactAgeRules(patient, contacts);
       if (
         patient.role !== PatientRole.UNKNOWN &&
@@ -372,15 +362,6 @@ export class EnrollmentsService {
           ? AuditContextKind.HISTORICAL_LOAD
           : AuditContextKind.FOLLOW_UP,
       );
-      if (reenrollment?.reactivate)
-        Object.assign(
-          patient,
-          await this.patients.reactivate(
-            patient.id,
-            { followUpId: followUp.id },
-            manager,
-          ),
-        );
       const enrollmentRepository = manager.getRepository(Enrollment);
       const resolvedEntrySource = await this.catalogValues.resolveOptional(
         'entry_source',
@@ -474,25 +455,8 @@ export class EnrollmentsService {
           manager,
         );
       const createdDiagnoses = new Map<string, PatientDiagnosis>();
-      // A re-enrolled patient keeps their current diagnoses: the same cancer
-      // reported again is reused instead of duplicated.
-      const currentDiagnoses = reenrollment
-        ? await manager
-            .getRepository(PatientDiagnosis)
-            .findBy({ patientId: patient.id, isCurrent: true })
-        : [];
       for (const diagnosisInput of diagnoses ?? []) {
         const { clientRef, ...diagnosisValues } = diagnosisInput;
-        const existing = currentDiagnoses.find(
-          (current) =>
-            current.diagnosis === diagnosisValues.diagnosis &&
-            (current.diagnosisOther ?? null) ===
-              (diagnosisValues.diagnosisOther ?? null),
-        );
-        if (existing) {
-          if (clientRef) createdDiagnoses.set(clientRef, existing);
-          continue;
-        }
         const createdDiagnosis = await this.diagnoses.create(
           patient.id,
           { ...diagnosisValues, followUpId: followUp.id },
@@ -742,22 +706,11 @@ export class EnrollmentsService {
   }
 
   /**
-   * E5/E6: an enrolled patient who calls again gets a follow-up, unless they
-   * left the program or had cancer ruled out; then they enroll again.
+   * The enrollment flow only enrolls patients once, historical load included.
+   * Inactive patients come back with a REENROLLMENT follow-up
+   * (ReenrollmentsService); ruled-out patients get regular follow-ups.
    */
-  /**
-   * Re-enrolling an existing patient through the enrollment flow is only for
-   * the historical load. Inactive patients come back with a REENROLLMENT
-   * follow-up (ReenrollmentsService); ruled-out patients get regular follow-ups.
-   */
-  private assertReenrollable(
-    patient: Patient,
-    options: EnrollmentCreateOptions,
-  ): { reactivate: boolean } {
-    if (options.historical)
-      return {
-        reactivate: patient.activityStatus === PatientActivityStatus.INACTIVE,
-      };
+  private rejectEnrolledPatient(patient: Patient): never {
     throw new ConflictException(
       patient.activityStatus === PatientActivityStatus.INACTIVE
         ? {
@@ -768,7 +721,7 @@ export class EnrollmentsService {
         : {
             code: 'PATIENT_ALREADY_ENROLLED',
             message:
-              'El paciente ya está enrolado y activo; registra un seguimiento.',
+              'El paciente ya está enrolado; registra un seguimiento.',
           },
     );
   }
