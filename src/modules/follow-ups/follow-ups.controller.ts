@@ -25,6 +25,11 @@ import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { User } from '../../database/entities/user.entity';
 import { FollowUp } from '../../database/entities/follow-up.entity';
+import { FollowUpAttempt } from '../../database/entities/follow-up-attempt.entity';
+import { FollowUpStatus } from '../../database/entities/follow-up.enums';
+import { CreateFollowUpAttemptDto } from './dto/create-follow-up-attempt.dto';
+import { RescheduleFollowUpDto } from './dto/reschedule-follow-up.dto';
+import { FollowUpAttemptResponseDto } from './dto/follow-up-attempt-response.dto';
 import { Reminder } from '../../database/entities/reminder.entity';
 import { CreateReminderDto } from '../reminders/dto/create-reminder.dto';
 import { ReminderResponseDto } from '../reminders/dto/reminder-response.dto';
@@ -42,6 +47,20 @@ const READ = [
   UserRole.VOLUNTEER,
 ];
 const WRITE = [UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT];
+
+function toAttempt(item: FollowUpAttempt): FollowUpAttemptResponseDto {
+  return {
+    id: item.id,
+    followUpId: item.followUpId,
+    channel: item.channel,
+    outcome: item.outcome,
+    occurredAt: item.occurredAt,
+    actorUserId: item.actorUserId,
+    notes: item.notes,
+    createdAt: item.createdAt,
+  };
+}
+
 @Controller('follow-ups')
 @ApiTags('follow-ups')
 @ApiBearerAuth()
@@ -81,14 +100,18 @@ export class FollowUpsController {
   }
   @Get()
   @Roles(...READ)
-  @ApiOperation({ summary: 'List visible follow-ups' })
+  @ApiOperation({
+    summary: 'List visible follow-ups',
+    description:
+      'Agents see every follow-up of a patient when patientId is given; otherwise only their own unless agentId is given.',
+  })
   @ApiOkResponse({ type: FollowUpResponseDto, isArray: true })
   @ApiQuery({ name: 'agentId', required: false, format: 'uuid' })
   @ApiQuery({ name: 'patientId', required: false, format: 'uuid' })
   @ApiQuery({
     name: 'status',
     required: false,
-    enum: ['SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_ANSWER'],
+    enum: FollowUpStatus,
   })
   @ApiBadRequestResponse({
     description: 'The authenticated agent has no profile',
@@ -100,7 +123,7 @@ export class FollowUpsController {
   }
   @Get(':id')
   @Roles(...READ)
-  @ApiOperation({ summary: 'Get a follow-up' })
+  @ApiOperation({ summary: 'Get a follow-up with its attempts' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: FollowUpResponseDto })
   @ApiBadRequestResponse({
@@ -159,6 +182,53 @@ export class FollowUpsController {
       .scheduleNext(id, dto, user.id, user.role)
       .then(this.toFollowUp);
   }
+  @Post(':id/attempts')
+  @AuditFollowUpParam('id')
+  @Roles(...WRITE)
+  @ApiOperation({
+    summary: 'Record a contact attempt',
+    description:
+      'A CONTACTED attempt completes the follow-up; a failed one marks it NO_ANSWER unless it was already completed.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiCreatedResponse({ type: FollowUpAttemptResponseDto })
+  @ApiBadRequestResponse({ description: 'The follow-up is cancelled' })
+  @ApiForbiddenResponse({
+    description: 'Agents can only modify their own follow-ups',
+  })
+  @ApiNotFoundResponse({ description: 'Follow-up not found' })
+  attempt(
+    @Param('id') id: string,
+    @Body() dto: CreateFollowUpAttemptDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.service.addAttempt(id, dto, user).then(toAttempt);
+  }
+  @Post(':id/reschedule')
+  @AuditFollowUpParam('id')
+  @Roles(...WRITE)
+  @ApiOperation({
+    summary: 'Reschedule an overdue or cancelled follow-up',
+    description:
+      'Creates a new scheduled follow-up linked through nextFollowUpId.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiCreatedResponse({ type: FollowUpResponseDto })
+  @ApiBadRequestResponse({
+    description:
+      'The follow-up is not overdue or cancelled, was already rescheduled, or the date is in the past',
+  })
+  @ApiForbiddenResponse({
+    description: 'Agents can only modify their own follow-ups',
+  })
+  @ApiNotFoundResponse({ description: 'Follow-up or agent not found' })
+  reschedule(
+    @Param('id') id: string,
+    @Body() dto: RescheduleFollowUpDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.service.reschedule(id, dto, user).then(this.toFollowUp);
+  }
   @Post(':id/reminders')
   @AuditFollowUpParam('id')
   @Roles(...WRITE)
@@ -199,6 +269,7 @@ export class FollowUpsController {
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
       isHistorical: item.isHistorical,
+      attempts: item.attempts?.map(toAttempt),
     };
   }
 

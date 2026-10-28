@@ -11,6 +11,7 @@ export enum FollowUpStatus {
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
   NO_ANSWER = 'NO_ANSWER',
+  OVERDUE = 'OVERDUE',
 }
 export enum FollowUpPurpose {
   FIRST_CONTACT = 'FIRST_CONTACT',
@@ -18,4 +19,10 @@ export enum FollowUpPurpose {
   FOLLOW_UP = 'FOLLOW_UP',
   PSYCHOONCOLOGY_REFERRAL = 'PSYCHOONCOLOGY_REFERRAL',
   OTHER = 'OTHER',
+}
+export enum FollowUpAttemptOutcome {
+  CONTACTED = 'CONTACTED',
+  NO_ANSWER = 'NO_ANSWER',
+  WRONG_NUMBER = 'WRONG_NUMBER',
+  REJECTED = 'REJECTED',
 }

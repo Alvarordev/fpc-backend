@@ -4,17 +4,21 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Agent } from '../../database/entities/agent.entity';
 import {
+  FollowUpAttemptOutcome,
   FollowUpPurpose,
   FollowUpStatus,
   FollowUpType,
 } from '../../database/entities/follow-up.enums';
 import { FollowUp } from '../../database/entities/follow-up.entity';
+import { FollowUpAttempt } from '../../database/entities/follow-up-attempt.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
 import { Patient } from '../../database/entities/patient.entity';
 import { CompanionPatient } from '../../database/entities/companion-patient.entity';
@@ -28,6 +32,10 @@ import { RemindersService } from '../reminders/reminders.service';
 import { PatientSummaryInvalidationService } from '../patient-summaries/patient-summary-invalidation.service';
 import { PatientAccessService } from '../patients/access/patient-access.service';
 import { User } from '../../database/entities/user.entity';
+import { AuditContextService } from '../../shared/audit/audit-context.service';
+import { AuditContextKind } from '../../shared/audit/audit-context';
+import { CreateFollowUpAttemptDto } from './dto/create-follow-up-attempt.dto';
+import { RescheduleFollowUpDto } from './dto/reschedule-follow-up.dto';
 import {
   dateOnlyInLima,
   dateOnlyInLimaFromInput,
@@ -47,8 +55,24 @@ export interface HistoricalFollowUpInput extends CreateFollowUpDto {
   scheduledOn?: string;
   completedOn?: string;
 }
+
+const RESCHEDULABLE = [FollowUpStatus.OVERDUE, FollowUpStatus.CANCELLED];
+
+/*
+ * "Recovered" follow-ups (S5): first attempt failed, a later one reached the
+ * patient.
+ *
+ *   SELECT count(*) FROM follow_ups f
+ *   WHERE (SELECT a.outcome FROM follow_up_attempts a
+ *          WHERE a.follow_up_id = f.id
+ *          ORDER BY a.occurred_at, a.created_at LIMIT 1) <> 'CONTACTED'
+ *     AND EXISTS (SELECT 1 FROM follow_up_attempts a
+ *                 WHERE a.follow_up_id = f.id AND a.outcome = 'CONTACTED');
+ */
 @Injectable()
 export class FollowUpsService {
+  private readonly logger = new Logger(FollowUpsService.name);
+
   constructor(
     @InjectRepository(FollowUp)
     private readonly followUps: Repository<FollowUp>,
@@ -61,6 +85,7 @@ export class FollowUpsService {
     private readonly access: PatientAccessService,
     @Inject(forwardRef(() => RemindersService))
     private readonly remindersService: RemindersService,
+    private readonly audit: AuditContextService,
   ) {}
   // Reuses the patient's most recent follow-up, or creates a minimal
   // IN_PERSON/COMPLETED one, matching fpc-back's standalone-appointment
@@ -181,8 +206,28 @@ export class FollowUpsService {
           : null,
       }),
     );
+    if (
+      followUp.status === FollowUpStatus.COMPLETED ||
+      followUp.status === FollowUpStatus.NO_ANSWER
+    )
+      await (manager?.getRepository(FollowUpAttempt) ?? this.attempts()).save({
+        followUpId: followUp.id,
+        patientId: followUp.subjectPatientId,
+        channel: followUp.type,
+        outcome:
+          followUp.status === FollowUpStatus.COMPLETED
+            ? FollowUpAttemptOutcome.CONTACTED
+            : FollowUpAttemptOutcome.NO_ANSWER,
+        occurredAt: followUp.completedAt ?? new Date(),
+        actorUserId: userId,
+        notes: null,
+      });
     await this.invalidations.markDirty(followUp.subjectPatientId, manager);
     return followUp;
+  }
+
+  private attempts(manager?: EntityManager) {
+    return (manager ?? this.dataSource.manager).getRepository(FollowUpAttempt);
   }
 
   async createHistorical(
@@ -347,7 +392,107 @@ export class FollowUpsService {
   async findOneForUser(id: string, user: User) {
     const item = await this.findOne(id);
     await this.access.assertCanRead(item.subjectPatientId, user);
+    item.attempts = await this.attempts().find({
+      where: { followUpId: id },
+      order: { occurredAt: 'ASC', createdAt: 'ASC' },
+    });
     return item;
+  }
+
+  async addAttempt(id: string, input: CreateFollowUpAttemptDto, user: User) {
+    return this.dataSource.transaction(async (manager) => {
+      const followUp = await this.findOne(id, manager);
+      await this.assertWriteScope(followUp, user.id, user.role, manager);
+      if (followUp.status === FollowUpStatus.CANCELLED)
+        throw new BadRequestException(
+          'Cancelled follow-ups cannot receive attempts; reschedule instead',
+        );
+      const occurredAt = input.occurredAt
+        ? new Date(input.occurredAt)
+        : new Date();
+      const attempt = await manager.getRepository(FollowUpAttempt).save({
+        followUpId: followUp.id,
+        patientId: followUp.subjectPatientId,
+        channel: input.channel,
+        outcome: input.outcome,
+        occurredAt,
+        actorUserId: user.id,
+        notes: input.notes ?? null,
+      });
+      if (input.outcome === FollowUpAttemptOutcome.CONTACTED) {
+        if (followUp.status !== FollowUpStatus.COMPLETED) {
+          followUp.status = FollowUpStatus.COMPLETED;
+          followUp.completedAt = occurredAt;
+          followUp.completedOn = dateOnlyInLima(occurredAt);
+        }
+      } else if (followUp.status !== FollowUpStatus.COMPLETED) {
+        followUp.status = FollowUpStatus.NO_ANSWER;
+      }
+      await manager.getRepository(FollowUp).save(followUp);
+      await this.invalidations.markDirty(followUp.subjectPatientId, manager);
+      return attempt;
+    });
+  }
+
+  async reschedule(id: string, input: RescheduleFollowUpDto, user: User) {
+    return this.dataSource.transaction(async (manager) => {
+      const current = await this.findOne(id, manager);
+      await this.assertWriteScope(current, user.id, user.role, manager);
+      if (!RESCHEDULABLE.includes(current.status))
+        throw new BadRequestException(
+          'Only overdue or cancelled follow-ups can be rescheduled',
+        );
+      if (current.nextFollowUpId)
+        throw new BadRequestException('Follow-up was already rescheduled');
+      if (new Date(input.scheduledAt).getTime() <= Date.now())
+        throw new BadRequestException('scheduledAt must be in the future');
+      const next = await this.create(
+        {
+          subjectPatientId: current.subjectPatientId,
+          interlocutorId: current.interlocutorId,
+          agentId:
+            user.role === UserRole.AGENT
+              ? undefined
+              : (input.agentId ?? current.agentId),
+          type: input.type ?? current.type,
+          purpose: current.purpose,
+          notes: input.notes ?? current.notes ?? undefined,
+          scheduledAt: input.scheduledAt,
+        },
+        user.id,
+        user.role,
+        manager,
+      );
+      current.nextFollowUpId = next.id;
+      await manager.getRepository(FollowUp).save(current);
+      return next;
+    });
+  }
+
+  @Cron('10 0 * * *', { timeZone: 'America/Lima' })
+  async markOverdue(today = dateOnlyInLima(new Date())) {
+    const rows = await this.audit.run(
+      { actorUserId: null, context: AuditContextKind.SYSTEM },
+      () =>
+        this.dataSource.transaction(async (manager) => {
+          const [updated]: [{ subject_patient_id: string }[], number] =
+            await manager.query(
+              `UPDATE follow_ups
+                SET status = $1, updated_at = now()
+              WHERE status = $2 AND is_historical = false AND scheduled_on < $3
+              RETURNING subject_patient_id`,
+              [FollowUpStatus.OVERDUE, FollowUpStatus.SCHEDULED, today],
+            );
+          for (const patientId of new Set(
+            updated.map((row) => row.subject_patient_id),
+          ))
+            await this.invalidations.markDirty(patientId, manager);
+          return updated;
+        }),
+    );
+    if (rows.length)
+      this.logger.log(`Marked ${rows.length} follow-ups as overdue`);
+    return rows.length;
   }
   async findAllForUser(queryInput: FindFollowUpsQueryDto, user: User) {
     const query = this.followUps
@@ -367,13 +512,17 @@ export class FollowUpsService {
       .addOrderBy('follow_up.created_at', 'DESC')
       .addOrderBy('follow_up.id', 'DESC');
 
-    if (user.role === UserRole.AGENT) {
+    // R-11: inside a patient file an agent sees every follow-up of the
+    // patient; "my follow-ups" is only the default of the agenda.
+    if (user.role === UserRole.AGENT && !queryInput.patientId) {
       const agent = await this.agents.findOne({ where: { userId: user.id } });
       if (!agent)
         throw new BadRequestException(
           'Authenticated user has no agent profile',
         );
-      query.andWhere('follow_up.agent_id = :agentId', { agentId: agent.id });
+      query.andWhere('follow_up.agent_id = :agentId', {
+        agentId: queryInput.agentId ?? agent.id,
+      });
     } else if (queryInput.agentId) {
       query.andWhere('follow_up.agent_id = :agentId', {
         agentId: queryInput.agentId,
@@ -516,11 +665,9 @@ export class FollowUpsService {
     ...ids: string[]
   ) {
     const patients = manager?.getRepository(Patient) ?? this.patients;
-    const count = await patients.countBy({ id: ids[0] });
     for (const id of ids)
       if (!(await patients.existsBy({ id })))
         throw new NotFoundException('Patient not found');
-    return count;
   }
 
   private async assertInterlocutor(

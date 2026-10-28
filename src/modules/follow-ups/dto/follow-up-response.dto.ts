@@ -1,9 +1,10 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   FollowUpPurpose,
   FollowUpStatus,
   FollowUpType,
 } from '../../../database/entities/follow-up.enums';
+import { FollowUpAttemptResponseDto } from './follow-up-attempt-response.dto';
 
 export class FollowUpResponseDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
@@ -28,4 +29,10 @@ export class FollowUpResponseDto {
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
   @ApiProperty({ format: 'date-time' }) updatedAt!: Date;
   @ApiProperty() isHistorical!: boolean;
+  @ApiPropertyOptional({
+    type: FollowUpAttemptResponseDto,
+    isArray: true,
+    description: 'Only returned by GET /follow-ups/:id',
+  })
+  attempts?: FollowUpAttemptResponseDto[];
 }

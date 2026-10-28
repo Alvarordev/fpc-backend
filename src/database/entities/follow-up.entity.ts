@@ -11,6 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Agent } from './agent.entity';
+import { FollowUpAttempt } from './follow-up-attempt.entity';
 import {
   FollowUpPurpose,
   FollowUpStatus,
@@ -23,7 +24,9 @@ import { User } from './user.entity';
 @Check(
   `"type" IN ('WHATSAPP','CALL','VIDEO_CALL','EMAIL','IN_PERSON','FACEBOOK')`,
 )
-@Check(`"status" IN ('SCHEDULED','COMPLETED','CANCELLED','NO_ANSWER')`)
+@Check(
+  `"status" IN ('SCHEDULED','COMPLETED','CANCELLED','NO_ANSWER','OVERDUE')`,
+)
 @Check(
   `"purpose" IN ('FIRST_CONTACT','ENROLLMENT','FOLLOW_UP','PSYCHOONCOLOGY_REFERRAL','OTHER')`,
 )
@@ -73,6 +76,8 @@ export class FollowUp {
   nextFollowUp!: FollowUp | null;
   @OneToMany(() => FollowUp, (followUp) => followUp.nextFollowUp)
   previousFollowUps!: FollowUp[];
+  @OneToMany(() => FollowUpAttempt, (attempt) => attempt.followUp)
+  attempts!: FollowUpAttempt[];
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
