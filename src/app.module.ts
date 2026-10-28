@@ -15,6 +15,7 @@ import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './modules/health/health.module';
 import { HealthCentersModule } from './modules/health-centers/health-centers.module';
 import { CatalogsModule } from './modules/catalogs/catalogs.module';
+import { ReferralsModule } from './modules/referrals/referrals.module';
 import { FollowUpsModule } from './modules/follow-ups/follow-ups.module';
 import { PsychooncologyAppointmentsModule } from './modules/psychooncology-appointments/psychooncology-appointments.module';
 import { RemindersModule } from './modules/reminders/reminders.module';
@@ -83,6 +84,7 @@ import { HistoricalRecordsModule } from './modules/historical-records/historical
     VolunteerAvailabilityModule,
     HealthCentersModule,
     CatalogsModule,
+    ReferralsModule,
     FollowUpsModule,
     RemindersModule,
     EnrollmentsModule,

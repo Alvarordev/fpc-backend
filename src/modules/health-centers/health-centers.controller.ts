@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -21,7 +22,10 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { UserRole } from '../../database/entities/user-role.enum';
-import { HealthCenter } from '../../database/entities/health-center.entity';
+import {
+  HEALTH_CENTER_CARE_LEVELS,
+  HealthCenter,
+} from '../../database/entities/health-center.entity';
 import { CreateHealthCenterDto } from './dto/create-health-center.dto';
 import { UpdateHealthCenterDto } from './dto/update-health-center.dto';
 import { HealthCenterResponseDto } from './dto/health-center-response.dto';
@@ -46,17 +50,27 @@ export class HealthCentersController {
   @Get()
   @ApiOperation({ summary: 'List health centers' })
   @ApiQuery({ name: 'department', required: false })
+  @ApiQuery({
+    name: 'careLevel',
+    required: false,
+    enum: HEALTH_CENTER_CARE_LEVELS,
+  })
+  @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'isActive', required: false, enum: ['true', 'false'] })
   @ApiOkResponse({ type: HealthCenterResponseDto, isArray: true })
   findAll(
     @Query('department') department?: string,
     @Query('isActive') isActive?: string,
+    @Query('careLevel') careLevel?: string,
+    @Query('search') search?: string,
   ) {
     return this.service
-      .findAll(
+      .findAll({
         department,
-        isActive === undefined ? undefined : isActive === 'true',
-      )
+        isActive: isActive === undefined ? undefined : isActive === 'true',
+        careLevel,
+        search,
+      })
       .then((items) => items.map(this.toResponse));
   }
   @Get(':id')
@@ -64,7 +78,7 @@ export class HealthCentersController {
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: HealthCenterResponseDto })
   @ApiNotFoundResponse({ description: 'Health center not found' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.findOne(id).then(this.toResponse);
   }
   @Patch(':id')
@@ -76,21 +90,14 @@ export class HealthCentersController {
     description: 'Administrator, foundation, or agent role required',
   })
   @ApiNotFoundResponse({ description: 'Health center not found' })
-  update(@Param('id') id: string, @Body() dto: UpdateHealthCenterDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateHealthCenterDto,
+  ) {
     return this.service.update(id, dto).then(this.toResponse);
   }
 
   private toResponse(this: void, item: HealthCenter): HealthCenterResponseDto {
-    return {
-      id: item.id,
-      name: item.name,
-      slug: item.slug,
-      department: item.department,
-      category: item.category,
-      isActive: item.isActive,
-      patientCount: item.patientCount ?? 0,
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-    };
+    return HealthCenterResponseDto.from(item);
   }
 }

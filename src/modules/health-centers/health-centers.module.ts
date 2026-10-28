@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HealthCenter } from '../../database/entities/health-center.entity';
-import { CatalogsModule } from '../catalogs/catalogs.module';
+import { UbigeoDistrict } from '../../database/entities/ubigeo.entity';
 import { HealthCentersController } from './health-centers.controller';
 import { HealthCentersService } from './health-centers.service';
 @Module({
-  imports: [TypeOrmModule.forFeature([HealthCenter]), CatalogsModule],
+  imports: [TypeOrmModule.forFeature([HealthCenter, UbigeoDistrict])],
   controllers: [HealthCentersController],
   providers: [HealthCentersService],
 })
