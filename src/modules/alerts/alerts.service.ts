@@ -1,3 +1,4 @@
+import { CompanionPatient } from '../../database/entities/companion-patient.entity';
 import {
   BadRequestException,
   ConflictException,
@@ -666,17 +667,31 @@ export class AlertsService {
       );
     if (!actor.agentId)
       throw new BadRequestException('Selecciona el seguimiento.');
-    const interlocutorId = input.interlocutorId ?? input.subjectPatientId;
-    const patientCount = await manager.getRepository(Patient).count({
-      where: [{ id: input.subjectPatientId }, { id: interlocutorId }],
-    });
-    if (patientCount !== (interlocutorId === input.subjectPatientId ? 1 : 2))
+    if (
+      !(await manager
+        .getRepository(Patient)
+        .existsBy({ id: input.subjectPatientId }))
+    )
       throw new NotFoundException('No se encontró el paciente.');
+    const interlocutorCompanionId =
+      input.interlocutorId && input.interlocutorId !== input.subjectPatientId
+        ? input.interlocutorId
+        : null;
+    if (
+      interlocutorCompanionId &&
+      !(await manager.getRepository(CompanionPatient).existsBy({
+        patientId: input.subjectPatientId,
+        companionId: interlocutorCompanionId,
+      }))
+    )
+      throw new BadRequestException(
+        'El interlocutor debe ser el paciente o un acompañante vinculado.',
+      );
 
     const followUp = await manager.getRepository(FollowUp).save(
       manager.getRepository(FollowUp).create({
         subjectPatientId: input.subjectPatientId,
-        interlocutorId,
+        interlocutorCompanionId,
         agentId: actor.agentId,
         type: input.followUpType ?? FollowUpType.IN_PERSON,
         status: FollowUpStatus.COMPLETED,

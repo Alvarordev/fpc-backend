@@ -114,7 +114,9 @@ export class PatientDiagnosticStatusesService {
         order: { occurredAt: 'DESC', createdAt: 'DESC', id: 'DESC' },
       });
       if (!current)
-        throw new ConflictException('Todavía no se inició la búsqueda diagnóstica.');
+        throw new ConflictException(
+          'Todavía no se inició la búsqueda diagnóstica.',
+        );
 
       if (
         input.status !== PatientDiagnosticStatus.CONFIRMED &&

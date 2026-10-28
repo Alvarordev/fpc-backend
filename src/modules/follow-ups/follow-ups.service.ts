@@ -107,7 +107,7 @@ export class FollowUpsService {
     const created = await followUps.save(
       followUps.create({
         subjectPatientId: patientId,
-        interlocutorId: patientId,
+        interlocutorCompanionId: null,
         agentId,
         type: FollowUpType.IN_PERSON,
         status: FollowUpStatus.COMPLETED,
@@ -140,12 +140,8 @@ export class FollowUpsService {
     manager?: EntityManager,
     options: FollowUpCreateOptions = {},
   ) {
-    await this.assertPatients(
-      manager,
-      input.subjectPatientId,
-      input.interlocutorId,
-    );
-    await this.assertInterlocutor(
+    await this.assertPatients(manager, input.subjectPatientId);
+    const interlocutorCompanionId = await this.resolveInterlocutor(
       input.subjectPatientId,
       input.interlocutorId,
       manager,
@@ -184,7 +180,9 @@ export class FollowUpsService {
           ? dateOnlyInLimaFromInput(input.completedAt)
           : null;
     if (scheduledAt && completedAt && completedAt < scheduledAt)
-      throw new BadRequestException('La fecha de realización no puede ser anterior a la programada.');
+      throw new BadRequestException(
+        'La fecha de realización no puede ser anterior a la programada.',
+      );
     if (
       input.scheduledAt &&
       scheduledOn &&
@@ -202,10 +200,13 @@ export class FollowUpsService {
         'La hora de realización no coincide con su fecha.',
       );
     if (!isDateOnlyRangeValid(scheduledOn, completedOn))
-      throw new BadRequestException('La fecha de realización no puede ser anterior a la programada.');
+      throw new BadRequestException(
+        'La fecha de realización no puede ser anterior a la programada.',
+      );
     const followUp = await followUps.save(
       followUps.create({
-        ...input,
+        ...withoutInterlocutor(input),
+        interlocutorCompanionId,
         agentId,
         status: options.status ?? this.inferStatus(input),
         scheduledAt,
@@ -302,14 +303,12 @@ export class FollowUpsService {
       throw new BadRequestException(
         'Desde carga histórica solo se editan seguimientos históricos.',
       );
-    if (input.interlocutorId) {
-      await this.assertInterlocutor(
+    if (input.interlocutorId)
+      item.interlocutorCompanionId = await this.resolveInterlocutor(
         item.subjectPatientId,
         input.interlocutorId,
         manager,
       );
-      item.interlocutorId = input.interlocutorId;
-    }
     if (input.agentId !== undefined) {
       const agents = manager?.getRepository(Agent) ?? this.agents;
       if (!(await agents.existsBy({ id: input.agentId })))
@@ -331,9 +330,13 @@ export class FollowUpsService {
       item.completedAt &&
       item.completedAt < item.scheduledAt
     )
-      throw new BadRequestException('La fecha de realización no puede ser anterior a la programada.');
+      throw new BadRequestException(
+        'La fecha de realización no puede ser anterior a la programada.',
+      );
     if (!isDateOnlyRangeValid(item.scheduledOn, item.completedOn))
-      throw new BadRequestException('La fecha de realización no puede ser anterior a la programada.');
+      throw new BadRequestException(
+        'La fecha de realización no puede ser anterior a la programada.',
+      );
     const saved = await followUps.save(item);
     await this.invalidations.markDirty(saved.subjectPatientId, manager);
     return saved;
@@ -461,7 +464,7 @@ export class FollowUpsService {
       const next = await this.create(
         {
           subjectPatientId: current.subjectPatientId,
-          interlocutorId: current.interlocutorId,
+          interlocutorId: interlocutorIdOf(current),
           agentId:
             user.role === UserRole.AGENT
               ? undefined
@@ -529,9 +532,7 @@ export class FollowUpsService {
     if (user.role === UserRole.AGENT && !queryInput.patientId) {
       const agent = await this.agents.findOne({ where: { userId: user.id } });
       if (!agent)
-        throw new BadRequestException(
-          'Tu usuario no tiene perfil de agente.',
-        );
+        throw new BadRequestException('Tu usuario no tiene perfil de agente.');
       query.andWhere('follow_up.agent_id = :agentId', {
         agentId: queryInput.agentId ?? agent.id,
       });
@@ -566,7 +567,7 @@ export class FollowUpsService {
         {
           ...input,
           subjectPatientId: current.subjectPatientId,
-          interlocutorId: input.interlocutorId ?? current.interlocutorId,
+          interlocutorId: input.interlocutorId ?? interlocutorIdOf(current),
           scheduledAt:
             input.scheduledAt ?? new Date(Date.now() + 60000).toISOString(),
           completedAt: undefined,
@@ -590,13 +591,13 @@ export class FollowUpsService {
     const item = await this.findOne(id);
     await this.assertWriteScope(item, userId, userRole);
     if (input.interlocutorId)
-      await this.assertInterlocutor(
+      item.interlocutorCompanionId = await this.resolveInterlocutor(
         item.subjectPatientId,
         input.interlocutorId,
       );
     Object.assign(
       item,
-      input,
+      withoutInterlocutor(input),
       input.scheduledAt ? { scheduledAt: new Date(input.scheduledAt) } : {},
       input.completedAt ? { completedAt: new Date(input.completedAt) } : {},
     );
@@ -609,7 +610,9 @@ export class FollowUpsService {
         ? dateOnlyInLimaFromInput(input.completedAt)
         : null;
     if (!isDateOnlyRangeValid(item.scheduledOn, item.completedOn))
-      throw new BadRequestException('La fecha de realización no puede ser anterior a la programada.');
+      throw new BadRequestException(
+        'La fecha de realización no puede ser anterior a la programada.',
+      );
     const followUp = await this.followUps.save(item);
     await this.invalidations.markDirty(followUp.subjectPatientId);
     return followUp;
@@ -642,16 +645,15 @@ export class FollowUpsService {
     if (userRole === 'AGENT') {
       const agent = await agents.findOne({ where: { userId } });
       if (!agent)
-        throw new BadRequestException(
-          'Tu usuario no tiene perfil de agente.',
-        );
+        throw new BadRequestException('Tu usuario no tiene perfil de agente.');
       if (requestedAgentId && requestedAgentId !== agent.id)
         throw new ForbiddenException(
           'No puedes asignar seguimientos a otro agente.',
         );
       return agent.id;
     }
-    if (!requestedAgentId) throw new BadRequestException('Selecciona el agente responsable.');
+    if (!requestedAgentId)
+      throw new BadRequestException('Selecciona el agente responsable.');
     if (!(await agents.existsBy({ id: requestedAgentId })))
       throw new NotFoundException('No se encontró el agente.');
     return requestedAgentId;
@@ -682,12 +684,16 @@ export class FollowUpsService {
         throw new NotFoundException('No se encontró el paciente.');
   }
 
-  private async assertInterlocutor(
+  /**
+   * The API keeps `interlocutorId` as "the patient or one of their linked
+   * companions"; it is stored as the companion id, or null for the patient.
+   */
+  private async resolveInterlocutor(
     subjectPatientId: string,
-    interlocutorId: string,
+    interlocutorId: string | undefined,
     manager?: EntityManager,
-  ) {
-    if (subjectPatientId === interlocutorId) return;
+  ): Promise<string | null> {
+    if (!interlocutorId || subjectPatientId === interlocutorId) return null;
     const links =
       manager?.getRepository(CompanionPatient) ??
       this.dataSource.getRepository(CompanionPatient);
@@ -699,5 +705,20 @@ export class FollowUpsService {
       throw new BadRequestException(
         'El interlocutor debe ser el paciente o un acompañante vinculado.',
       );
+    return interlocutorId;
   }
+}
+
+/** API view of who was talked to: the companion, or the patient themself. */
+export function interlocutorIdOf(
+  followUp: Pick<FollowUp, 'interlocutorCompanionId' | 'subjectPatientId'>,
+): string {
+  return followUp.interlocutorCompanionId ?? followUp.subjectPatientId;
+}
+
+function withoutInterlocutor<T extends { interlocutorId?: string }>(
+  input: T,
+): Omit<T, 'interlocutorId'> {
+  const { interlocutorId: _interlocutorId, ...rest } = input;
+  return rest;
 }

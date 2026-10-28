@@ -58,6 +58,18 @@ extraer del código y validar.
 
 - **A1** Entidad propia (no paciente con flag), relacionada con uno o varios pacientes, con parentesco
   (familiares y amigos). Un acompañante puede convertirse en paciente ("enrolar desde este contacto").
+  - **Implementado (2026-10-28).** Tabla `companions` (migración `1784930000000`): los `patients` con
+    rol COMPANION pasan con su mismo UUID y el rol desaparece. `companion_patient`, `enrollments` y
+    `psychooncology_appointments` apuntan a `companions`. El seguimiento guarda
+    `interlocutor_companion_id` (null = se habló con el paciente); la API mantiene `interlocutorId`
+    = acompañante o el propio paciente. La migración se detiene si algún acompañante tiene datos
+    clínicos, y no tiene vuelta atrás (respaldo).
+  - Parentesco = catálogo `companion_relationship` (abierto a agentes). Los códigos del front se
+    conservan y cada texto libre distinto se agregó al catálogo.
+  - Solo se ve y edita desde la ficha del paciente: `PATCH /patients/:id/companions/:companionId/person`
+    (datos personales; aplica a todos los pacientes que acompaña). Documento único entre acompañantes.
+  - "Enrolar desde este contacto": `POST /patients/:id/companions/:companionId/convert-to-patient`
+    crea un prospecto con sus datos (`companions.converted_patient_id`); se enrola con el wizard.
 
 ## 4. Seguimientos
 

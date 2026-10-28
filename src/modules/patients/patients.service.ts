@@ -61,6 +61,9 @@ import { CompanionContactRole } from '../../database/entities/companion-contact-
 import { PatientPsychooncologySupportAssessment } from '../../database/entities/patient-psychooncology-support-assessment.entity';
 import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-non-oncological-follow-up.entity';
 import { CatalogValueService } from '../catalogs/catalog-value.service';
+import { Companion } from '../../database/entities/companion.entity';
+import { UpdateCompanionDto } from './dto/update-companion.dto';
+import { saveCompanionOrDniConflict } from './companion-dni-conflict';
 
 function resolveContactRole(
   contactRole: CompanionContactRole | null | undefined,
@@ -177,7 +180,7 @@ export class PatientsService {
     input: CreateCompanionDto,
     manager?: EntityManager,
     user?: User,
-  ): Promise<Patient> {
+  ): Promise<Companion> {
     if (user && user.role === UserRole.VOLUNTEER)
       await this.access.assertCanRead(patientId, user);
     await this.assertPatientRole(
@@ -225,12 +228,7 @@ export class PatientsService {
       PatientStatus.ENROLLED,
       manager,
     );
-    await this.assertPatientRole(
-      input.existingCompanionId,
-      PatientRole.COMPANION,
-      undefined,
-      manager,
-    );
+    await this.findCompanion(input.existingCompanionId, manager);
     const repository =
       manager?.getRepository(CompanionPatient) ??
       this.companionPatientsRepository;
@@ -260,9 +258,114 @@ export class PatientsService {
         contactRole,
         isPrimaryContact: contactRole === CompanionContactRole.PRIMARY,
         isCaregiver: input.isCaregiver ?? false,
-        relationship: input.relationship ?? null,
+        relationship: await this.resolveRelationship(
+          input.relationship,
+          manager,
+        ),
       }),
     );
+  }
+
+  async findCompanion(id: string, manager?: EntityManager): Promise<Companion> {
+    const companion = await (
+      manager?.getRepository(Companion) ??
+      this.dataSource.getRepository(Companion)
+    ).findOneBy({ id });
+    if (!companion)
+      throw new NotFoundException('No se encontró el acompañante.');
+    return companion;
+  }
+
+  /** Datos personales del acompañante; se editan desde la ficha de un paciente al que acompaña. */
+  async updateCompanion(
+    patientId: string,
+    companionId: string,
+    input: UpdateCompanionDto,
+  ): Promise<Companion> {
+    return this.dataSource.transaction(async (manager) => {
+      if (
+        !(await manager
+          .getRepository(CompanionPatient)
+          .existsBy({ patientId, companionId }))
+      )
+        throw new NotFoundException(
+          'El acompañante no está vinculado a este paciente.',
+        );
+      const companion = await this.findCompanion(companionId, manager);
+      Object.assign(companion, input);
+      const saved = await saveCompanionOrDniConflict(
+        manager.getRepository(Companion),
+        companion,
+      );
+      await this.invalidations.markDirty(patientId, manager);
+      return saved;
+    });
+  }
+
+  /**
+   * A1: "enrolar desde este contacto". Crea un prospecto (paciente sin enrolar)
+   * con los datos del acompañante, que se enrola luego con el flujo normal.
+   * El acompañante sigue acompañando a quien ya acompañaba.
+   */
+  async convertCompanionToPatient(
+    patientId: string,
+    companionId: string,
+  ): Promise<Patient> {
+    return this.dataSource.transaction(async (manager) => {
+      if (
+        !(await manager
+          .getRepository(CompanionPatient)
+          .existsBy({ patientId, companionId }))
+      )
+        throw new NotFoundException(
+          'El acompañante no está vinculado a este paciente.',
+        );
+      const companion = await manager
+        .getRepository(Companion)
+        .createQueryBuilder('companion')
+        .setLock('pessimistic_write')
+        .where('companion.id = :companionId', { companionId })
+        .getOne();
+      if (!companion)
+        throw new NotFoundException('No se encontró el acompañante.');
+      if (companion.convertedPatientId)
+        throw new ConflictException({
+          code: 'COMPANION_ALREADY_CONVERTED',
+          message: 'Este acompañante ya fue registrado como paciente.',
+          patientId: companion.convertedPatientId,
+        });
+      const patient = await savePatientOrDniConflict(
+        manager.getRepository(Patient),
+        {
+          fullName: companion.fullName,
+          documentType: companion.documentType,
+          dni: companion.dni,
+          birthDate: companion.birthDate,
+          gender: companion.gender,
+          primaryPhone: companion.primaryPhone,
+          secondaryPhone: companion.secondaryPhone,
+          hasWhatsapp: companion.hasWhatsapp,
+          email: companion.email,
+          role: PatientRole.UNKNOWN,
+          status: PatientStatus.UNENROLLED,
+        },
+      );
+      companion.convertedPatientId = patient.id;
+      await manager.getRepository(Companion).save(companion);
+      return patient;
+    });
+  }
+
+  private async resolveRelationship(
+    value: string | null | undefined,
+    manager?: EntityManager,
+  ): Promise<string | null> {
+    const resolved = await this.catalogValues.resolveOptional(
+      'companion_relationship',
+      value,
+      { manager },
+    );
+    return resolved?.code ?? null;
   }
 
   async updateCompanionLink(
@@ -281,7 +384,10 @@ export class PatientsService {
         where: { id: linkId, patientId },
         relations: { companion: true },
       });
-      if (!link) throw new NotFoundException('No se encontró el vínculo con el acompañante.');
+      if (!link)
+        throw new NotFoundException(
+          'No se encontró el vínculo con el acompañante.',
+        );
       const contactRole = resolveContactRole(
         input.contactRole,
         input.isPrimaryContact,
@@ -295,6 +401,14 @@ export class PatientsService {
       Object.assign(link, input, {
         contactRole,
         isPrimaryContact: contactRole === CompanionContactRole.PRIMARY,
+        ...(input.relationship !== undefined
+          ? {
+              relationship: await this.resolveRelationship(
+                input.relationship,
+                manager,
+              ),
+            }
+          : {}),
       });
       const saved = await repository.save(link);
       await this.invalidations.markDirty(patientId, manager);
@@ -349,22 +463,14 @@ export class PatientsService {
       );
     await this.access.scopeQuery(query, 'patient.id', user);
     if (filters.segment === PatientListSegment.CARE) {
-      query.andWhere(
-        '(patient.status = :careEnrolledStatus OR patient.role = :careCompanionRole)',
-        {
-          careEnrolledStatus: PatientStatus.ENROLLED,
-          careCompanionRole: PatientRole.COMPANION,
-        },
-      );
+      query.andWhere('patient.status = :careEnrolledStatus', {
+        careEnrolledStatus: PatientStatus.ENROLLED,
+      });
     }
     if (filters.segment === PatientListSegment.PROSPECTS) {
-      query.andWhere(
-        'patient.status = :prospectStatus AND patient.role != :prospectCompanionRole',
-        {
-          prospectStatus: PatientStatus.UNENROLLED,
-          prospectCompanionRole: PatientRole.COMPANION,
-        },
-      );
+      query.andWhere('patient.status = :prospectStatus', {
+        prospectStatus: PatientStatus.UNENROLLED,
+      });
     }
     if (filters.role)
       query.andWhere('patient.role = :role', { role: filters.role });
@@ -773,9 +879,13 @@ export class PatientsService {
 
     if (input.healthPhase) {
       healthPhase = (
-        await this.catalogValues.resolve('patient_health_phase', input.healthPhase, {
-          manager,
-        })
+        await this.catalogValues.resolve(
+          'patient_health_phase',
+          input.healthPhase,
+          {
+            manager,
+          },
+        )
       ).code;
     }
     if (hasSubcategoryInput && input.healthSubcategory) {
@@ -806,8 +916,7 @@ export class PatientsService {
           );
         }
       }
-      healthPhase =
-        HEALTH_SUBCATEGORY_PHASE[healthSubcategory] ?? healthPhase;
+      healthPhase = HEALTH_SUBCATEGORY_PHASE[healthSubcategory] ?? healthPhase;
     } else if (
       input.healthPhase &&
       previousHealthSubcategory &&
@@ -844,7 +953,8 @@ export class PatientsService {
         birthCountry,
         { manager },
       );
-      nextBirthCountry = resolvedCountry?.code ?? (birthCountry?.trim() || null);
+      nextBirthCountry =
+        resolvedCountry?.code ?? (birthCountry?.trim() || null);
     }
     if (birthDepartment !== undefined) {
       nextBirthDepartment = birthDepartment ?? null;
@@ -892,7 +1002,9 @@ export class PatientsService {
       ...(nativeLanguage !== undefined
         ? { nativeLanguage: resolvedLanguage?.code ?? null }
         : {}),
-      ...(zoneType !== undefined ? { zoneType: resolvedZone?.code ?? null } : {}),
+      ...(zoneType !== undefined
+        ? { zoneType: resolvedZone?.code ?? null }
+        : {}),
       ...(shelterSepaProvider !== undefined
         ? {
             shelterSepaProvider: resolvedShelter?.code ?? null,
@@ -951,21 +1063,19 @@ export class PatientsService {
     patientId: string,
     input: CreateCompanionDto,
     manager: EntityManager,
-  ): Promise<Patient> {
+  ): Promise<Companion> {
     const {
       isPrimaryInformant,
       isPrimaryContact,
       contactRole,
       isCaregiver,
       relationship,
-      ...patientFields
+      ...personFields
     } = input;
-    const patients = manager.getRepository(Patient);
-    const companion = await savePatientOrDniConflict(patients, {
-      ...patientFields,
-      role: PatientRole.COMPANION,
-      status: PatientStatus.UNENROLLED,
-    });
+    const companion = await saveCompanionOrDniConflict(
+      manager.getRepository(Companion),
+      personFields,
+    );
     const links = manager.getRepository(CompanionPatient);
     const resolvedContactRole = resolveContactRole(
       contactRole,
@@ -985,7 +1095,7 @@ export class PatientsService {
         contactRole: resolvedContactRole,
         isPrimaryContact: resolvedContactRole === CompanionContactRole.PRIMARY,
         isCaregiver: isCaregiver ?? false,
-        relationship: relationship ?? null,
+        relationship: await this.resolveRelationship(relationship, manager),
       }),
     );
     return companion;

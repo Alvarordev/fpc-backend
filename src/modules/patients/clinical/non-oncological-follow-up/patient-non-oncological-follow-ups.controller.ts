@@ -94,7 +94,9 @@ export class PatientNonOncologicalFollowUpsController {
   @ApiBadRequestResponse({ description: 'Invalid non-oncological follow-up' })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'No se encontró el seguimiento no oncológico.' })
+  @ApiNotFoundResponse({
+    description: 'No se encontró el seguimiento no oncológico.',
+  })
   async update(
     @Param('patientId', ParseUUIDPipe) patientId: string,
     @Param('id', ParseUUIDPipe) id: string,

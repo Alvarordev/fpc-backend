@@ -85,7 +85,11 @@ export class PatientDocumentsController {
   @ApiForbiddenResponse()
   @ApiNotFoundResponse({ description: 'Patient or association not found' })
   @ApiResponse({ status: 413, description: 'File is too large' })
-  @ApiResponse({ status: 415, description: 'Ese tipo de archivo no está permitido. Usa PDF, imagen o Word.' })
+  @ApiResponse({
+    status: 415,
+    description:
+      'Ese tipo de archivo no está permitido. Usa PDF, imagen o Word.',
+  })
   async create(
     @Param('patientId', new ParseUUIDPipe()) patientId: string,
     @Body() input: CreatePatientDocumentDto,

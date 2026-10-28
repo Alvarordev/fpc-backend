@@ -51,6 +51,7 @@ export const CATALOG_REFERENCES: Partial<
     { table: 'follow_up_reenrollments', column: 'entry_sub_source' },
   ],
   reenrollment_reason: [{ table: 'follow_up_reenrollments', column: 'reason' }],
+  companion_relationship: [{ table: 'companion_patient', column: 'relationship' }],
   zone_type: [{ table: 'patient_details', column: 'zone_type' }],
   care_program: [{ table: 'patient_treatments', column: 'care_program' }],
   access_barrier: [

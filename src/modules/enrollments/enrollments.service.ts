@@ -1,3 +1,4 @@
+import { Companion } from '../../database/entities/companion.entity';
 import { AuditContextKind } from '../../shared/audit/audit-context';
 import { AuditContextService } from '../../shared/audit/audit-context.service';
 import {
@@ -9,11 +10,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  DataSource,
-  QueryFailedError,
-  Repository,
-} from 'typeorm';
+import { DataSource, QueryFailedError, Repository } from 'typeorm';
 import {
   enrollmentDbDriverError,
   translateEnrollmentQueryError,
@@ -126,9 +123,10 @@ export class EnrollmentsService {
     } catch (error) {
       const translated = translateEnrollmentQueryError(error);
       if (!translated) throw error;
-      const driver = error instanceof QueryFailedError
-        ? enrollmentDbDriverError(error)
-        : undefined;
+      const driver =
+        error instanceof QueryFailedError
+          ? enrollmentDbDriverError(error)
+          : undefined;
       this.logger.warn(
         `Enrollment database constraint ${driver?.code ?? 'unknown'} ${driver?.constraint ?? ''} ${driver?.table ?? ''}`.trim(),
       );
@@ -212,7 +210,7 @@ export class EnrollmentsService {
             'Un paciente con SIS no puede tener además un trámite de afiliación al SIS.',
         });
 
-      let patient = patientId
+      const patient = patientId
         ? await manager
             .getRepository(Patient)
             .createQueryBuilder('patient')
@@ -241,7 +239,7 @@ export class EnrollmentsService {
       patient.status = PatientStatus.ENROLLED;
       await manager.getRepository(Patient).save(patient);
 
-      let companion: Patient | null = null;
+      let companion: Companion | null = null;
       if (hasCompanion) {
         const isFamily =
           input.affiliationType === AffiliationType.FAMILY_FRIEND;
@@ -256,18 +254,13 @@ export class EnrollmentsService {
             }
           : undefined;
         companion = companionId
-          ? await this.patients.assertPatientRole(
-              companionId,
-              PatientRole.COMPANION,
-              undefined,
-              manager,
-            )
+          ? await this.patients.findCompanion(companionId, manager)
           : await this.patients.createCompanion(
               patient.id,
               normalizedCompanion!,
               manager,
             );
-        if (companionId) {
+        if (companionId && companion) {
           const links = manager.getRepository(CompanionPatient);
           const link = await links.findOne({
             where: { patientId: patient.id, companionId: companion.id },
@@ -543,7 +536,10 @@ export class EnrollmentsService {
             enrollmentId: enrollment.id,
           },
           manager,
-          { skipAppointmentFanOut: Boolean(medicalAppointments?.length), historical: options.historical },
+          {
+            skipAppointmentFanOut: Boolean(medicalAppointments?.length),
+            historical: options.historical,
+          },
         );
       if (healthBackgroundAssessment)
         await this.healthBackgroundAssessments.create(
@@ -653,14 +649,13 @@ export class EnrollmentsService {
       where: { id },
       relations: { followUp: true },
     });
-    if (!enrollment) throw new NotFoundException('No se encontró el enrolamiento.');
+    if (!enrollment)
+      throw new NotFoundException('No se encontró el enrolamiento.');
 
     if (userRole === 'AGENT') {
       const agent = await this.agents.findOne({ where: { userId } });
       if (!agent)
-        throw new BadRequestException(
-          'Tu usuario no tiene perfil de agente.',
-        );
+        throw new BadRequestException('Tu usuario no tiene perfil de agente.');
       if (enrollment.followUp.agentId !== agent.id)
         throw new ForbiddenException(
           'Solo puedes modificar tus propios enrolamientos.',
@@ -679,17 +674,13 @@ export class EnrollmentsService {
         (contact) => contact.role === CompanionContactRole.PRIMARY,
       ).length !== 1
     )
-      throw new BadRequestException(
-        'Registra un único contacto principal.',
-      );
+      throw new BadRequestException('Registra un único contacto principal.');
     if (
       contacts.filter(
         (contact) => contact.source === EnrollmentContactSource.CALLER,
       ).length > 1
     )
-      throw new BadRequestException(
-        'Solo puede haber una persona que llamó.',
-      );
+      throw new BadRequestException('Solo puede haber una persona que llamó.');
     for (const contact of contacts) {
       if (
         contact.source === EnrollmentContactSource.PATIENT &&
@@ -701,7 +692,9 @@ export class EnrollmentsService {
       if (contact.source === EnrollmentContactSource.NEW && !contact.person)
         throw new BadRequestException('Completa los datos del nuevo contacto.');
       if (contact.source !== EnrollmentContactSource.NEW && contact.person)
-        throw new BadRequestException('Solo un contacto nuevo admite datos de persona.');
+        throw new BadRequestException(
+          'Solo un contacto nuevo admite datos de persona.',
+        );
     }
   }
 
@@ -720,8 +713,7 @@ export class EnrollmentsService {
           }
         : {
             code: 'PATIENT_ALREADY_ENROLLED',
-            message:
-              'El paciente ya está enrolado; registra un seguimiento.',
+            message: 'El paciente ya está enrolado; registra un seguimiento.',
           },
     );
   }
@@ -778,9 +770,7 @@ export class EnrollmentsService {
       healthPhase === PatientHealthPhase.CANCER_DIAGNOSIS &&
       !input.diagnoses?.length
     )
-      throw new BadRequestException(
-        'Registra al menos un diagnóstico.',
-      );
+      throw new BadRequestException('Registra al menos un diagnóstico.');
     const refs = (input.diagnoses ?? []).map(({ clientRef }) => clientRef);
     if (refs.some((ref) => !ref))
       throw new BadRequestException(
@@ -797,13 +787,9 @@ export class EnrollmentsService {
         );
     if (healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS) {
       if (!symptomReport)
-        throw new BadRequestException(
-          'Registra los síntomas del paciente.',
-        );
+        throw new BadRequestException('Registra los síntomas del paciente.');
       if (symptomReport.hasDiscomfort === undefined)
-        throw new BadRequestException(
-          'Indica si el paciente tiene molestias.',
-        );
+        throw new BadRequestException('Indica si el paciente tiene molestias.');
       if (symptomReport.hasMedicalConsultation !== undefined) {
         if (typeof symptomReport.hasMedicalConsultation !== 'boolean')
           throw new BadRequestException(
@@ -819,13 +805,9 @@ export class EnrollmentsService {
           );
       } else {
         if (typeof symptomReport.hasRequestedMedicalConsultation !== 'boolean')
-          throw new BadRequestException(
-            'Indica si se pidió una consulta.',
-          );
+          throw new BadRequestException('Indica si se pidió una consulta.');
         if (typeof symptomReport.hasReceivedDiagnosis !== 'boolean')
-          throw new BadRequestException(
-            'Indica si recibió un diagnóstico.',
-          );
+          throw new BadRequestException('Indica si recibió un diagnóstico.');
         if (typeof symptomReport.isReceivingReportedTreatment !== 'boolean')
           throw new BadRequestException(
             'Indica si el paciente recibe tratamiento.',
@@ -850,9 +832,7 @@ export class EnrollmentsService {
         );
       if (input.currentlyAttendingConsultations === true) {
         if (medicalAppointments?.length !== 1)
-          throw new BadRequestException(
-            'Registra una cita para la consulta.',
-          );
+          throw new BadRequestException('Registra una cita para la consulta.');
         if (!medicalAppointments[0].healthCenterId)
           throw new BadRequestException(
             'Selecciona el establecimiento donde se atiende.',
@@ -917,9 +897,7 @@ export class EnrollmentsService {
       return;
     if (!medicalAppointments?.length) return;
     if (medicalAppointments.length !== 1)
-      throw new BadRequestException(
-        'Registra la cita de la consulta.',
-      );
+      throw new BadRequestException('Registra la cita de la consulta.');
     const appointment = medicalAppointments[0];
     if (
       !appointment.appointmentDate ||
@@ -937,9 +915,7 @@ export class EnrollmentsService {
           'La referencia solo se registra si la consulta se realizó.',
         );
     } else if (appointment.hasReferralSheet === undefined) {
-      throw new BadRequestException(
-        'Indica si hubo hoja de referencia.',
-      );
+      throw new BadRequestException('Indica si hubo hoja de referencia.');
     } else if (
       appointment.hasReferralSheet === false &&
       !appointment.referralNotProvidedReason?.trim()

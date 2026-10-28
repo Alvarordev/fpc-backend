@@ -146,7 +146,9 @@ export class PatientDocumentsService {
           { status: PatientDocumentStatus.ACTIVE },
         );
         if (result.affected !== 1) {
-          throw new ConflictException('No se pudo terminar de subir el documento.');
+          throw new ConflictException(
+            'No se pudo terminar de subir el documento.',
+          );
         }
 
         return repository.findOneByOrFail({ id: documentId });
@@ -352,7 +354,9 @@ export class PatientDocumentsService {
 
   private assertCanManage(user: User): void {
     if (!DOCUMENT_ROLES.has(user.role)) {
-      throw new ForbiddenException('No tienes acceso a los documentos del paciente.');
+      throw new ForbiddenException(
+        'No tienes acceso a los documentos del paciente.',
+      );
     }
   }
 

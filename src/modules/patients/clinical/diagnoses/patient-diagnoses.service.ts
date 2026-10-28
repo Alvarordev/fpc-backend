@@ -80,7 +80,9 @@ export class PatientDiagnosesService {
         manager?.getRepository(HealthCenter) ?? this.healthCenters
       ).existsBy({ id: input.referredHealthCenterId, isActive: true }))
     )
-      throw new NotFoundException('No se encontró el establecimiento de referencia.');
+      throw new NotFoundException(
+        'No se encontró el establecimiento de referencia.',
+      );
     if (
       mode === PatientDiagnosisMode.PARALLEL &&
       replacementDiagnosisId !== undefined
@@ -101,13 +103,17 @@ export class PatientDiagnosesService {
         where: { id: replacementDiagnosisId },
       });
       if (!replacementDiagnosis)
-        throw new NotFoundException('No se encontró el diagnóstico a reemplazar.');
+        throw new NotFoundException(
+          'No se encontró el diagnóstico a reemplazar.',
+        );
       if (replacementDiagnosis.patientId !== patientId)
         throw new ConflictException(
           'El diagnóstico a reemplazar no es de este paciente.',
         );
       if (!replacementDiagnosis.isCurrent)
-        throw new ConflictException('El diagnóstico a reemplazar no está activo.');
+        throw new ConflictException(
+          'El diagnóstico a reemplazar no está activo.',
+        );
     }
 
     let waitTime = normalizeDuration(waitTimeForDiagnosis);
@@ -236,16 +242,21 @@ export class PatientDiagnosesService {
     const diagnosis = await diagnosisRepository.findOne({
       where: { id: diagnosisId, patientId },
     });
-    if (!diagnosis) throw new NotFoundException('No se encontró el diagnóstico.');
+    if (!diagnosis)
+      throw new NotFoundException('No se encontró el diagnóstico.');
     if (!diagnosis.isCurrent)
-      throw new ConflictException('Solo se puede corregir un diagnóstico activo.');
+      throw new ConflictException(
+        'Solo se puede corregir un diagnóstico activo.',
+      );
     if (
       input.referredHealthCenterId &&
       !(await manager
         .getRepository(HealthCenter)
         .existsBy({ id: input.referredHealthCenterId, isActive: true }))
     )
-      throw new NotFoundException('No se encontró el establecimiento de referencia.');
+      throw new NotFoundException(
+        'No se encontró el establecimiento de referencia.',
+      );
 
     const {
       followUpId: _followUpId,

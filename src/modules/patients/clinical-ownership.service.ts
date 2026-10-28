@@ -79,7 +79,9 @@ export class ClinicalOwnershipService {
     );
   }
 
-  private shouldCreateAppointment(input: CreatePatientSymptomReportDto): boolean {
+  private shouldCreateAppointment(
+    input: CreatePatientSymptomReportDto,
+  ): boolean {
     if (input.hasMedicalConsultation === true) return true;
     return (
       input.consultationStatus === MedicalConsultationStatus.SCHEDULED ||
@@ -146,8 +148,7 @@ export class ClinicalOwnershipService {
       {
         followUpId,
         specialty: nextSpecialty,
-        healthCenterId:
-          input.referredHealthCenterId ?? input.healthCenterId,
+        healthCenterId: input.referredHealthCenterId ?? input.healthCenterId,
         appointmentDate: nextDate,
         isFirstConsultation: false,
         status: MedicalAppointmentStatus.SCHEDULED,
@@ -204,7 +205,10 @@ export class ClinicalOwnershipService {
           diagnosisId: diagnosis.id,
         }),
       );
-      if (input.isReceivingReportedTreatment === true && input.reportedTreatment) {
+      if (
+        input.isReceivingReportedTreatment === true &&
+        input.reportedTreatment
+      ) {
         const treatmentType = await this.catalogValues.tryResolve(
           'treatment_type',
           input.reportedTreatment,

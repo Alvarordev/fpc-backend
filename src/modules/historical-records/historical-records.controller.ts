@@ -1,3 +1,4 @@
+import { interlocutorIdOf } from '../follow-ups/follow-ups.service';
 import {
   AuditContext,
   AuditContextKind,
@@ -261,7 +262,7 @@ export class HistoricalRecordsController {
       id: item.id,
       subjectPatientId: item.subjectPatientId,
       subjectPatientName: item.subjectPatient?.fullName ?? null,
-      interlocutorId: item.interlocutorId,
+      interlocutorId: interlocutorIdOf(item),
       agentId: item.agentId,
       type: item.type,
       status: item.status,

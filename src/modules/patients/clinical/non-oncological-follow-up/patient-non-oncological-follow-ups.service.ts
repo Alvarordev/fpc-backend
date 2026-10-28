@@ -106,7 +106,9 @@ export class PatientNonOncologicalFollowUpsService {
         where: { id, patientId },
       });
       if (!existing)
-        throw new NotFoundException('No se encontró el seguimiento no oncológico.');
+        throw new NotFoundException(
+          'No se encontró el seguimiento no oncológico.',
+        );
 
       const merged = {
         ...existing,
@@ -228,9 +230,7 @@ export class PatientNonOncologicalFollowUpsService {
       input.status === PatientNonOncologicalFollowUpStatus.DISCHARGED &&
       !input.dischargeReason?.trim()
     )
-      throw new BadRequestException(
-        'Indica el motivo del alta.',
-      );
+      throw new BadRequestException('Indica el motivo del alta.');
 
     return {
       followUpId: input.followUpId,

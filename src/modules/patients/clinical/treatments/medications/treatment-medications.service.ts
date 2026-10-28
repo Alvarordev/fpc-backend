@@ -32,7 +32,8 @@ export class TreatmentMedicationsService {
     const treatment = await treatments.findOne({
       where: { id: treatmentId, patientId },
     });
-    if (!treatment) throw new NotFoundException('No se encontró el tratamiento.');
+    if (!treatment)
+      throw new NotFoundException('No se encontró el tratamiento.');
     const repository =
       manager?.getRepository(TreatmentMedication) ?? this.repository;
     const { frequency, followUpId, ...rest } = input;
@@ -62,7 +63,8 @@ export class TreatmentMedicationsService {
     const medication = await this.repository.findOne({
       where: { id: medicationId, treatmentId, patientId },
     });
-    if (!medication) throw new NotFoundException('No se encontró el medicamento.');
+    if (!medication)
+      throw new NotFoundException('No se encontró el medicamento.');
     medication.isActive = false;
     medication.isCurrent = false;
     const { frequency, doseAmount, followUpId, ...rest } = input;
@@ -75,8 +77,7 @@ export class TreatmentMedicationsService {
       followUpId: followUpId ?? medication.followUpId,
       ...rest,
     });
-    if (frequency !== undefined)
-      next.frequency = normalizeDuration(frequency);
+    if (frequency !== undefined) next.frequency = normalizeDuration(frequency);
     if (doseAmount !== undefined) next.doseAmount = String(doseAmount);
     await this.repository.save(medication);
     const saved = await this.repository.save(next);
@@ -92,7 +93,8 @@ export class TreatmentMedicationsService {
     const medication = await this.repository.findOne({
       where: { id: medicationId, treatmentId, patientId },
     });
-    if (!medication) throw new NotFoundException('No se encontró el medicamento.');
+    if (!medication)
+      throw new NotFoundException('No se encontró el medicamento.');
     medication.isActive = false;
     medication.isCurrent = false;
     await this.repository.save(medication);

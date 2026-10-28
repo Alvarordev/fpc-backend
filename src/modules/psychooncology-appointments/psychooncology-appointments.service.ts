@@ -1,3 +1,4 @@
+import { Companion } from '../../database/entities/companion.entity';
 import { EmailService } from '../../integrations/email/email.service';
 import {
   BadRequestException,
@@ -148,13 +149,12 @@ export class PsychooncologyAppointmentsService {
           'Elige un voluntario o el voluntario anónimo, no ambos.',
         );
       if (!input.volunteerId && input.useAnonymousVolunteer !== true)
-        throw new BadRequestException(
-          'Selecciona un voluntario.',
-        );
+        throw new BadRequestException('Selecciona un voluntario.');
       const volunteer = input.volunteerId
         ? await volunteers.findOne({ where: { id: input.volunteerId } })
         : await volunteers.findOne({ where: { isAnonymous: true } });
-      if (!volunteer) throw new NotFoundException('No se encontró el voluntario.');
+      if (!volunteer)
+        throw new NotFoundException('No se encontró el voluntario.');
       if (input.volunteerId && volunteer.isAnonymous)
         throw new BadRequestException(
           'Para usar el voluntario anónimo, márcalo como anónimo.',
@@ -241,7 +241,9 @@ export class PsychooncologyAppointmentsService {
         relations: { volunteer: true, availability: true },
       });
       if (!appointment)
-        throw new NotFoundException('No se encontró la cita de psicooncología.');
+        throw new NotFoundException(
+          'No se encontró la cita de psicooncología.',
+        );
       if (!appointment.isHistorical)
         throw new BadRequestException(
           'Desde carga histórica solo se editan citas de psicooncología históricas.',
@@ -255,7 +257,8 @@ export class PsychooncologyAppointmentsService {
         const volunteer = input.volunteerId
           ? await volunteers.findOne({ where: { id: input.volunteerId } })
           : await volunteers.findOne({ where: { isAnonymous: true } });
-        if (!volunteer) throw new NotFoundException('No se encontró el voluntario.');
+        if (!volunteer)
+          throw new NotFoundException('No se encontró el voluntario.');
         if (input.volunteerId && volunteer.isAnonymous)
           throw new BadRequestException(
             'Para usar el voluntario anónimo, márcalo como anónimo.',
@@ -528,9 +531,7 @@ export class PsychooncologyAppointmentsService {
       this.assertZoomLinkModality({ modality, zoomLink: input.zoomLink });
       const next = await this.reserveSlot(manager, input.availabilityId);
       if (next.availability.id === original.availabilityId)
-        throw new ConflictException(
-          'La cita ya usa ese horario.',
-        );
+        throw new ConflictException('La cita ya usa ese horario.');
 
       const current = await this.lockAvailability(
         manager,
@@ -863,7 +864,8 @@ export class PsychooncologyAppointmentsService {
       where: { id: availability.volunteerId },
       relations: { user: true },
     });
-    if (!volunteer) throw new NotFoundException('No se encontró el voluntario.');
+    if (!volunteer)
+      throw new NotFoundException('No se encontró el voluntario.');
     if (!volunteer.isActive || volunteer.user?.isActive === false)
       throw new ConflictException('El voluntario está inactivo.');
     const scheduledAt = this.slotDate(availability);
@@ -905,7 +907,9 @@ export class PsychooncologyAppointmentsService {
         })
       : null;
     if (input.followUpId && !followUp)
-      throw new BadRequestException('El seguimiento no pertenece a este paciente.');
+      throw new BadRequestException(
+        'El seguimiento no pertenece a este paciente.',
+      );
 
     const beneficiary = await this.resolveBeneficiary(
       manager,
@@ -993,7 +997,9 @@ export class PsychooncologyAppointmentsService {
       .getOne()
       .then((appointment) => {
         if (!appointment)
-          throw new NotFoundException('No se encontró la cita de psicooncología.');
+          throw new NotFoundException(
+            'No se encontró la cita de psicooncología.',
+          );
         return appointment;
       });
   }
@@ -1013,7 +1019,7 @@ export class PsychooncologyAppointmentsService {
   ): Promise<{
     beneficiaryType: AppointmentBeneficiaryType;
     companionId: string | null;
-    companion: Patient | null;
+    companion: Companion | null;
   }> {
     const resolvedType = beneficiaryType ?? AppointmentBeneficiaryType.PATIENT;
 
@@ -1036,10 +1042,10 @@ export class PsychooncologyAppointmentsService {
       );
     }
 
-    const companion = await manager.getRepository(Patient).findOne({
+    const companion = await manager.getRepository(Companion).findOne({
       where: { id: companionId },
     });
-    if (!companion || companion.role !== PatientRole.COMPANION) {
+    if (!companion) {
       throw new NotFoundException('No se encontró el acompañante.');
     }
 
@@ -1047,7 +1053,9 @@ export class PsychooncologyAppointmentsService {
       where: { patientId, companionId },
     });
     if (!link) {
-      throw new BadRequestException('El acompañante no está vinculado a este paciente.');
+      throw new BadRequestException(
+        'El acompañante no está vinculado a este paciente.',
+      );
     }
 
     return {
@@ -1098,8 +1106,6 @@ export class PsychooncologyAppointmentsService {
       throw new NotFoundException('No se encontró la cita de psicooncología.');
     const volunteerId = await this.access.volunteerIdFor(user);
     if (volunteerId && appointment.volunteerId !== volunteerId)
-      throw new ForbiddenException(
-        'Solo puedes modificar tus propias citas.',
-      );
+      throw new ForbiddenException('Solo puedes modificar tus propias citas.');
   }
 }

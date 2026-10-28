@@ -50,7 +50,9 @@ export async function validatePatientDocumentFile(
   const rule = FILE_RULES[extension as keyof typeof FILE_RULES];
 
   if (!rule) {
-    throw new UnsupportedMediaTypeException('Ese tipo de archivo no está permitido. Usa PDF, imagen o Word.');
+    throw new UnsupportedMediaTypeException(
+      'Ese tipo de archivo no está permitido. Usa PDF, imagen o Word.',
+    );
   }
 
   const clientMediaType = file.mimetype?.toLowerCase().split(';', 1)[0];
@@ -59,7 +61,9 @@ export async function validatePatientDocumentFile(
     clientMediaType !== rule.mediaType &&
     clientMediaType !== 'application/octet-stream'
   ) {
-    throw new UnsupportedMediaTypeException('Ese tipo de archivo no está permitido. Usa PDF, imagen o Word.');
+    throw new UnsupportedMediaTypeException(
+      'Ese tipo de archivo no está permitido. Usa PDF, imagen o Word.',
+    );
   }
 
   const validSignature =
@@ -68,7 +72,9 @@ export async function validatePatientDocumentFile(
       : hasExpectedSignature(file.buffer, extension);
 
   if (!validSignature) {
-    throw new UnsupportedMediaTypeException('El archivo está dañado o no coincide con su tipo.');
+    throw new UnsupportedMediaTypeException(
+      'El archivo está dañado o no coincide con su tipo.',
+    );
   }
 
   return {

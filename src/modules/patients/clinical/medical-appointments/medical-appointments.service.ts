@@ -97,7 +97,8 @@ export class MedicalAppointmentsService {
 
   async update(id: string, input: UpdateMedicalAppointmentDto) {
     const existing = await this.appointments.findOne({ where: { id } });
-    if (!existing) throw new NotFoundException('No se encontró la cita médica.');
+    if (!existing)
+      throw new NotFoundException('No se encontró la cita médica.');
 
     const appointment = await this.versioning.replaceCurrent(
       PatientMedicalAppointment,

@@ -39,7 +39,7 @@ import { FindFollowUpsQueryDto } from './dto/list-follow-ups.dto';
 import { UpdateFollowUpDto } from './dto/update-follow-up.dto';
 import { FollowUpResponseDto } from './dto/follow-up-response.dto';
 import { CreateFollowUpsBatchDto } from './dto/create-follow-ups-batch.dto';
-import { FollowUpsService } from './follow-ups.service';
+import { FollowUpsService, interlocutorIdOf } from './follow-ups.service';
 import { UserRole } from '../../database/entities/user-role.enum';
 const READ = [
   UserRole.ADMIN,
@@ -256,7 +256,7 @@ export class FollowUpsController {
       id: item.id,
       subjectPatientId: item.subjectPatientId,
       subjectPatientName: item.subjectPatient?.fullName ?? null,
-      interlocutorId: item.interlocutorId,
+      interlocutorId: interlocutorIdOf(item),
       agentId: item.agentId,
       type: item.type,
       status: item.status,

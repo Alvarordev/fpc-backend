@@ -29,6 +29,7 @@ export const COLUMN_HEADERS: Record<string, string> = {
   completed_on: 'Fecha completado',
   notes: 'Notas',
   agent_name: 'Agente',
+  interlocutor_name: 'Con quién se habló',
   diagnosis: 'Diagnóstico',
   cancer_stage: 'Estadio',
   diagnosis_date: 'Fecha de diagnóstico',

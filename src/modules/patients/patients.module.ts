@@ -1,3 +1,4 @@
+import { Companion } from '../../database/entities/companion.entity';
 import { ChangeLog } from '../../database/entities/change-log.entity';
 import { PatientChangeLogController } from './change-log/patient-change-log.controller';
 import { PatientChangeLogService } from './change-log/patient-change-log.service';
@@ -76,6 +77,7 @@ import { PatientHealthSubcategoryService } from './health-subcategory/patient-he
   imports: [
     TypeOrmModule.forFeature([
       ChangeLog,
+      Companion,
       PatientActivityEvent,
       Patient,
       PatientDetails,

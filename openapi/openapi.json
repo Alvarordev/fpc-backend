@@ -3815,7 +3815,8 @@
                 "temporary_housing_type",
                 "alert_category",
                 "alert_derivation_entity",
-                "reenrollment_reason"
+                "reenrollment_reason",
+                "companion_relationship"
               ],
               "type": "string"
             }
@@ -4584,8 +4585,7 @@
               "type": "string",
               "enum": [
                 "UNKNOWN",
-                "PATIENT",
-                "COMPANION"
+                "PATIENT"
               ]
             }
           },
@@ -4733,7 +4733,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PatientResponseDto"
+                  "$ref": "#/components/schemas/CompanionResponseDto"
                 }
               }
             }
@@ -4748,7 +4748,7 @@
             "description": "No se encontró el paciente."
           },
           "409": {
-            "description": "Patient cannot have companions"
+            "description": "Patient cannot have companions, or the companion document already exists"
           }
         },
         "security": [
@@ -4801,6 +4801,134 @@
           }
         ],
         "summary": "List companions linked to a patient",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}/companions/{companionId}/person": {
+      "patch": {
+        "description": "Companions are edited from the record of a patient they accompany; the change applies to every patient they accompany.",
+        "operationId": "PatientsController_updateCompanion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "companionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanionResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Companion not linked to this patient"
+          },
+          "409": {
+            "description": "The companion document already exists"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a companion's personal data",
+        "tags": [
+          "Patients"
+        ]
+      }
+    },
+    "/patients/{id}/companions/{companionId}/convert-to-patient": {
+      "post": {
+        "description": "A1 \"enroll from this contact\": creates an unenrolled patient with the companion data; enroll it afterwards with POST /enrollments. The companion keeps accompanying their patients.",
+        "operationId": "PatientsController_convertCompanion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "companionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Companion not linked to this patient"
+          },
+          "409": {
+            "description": "Already converted, or a patient with this document exists"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register a companion as a patient (prospect)",
         "tags": [
           "Patients"
         ]
@@ -13020,7 +13148,7 @@
           },
           "relationship": {
             "type": "string",
-            "maxLength": 50
+            "maxLength": 100
           }
         },
         "required": [
@@ -15592,7 +15720,8 @@
               "temporary_housing_type",
               "alert_category",
               "alert_derivation_entity",
-              "reenrollment_reason"
+              "reenrollment_reason",
+              "companion_relationship"
             ],
             "type": "string"
           },
@@ -16404,8 +16533,7 @@
           "role": {
             "enum": [
               "UNKNOWN",
-              "PATIENT",
-              "COMPANION"
+              "PATIENT"
             ],
             "type": "string"
           },
@@ -16480,6 +16608,120 @@
           "updatedAt"
         ]
       },
+      "CompanionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "documentType": {
+            "nullable": true,
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
+          },
+          "dni": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "convertedPatientId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid",
+            "description": "Paciente creado desde este contacto"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "hasWhatsapp",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateCompanionDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "primaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "documentType": {
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
+          },
+          "dni": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "birthDate": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "maxLength": 10
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email"
+          }
+        }
+      },
       "LinkCompanionDto": {
         "type": "object",
         "properties": {
@@ -16506,7 +16748,7 @@
           },
           "relationship": {
             "type": "string",
-            "maxLength": 50
+            "maxLength": 100
           }
         },
         "required": [
@@ -16558,7 +16800,7 @@
             "format": "date-time"
           },
           "companion": {
-            "$ref": "#/components/schemas/PatientResponseDto"
+            "$ref": "#/components/schemas/CompanionResponseDto"
           },
           "patient": {
             "$ref": "#/components/schemas/PatientResponseDto"
@@ -16599,7 +16841,7 @@
           },
           "relationship": {
             "type": "string",
-            "maxLength": 50
+            "maxLength": 100
           }
         }
       },
@@ -16733,8 +16975,7 @@
           "role": {
             "enum": [
               "UNKNOWN",
-              "PATIENT",
-              "COMPANION"
+              "PATIENT"
             ],
             "type": "string"
           },
@@ -18406,8 +18647,7 @@
           "role": {
             "enum": [
               "UNKNOWN",
-              "PATIENT",
-              "COMPANION"
+              "PATIENT"
             ],
             "type": "string"
           },

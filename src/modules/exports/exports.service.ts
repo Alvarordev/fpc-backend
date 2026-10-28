@@ -57,11 +57,14 @@ const SHEETS: SheetDefinition[] = [
     name: 'Acompañantes',
     sql: `
       SELECT ${PATIENT_KEY}, c.id AS companion_id, c.full_name AS companion_name,
-        c.dni AS companion_document, c.primary_phone, c.gender, cp.relationship,
+        c.dni AS companion_document, c.primary_phone, c.gender,
+        COALESCE(rel.label, cp.relationship) AS relationship,
         cp.contact_role, cp.is_caregiver, cp.is_primary_contact, cp.created_at
       FROM companion_patient cp
       JOIN patients p ON p.id = cp.patient_id
-      JOIN patients c ON c.id = cp.companion_id
+      JOIN companions c ON c.id = cp.companion_id
+      LEFT JOIN catalog_items rel
+        ON rel.kind = 'companion_relationship' AND rel.code = cp.relationship
       WHERE cp.patient_id = ANY($1::uuid[])
       ORDER BY p.full_name, cp.created_at`,
   },
@@ -76,11 +79,13 @@ const SHEETS: SheetDefinition[] = [
   {
     name: 'Seguimientos',
     sql: `
-      SELECT ${PATIENT_KEY}, f.id, ag.full_name AS agent_name, f.type, f.status,
+      SELECT ${PATIENT_KEY}, f.id, ag.full_name AS agent_name,
+        COALESCE(ic.full_name, 'Paciente') AS interlocutor_name, f.type, f.status,
         f.purpose, f.scheduled_at, f.completed_at, f.notes, f.is_historical, f.created_at
       FROM follow_ups f
       JOIN patients p ON p.id = f.subject_patient_id
       LEFT JOIN agents ag ON ag.id = f.agent_id
+      LEFT JOIN companions ic ON ic.id = f.interlocutor_companion_id
       WHERE f.subject_patient_id = ANY($1::uuid[])
       ORDER BY p.full_name, COALESCE(f.completed_at, f.scheduled_at, f.created_at)`,
   },

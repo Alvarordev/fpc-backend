@@ -1,6 +1,14 @@
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { PatientActivityStatus } from '../../../database/entities/patient-activity-status.enum';
 import { PatientListSegment } from '../../../database/entities/patient-list-segment.enum';
 import { PatientRole } from '../../../database/entities/patient-role.enum';

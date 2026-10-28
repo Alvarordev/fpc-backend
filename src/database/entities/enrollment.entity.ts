@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { FollowUp } from './follow-up.entity';
+import { Companion } from './companion.entity';
 import { Patient } from './patient.entity';
 import { User } from './user.entity';
 
@@ -45,9 +46,9 @@ export class Enrollment {
   affiliationType!: AffiliationType;
   @Column({ name: 'companion_id', type: 'uuid', nullable: true })
   companionId!: string | null;
-  @ManyToOne(() => Patient)
+  @ManyToOne(() => Companion)
   @JoinColumn({ name: 'companion_id' })
-  companion!: Patient | null;
+  companion!: Companion | null;
   @Column({
     name: 'currently_attending_consultations',
     type: 'boolean',

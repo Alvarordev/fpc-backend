@@ -9,6 +9,7 @@ import {
   PrimaryColumn,
   Unique,
 } from 'typeorm';
+import { Companion } from './companion.entity';
 import { Patient } from './patient.entity';
 import { CompanionContactRole } from './companion-contact-role.enum';
 
@@ -27,9 +28,9 @@ import { CompanionContactRole } from './companion-contact-role.enum';
 export class CompanionPatient {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' }) id!: string;
   @Column({ name: 'companion_id', type: 'uuid' }) companionId!: string;
-  @ManyToOne(() => Patient)
+  @ManyToOne(() => Companion, (companion) => companion.links)
   @JoinColumn({ name: 'companion_id' })
-  companion!: Patient;
+  companion!: Companion;
   @Column({ name: 'patient_id', type: 'uuid' }) patientId!: string;
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'patient_id' })
@@ -42,7 +43,13 @@ export class CompanionPatient {
   contactRole!: CompanionContactRole | null;
   @Column({ name: 'is_caregiver', type: 'boolean', default: false })
   isCaregiver!: boolean;
-  @Column({ name: 'relationship', type: 'varchar', length: 50, nullable: true })
+  /** Catálogo companion_relationship. */
+  @Column({
+    name: 'relationship',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   relationship!: string | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

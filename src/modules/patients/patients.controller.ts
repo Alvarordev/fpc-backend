@@ -1,3 +1,4 @@
+import { UpdateCompanionDto } from './dto/update-companion.dto';
 import {
   Body,
   Controller,
@@ -29,14 +30,13 @@ import { CreateCompanionDto } from './dto/create-companion.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { LinkCompanionDto } from './dto/link-companion.dto';
 import { UpdateCompanionLinkDto } from './dto/update-companion-link.dto';
-import {
-  DeactivatePatientDto,
-} from './dto/deactivate-patient.dto';
+import { DeactivatePatientDto } from './dto/deactivate-patient.dto';
 import { ListPatientsDto } from './dto/list-patients.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { UpsertPatientDetailsDto } from './dto/upsert-patient-details.dto';
 import {
   CompanionPatientResponseDto,
+  CompanionResponseDto,
   PatientDetailsResponseDto,
   PatientDetailsWithSummaryResponseDto,
   PatientListResponseDto,
@@ -101,18 +101,70 @@ export class PatientsController {
   @Roles(...PATIENT_WRITE_ROLES)
   @ApiOperation({ summary: 'Create and link a companion to a patient' })
   @ApiParam({ name: 'id', format: 'uuid' })
-  @ApiCreatedResponse({ type: PatientResponseDto })
+  @ApiCreatedResponse({ type: CompanionResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
   @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
-  @ApiConflictResponse({ description: 'Patient cannot have companions' })
+  @ApiConflictResponse({
+    description:
+      'Patient cannot have companions, or the companion document already exists',
+  })
   async createCompanion(
     @Param('id') id: string,
     @Body() input: CreateCompanionDto,
     @CurrentUser() user: User,
+  ): Promise<CompanionResponseDto> {
+    return CompanionResponseDto.from(
+      await this.patientsService.createCompanion(id, input, undefined, user),
+    );
+  }
+
+  @Patch(':id/companions/:companionId/person')
+  @Roles(...PATIENT_WRITE_ROLES)
+  @ApiOperation({
+    summary: "Update a companion's personal data",
+    description:
+      'Companions are edited from the record of a patient they accompany; the change applies to every patient they accompany.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiParam({ name: 'companionId', format: 'uuid' })
+  @ApiOkResponse({ type: CompanionResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Companion not linked to this patient' })
+  @ApiConflictResponse({ description: 'The companion document already exists' })
+  async updateCompanion(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('companionId', ParseUUIDPipe) companionId: string,
+    @Body() input: UpdateCompanionDto,
+  ): Promise<CompanionResponseDto> {
+    return CompanionResponseDto.from(
+      await this.patientsService.updateCompanion(id, companionId, input),
+    );
+  }
+
+  @Post(':id/companions/:companionId/convert-to-patient')
+  @Roles(...PATIENT_WRITE_ROLES)
+  @ApiOperation({
+    summary: 'Register a companion as a patient (prospect)',
+    description:
+      'A1 "enroll from this contact": creates an unenrolled patient with the companion data; enroll it afterwards with POST /enrollments. The companion keeps accompanying their patients.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiParam({ name: 'companionId', format: 'uuid' })
+  @ApiCreatedResponse({ type: PatientResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Companion not linked to this patient' })
+  @ApiConflictResponse({
+    description: 'Already converted, or a patient with this document exists',
+  })
+  async convertCompanion(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('companionId', ParseUUIDPipe) companionId: string,
   ): Promise<PatientResponseDto> {
     return PatientResponseDto.from(
-      await this.patientsService.createCompanion(id, input, undefined, user),
+      await this.patientsService.convertCompanionToPatient(id, companionId),
     );
   }
 

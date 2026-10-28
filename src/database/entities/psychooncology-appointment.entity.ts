@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { FollowUp } from './follow-up.entity';
+import { Companion } from './companion.entity';
 import { Patient } from './patient.entity';
 import { VolunteerAvailability } from './volunteer-availability.entity';
 import { Volunteer } from './volunteer.entity';
@@ -91,9 +92,9 @@ export class PsychooncologyAppointment {
   beneficiaryType!: AppointmentBeneficiaryType;
   @Column({ name: 'companion_id', type: 'uuid', nullable: true })
   companionId!: string | null;
-  @ManyToOne(() => Patient)
+  @ManyToOne(() => Companion)
   @JoinColumn({ name: 'companion_id' })
-  companion!: Patient | null;
+  companion!: Companion | null;
   @Column({ name: 'volunteer_id', type: 'uuid' }) volunteerId!: string;
   @ManyToOne(() => Volunteer)
   @JoinColumn({ name: 'volunteer_id' })

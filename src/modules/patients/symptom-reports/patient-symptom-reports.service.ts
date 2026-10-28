@@ -71,7 +71,10 @@ export class PatientSymptomReportsService {
       input.enrollmentId ?? null,
       normalized,
       manager,
-      { skipAppointment: options.skipAppointmentFanOut, historical: options.historical },
+      {
+        skipAppointment: options.skipAppointmentFanOut,
+        historical: options.historical,
+      },
     );
     const persistable = this.ownership.stripOwnershipFields(normalized);
     const symptom = await repository.save(
@@ -118,9 +121,7 @@ export class PatientSymptomReportsService {
       normalized.indicationsReceived = undefined;
     } else if (input.hasRequestedMedicalConsultation === true) {
       if (!input.consultationStatus)
-        throw new BadRequestException(
-          'Indica el estado de la consulta.',
-        );
+        throw new BadRequestException('Indica el estado de la consulta.');
       if (input.consultationStatus === MedicalConsultationStatus.NOT_OBTAINED) {
         if (!present(input.consultationNotObtainedReason))
           throw new BadRequestException(
@@ -165,14 +166,15 @@ export class PatientSymptomReportsService {
         throw new BadRequestException(
           'Indica la fecha de la primera consulta.',
         );
-      if (input.nextConsultationDate && !present(input.nextConsultationSpecialty))
+      if (
+        input.nextConsultationDate &&
+        !present(input.nextConsultationSpecialty)
+      )
         throw new BadRequestException(
           'Indica la especialidad de la próxima consulta.',
         );
       if (input.hasReferral === undefined)
-        throw new BadRequestException(
-          'Indica si hubo referencia.',
-        );
+        throw new BadRequestException('Indica si hubo referencia.');
       if (input.hasReferral === true && !input.referredHealthCenterId)
         throw new BadRequestException(
           'Selecciona el establecimiento de referencia.',
@@ -181,17 +183,13 @@ export class PatientSymptomReportsService {
         input.hasReferral === false &&
         !present(input.referralNotProvidedReason)
       )
-        throw new BadRequestException(
-          'Indica por qué no hubo referencia.',
-        );
+        throw new BadRequestException('Indica por qué no hubo referencia.');
       if (input.hasReferral !== true)
         normalized.referredHealthCenterId = undefined;
       if (input.hasReferral !== false)
         normalized.referralNotProvidedReason = undefined;
       if (typeof input.hasReceivedDiagnosis !== 'boolean')
-        throw new BadRequestException(
-          'Indica si recibió un diagnóstico.',
-        );
+        throw new BadRequestException('Indica si recibió un diagnóstico.');
     } else if (
       (input.hasReferral !== undefined && input.hasReferral !== null) ||
       (input.firstConsultationDate !== undefined &&
@@ -208,9 +206,7 @@ export class PatientSymptomReportsService {
       input.hasReceivedDiagnosis === true &&
       !present(input.reportedDiagnosis)
     )
-      throw new BadRequestException(
-        'Indica el diagnóstico recibido.',
-      );
+      throw new BadRequestException('Indica el diagnóstico recibido.');
     if (input.hasReceivedDiagnosis === false)
       normalized.reportedDiagnosis = undefined;
 
@@ -223,15 +219,11 @@ export class PatientSymptomReportsService {
         !present(input.reportedTreatment) ||
         !input.reportedTreatmentFrequency
       )
-        throw new BadRequestException(
-          'Indica el tratamiento y su frecuencia.',
-        );
+        throw new BadRequestException('Indica el tratamiento y su frecuencia.');
       normalized.notReceivingTreatmentReason = undefined;
     } else if (input.isReceivingReportedTreatment === false) {
       if (!present(input.notReceivingTreatmentReason))
-        throw new BadRequestException(
-          'Indica por qué no recibe tratamiento.',
-        );
+        throw new BadRequestException('Indica por qué no recibe tratamiento.');
       normalized.reportedTreatment = undefined;
       normalized.reportedTreatmentFrequency = undefined;
     }

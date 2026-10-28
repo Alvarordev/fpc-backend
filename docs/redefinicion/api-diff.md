@@ -49,6 +49,9 @@ Generado desde openapi/openapi.json. Fuente de verdad para adaptar el front.
 - POST /follow-ups/{id}/reenrollment
 - GET /follow-ups/{id}/reenrollment
 
+- PATCH /patients/{id}/companions/{companionId}/person
+- POST /patients/{id}/companions/{companionId}/convert-to-patient
+
 ## Endpoints eliminados
 - PATCH /patients/{id}/reactivate (se reactiva solo con POST /follow-ups/{id}/reenrollment)
 
@@ -101,6 +104,8 @@ Generado desde openapi/openapi.json. Fuente de verdad para adaptar el front.
 - UpsertPatientDetailsDto: +[] -['programDropoutDate', 'programDropoutReason', 'programDropoutReasonCode']
 - VolunteerAvailabilityResponseDto: +['recurrenceId'] -[]
 - VolunteerCalendarAppointmentDto: +[] -[] enum cambiado en ['status']
+
+- POST /patients/{id}/companions devuelve CompanionResponseDto (antes PatientResponseDto); CompanionPatientResponseDto.companion es CompanionResponseDto. PatientRole ya no tiene COMPANION. relationship es un código del catálogo companion_relationship.
 
 ## Schemas nuevos
 - AlertAffectedPatientDto

@@ -65,13 +65,19 @@ export class PatientTreatmentsService {
           subjectPatientId: patientId,
         }),
       ]);
-      if (!diagnosis) throw new NotFoundException('No se encontró el diagnóstico.');
+      if (!diagnosis)
+        throw new NotFoundException('No se encontró el diagnóstico.');
       if (diagnosis.patientId !== patientId)
-        throw new ConflictException('El diagnóstico no pertenece a este paciente.');
-      if (!followUp) throw new NotFoundException('No se encontró el seguimiento.');
+        throw new ConflictException(
+          'El diagnóstico no pertenece a este paciente.',
+        );
+      if (!followUp)
+        throw new NotFoundException('No se encontró el seguimiento.');
 
       if (input.startDate && input.endDate && input.endDate < input.startDate)
-        throw new BadRequestException('La fecha de fin no puede ser anterior a la de inicio.');
+        throw new BadRequestException(
+          'La fecha de fin no puede ser anterior a la de inicio.',
+        );
 
       let previousTreatment: PatientTreatment | null = null;
       let seriesId = input.seriesId;
@@ -120,10 +126,16 @@ export class PatientTreatmentsService {
           .getRepository(HealthCenter)
           .find({ where: { id: In(healthCenterIds), isActive: true } });
         if (activeHealthCenters.length !== new Set(healthCenterIds).size)
-          throw new NotFoundException('El establecimiento no existe o está inactivo.');
+          throw new NotFoundException(
+            'El establecimiento no existe o está inactivo.',
+          );
       }
 
-      const { medications: medicationInputs, treatmentTypeOther, ...rest } = input;
+      const {
+        medications: medicationInputs,
+        treatmentTypeOther,
+        ...rest
+      } = input;
       const resolvedType = await this.catalogValues.resolve(
         'treatment_type',
         input.treatmentType,

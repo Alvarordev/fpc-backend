@@ -16,7 +16,7 @@ import { PatientRole } from './patient-role.enum';
 import { PatientStatus } from './patient-status.enum';
 
 @Entity('patients')
-@Check("\"role\" IN ('UNKNOWN', 'PATIENT', 'COMPANION')")
+@Check("\"role\" IN ('UNKNOWN', 'PATIENT')")
 @Check("\"status\" IN ('UNENROLLED', 'ENROLLED')")
 @Check(
   'CHK_patients_activity_status',

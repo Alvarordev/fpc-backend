@@ -10,9 +10,7 @@ export interface ReferralFields {
 export function normalizeReferralFields<T extends ReferralFields>(input: T): T {
   if (input.hasReferralSheet === true) {
     if (!input.referredTo?.trim() && !input.referredHealthCenterId)
-      throw new BadRequestException(
-        'Indica a dónde fue referido.',
-      );
+      throw new BadRequestException('Indica a dónde fue referido.');
     return { ...input, referralNotProvidedReason: null };
   }
   if (input.hasReferralSheet === false) {
