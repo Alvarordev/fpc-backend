@@ -12,11 +12,13 @@ import { PatientsModule } from '../patients/patients.module';
 import { AssistantToolsService } from './assistant-tools.service';
 import { AssistantController } from './assistant.controller';
 import { AssistantService } from './assistant.service';
+import { KnowledgeModule } from '../knowledge/knowledge.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AssistantConversation, AssistantMessage]),
     ThrottlerModule,
+    KnowledgeModule,
     DashboardModule,
     PatientsModule,
     AlertsModule,

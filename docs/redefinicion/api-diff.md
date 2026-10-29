@@ -154,3 +154,13 @@ Generado desde openapi/openapi.json. Fuente de verdad para adaptar el front.
 - SurveyScriptResponseDto
 - UnmanagedNoShowsResponseDto
 - UpdateReferralDto
+
+
+## Biblioteca y modo documental (2026-10-29)
+
+- `POST /assistant/messages` acepta `mode: DATA | DOCUMENTS` (por defecto DATA).
+- `GET /assistant/conversations` acepta filtro `mode`; las conversaciones devuelven su modo.
+- Los mensajes agregan `citations` y `unanswered`. Cada cita incluye número, ID, título, versión, nombre de archivo, extracto y página opcional.
+- AGENT accede únicamente al modo DOCUMENTS, también protegido al leer/eliminar conversaciones.
+- Nuevos endpoints `/knowledge/status` y `/knowledge/documents`, publicación, retirada, reintento, eliminación y descarga del original. Gestión ADMIN/FOUNDATION; consulta/descarga publicada también AGENT.
+- Referencia completa y configuración en `asistente-documental.md`.

@@ -23,6 +23,16 @@ export type AssistantToolCall = {
   durationMs: number;
 };
 
+export type AssistantDocumentCitation = {
+  number: number;
+  documentId: string;
+  title: string;
+  version: string;
+  originalName: string;
+  page: number | null;
+  excerpt: string;
+};
+
 @Entity('assistant_messages')
 @Index('IDX_assistant_messages_conversation_id', ['conversationId'])
 export class AssistantMessage {
@@ -47,6 +57,12 @@ export class AssistantMessage {
 
   @Column({ name: 'tool_calls', type: 'jsonb', default: () => `'[]'::jsonb` })
   toolCalls!: AssistantToolCall[];
+
+  @Column({ type: 'jsonb', default: () => `'[]'::jsonb` })
+  citations!: AssistantDocumentCitation[];
+
+  @Column({ type: 'boolean', default: false })
+  unanswered!: boolean;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   model!: string | null;

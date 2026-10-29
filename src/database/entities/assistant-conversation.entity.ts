@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { AssistantMessage } from './assistant-message.entity';
+import { AssistantMode } from './assistant-mode.enum';
 
 /** Seudónimo (IA4) → paciente real. Solo vive en la base, nunca va al modelo. */
 export type AssistantPseudonyms = Record<
@@ -34,6 +35,9 @@ export class AssistantConversation {
 
   @Column({ type: 'varchar', length: 200 })
   title!: string;
+
+  @Column({ type: 'varchar', length: 20, default: AssistantMode.DATA })
+  mode!: AssistantMode;
 
   @Column({ type: 'jsonb', default: () => `'{}'::jsonb` })
   pseudonyms!: AssistantPseudonyms;

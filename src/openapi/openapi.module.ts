@@ -12,6 +12,8 @@ import { CallCenterService } from '../modules/call-center/call-center.service';
 import { DashboardController } from '../modules/dashboard/dashboard.controller';
 import { DashboardIndicatorsService } from '../modules/dashboard/dashboard-indicators.service';
 import { DashboardService } from '../modules/dashboard/dashboard.service';
+import { KnowledgeController } from '../modules/knowledge/knowledge.controller';
+import { KnowledgeService } from '../modules/knowledge/knowledge.service';
 import { AssistantController } from '../modules/assistant/assistant.controller';
 import { AssistantService } from '../modules/assistant/assistant.service';
 import { AssistantToolsService } from '../modules/assistant/assistant-tools.service';
@@ -138,6 +140,7 @@ import { SurveysService } from '../modules/surveys/surveys.service';
     ReferralsController,
     SurveysController,
     AssistantController,
+    KnowledgeController,
     ReenrollmentsController,
   ],
   providers: [
@@ -151,6 +154,7 @@ import { SurveysService } from '../modules/surveys/surveys.service';
     { provide: AuthService, useValue: {} },
     { provide: PasswordResetService, useValue: {} },
     { provide: AssistantService, useValue: {} },
+    { provide: KnowledgeService, useValue: {} },
     { provide: ReenrollmentsService, useValue: {} },
     { provide: TalkInterestsService, useValue: {} },
     { provide: AssistantToolsService, useValue: {} },

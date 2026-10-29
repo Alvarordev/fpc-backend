@@ -23,7 +23,7 @@ export const envValidationSchema = Joi.object({
     otherwise: Joi.boolean().default(true),
   }),
   CORS_ORIGIN: Joi.string()
-    .custom((value, helpers) => {
+    .custom((value: unknown, helpers) => {
       const origins = String(value)
         .split(',')
         .map((origin) => origin.trim())
@@ -49,6 +49,9 @@ export const envValidationSchema = Joi.object({
   GEMINI_ASSISTANT_MODELS: Joi.string()
     .trim()
     .default('gemini-3-flash-preview,gemini-2.5-flash'),
+  GEMINI_KNOWLEDGE_MODELS: Joi.string()
+    .trim()
+    .default('gemini-3-flash-preview,gemini-2.5-flash-lite'),
   PATIENT_SUMMARY_RATE_LIMIT: Joi.number().integer().min(1).default(10),
   PATIENT_SUMMARY_RATE_LIMIT_WINDOW_SECONDS: Joi.number()
     .integer()

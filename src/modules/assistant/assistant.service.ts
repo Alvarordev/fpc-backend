@@ -1,4 +1,6 @@
 import {
+  BadRequestException,
+  ForbiddenException,
   HttpException,
   Injectable,
   Logger,
@@ -14,6 +16,9 @@ import {
   AssistantToolCall,
 } from '../../database/entities/assistant-message.entity';
 import { User } from '../../database/entities/user.entity';
+import { UserRole } from '../../database/entities/user-role.enum';
+import { AssistantMode } from '../../database/entities/assistant-mode.enum';
+import { KnowledgeAnswerService } from '../knowledge/knowledge-answer.service';
 import { GeminiAssistantClient } from '../../integrations/gemini/gemini-assistant.client';
 import { AssistantPseudonymizer } from './assistant-pseudonyms';
 import {
@@ -53,11 +58,15 @@ export class AssistantService {
     private readonly messages: Repository<AssistantMessage>,
     private readonly tools: AssistantToolsService,
     private readonly model: GeminiAssistantClient,
+    private readonly knowledge: KnowledgeAnswerService,
   ) {}
 
-  listConversations(user: User) {
+  listConversations(user: User, mode = AssistantMode.DATA) {
     return this.conversations.find({
-      where: { userId: user.id },
+      where: {
+        userId: user.id,
+        mode: user.role === UserRole.AGENT ? AssistantMode.DOCUMENTS : mode,
+      },
       order: { updatedAt: 'DESC' },
       take: 50,
     });
@@ -71,26 +80,49 @@ export class AssistantService {
     });
     if (!conversation)
       throw new NotFoundException('No se encontró la conversación.');
+    this.assertModeAccess(user, conversation.mode);
     return conversation;
   }
 
   async deleteConversation(id: string, user: User) {
+    await this.getConversation(id, user);
     const result = await this.conversations.delete({ id, userId: user.id });
     if (!result.affected)
       throw new NotFoundException('No se encontró la conversación.');
   }
 
-  async ask(user: User, question: string, conversationId?: string) {
+  private assertModeAccess(user: User, mode: AssistantMode) {
+    if (
+      mode === AssistantMode.DATA &&
+      ![UserRole.ADMIN, UserRole.FOUNDATION].includes(user.role)
+    )
+      throw new ForbiddenException(
+        'Tu rol solo puede consultar documentos del programa.',
+      );
+  }
+
+  async ask(
+    user: User,
+    question: string,
+    conversationId?: string,
+    mode = AssistantMode.DATA,
+  ) {
+    this.assertModeAccess(user, mode);
     const conversation = conversationId
       ? await this.getConversation(conversationId, user)
       : await this.conversations.save(
           this.conversations.create({
             userId: user.id,
+            mode,
             title: question.trim().slice(0, 200),
             pseudonyms: {},
             messages: [],
           }),
         );
+    if (conversation.mode !== mode)
+      throw new BadRequestException(
+        'Empieza una conversación nueva para cambiar el modo de consulta.',
+      );
     const history = (conversation.messages ?? [])
       .filter((message) => !message.error)
       .slice(-HISTORY_MESSAGES);
@@ -102,6 +134,43 @@ export class AssistantService {
         toolCalls: [],
       }),
     );
+
+    if (mode === AssistantMode.DOCUMENTS) {
+      let result: Awaited<ReturnType<KnowledgeAnswerService['answer']>>;
+      let error: string | null = null;
+      try {
+        result = await this.knowledge.answer(
+          question,
+          history
+            .filter((message) => message.role === AssistantMessageRole.USER)
+            .map((message) => message.content),
+        );
+      } catch {
+        error =
+          'No se pudo consultar la biblioteca en este momento. Intenta de nuevo.';
+        result = {
+          content: error,
+          citations: [],
+          unanswered: false,
+          model: null,
+          inputTokens: null,
+          outputTokens: null,
+        };
+      }
+      await this.conversations.update(conversation.id, {
+        updatedAt: new Date(),
+      });
+      const assistantMessage = await this.messages.save(
+        this.messages.create({
+          conversationId: conversation.id,
+          role: AssistantMessageRole.ASSISTANT,
+          ...result,
+          toolCalls: [],
+          error,
+        }),
+      );
+      return { conversation, userMessage, assistantMessage };
+    }
 
     const pseudonyms = new AssistantPseudonymizer(conversation.pseudonyms);
     const contents: Content[] = [

@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -30,6 +31,7 @@ import { AssistantToolsService } from './assistant-tools.service';
 import { AssistantService } from './assistant.service';
 import {
   AskAssistantDto,
+  AssistantConversationQueryDto,
   AskAssistantResponseDto,
   AssistantConversationResponseDto,
   AssistantConversationSummaryDto,
@@ -40,7 +42,7 @@ import {
 @Controller('assistant')
 @ApiTags('assistant')
 @ApiBearerAuth()
-@Roles(UserRole.ADMIN, UserRole.FOUNDATION)
+@Roles(UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT)
 @ApiUnauthorizedResponse()
 @ApiForbiddenResponse({
   description: 'Administrator or foundation role required',
@@ -70,7 +72,12 @@ export class AssistantController {
     @CurrentUser() user: User,
   ): Promise<AskAssistantResponseDto> {
     const { conversation, userMessage, assistantMessage } =
-      await this.service.ask(user, input.message, input.conversationId);
+      await this.service.ask(
+        user,
+        input.message,
+        input.conversationId,
+        input.mode,
+      );
     const pseudonyms = new AssistantPseudonymizer(conversation.pseudonyms);
     return {
       conversationId: conversation.id,
@@ -84,9 +91,10 @@ export class AssistantController {
   @ApiOkResponse({ type: AssistantConversationSummaryDto, isArray: true })
   async list(
     @CurrentUser() user: User,
+    @Query() query: AssistantConversationQueryDto,
   ): Promise<AssistantConversationSummaryDto[]> {
-    return (await this.service.listConversations(user)).map((conversation) =>
-      AssistantConversationSummaryDto.from(conversation),
+    return (await this.service.listConversations(user, query.mode)).map(
+      (conversation) => AssistantConversationSummaryDto.from(conversation),
     );
   }
 

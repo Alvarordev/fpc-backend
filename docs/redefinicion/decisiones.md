@@ -237,7 +237,15 @@ extraer del código y validar.
   con sus argumentos y resultado, modelo y tokens. La respuesta trae `sources` para citarlas.
 - Modelos: `GEMINI_ASSISTANT_MODELS` (lista en orden; default
   `gemini-3-flash-preview,gemini-2.5-flash`). Ante 429/5xx reintenta y pasa al siguiente.
-- Pendiente: pantalla en el front; respuesta en streaming si la latencia molesta.
+- Front implementado: panel global con modos Datos del CRM y Documentos. Streaming queda pendiente.
+
+### Implementado: consulta documental (IA3, IA6, IA7) — 2026-10-29
+
+- Modo `DOCUMENTS` en el mismo asistente, disponible para agentes, administración y fundación.
+- Biblioteca de PDF y Word `.docx`, administrada por ADMIN/FOUNDATION, con borradores, preparación, publicación, retirada y eliminación.
+- File Search de Gemini con filtros de documentos publicados, citas verificadas por metadatos, extractos y página cuando existe. Sin herramientas de datos del CRM en este modo.
+- Registro de preguntas sin respaldo y conservación de citas históricas. La ficha del paciente no se incorpora automáticamente.
+- Detalles, endpoints y despliegue en `asistente-documental.md`.
 
 ## 17. Hallazgos del código (para la auditoría)
 

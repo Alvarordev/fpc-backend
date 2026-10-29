@@ -11014,7 +11014,21 @@
     "/assistant/conversations": {
       "get": {
         "operationId": "AssistantController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "mode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "DATA",
+              "type": "string",
+              "enum": [
+                "DATA",
+                "DOCUMENTS"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -11125,6 +11139,325 @@
         "summary": "Delete an assistant conversation",
         "tags": [
           "assistant"
+        ]
+      }
+    },
+    "/knowledge/status": {
+      "get": {
+        "operationId": "KnowledgeController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeLibraryStatusDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/knowledge/documents": {
+      "get": {
+        "operationId": "KnowledgeController_list",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "PUBLISHED",
+                "ARCHIVED"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeDocumentListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "knowledge"
+        ]
+      },
+      "post": {
+        "operationId": "KnowledgeController_upload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file",
+                  "title"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "version": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "default": "1"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeDocumentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload a draft knowledge document; indexing runs in the background",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/knowledge/documents/{id}/publish": {
+      "post": {
+        "operationId": "KnowledgeController_publish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeDocumentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/knowledge/documents/{id}/archive": {
+      "post": {
+        "operationId": "KnowledgeController_archive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeDocumentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/knowledge/documents/{id}/retry": {
+      "post": {
+        "operationId": "KnowledgeController_retry",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeDocumentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/knowledge/documents/{id}": {
+      "delete": {
+        "operationId": "KnowledgeController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/knowledge/documents/{id}/content": {
+      "get": {
+        "operationId": "KnowledgeController_content",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "knowledge"
         ]
       }
     },
@@ -24597,6 +24930,14 @@
       "AskAssistantDto": {
         "type": "object",
         "properties": {
+          "mode": {
+            "default": "DATA",
+            "enum": [
+              "DATA",
+              "DOCUMENTS"
+            ],
+            "type": "string"
+          },
           "message": {
             "type": "string",
             "maxLength": 2000,
@@ -24661,6 +25002,43 @@
           "name"
         ]
       },
+      "AssistantDocumentCitationDto": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "number"
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "originalName": {
+            "type": "string"
+          },
+          "page": {
+            "type": "number",
+            "nullable": true
+          },
+          "excerpt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "documentId",
+          "title",
+          "version",
+          "originalName",
+          "page",
+          "excerpt"
+        ]
+      },
       "AssistantMessageResponseDto": {
         "type": "object",
         "properties": {
@@ -24691,6 +25069,15 @@
               "$ref": "#/components/schemas/AssistantPatientMentionDto"
             }
           },
+          "citations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantDocumentCitationDto"
+            }
+          },
+          "unanswered": {
+            "type": "boolean"
+          },
           "isError": {
             "type": "boolean"
           },
@@ -24705,6 +25092,8 @@
           "content",
           "sources",
           "patients",
+          "citations",
+          "unanswered",
           "isError",
           "createdAt"
         ]
@@ -24732,6 +25121,13 @@
       "AssistantConversationSummaryDto": {
         "type": "object",
         "properties": {
+          "mode": {
+            "enum": [
+              "DATA",
+              "DOCUMENTS"
+            ],
+            "type": "string"
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -24749,6 +25145,7 @@
           }
         },
         "required": [
+          "mode",
           "id",
           "title",
           "createdAt",
@@ -24758,6 +25155,13 @@
       "AssistantConversationResponseDto": {
         "type": "object",
         "properties": {
+          "mode": {
+            "enum": [
+              "DATA",
+              "DOCUMENTS"
+            ],
+            "type": "string"
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -24781,11 +25185,113 @@
           }
         },
         "required": [
+          "mode",
           "id",
           "title",
           "createdAt",
           "updatedAt",
           "messages"
+        ]
+      },
+      "KnowledgeLibraryStatusDto": {
+        "type": "object",
+        "properties": {
+          "publishedCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "publishedCount"
+        ]
+      },
+      "KnowledgeDocumentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "originalName": {
+            "type": "string"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          },
+          "status": {
+            "enum": [
+              "DRAFT",
+              "PUBLISHED",
+              "ARCHIVED"
+            ],
+            "type": "string"
+          },
+          "indexStatus": {
+            "enum": [
+              "PENDING",
+              "PROCESSING",
+              "READY",
+              "FAILED"
+            ],
+            "type": "string"
+          },
+          "indexError": {
+            "type": "string",
+            "nullable": true
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "version",
+          "originalName",
+          "mediaType",
+          "size",
+          "status",
+          "indexStatus",
+          "indexError",
+          "publishedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "KnowledgeDocumentListDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeDocumentResponseDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "total"
         ]
       },
       "CreateReenrollmentDto": {
