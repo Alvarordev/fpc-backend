@@ -10,7 +10,11 @@ permissions:
   packages: write
 
 jobs:
+  narrative-text:
+    uses: ./.github/workflows/narrative-text.yml
+
   build-and-deploy:
+    needs: narrative-text
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository

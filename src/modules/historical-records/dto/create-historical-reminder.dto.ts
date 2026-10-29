@@ -1,21 +1,17 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-  IsBoolean,
   IsDateString,
   IsEnum,
   IsOptional,
   IsString,
   IsUUID,
   Matches,
-  MaxLength,
   ValidateNested,
 } from 'class-validator';
-import { MedicalAppointmentStatus } from '../../../database/entities/medical-appointment-status.enum';
 import { ReminderKind } from '../../../database/entities/reminder-kind.enum';
 import { ReminderStatus } from '../../../database/entities/reminder-status.enum';
 import { DATE_ONLY_PATTERN } from '../../../shared/date-only/date-only.util';
-import { APPOINTMENT_TIME_PATTERN } from '../../patients/clinical/medical-appointments/dto/appointment-time';
 import { CreateHistoricalMedicalAppointmentDto } from './create-historical-medical-appointment.dto';
 
 /** Nested appointment payload when creating a MEDICAL_APPOINTMENT reminder historically. */
@@ -57,7 +53,6 @@ export class CreateHistoricalReminderDto {
 
   @ApiProperty()
   @IsString()
-  @MaxLength(2000)
   description!: string;
 
   @ApiPropertyOptional({ enum: ReminderKind })
@@ -103,7 +98,6 @@ export class UpdateHistoricalReminderDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @MaxLength(2000)
   description?: string;
 
   @ApiPropertyOptional({ enum: ReminderStatus })

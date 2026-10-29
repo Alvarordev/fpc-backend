@@ -40,7 +40,6 @@ export class CreateVolunteerDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @MaxLength(5000)
   additionalComments?: string;
 
   @ApiPropertyOptional()

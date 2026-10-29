@@ -1,12 +1,6 @@
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUUID,
-  MaxLength,
-} from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { PatientDocumentType } from '../../../../database/entities/patient-document.entity';
 
 function emptyStringToUndefined({ value }: { value: unknown }): unknown {
@@ -30,10 +24,9 @@ export class CreatePatientDocumentDto {
   @IsUUID()
   treatmentId?: string;
 
-  @ApiPropertyOptional({ maxLength: 1000 })
+  @ApiPropertyOptional({})
   @Transform(emptyStringToUndefined)
   @IsOptional()
   @IsString()
-  @MaxLength(1000)
   description?: string;
 }

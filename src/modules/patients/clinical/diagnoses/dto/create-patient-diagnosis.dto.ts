@@ -68,7 +68,6 @@ export class CreatePatientDiagnosisDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @MaxLength(2000)
   diseaseEvolution?: string;
   @ApiPropertyOptional({ nullable: true, type: DurationDto })
   @ValidateIf((_, value: unknown) => value != null)

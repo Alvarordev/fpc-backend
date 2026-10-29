@@ -37,7 +37,7 @@ export class AlertEvent {
   agent!: Agent | null;
   @Column({ name: 'event_type', type: 'varchar', length: 50 })
   eventType!: AlertEventType;
-  @Column({ type: 'varchar', length: 255 }) title!: string;
+  @Column({ type: 'text' }) title!: string;
   @Column({ type: 'text', nullable: true }) description!: string | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

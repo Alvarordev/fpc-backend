@@ -5858,8 +5858,7 @@
                     "format": "uuid"
                   },
                   "description": {
-                    "type": "string",
-                    "maxLength": 1000
+                    "type": "string"
                   }
                 }
               }
@@ -9952,8 +9951,7 @@
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
           "diseaseEvolution": {
-            "type": "string",
-            "maxLength": 2000
+            "type": "string"
           },
           "waitTimeForDiagnosis": {
             "nullable": true,
@@ -10008,8 +10006,7 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "doseAmount": {
             "type": "number",
@@ -10348,8 +10345,7 @@
             "type": "string"
           },
           "shelterName": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "averageLodgingCost": {
             "type": "number",
@@ -10575,12 +10571,10 @@
         "type": "object",
         "properties": {
           "relationship": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "cancerType": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           }
         },
         "required": [
@@ -10702,8 +10696,7 @@
         "type": "object",
         "properties": {
           "talkName": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "familyMemberName": {
             "type": "string",
@@ -10736,12 +10729,10 @@
           },
           "notAttendingConsultationsNote": {
             "type": "string",
-            "maxLength": 2000,
             "nullable": true
           },
           "notReceivingTreatmentReason": {
             "type": "string",
-            "maxLength": 2000,
             "nullable": true
           },
           "patientId": {
@@ -14963,8 +14954,7 @@
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
           "diseaseEvolution": {
-            "type": "string",
-            "maxLength": 2000
+            "type": "string"
           },
           "waitTimeForDiagnosis": {
             "nullable": true,
@@ -15072,8 +15062,7 @@
           },
           "diseaseEvolution": {
             "type": "string",
-            "nullable": true,
-            "maxLength": 2000
+            "nullable": true
           },
           "waitTimeForDiagnosis": {
             "nullable": true,
@@ -15472,8 +15461,7 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "doseAmount": {
             "type": "number",
@@ -15616,8 +15604,7 @@
             "type": "string"
           },
           "shelterName": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "averageLodgingCost": {
             "type": "number",
@@ -15868,8 +15855,7 @@
             "type": "string"
           },
           "shelterName": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "averageLodgingCost": {
             "type": "number",
@@ -16277,8 +16263,7 @@
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
           "diseaseEvolution": {
-            "type": "string",
-            "maxLength": 2000
+            "type": "string"
           },
           "waitTimeForDiagnosis": {
             "nullable": true,
@@ -17077,8 +17062,7 @@
             "type": "boolean"
           },
           "additionalComments": {
-            "type": "string",
-            "maxLength": 5000
+            "type": "string"
           },
           "completedSustainabilityModule": {
             "type": "boolean"
@@ -17251,8 +17235,7 @@
           },
           "additionalComments": {
             "type": "string",
-            "nullable": true,
-            "maxLength": 5000
+            "nullable": true
           },
           "completedSustainabilityModule": {
             "type": "boolean"
@@ -17516,12 +17499,10 @@
           },
           "notAttendingConsultationsNote": {
             "type": "string",
-            "maxLength": 2000,
             "nullable": true
           },
           "notReceivingTreatmentReason": {
             "type": "string",
-            "maxLength": 2000,
             "nullable": true
           },
           "patientId": {
@@ -18041,8 +18022,7 @@
             "description": "Legacy snapshot. Prefer patient_symptom_reports when a symptom report exists."
           },
           "diseaseEvolution": {
-            "type": "string",
-            "maxLength": 2000
+            "type": "string"
           },
           "waitTimeForDiagnosis": {
             "nullable": true,
@@ -18577,8 +18557,7 @@
             "type": "string"
           },
           "shelterName": {
-            "type": "string",
-            "maxLength": 255
+            "type": "string"
           },
           "averageLodgingCost": {
             "type": "number",
@@ -18833,8 +18812,7 @@
             "format": "uuid"
           },
           "description": {
-            "type": "string",
-            "maxLength": 2000
+            "type": "string"
           },
           "kind": {
             "enum": [
@@ -18884,8 +18862,7 @@
             "format": "date"
           },
           "description": {
-            "type": "string",
-            "maxLength": 2000
+            "type": "string"
           },
           "status": {
             "enum": [

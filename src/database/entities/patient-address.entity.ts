@@ -75,12 +75,7 @@ export class PatientAddress {
   housingType!: string | null;
   @Column({ name: 'housing_type_other', type: 'text', nullable: true })
   housingTypeOther!: string | null;
-  @Column({
-    name: 'shelter_name',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
+  @Column({ name: 'shelter_name', type: 'text', nullable: true })
   shelterName!: string | null;
   @Column(() => Duration, { prefix: 'travel_time_to_hospital' })
   travelTimeToHospital!: Duration;

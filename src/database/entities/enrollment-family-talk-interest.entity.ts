@@ -17,7 +17,7 @@ export class EnrollmentFamilyTalkInterest {
   @ManyToOne(() => Enrollment, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'enrollment_id' })
   enrollment!: Enrollment;
-  @Column({ name: 'talk_name', type: 'varchar', length: 255 })
+  @Column({ name: 'talk_name', type: 'text' })
   talkName!: string;
   @Column({ name: 'family_member_name', type: 'varchar', length: 255 })
   familyMemberName!: string;

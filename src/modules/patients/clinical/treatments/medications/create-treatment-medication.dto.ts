@@ -7,7 +7,6 @@ import {
   IsString,
   IsUUID,
   Min,
-  MaxLength,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -16,7 +15,7 @@ import { MedicationRoute } from '../../../../../database/entities/medication-rou
 import { DurationDto } from '../../../../../shared/duration/duration.dto';
 
 export class CreateTreatmentMedicationDto {
-  @IsString() @MaxLength(255) name!: string;
+  @IsString() name!: string;
   @IsOptional() @IsNumber() @Min(0) doseAmount?: number;
   @IsOptional() @IsIn(Object.values(DoseUnit)) doseUnit?: DoseUnit;
   @IsOptional() @IsString() doseDescription?: string;

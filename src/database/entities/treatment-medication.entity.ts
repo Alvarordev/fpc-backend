@@ -40,7 +40,7 @@ export class TreatmentMedication {
   @ManyToOne(() => FollowUp)
   @JoinColumn({ name: 'follow_up_id' })
   followUp!: FollowUp | null;
-  @Column({ type: 'varchar', length: 255 }) name!: string;
+  @Column({ type: 'text' }) name!: string;
   @Column({
     name: 'dose_amount',
     type: 'numeric',
