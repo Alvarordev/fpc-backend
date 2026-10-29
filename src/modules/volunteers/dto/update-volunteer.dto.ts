@@ -17,7 +17,7 @@ export class UpdateVolunteerDto {
   @IsOptional() @IsDateString() commitmentStartAt?: string | null;
   @IsOptional() @IsDateString() commitmentEndAt?: string | null;
   @IsOptional() @IsBoolean() hasVolunteerCertificate?: boolean;
-  @IsOptional() @IsString() @MaxLength(5000) additionalComments?: string | null;
+  @IsOptional() @IsString() additionalComments?: string | null;
   @IsOptional() @IsBoolean() completedSustainabilityModule?: boolean;
   @IsOptional() @IsBoolean() completedDesignThinkingModule?: boolean;
 }

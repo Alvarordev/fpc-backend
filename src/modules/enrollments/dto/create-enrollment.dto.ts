@@ -238,15 +238,13 @@ export class CreateEnrollmentDto {
   @IsBoolean()
   currentlyAttendingConsultations?: boolean;
   @IsOptional() @IsBoolean() currentlyReceivingTreatment?: boolean;
-  @ApiPropertyOptional({ maxLength: 2000, nullable: true })
+  @ApiPropertyOptional({ nullable: true })
   @IsOptional()
   @IsString()
-  @MaxLength(2000)
   notAttendingConsultationsNote?: string;
-  @ApiPropertyOptional({ maxLength: 2000, nullable: true })
+  @ApiPropertyOptional({ nullable: true })
   @IsOptional()
   @IsString()
-  @MaxLength(2000)
   notReceivingTreatmentReason?: string;
   @IsOptional() @IsString() @MaxLength(100) entrySource?: string;
   @IsOptional() @IsString() @MaxLength(100) entrySubSource?: string;

@@ -27,9 +27,9 @@ export class CreatePatientLimitationDto {
 }
 
 export class CreatePatientFamilyCancerHistoryDto {
-  @IsString() @IsNotEmpty() @MaxLength(255) relationship!: string;
+  @IsString() @IsNotEmpty() relationship!: string;
 
-  @IsOptional() @IsString() @MaxLength(255) cancerType?: string;
+  @IsOptional() @IsString() cancerType?: string;
 }
 
 export class CreatePatientHealthBackgroundAssessmentDto {

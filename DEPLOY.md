@@ -231,3 +231,27 @@ Crear estos secrets antes de usar los workflows:
 
 `GITHUB_TOKEN` es el token automático de GitHub Actions con permiso
 `packages: write`; no hace falta crear un PAT para publicar en GHCR.
+
+## Textos narrativos y bases existentes
+
+La migración `WidenAllNarrativeTextColumns1784919000000` amplía a `text` las
+columnas narrativas que aún sean `varchar` en bases antiguas, incluso cuando la
+entidad o la migración de creación ya declara `text`. Debe ejecutarse después
+de desplegar esta versión; publicar la imagen por sí solo no cambia la base:
+
+```bash
+node ./node_modules/typeorm/cli.js migration:run -d dist/database/data-source.js
+```
+
+Cubre notas clínicas y sociales, síntomas, evolución, motivos, observaciones,
+campos «otro», descripciones, títulos de alertas, recordatorios y comentarios.
+La API acepta esos textos sin los límites históricos de 255, 1000, 2000 o 5000
+caracteres. Los códigos de catálogo, estados, documentos de identidad, nombres
+de persona, correos y teléfonos conservan sus validaciones de formato y longitud.
+El tamaño máximo del cuerpo HTTP sigue aplicándose. No se recorta texto para
+hacerlo caber. La migración conserva los datos, es idempotente y no permite un
+rollback que vuelva a imponer límites sobre información ya aceptada.
+
+Al añadir un campo narrativo, usar `text` en la entidad y en una migración nueva,
+sin `MaxLength` ni `maxLength` arbitrarios en la API o el formulario. Si cambia
+una entidad existente, la migración debe reparar también las bases instaladas.

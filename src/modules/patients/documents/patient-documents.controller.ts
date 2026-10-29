@@ -75,7 +75,7 @@ export class PatientDocumentsController {
         documentType: { enum: Object.values(PatientDocumentType) },
         diagnosisId: { type: 'string', format: 'uuid' },
         treatmentId: { type: 'string', format: 'uuid' },
-        description: { type: 'string', maxLength: 1000 },
+        description: { type: 'string' },
       },
     },
   })

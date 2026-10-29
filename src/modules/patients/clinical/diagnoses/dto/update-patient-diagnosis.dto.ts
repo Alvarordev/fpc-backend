@@ -84,7 +84,6 @@ export class UpdatePatientDiagnosisDto {
   @ValidateIf((_, value: unknown) => value !== null)
   @IsOptional()
   @IsString()
-  @MaxLength(2000)
   diseaseEvolution?: string | null;
   @ApiPropertyOptional({
     nullable: true,

@@ -40,7 +40,7 @@ export class CreatePatientAddressDto {
   /** Catalog `temporary_housing_type` code (or label). */
   @IsOptional() @IsString() @MaxLength(100) housingType?: string;
   @IsOptional() @IsString() housingTypeOther?: string;
-  @IsOptional() @IsString() @MaxLength(255) shelterName?: string;
+  @IsOptional() @IsString() shelterName?: string;
   @ApiPropertyOptional({ type: DurationDto })
   @IsOptional()
   @ValidateNested()

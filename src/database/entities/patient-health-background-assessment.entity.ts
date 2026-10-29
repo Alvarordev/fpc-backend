@@ -119,9 +119,9 @@ export class PatientFamilyCancerHistory {
   @JoinColumn({ name: 'assessment_id' })
   assessment!: PatientHealthBackgroundAssessment;
 
-  @Column({ type: 'varchar', length: 255 }) relationship!: string;
+  @Column({ type: 'text' }) relationship!: string;
 
-  @Column({ name: 'cancer_type', type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'cancer_type', type: 'text', nullable: true })
   cancerType!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
