@@ -114,7 +114,9 @@ export class AuthController {
   @Post('refresh')
   @Public()
   @UseGuards(ThrottlerGuard)
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  // Por IP: en la fundación varios agentes comparten la misma IP y cada recarga
+  // renueva la sesión. El refresh ya exige un token secreto.
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Rotate the refresh token and issue an access token',
   })
