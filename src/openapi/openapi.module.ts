@@ -93,6 +93,8 @@ import { ReferralsController } from '../modules/referrals/referrals.controller';
 import { ReferralsService } from '../modules/referrals/referrals.service';
 import { SurveysController } from '../modules/surveys/surveys.controller';
 import { SurveysService } from '../modules/surveys/surveys.service';
+import { SupportTicketsController } from '../modules/support-tickets/support-tickets.controller';
+import { SupportTicketsService } from '../modules/support-tickets/support-tickets.service';
 
 // Controllers only need their route metadata to build the OpenAPI document.
 // Empty providers keep generation independent from infrastructure services.
@@ -142,6 +144,7 @@ import { SurveysService } from '../modules/surveys/surveys.service';
     AssistantController,
     KnowledgeController,
     ReenrollmentsController,
+    SupportTicketsController,
   ],
   providers: [
     { provide: AgentsService, useValue: {} },
@@ -194,6 +197,7 @@ import { SurveysService } from '../modules/surveys/surveys.service';
     { provide: PsychooncologyCyclesService, useValue: {} },
     { provide: ReferralsService, useValue: {} },
     { provide: SurveysService, useValue: {} },
+    { provide: SupportTicketsService, useValue: {} },
   ],
 })
 export class OpenApiModule {}

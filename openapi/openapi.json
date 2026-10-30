@@ -11563,6 +11563,359 @@
           "follow-ups"
         ]
       }
+    },
+    "/support-tickets": {
+      "post": {
+        "operationId": "SupportTicketsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "type",
+                  "title",
+                  "description"
+                ],
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "CHANGE_REQUEST",
+                      "NEW_FEATURE",
+                      "VISUAL_BUG",
+                      "FUNCTIONAL_BUG",
+                      "BLOCKING_BUG",
+                      "QUESTION"
+                    ]
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "pagePath": {
+                    "type": "string"
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportTicketResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Open a support ticket",
+        "tags": [
+          "Support tickets"
+        ]
+      },
+      "get": {
+        "operationId": "SupportTicketsController_findAll",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "IN_REVIEW",
+                "NEEDS_MEETING",
+                "COMPLETED",
+                "DISMISSED"
+              ]
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CHANGE_REQUEST",
+                "NEW_FEATURE",
+                "VISUAL_BUG",
+                "FUNCTIONAL_BUG",
+                "BLOCKING_BUG",
+                "QUESTION"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupportTicketResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List tickets (admins see all, others only their own)",
+        "tags": [
+          "Support tickets"
+        ]
+      }
+    },
+    "/support-tickets/{id}": {
+      "get": {
+        "operationId": "SupportTicketsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportTicketResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Support tickets"
+        ]
+      },
+      "patch": {
+        "operationId": "SupportTicketsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupportTicketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportTicketResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change the status of a ticket",
+        "tags": [
+          "Support tickets"
+        ]
+      }
+    },
+    "/support-tickets/{id}/messages": {
+      "post": {
+        "operationId": "SupportTicketsController_addMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "body": {
+                    "type": "string"
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportTicketResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reply in the ticket thread (reopens it if the reporter replies)",
+        "tags": [
+          "Support tickets"
+        ]
+      }
+    },
+    "/support-tickets/{id}/seen": {
+      "post": {
+        "operationId": "SupportTicketsController_markSeen",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportTicketResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark the ticket updates as seen",
+        "tags": [
+          "Support tickets"
+        ]
+      }
+    },
+    "/support-tickets/{id}/attachments/{attachmentId}/content": {
+      "get": {
+        "operationId": "SupportTicketsController_attachmentContent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Support tickets"
+        ]
+      }
     }
   },
   "info": {
@@ -25423,6 +25776,219 @@
           "healthPhase",
           "contactDataConfirmedAt",
           "createdAt"
+        ]
+      },
+      "SupportTicketUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "ADMIN",
+              "FOUNDATION",
+              "AGENT",
+              "VOLUNTEER"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role"
+        ]
+      },
+      "SupportTicketAttachmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "originalFileName": {
+            "type": "string"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "originalFileName",
+          "mediaType",
+          "sizeBytes"
+        ]
+      },
+      "SupportTicketMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "enum": [
+              "COMMENT",
+              "STATUS_CHANGE"
+            ],
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "nullable": true,
+            "enum": [
+              "PENDING",
+              "IN_REVIEW",
+              "NEEDS_MEETING",
+              "COMPLETED",
+              "DISMISSED"
+            ],
+            "type": "string"
+          },
+          "author": {
+            "$ref": "#/components/schemas/SupportTicketUserDto"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportTicketAttachmentResponseDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "body",
+          "status",
+          "author",
+          "attachments",
+          "createdAt"
+        ]
+      },
+      "SupportTicketResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticketNumber": {
+            "type": "number"
+          },
+          "type": {
+            "enum": [
+              "CHANGE_REQUEST",
+              "NEW_FEATURE",
+              "VISUAL_BUG",
+              "FUNCTIONAL_BUG",
+              "BLOCKING_BUG",
+              "QUESTION"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "IN_REVIEW",
+              "NEEDS_MEETING",
+              "COMPLETED",
+              "DISMISSED"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "pagePath": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/SupportTicketUserDto"
+          },
+          "attachments": {
+            "description": "Images sent with the ticket itself",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportTicketAttachmentResponseDto"
+            }
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportTicketMessageResponseDto"
+            }
+          },
+          "hasUpdates": {
+            "type": "boolean",
+            "description": "There are changes the current user has not seen yet"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "ticketNumber",
+          "type",
+          "status",
+          "title",
+          "description",
+          "pagePath",
+          "createdBy",
+          "attachments",
+          "messages",
+          "hasUpdates",
+          "resolvedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateSupportTicketDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "PENDING",
+              "IN_REVIEW",
+              "NEEDS_MEETING",
+              "COMPLETED",
+              "DISMISSED"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
         ]
       }
     }

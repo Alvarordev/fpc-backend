@@ -37,6 +37,7 @@ import { TalkInterestsModule } from './modules/talk-interests/talk-interests.mod
 import { AssistantModule } from './modules/assistant/assistant.module';
 import { HistoricalRecordsModule } from './modules/historical-records/historical-records.module';
 
+import { SupportTicketsModule } from './modules/support-tickets/support-tickets.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -106,6 +107,7 @@ import { HistoricalRecordsModule } from './modules/historical-records/historical
     AssistantModule,
     TalkInterestsModule,
     AuditModule,
+    SupportTicketsModule,
   ],
 })
 export class AppModule {}
