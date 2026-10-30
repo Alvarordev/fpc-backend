@@ -40,6 +40,7 @@ import { RescheduleFollowUpDto } from './dto/reschedule-follow-up.dto';
 import {
   dateOnlyInLima,
   dateOnlyInLimaFromInput,
+  isNotAfterTodayInLima,
 } from '../../shared/date-only/date-only.util';
 
 // Un seguimiento puede realizarse antes de su fecha programada (se adelanta
@@ -251,6 +252,13 @@ export class FollowUpsService {
     userRole: string,
     manager?: EntityManager,
   ) {
+    this.assertHistoricalNotFuture(
+      input.status,
+      input.completedOn ??
+        input.completedAt ??
+        input.scheduledOn ??
+        input.scheduledAt,
+    );
     const run = (entityManager: EntityManager) =>
       this.create(
         {
@@ -327,6 +335,13 @@ export class FollowUpsService {
       item.scheduledAt = input.scheduledAt ? new Date(input.scheduledAt) : null;
     if (input.completedAt !== undefined)
       item.completedAt = input.completedAt ? new Date(input.completedAt) : null;
+    this.assertHistoricalNotFuture(
+      item.status,
+      item.completedOn ??
+        item.completedAt ??
+        item.scheduledOn ??
+        item.scheduledAt,
+    );
     const saved = await followUps.save(item);
     await this.invalidations.markDirty(saved.subjectPatientId, manager);
     return saved;
@@ -620,6 +635,20 @@ export class FollowUpsService {
       },
       user,
     );
+  }
+  /** Un seguimiento histórico realizado o sin respuesta ya ocurrió: no puede ser futuro. */
+  private assertHistoricalNotFuture(
+    status: FollowUpStatus | undefined,
+    date: string | Date | null | undefined,
+  ) {
+    if (
+      (status === FollowUpStatus.COMPLETED ||
+        status === FollowUpStatus.NO_ANSWER) &&
+      !isNotAfterTodayInLima(date)
+    )
+      throw new BadRequestException(
+        'Un seguimiento histórico realizado o sin respuesta no puede tener fecha futura.',
+      );
   }
   private async resolveAgentId(
     requestedAgentId: string | undefined,

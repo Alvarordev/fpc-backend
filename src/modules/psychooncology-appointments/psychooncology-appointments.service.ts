@@ -52,6 +52,7 @@ import {
   dateOnlyInLima,
   dateOnlyInLimaFromInput,
   isDateOnlyRangeValid,
+  isNotAfterTodayInLima,
 } from '../../shared/date-only/date-only.util';
 
 const RESULT_KEYS = new Set([
@@ -117,6 +118,10 @@ export class PsychooncologyAppointmentsService {
         throw new BadRequestException(
           'La fecha de realización no puede ser anterior a la programada.',
         );
+      this.assertHistoricalNotFuture(
+        input.status,
+        input.completedOn ?? input.completedAt ?? input.scheduledOn,
+      );
       if (
         input.scheduledAt &&
         input.completedAt &&
@@ -167,6 +172,12 @@ export class PsychooncologyAppointmentsService {
         input.beneficiaryType,
         input.companionId,
       );
+      // La sesión histórica cuenta en el ciclo del paciente, abierto desde su fecha real.
+      const cycle = await this.openCycle(
+        manager,
+        patient.id,
+        new Date(`${input.scheduledOn}T12:00:00-05:00`),
+      );
       const availability = await availabilities.save(
         availabilities.create({
           volunteerId: volunteer.id,
@@ -187,6 +198,7 @@ export class PsychooncologyAppointmentsService {
           volunteerId: volunteer.id,
           followUpId: followUp?.id ?? null,
           availabilityId: availability.id,
+          cycleId: cycle.id,
           historicalLoadedById,
           patientEmail: input.patientEmail ?? null,
           zoomLink: input.zoomLink ?? null,
@@ -366,6 +378,12 @@ export class PsychooncologyAppointmentsService {
         throw new BadRequestException(
           'La fecha de realización no puede ser anterior a la programada.',
         );
+      this.assertHistoricalNotFuture(
+        appointment.status,
+        appointment.completedOn ??
+          appointment.completedAt ??
+          appointment.scheduledOn,
+      );
 
       await appointments.save(appointment);
       await this.invalidations.markDirty(appointment.patientId, manager);
@@ -781,6 +799,21 @@ export class PsychooncologyAppointmentsService {
     }
   }
 
+  /** Una sesión histórica realizada o con inasistencia ya ocurrió: no puede ser futura. */
+  private assertHistoricalNotFuture(
+    status: AppointmentStatus,
+    date: string | Date | null | undefined,
+  ) {
+    if (
+      (status === AppointmentStatus.COMPLETED ||
+        status === AppointmentStatus.NO_SHOW) &&
+      !isNotAfterTodayInLima(date)
+    )
+      throw new BadRequestException(
+        'Una sesión histórica realizada o sin asistencia no puede tener fecha futura.',
+      );
+  }
+
   private assertPending(appointment: PsychooncologyAppointment, verb: string) {
     if (!PENDING_APPOINTMENT_STATUSES.includes(appointment.status))
       throw new ConflictException(
@@ -895,13 +928,25 @@ export class PsychooncologyAppointmentsService {
     return { availability, volunteer, scheduledAt };
   }
 
-  private async openCycle(manager: EntityManager, patientId: string) {
+  /**
+   * Ciclo abierto del paciente, o uno nuevo. `openedAt` es la fecha real de la
+   * sesión (carga histórica): si es anterior a la apertura, el ciclo se adelanta.
+   */
+  private async openCycle(
+    manager: EntityManager,
+    patientId: string,
+    openedAt = new Date(),
+  ) {
     const cycles = manager.getRepository(PsychooncologyCycle);
     const open = await cycles.findOne({
       where: { patientId, closedAt: IsNull() },
     });
-    if (open) return open;
-    return cycles.save(cycles.create({ patientId, openedAt: new Date() }));
+    if (!open) return cycles.save(cycles.create({ patientId, openedAt }));
+    if (openedAt < open.openedAt) {
+      open.openedAt = openedAt;
+      await cycles.save(open);
+    }
+    return open;
   }
 
   private async reserveAndCreate(

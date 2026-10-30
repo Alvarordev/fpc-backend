@@ -24,6 +24,7 @@ import {
   dateOnlyInLima,
   dateOnlyInLimaFromInput,
   isDateOnlyRangeValid,
+  isNotAfterTodayInLima,
 } from '../../shared/date-only/date-only.util';
 import { FollowUpsService } from '../follow-ups/follow-ups.service';
 import { HistoryVersioningService } from '../patients/history-versioning/history-versioning.service';
@@ -975,6 +976,10 @@ export class RemindersService {
     if (!isDateOnlyRangeValid(dueOn, completedOn))
       throw new BadRequestException(
         'La fecha de realización no puede ser anterior a la del recordatorio.',
+      );
+    if (!isNotAfterTodayInLima(completedOn))
+      throw new BadRequestException(
+        'Un recordatorio histórico no puede realizarse en una fecha futura.',
       );
   }
 
