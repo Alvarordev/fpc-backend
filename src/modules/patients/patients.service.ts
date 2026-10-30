@@ -35,6 +35,7 @@ import { PatientTreatment } from '../../database/entities/patient-treatment.enti
 import { PatientHealthBackgroundAssessment } from '../../database/entities/patient-health-background-assessment.entity';
 import { Patient } from '../../database/entities/patient.entity';
 import { savePatientOrDniConflict } from './patient-dni-conflict';
+import { applyPatientSearchFilters } from './patient-search-filters';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CreateCompanionDto } from './dto/create-companion.dto';
 import { type PatientCreationInput } from './dto/create-patient.dto';
@@ -150,6 +151,10 @@ export class PatientsService {
     input: PatientCreationInput,
     manager?: EntityManager,
   ): Promise<Patient> {
+    if (!input.birthDate)
+      throw new BadRequestException(
+        'Registra la fecha de nacimiento del paciente.',
+      );
     const repository =
       manager?.getRepository(Patient) ?? this.patientsRepository;
     const patient = await savePatientOrDniConflict(repository, { ...input });
@@ -496,6 +501,7 @@ export class PatientsService {
         '(patient.full_name ILIKE :search OR patient.dni ILIKE :search)',
         { search: `%${filters.search}%` },
       );
+    applyPatientSearchFilters(query, filters);
     const [data, total] = await query
       .orderBy('latestEnrollmentDate', 'DESC', 'NULLS LAST')
       .addOrderBy('patient.created_at', 'DESC')

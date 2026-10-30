@@ -1,3 +1,4 @@
+import { patientDniConflict } from '../patients/patient-dni-conflict';
 import { TalkInterestsService } from '../talk-interests/talk-interests.service';
 import { Companion } from '../../database/entities/companion.entity';
 import { AuditContextKind } from '../../shared/audit/audit-context';
@@ -220,9 +221,26 @@ export class EnrollmentsService {
       if (!patient) throw new NotFoundException('No se encontró el paciente.');
       if (patientId && patient.status !== PatientStatus.UNENROLLED)
         this.rejectEnrolledPatient(patient);
-      if (patientId && patientInput)
+      // Un prospecto se completa con lo que se registró en el enrolamiento.
+      if (patientId && patientInput) {
+        const changes = Object.fromEntries(
+          Object.entries(patientInput).filter(
+            ([, value]) => value !== undefined,
+          ),
+        );
+        const dni = typeof changes.dni === 'string' ? changes.dni.trim() : '';
+        if (
+          dni &&
+          dni !== patient.dni &&
+          (await manager.getRepository(Patient).existsBy({ dni }))
+        )
+          throw patientDniConflict();
+        Object.assign(patient, changes, dni ? { dni } : {});
+        await manager.getRepository(Patient).save(patient);
+      }
+      if (!patient.birthDate)
         throw new BadRequestException(
-          'Los datos del paciente solo se envían al registrar uno nuevo.',
+          'Registra la fecha de nacimiento del paciente.',
         );
       this.validateContactAgeRules(patient, contacts);
       if (
@@ -311,7 +329,7 @@ export class EnrollmentsService {
             contactRole: contact.role,
             isPrimaryContact: contact.role === CompanionContactRole.PRIMARY,
             isPrimaryInformant: false,
-            isCaregiver: false,
+            isCaregiver: contact.person!.isCaregiver ?? false,
           },
           manager,
         );

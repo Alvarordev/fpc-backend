@@ -202,7 +202,15 @@ export class FollowUpsService {
         ...withoutInterlocutor(input),
         interlocutorCompanionId,
         agentId,
-        status: options.status ?? this.inferStatus(input),
+        // El reenrolamiento se abre para registrarlo ahora: aunque su hora ya pasó,
+        // no se da por realizado hasta POST /follow-ups/:id/reenrollment.
+        status:
+          options.status ??
+          (input.purpose === FollowUpPurpose.REENROLLMENT &&
+          !options.isHistorical &&
+          !input.completedAt
+            ? FollowUpStatus.SCHEDULED
+            : this.inferStatus(input)),
         scheduledAt,
         completedAt,
         scheduledOn,

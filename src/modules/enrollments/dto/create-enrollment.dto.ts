@@ -36,7 +36,6 @@ export class EnrollmentContactPersonDto extends OmitType(CreateCompanionDto, [
   'isPrimaryInformant',
   'isPrimaryContact',
   'contactRole',
-  'isCaregiver',
   'relationship',
 ] as const) {
   @IsString() @MaxLength(50) relationship!: string;
@@ -138,17 +137,32 @@ export class EnrollmentNonOncologicalFollowUpDto extends OmitType(
   ['followUpId', 'enrollmentId'] as const,
 ) {}
 
+/**
+ * El teléfono del paciente es opcional al enrolar: si el contacto principal es
+ * otra persona, puede no tener uno. Si el paciente es el contacto principal, el
+ * servicio lo exige.
+ */
+export class EnrollmentPatientDto extends OmitType(CreatePatientDto, [
+  'primaryPhone',
+] as const) {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  primaryPhone?: string;
+}
+
 export class CreateEnrollmentDto {
   @IsOptional() @IsUUID() patientId?: string;
   @ApiPropertyOptional({
-    type: CreatePatientDto,
+    type: EnrollmentPatientDto,
     description:
-      'New patient, or updated data of patientId when re-enrolling an inactive or cancer-ruled-out patient',
+      'New patient, or the data registered in the wizard to complete a prospect (patientId)',
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => CreatePatientDto)
-  patient?: CreatePatientDto;
+  @Type(() => EnrollmentPatientDto)
+  patient?: EnrollmentPatientDto;
   @ValidateNested()
   @Type(() => EnrollmentFollowUpDto)
   followUp!: EnrollmentFollowUpDto;
