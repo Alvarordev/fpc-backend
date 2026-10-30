@@ -4,3 +4,4 @@ dist
 .git
 coverage
 npm-debug.log*
+.local-migration-audit
