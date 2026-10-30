@@ -4752,6 +4752,184 @@
         "operationId": "PatientsController_findAll",
         "parameters": [
           {
+            "name": "hasPhone",
+            "required": false,
+            "in": "query",
+            "description": "Registered primary or secondary phone.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "hasCompanion",
+            "required": false,
+            "in": "query",
+            "description": "At least one linked companion.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "hasPendingFollowUps",
+            "required": false,
+            "in": "query",
+            "description": "Scheduled or overdue follow-up not superseded by a reschedule.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "minAge",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "maximum": 130,
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxAge",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "maximum": 130,
+              "type": "number"
+            }
+          },
+          {
+            "name": "gender",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "M",
+                "F",
+                "OTHER"
+              ]
+            }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Current primary residence department, case insensitive.",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "healthCenterId",
+            "required": false,
+            "in": "query",
+            "description": "Primary health center.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "diagnosis",
+            "required": false,
+            "in": "query",
+            "description": "Current diagnosis code; combined with cancerStage on the same diagnosis.",
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          },
+          {
+            "name": "cancerStage",
+            "required": false,
+            "in": "query",
+            "description": "Current cancer stage catalog code.",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "insuranceType",
+            "required": false,
+            "in": "query",
+            "description": "Current insurance catalog code.",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "treatmentType",
+            "required": false,
+            "in": "query",
+            "description": "Current treatment type; combined with treatmentSituation on the same treatment.",
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          },
+          {
+            "name": "treatmentSituation",
+            "required": false,
+            "in": "query",
+            "description": "Current treatment situation catalog code.",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "enrolledFrom",
+            "required": false,
+            "in": "query",
+            "description": "First enrollment on or after this date (inclusive).",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "enrolledTo",
+            "required": false,
+            "in": "query",
+            "description": "First enrollment before this date (exclusive).",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "lastContactBefore",
+            "required": false,
+            "in": "query",
+            "description": "Last completed contact before this date (exclusive). Excludes patients with no completed contact.",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasEmail",
+            "required": false,
+            "in": "query",
+            "description": "Whether a non-empty email is registered.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "hasPendingReminders",
+            "required": false,
+            "in": "query",
+            "description": "Whether the patient has at least one pending reminder, including historical records.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "name": "role",
             "required": false,
             "in": "query",
@@ -8039,6 +8217,59 @@
         ]
       }
     },
+    "/psychooncology-appointments/{id}/reminder/message": {
+      "put": {
+        "operationId": "PsychooncologyAppointmentsController_setReminderMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetReminderMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentReminderResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "409": {
+            "description": "Session not pending"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Save the reminder text of a session (empty restores the suggested text)",
+        "tags": [
+          "psychooncology-appointments"
+        ]
+      }
+    },
     "/psychooncology-appointments/{id}/reminder/sent": {
       "patch": {
         "operationId": "PsychooncologyAppointmentsController_markReminderSent",
@@ -8315,6 +8546,57 @@
           }
         ],
         "summary": "Get the reminder text ready to copy (manual WhatsApp delivery)",
+        "tags": [
+          "reminders"
+        ]
+      },
+      "put": {
+        "operationId": "RemindersController_setMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetReminderMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderMessageResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No se puede editar un recordatorio cerrado."
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Save the email text of a pending reminder (empty restores the suggested text)",
         "tags": [
           "reminders"
         ]
@@ -12583,6 +12865,9 @@
           "subjectPatientName": {
             "type": "string"
           },
+          "patientHasEmail": {
+            "type": "boolean"
+          },
           "agentId": {
             "type": "string",
             "format": "uuid"
@@ -12631,6 +12916,7 @@
           "id",
           "subjectPatientId",
           "subjectPatientName",
+          "patientHasEmail",
           "agentId",
           "status",
           "type",
@@ -12652,6 +12938,9 @@
           },
           "subjectPatientName": {
             "type": "string"
+          },
+          "patientHasEmail": {
+            "type": "boolean"
           },
           "assignedAgentId": {
             "type": "string",
@@ -12675,6 +12964,7 @@
           "id",
           "subjectPatientId",
           "subjectPatientName",
+          "patientHasEmail",
           "assignedAgentId",
           "description",
           "dueAt",
@@ -13793,16 +14083,12 @@
           "accessToken"
         ]
       },
-      "CreatePatientDto": {
+      "EnrollmentPatientDto": {
         "type": "object",
         "properties": {
           "fullName": {
             "type": "string",
             "maxLength": 255
-          },
-          "primaryPhone": {
-            "type": "string",
-            "maxLength": 50
           },
           "secondaryPhone": {
             "type": "string",
@@ -13834,11 +14120,14 @@
             "type": "string",
             "maxLength": 255,
             "format": "email"
+          },
+          "primaryPhone": {
+            "type": "string",
+            "maxLength": 50
           }
         },
         "required": [
-          "fullName",
-          "primaryPhone"
+          "fullName"
         ]
       },
       "EnrollmentContactPersonDto": {
@@ -13876,6 +14165,9 @@
             "maxLength": 10
           },
           "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "isCaregiver": {
             "type": "boolean"
           },
           "relationship": {
@@ -15055,10 +15347,10 @@
         "type": "object",
         "properties": {
           "patient": {
-            "description": "New patient, or updated data of patientId when re-enrolling an inactive or cancer-ruled-out patient",
+            "description": "New patient, or the data registered in the wizard to complete a prospect (patientId)",
             "allOf": [
               {
-                "$ref": "#/components/schemas/CreatePatientDto"
+                "$ref": "#/components/schemas/EnrollmentPatientDto"
               }
             ]
           },
@@ -17377,6 +17669,54 @@
           "type",
           "note",
           "authorId"
+        ]
+      },
+      "CreatePatientDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "primaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "secondaryPhone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "documentType": {
+            "enum": [
+              "DNI",
+              "CE",
+              "CPP"
+            ],
+            "type": "string"
+          },
+          "dni": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "birthDate": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "maxLength": 10
+          },
+          "hasWhatsapp": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email"
+          }
+        },
+        "required": [
+          "fullName",
+          "primaryPhone"
         ]
       },
       "PatientResponseDto": {
@@ -21837,6 +22177,14 @@
             "type": "string",
             "description": "Ready-to-copy reminder text for the patient"
           },
+          "defaultMessage": {
+            "type": "string",
+            "description": "Texto sugerido por el sistema"
+          },
+          "isCustom": {
+            "type": "boolean",
+            "description": "El agente escribió su propio texto"
+          },
           "reminderMode": {
             "enum": [
               "TWO_HOURS",
@@ -21860,10 +22208,23 @@
         "required": [
           "appointmentId",
           "message",
+          "defaultMessage",
+          "isCustom",
           "reminderMode",
           "remindAt",
           "reminderSentAt"
         ]
+      },
+      "SetReminderMessageDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 4000,
+            "description": "Texto del correo del recordatorio. Vacío o null vuelve al texto sugerido."
+          }
+        }
       },
       "UpdateReminderDto": {
         "type": "object",
@@ -21928,6 +22289,14 @@
           "text": {
             "type": "string",
             "description": "Plain text ready to copy (e.g. WhatsApp)"
+          },
+          "defaultText": {
+            "type": "string",
+            "description": "Texto sugerido por el sistema"
+          },
+          "isCustom": {
+            "type": "boolean",
+            "description": "El agente escribió su propio texto"
           }
         },
         "required": [
@@ -21936,7 +22305,9 @@
           "phone",
           "email",
           "subject",
-          "text"
+          "text",
+          "defaultText",
+          "isCustom"
         ]
       },
       "CompleteReminderMedicalAppointmentDto": {
