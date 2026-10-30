@@ -40,8 +40,10 @@ import { RescheduleFollowUpDto } from './dto/reschedule-follow-up.dto';
 import {
   dateOnlyInLima,
   dateOnlyInLimaFromInput,
-  isDateOnlyRangeValid,
 } from '../../shared/date-only/date-only.util';
+
+// Un seguimiento puede realizarse antes de su fecha programada (se adelanta
+// la llamada): se conservan ambas fechas y no se exige un orden entre ellas.
 
 export interface FollowUpCreateOptions {
   isHistorical?: boolean;
@@ -179,10 +181,6 @@ export class FollowUpsService {
         : input.completedAt
           ? dateOnlyInLimaFromInput(input.completedAt)
           : null;
-    if (scheduledAt && completedAt && completedAt < scheduledAt)
-      throw new BadRequestException(
-        'La fecha de realización no puede ser anterior a la programada.',
-      );
     if (
       input.scheduledAt &&
       scheduledOn &&
@@ -198,10 +196,6 @@ export class FollowUpsService {
     )
       throw new BadRequestException(
         'La hora de realización no coincide con su fecha.',
-      );
-    if (!isDateOnlyRangeValid(scheduledOn, completedOn))
-      throw new BadRequestException(
-        'La fecha de realización no puede ser anterior a la programada.',
       );
     const followUp = await followUps.save(
       followUps.create({
@@ -325,18 +319,6 @@ export class FollowUpsService {
       item.scheduledAt = input.scheduledAt ? new Date(input.scheduledAt) : null;
     if (input.completedAt !== undefined)
       item.completedAt = input.completedAt ? new Date(input.completedAt) : null;
-    if (
-      item.scheduledAt &&
-      item.completedAt &&
-      item.completedAt < item.scheduledAt
-    )
-      throw new BadRequestException(
-        'La fecha de realización no puede ser anterior a la programada.',
-      );
-    if (!isDateOnlyRangeValid(item.scheduledOn, item.completedOn))
-      throw new BadRequestException(
-        'La fecha de realización no puede ser anterior a la programada.',
-      );
     const saved = await followUps.save(item);
     await this.invalidations.markDirty(saved.subjectPatientId, manager);
     return saved;
@@ -608,10 +590,6 @@ export class FollowUpsService {
       item.completedOn = input.completedAt
         ? dateOnlyInLimaFromInput(input.completedAt)
         : null;
-    if (!isDateOnlyRangeValid(item.scheduledOn, item.completedOn))
-      throw new BadRequestException(
-        'La fecha de realización no puede ser anterior a la programada.',
-      );
     const followUp = await this.followUps.save(item);
     await this.invalidations.markDirty(followUp.subjectPatientId);
     return followUp;
