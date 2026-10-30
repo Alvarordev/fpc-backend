@@ -40,7 +40,6 @@ export class VolunteerCalendarService {
       this.availability
         .createQueryBuilder('availability')
         .where('availability.date BETWEEN :from AND :to', { from, to })
-        .andWhere('availability.is_historical = false')
         .orderBy('availability.date', 'ASC')
         .addOrderBy('availability.start_time', 'ASC')
         .getMany(),
@@ -50,7 +49,6 @@ export class VolunteerCalendarService {
         .where('appointment.status IN (:...statuses)', {
           statuses: PENDING_APPOINTMENT_STATUSES,
         })
-        .andWhere('appointment.is_historical = false')
         .andWhere('appointment.scheduled_at IS NOT NULL')
         .andWhere('appointment.scheduled_at >= :from', {
           from: new Date(`${from}T00:00:00.000Z`),

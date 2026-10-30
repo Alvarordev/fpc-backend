@@ -104,7 +104,7 @@ export class FollowUpsController {
   @ApiOperation({
     summary: 'List visible follow-ups',
     description:
-      'Agents see every follow-up of a patient when patientId is given; otherwise only their own unless agentId is given.',
+      'Includes historical follow-ups and enrollments. Agents see every follow-up of a patient when patientId is given; otherwise only their own unless agentId is given.',
   })
   @ApiOkResponse({ type: FollowUpResponseDto, isArray: true })
   @ApiQuery({ name: 'agentId', required: false, format: 'uuid' })

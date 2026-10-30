@@ -194,7 +194,7 @@ export class VolunteerAvailabilityService {
   async findAll(volunteerId: string, user: User) {
     await this.assertScope(volunteerId, user);
     return this.availability.find({
-      where: { volunteerId, isHistorical: false },
+      where: { volunteerId },
       order: { date: 'ASC', startTime: 'ASC' },
     });
   }

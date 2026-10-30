@@ -3265,7 +3265,7 @@
         ]
       },
       "get": {
-        "description": "Agents see every follow-up of a patient when patientId is given; otherwise only their own unless agentId is given.",
+        "description": "Includes historical follow-ups and enrollments. Agents see every follow-up of a patient when patientId is given; otherwise only their own unless agentId is given.",
         "operationId": "FollowUpsController_findAll",
         "parameters": [
           {
@@ -12662,7 +12662,8 @@
           },
           "dueAt": {
             "format": "date-time",
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "dueOn": {
             "type": "string",
@@ -15009,6 +15010,15 @@
               "DISCHARGED"
             ],
             "type": "string"
+          },
+          "dischargedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "dischargeReason": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -23046,10 +23056,6 @@
             ],
             "type": "string"
           },
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
           "dischargedOn": {
             "type": "string",
             "nullable": true,
@@ -23058,6 +23064,10 @@
           "dischargeReason": {
             "type": "string",
             "nullable": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "required": [
@@ -24501,6 +24511,15 @@
               "DISCHARGED"
             ],
             "type": "string"
+          },
+          "dischargedOn": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "dischargeReason": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [

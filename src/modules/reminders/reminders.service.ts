@@ -506,7 +506,6 @@ export class RemindersService {
       .leftJoinAndSelect('reminder.medicalAppointment', 'medicalAppointment')
       .leftJoinAndSelect('medicalAppointment.healthCenter', 'healthCenter');
     query
-      .andWhere('reminder.is_historical = false')
       .orderBy('reminder.due_on', 'ASC', 'NULLS LAST')
       .addOrderBy('reminder.due_at', 'ASC', 'NULLS LAST')
       .addOrderBy('reminder.created_at', 'DESC')

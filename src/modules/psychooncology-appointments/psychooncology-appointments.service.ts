@@ -388,7 +388,6 @@ export class PsychooncologyAppointmentsService {
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.companion', 'companion')
       .leftJoinAndSelect('appointment.volunteer', 'volunteer')
-      .andWhere('appointment.is_historical = false')
       .orderBy('appointment.scheduled_on', 'DESC', 'NULLS LAST')
       .addOrderBy('appointment.scheduled_at', 'DESC', 'NULLS LAST')
       .addOrderBy('appointment.id', 'DESC');

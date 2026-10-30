@@ -844,7 +844,6 @@ export class PatientTimelineService {
         FROM follow_ups
       ) follow_up ON follow_up.id = medical_appointment.follow_up_id
       WHERE medical_appointment.follow_up_id = ANY($1::uuid[])
-        AND (medical_appointment.is_current = true OR medical_appointment.is_historical = true)
 
       UNION ALL
 

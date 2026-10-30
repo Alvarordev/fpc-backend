@@ -513,7 +513,6 @@ export class FollowUpsService {
     const query = this.followUps
       .createQueryBuilder('follow_up')
       .leftJoinAndSelect('follow_up.subjectPatient', 'subject_patient')
-      .andWhere('follow_up.is_historical = false')
       .orderBy(
         'COALESCE(follow_up.completed_on, follow_up.scheduled_on)',
         'ASC',

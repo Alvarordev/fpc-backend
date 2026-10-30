@@ -31,7 +31,7 @@ export class CallCenterReminderDto {
   @ApiProperty() subjectPatientName!: string;
   @ApiProperty({ format: 'uuid' }) assignedAgentId!: string;
   @ApiProperty() description!: string;
-  @ApiProperty({ format: 'date-time' }) dueAt!: Date;
+  @ApiProperty({ format: 'date-time', nullable: true }) dueAt!: Date | null;
   @ApiProperty({ format: 'date', nullable: true }) dueOn!: string | null;
 }
 

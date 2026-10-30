@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, IsNull, Not, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Agent } from '../../database/entities/agent.entity';
 import { FollowUpStatus } from '../../database/entities/follow-up.enums';
 import { FollowUp } from '../../database/entities/follow-up.entity';
@@ -23,7 +23,6 @@ const PENDING_FOLLOW_UP = [FollowUpStatus.SCHEDULED, FollowUpStatus.OVERDUE];
 
 // An overdue follow-up stops being pending once it has been rescheduled.
 const isPending = (item: FollowUp) =>
-  !item.isHistorical &&
   (item.status === FollowUpStatus.SCHEDULED ||
     (item.status === FollowUpStatus.OVERDUE && !item.nextFollowUpId));
 
@@ -52,14 +51,12 @@ export class CallCenterService {
     const [agents, followUps, pendingReminders] = await Promise.all([
       this.agents.find({ order: { fullName: 'ASC' } }),
       this.followUps.find({
-        where: { status: In(PENDING_FOLLOW_UP), isHistorical: false },
+        where: { status: In(PENDING_FOLLOW_UP) },
         order: { scheduledOn: 'ASC', scheduledAt: 'ASC', createdAt: 'DESC' },
       }),
       this.reminders.find({
         where: {
           status: ReminderStatus.PENDING,
-          isHistorical: false,
-          dueAt: Not(IsNull()),
         },
         order: { dueAt: 'ASC' },
       }),
@@ -116,7 +113,7 @@ export class CallCenterService {
     for (const reminder of pendingReminders)
       count(
         load.get(reminder.assignedAgentId)?.reminders,
-        reminder.dueOn ?? dateOnlyInLima(reminder.dueAt!),
+        reminder.dueOn ?? (reminder.dueAt ? dateOnlyInLima(reminder.dueAt) : null),
       );
 
     return {
@@ -146,7 +143,7 @@ export class CallCenterService {
           patientNames.get(reminder.subjectPatientId) ?? 'Paciente desconocido',
         assignedAgentId: reminder.assignedAgentId,
         description: reminder.description,
-        dueAt: reminder.dueAt!,
+        dueAt: reminder.dueAt,
         dueOn: reminder.dueOn,
       })),
     };
