@@ -48,6 +48,10 @@ import { PatientTimelineService } from './patient-timeline.service';
 import { PatientSocialNote } from '../../database/entities/patient-social-note.entity';
 import { PatientSocialNotesController } from './social-notes/patient-social-notes.controller';
 import { PatientSocialNotesService } from './social-notes/patient-social-notes.service';
+import { PatientSocialReferral } from '../../database/entities/patient-social-referral.entity';
+import { PatientSocialReferralUpdate } from '../../database/entities/patient-social-referral-update.entity';
+import { PatientSocialReferralsController } from './social-referrals/patient-social-referrals.controller';
+import { PatientSocialReferralsService } from './social-referrals/patient-social-referrals.service';
 import {
   PatientActiveComorbidity,
   PatientFamilyCancerHistory,
@@ -97,6 +101,8 @@ import { PatientHealthSubcategoryService } from './health-subcategory/patient-he
       Enrollment,
       PatientSummary,
       PatientSocialNote,
+      PatientSocialReferral,
+      PatientSocialReferralUpdate,
       PatientHealthBackgroundAssessment,
       PatientActiveComorbidity,
       PatientLimitation,
@@ -124,6 +130,7 @@ import { PatientHealthSubcategoryService } from './health-subcategory/patient-he
     PatientAddressesController,
     TreatmentMedicationsController,
     PatientSocialNotesController,
+    PatientSocialReferralsController,
     PatientHealthBackgroundAssessmentsController,
     PatientDiagnosticStatusesController,
     PatientDocumentsController,
@@ -144,6 +151,7 @@ import { PatientHealthSubcategoryService } from './health-subcategory/patient-he
     PatientAddressesService,
     TreatmentMedicationsService,
     PatientSocialNotesService,
+    PatientSocialReferralsService,
     PatientHealthBackgroundAssessmentsService,
     PatientDiagnosticStatusesService,
     PatientDocumentsService,

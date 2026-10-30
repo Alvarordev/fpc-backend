@@ -38,6 +38,11 @@ export const CATALOG_KINDS = [
   'reenrollment_reason',
   'companion_relationship',
   'educational_talk',
+  'complaint_channel',
+  'complaint_outcome',
+  'social_worker_outcome',
+  'fissal_outcome',
+  'conadis_outcome',
 ] as const;
 
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
@@ -54,6 +59,10 @@ export const OPEN_CATALOG_KINDS = [
   'chemotherapy_route',
   'surgical_procedure',
   'companion_relationship',
+  'complaint_outcome',
+  'social_worker_outcome',
+  'fissal_outcome',
+  'conadis_outcome',
 ] as const satisfies readonly CatalogKind[];
 
 export type OpenCatalogKind = (typeof OPEN_CATALOG_KINDS)[number];
@@ -93,6 +102,11 @@ export const CATALOG_KIND_LABELS: Record<CatalogKind, string> = {
   reenrollment_reason: 'Motivo de reenrolamiento',
   companion_relationship: 'Parentesco',
   educational_talk: 'Charla de prevención',
+  complaint_channel: 'Canal de reclamo',
+  complaint_outcome: 'Resultado del reclamo',
+  social_worker_outcome: 'Resultado de asistencia social',
+  fissal_outcome: 'Resultado de FISSAL',
+  conadis_outcome: 'Resultado del trámite CONADIS',
 };
 
 export const RESERVED_CATALOG_CODE = 'OTRO';

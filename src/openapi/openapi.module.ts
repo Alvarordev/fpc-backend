@@ -56,7 +56,9 @@ import { PatientTimelineService } from '../modules/patients/patient-timeline.ser
 import { PatientSymptomReportsController } from '../modules/patients/symptom-reports/patient-symptom-reports.controller';
 import { PatientSymptomReportsService } from '../modules/patients/symptom-reports/patient-symptom-reports.service';
 import { PatientSocialNotesController } from '../modules/patients/social-notes/patient-social-notes.controller';
+import { PatientSocialReferralsController } from '../modules/patients/social-referrals/patient-social-referrals.controller';
 import { PatientSocialNotesService } from '../modules/patients/social-notes/patient-social-notes.service';
+import { PatientSocialReferralsService } from '../modules/patients/social-referrals/patient-social-referrals.service';
 import { PatientHealthBackgroundAssessmentsController } from '../modules/patients/clinical/health-background/patient-health-background-assessments.controller';
 import { PatientHealthBackgroundAssessmentsService } from '../modules/patients/clinical/health-background/patient-health-background-assessments.service';
 import { PatientDiagnosticStatusesController } from '../modules/patients/diagnostic-status/patient-diagnostic-statuses.controller';
@@ -124,6 +126,7 @@ import { SupportTicketsService } from '../modules/support-tickets/support-ticket
     PatientAddressesController,
     PatientSymptomReportsController,
     PatientSocialNotesController,
+    PatientSocialReferralsController,
     PatientHealthBackgroundAssessmentsController,
     PatientDiagnosticStatusesController,
     PatientDocumentsController,
@@ -176,6 +179,7 @@ import { SupportTicketsService } from '../modules/support-tickets/support-ticket
     { provide: PatientSisAffiliationService, useValue: {} },
     { provide: PatientSymptomReportsService, useValue: {} },
     { provide: PatientSocialNotesService, useValue: {} },
+    { provide: PatientSocialReferralsService, useValue: {} },
     { provide: PatientHealthBackgroundAssessmentsService, useValue: {} },
     { provide: PatientDiagnosticStatusesService, useValue: {} },
     { provide: PatientDocumentsService, useValue: {} },
