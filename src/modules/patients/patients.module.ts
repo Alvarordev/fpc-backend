@@ -44,6 +44,10 @@ import { PatientTimelineService } from './patient-timeline.service';
 import { PatientSocialNote } from '../../database/entities/patient-social-note.entity';
 import { PatientSocialNotesController } from './social-notes/patient-social-notes.controller';
 import { PatientSocialNotesService } from './social-notes/patient-social-notes.service';
+import { PatientSocialReferral } from '../../database/entities/patient-social-referral.entity';
+import { PatientSocialReferralUpdate } from '../../database/entities/patient-social-referral-update.entity';
+import { PatientSocialReferralsController } from './social-referrals/patient-social-referrals.controller';
+import { PatientSocialReferralsService } from './social-referrals/patient-social-referrals.service';
 import {
   PatientActiveComorbidity,
   PatientFamilyCancerHistory,
@@ -90,6 +94,8 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
       Enrollment,
       PatientSummary,
       PatientSocialNote,
+      PatientSocialReferral,
+      PatientSocialReferralUpdate,
       PatientHealthBackgroundAssessment,
       PatientActiveComorbidity,
       PatientLimitation,
@@ -116,6 +122,7 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
     PatientAddressesController,
     TreatmentMedicationsController,
     PatientSocialNotesController,
+    PatientSocialReferralsController,
     PatientHealthBackgroundAssessmentsController,
     PatientDiagnosticStatusesController,
     PatientDocumentsController,
@@ -135,6 +142,7 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
     PatientAddressesService,
     TreatmentMedicationsService,
     PatientSocialNotesService,
+    PatientSocialReferralsService,
     PatientHealthBackgroundAssessmentsService,
     PatientDiagnosticStatusesService,
     PatientDocumentsService,

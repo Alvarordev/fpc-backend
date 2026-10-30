@@ -682,7 +682,11 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     label: 'Ginecología oncológica',
     sortOrder: 30,
     metadata: {
-      aliases: ['Gineco-oncologia', 'Gineco oncologia', 'Ginecología oncológica'],
+      aliases: [
+        'Gineco-oncologia',
+        'Gineco oncologia',
+        'Ginecología oncológica',
+      ],
     },
   },
   {
@@ -793,7 +797,9 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'MAMA_DUCTAL',
     label: 'Cáncer de mama ductal infiltrante',
     sortOrder: 10,
-    metadata: { aliases: ['Cáncer de mama', 'Cancer de mama', 'Breast cancer'] },
+    metadata: {
+      aliases: ['Cáncer de mama', 'Cancer de mama', 'Breast cancer'],
+    },
   },
   {
     kind: 'cancer_diagnosis',
@@ -807,7 +813,11 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     label: 'Cáncer gástrico',
     sortOrder: 30,
     metadata: {
-      aliases: ['Cáncer de estómago', 'Cáncer de estómago avanzado', 'Cancer gastrico'],
+      aliases: [
+        'Cáncer de estómago',
+        'Cáncer de estómago avanzado',
+        'Cancer gastrico',
+      ],
     },
   },
   {
@@ -1025,7 +1035,23 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
       ],
     },
   },
-  { kind: 'treatment_type', code: 'CIRUGIA', label: 'Cirugía', sortOrder: 30, metadata: { aliases: ['Surgery', 'Mastectomía', 'Histerectomía radical', 'Gastrectomía subtotal', 'Prostatectomía', 'Hemicolectomía', 'Tiroidectomía total'] } },
+  {
+    kind: 'treatment_type',
+    code: 'CIRUGIA',
+    label: 'Cirugía',
+    sortOrder: 30,
+    metadata: {
+      aliases: [
+        'Surgery',
+        'Mastectomía',
+        'Histerectomía radical',
+        'Gastrectomía subtotal',
+        'Prostatectomía',
+        'Hemicolectomía',
+        'Tiroidectomía total',
+      ],
+    },
+  },
   {
     kind: 'treatment_type',
     code: 'HORMONOTERAPIA',
@@ -1350,6 +1376,281 @@ export const CATALOG_ITEM_SEEDS: readonly CatalogItemSeed[] = [
     code: 'OTRO',
     label: 'Otro',
     sortOrder: 90,
+    isSystem: true,
+  },
+  // Social referrals: complaint channels and outcome per referral type
+  {
+    kind: 'complaint_channel',
+    code: 'LIBRO_RECLAMACIONES',
+    label: 'Libro de reclamaciones',
+    sortOrder: 10,
+    metadata: null,
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_channel',
+    code: 'PAUS_SIS',
+    label: 'Plataforma de Atención al Usuario (SIS)',
+    sortOrder: 20,
+    metadata: { insuranceTypes: ['SIS'] },
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_channel',
+    code: 'DEFENSORIA_ESSALUD',
+    label: 'Defensoría del Asegurado (EsSalud)',
+    sortOrder: 30,
+    metadata: { insuranceTypes: ['ESSALUD'] },
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_channel',
+    code: 'SUSALUD',
+    label: 'SUSALUD',
+    sortOrder: 40,
+    metadata: null,
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_outcome',
+    code: 'RESOLVED',
+    label: 'Sí, se resolvió',
+    sortOrder: 10,
+    metadata: { description: 'Se resolvió el reclamo o queja del paciente.' },
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_outcome',
+    code: 'NOT_RESOLVED',
+    label: 'No se resolvió',
+    sortOrder: 20,
+    metadata: { description: 'No se resolvió el reclamo o queja.' },
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_outcome',
+    code: 'NOT_RECEIVED',
+    label: 'No fue recibido',
+    sortOrder: 30,
+    metadata: {
+      description:
+        'La oficina no recibió el caso, no levantó un informe o no respondió la llamada del paciente.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_outcome',
+    code: 'NOT_FILED',
+    label: 'No lo presentó',
+    sortOrder: 40,
+    metadata: { description: 'El paciente no presentó su reclamo o queja.' },
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_outcome',
+    code: 'NOT_NEEDED',
+    label: 'No fue necesario',
+    sortOrder: 50,
+    metadata: {
+      description:
+        'El problema se resolvió antes de que el paciente presentara su caso.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_outcome',
+    code: 'NO_INFO',
+    label: 'No hay información',
+    sortOrder: 60,
+    metadata: {
+      closesReferral: false,
+      description:
+        'No se tiene información sobre la resolución del caso en el seguimiento.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_outcome',
+    code: 'PATIENT_UNREACHABLE',
+    label: 'Paciente dejó de contestar',
+    sortOrder: 70,
+    metadata: {
+      closesReferral: false,
+      description: 'El paciente no responde llamadas ni mensajes.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_outcome',
+    code: 'PATIENT_DECEASED',
+    label: 'Paciente falleció',
+    sortOrder: 80,
+    metadata: {
+      description:
+        'Falleció antes de poner el reclamo, durante el proceso o tras recibir la orientación.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'complaint_outcome',
+    code: 'CASE_CLOSED',
+    label: 'Se cerró el caso',
+    sortOrder: 90,
+    metadata: {
+      description:
+        'Presentó el reclamo, pero el proceso no continuó porque se resolvió o la oficina lo cerró sin respuesta.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'social_worker_outcome',
+    code: 'EFFECTIVE',
+    label: 'Sí, fue efectiva',
+    sortOrder: 10,
+    metadata: { description: 'La derivación fue efectiva.' },
+    isSystem: true,
+  },
+  {
+    kind: 'social_worker_outcome',
+    code: 'NOT_EFFECTIVE',
+    label: 'No ayudó',
+    sortOrder: 20,
+    metadata: { description: 'No ayudó a resolver la necesidad del paciente.' },
+    isSystem: true,
+  },
+  {
+    kind: 'social_worker_outcome',
+    code: 'DID_NOT_GO',
+    label: 'No se acercó',
+    sortOrder: 30,
+    metadata: {
+      description: 'El paciente no fue a la oficina de asistencia social.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'social_worker_outcome',
+    code: 'NOT_REFERRED',
+    label: 'No se derivó',
+    sortOrder: 40,
+    metadata: { description: 'El paciente no requiere el servicio.' },
+    isSystem: true,
+  },
+  {
+    kind: 'social_worker_outcome',
+    code: 'NO_INFO',
+    label: 'No hay información',
+    sortOrder: 50,
+    metadata: {
+      closesReferral: false,
+      description:
+        'No se tiene información de la efectividad en el seguimiento.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'social_worker_outcome',
+    code: 'OFFICE_CLOSED',
+    label: 'Oficina cerrada',
+    sortOrder: 60,
+    metadata: {
+      description: 'No encontró a nadie en la oficina o estaba cerrada.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'fissal_outcome',
+    code: 'YES_VIA_SEPA',
+    label: 'Sí, por orientación de SEPA',
+    sortOrder: 10,
+    metadata: { description: 'Accedió a FISSAL por orientación de SEPA.' },
+    isSystem: true,
+  },
+  {
+    kind: 'fissal_outcome',
+    code: 'YES_WITHOUT_SEPA',
+    label: 'Sí, sin orientación de SEPA',
+    sortOrder: 20,
+    metadata: { description: 'Accedió a FISSAL sin orientación de SEPA.' },
+    isSystem: true,
+  },
+  {
+    kind: 'fissal_outcome',
+    code: 'NOT_COVERED',
+    label: 'No, cáncer no cubierto',
+    sortOrder: 30,
+    metadata: {
+      description: 'No tiene uno de los 7 tipos de cáncer que cubre FISSAL.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'fissal_outcome',
+    code: 'DID_NOT_GO',
+    label: 'No se acercó a la oficina',
+    sortOrder: 40,
+    metadata: {
+      description:
+        'Tiene un cáncer cubierto, pero no fue a la oficina ni llamó tras la orientación.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'fissal_outcome',
+    code: 'NO_INFO',
+    label: 'No hay información',
+    sortOrder: 50,
+    metadata: {
+      closesReferral: false,
+      description:
+        'No se tiene información en el seguimiento después de la derivación.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'fissal_outcome',
+    code: 'NO_BUDGET',
+    label: 'FISSAL no tiene presupuesto',
+    sortOrder: 60,
+    metadata: {
+      description:
+        'Tiene un cáncer cubierto, pero no obtuvo el beneficio por falta de presupuesto.',
+    },
+    isSystem: true,
+  },
+  {
+    kind: 'fissal_outcome',
+    code: 'PATIENT_DECEASED',
+    label: 'Paciente falleció',
+    sortOrder: 70,
+    metadata: { description: 'Falleció mientras tramitaba el beneficio.' },
+    isSystem: true,
+  },
+  {
+    kind: 'conadis_outcome',
+    code: 'OBTAINED',
+    label: 'Adquirió el carnet',
+    sortOrder: 10,
+    metadata: { description: 'El paciente obtuvo el carnet CONADIS.' },
+    isSystem: true,
+  },
+  {
+    kind: 'conadis_outcome',
+    code: 'NOT_OBTAINED',
+    label: 'No adquirió el carnet',
+    sortOrder: 20,
+    metadata: { description: 'Hizo el trámite, pero no obtuvo el carnet.' },
+    isSystem: true,
+  },
+  {
+    kind: 'conadis_outcome',
+    code: 'DID_NOT_APPLY',
+    label: 'No hizo el trámite',
+    sortOrder: 30,
+    metadata: {
+      description:
+        'Se brindó orientación, pero el paciente no realizó el trámite.',
+    },
     isSystem: true,
   },
 ];

@@ -2791,7 +2791,12 @@
                 "chemotherapy_route",
                 "surgical_procedure",
                 "location_share_status",
-                "temporary_housing_type"
+                "temporary_housing_type",
+                "complaint_channel",
+                "complaint_outcome",
+                "social_worker_outcome",
+                "fissal_outcome",
+                "conadis_outcome"
               ],
               "type": "string"
             }
@@ -5541,6 +5546,180 @@
         "summary": "List patient social notes",
         "tags": [
           "Patient social notes"
+        ]
+      }
+    },
+    "/patients/{patientId}/social-referrals": {
+      "post": {
+        "operationId": "PatientSocialReferralsController_create",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientSocialReferralDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSocialReferralResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient or follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Open a social referral for a patient",
+        "tags": [
+          "Patient social referrals"
+        ]
+      },
+      "get": {
+        "operationId": "PatientSocialReferralsController_findAll",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatientSocialReferralResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List social referrals with their history",
+        "tags": [
+          "Patient social referrals"
+        ]
+      }
+    },
+    "/patients/{patientId}/social-referrals/{referralId}/updates": {
+      "post": {
+        "operationId": "PatientSocialReferralsController_addUpdate",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "referralId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientSocialReferralUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSocialReferralResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Referral or follow-up not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record the outcome of a social referral",
+        "tags": [
+          "Patient social referrals"
         ]
       }
     },
@@ -11930,7 +12109,12 @@
               "chemotherapy_route",
               "surgical_procedure",
               "location_share_status",
-              "temporary_housing_type"
+              "temporary_housing_type",
+              "complaint_channel",
+              "complaint_outcome",
+              "social_worker_outcome",
+              "fissal_outcome",
+              "conadis_outcome"
             ],
             "type": "string"
           },
@@ -16115,6 +16299,204 @@
           "note",
           "authorId",
           "createdAt"
+        ]
+      },
+      "CreatePatientSocialReferralDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "COMPLAINT",
+              "SOCIAL_WORKER",
+              "FISSAL",
+              "CONADIS"
+            ],
+            "type": "string"
+          },
+          "complaintChannel": {
+            "type": "string",
+            "description": "Catalog `complaint_channel` code."
+          },
+          "healthCenterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "issue": {
+            "type": "string",
+            "description": "What the complaint is about."
+          },
+          "note": {
+            "type": "string"
+          },
+          "openedAt": {
+            "type": "string",
+            "format": "date",
+            "description": "Defaults to today."
+          }
+        },
+        "required": [
+          "followUpId",
+          "type"
+        ]
+      },
+      "PatientSocialReferralUpdateResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "referralId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "referralId",
+          "followUpId",
+          "outcome",
+          "note",
+          "authorId",
+          "createdAt"
+        ]
+      },
+      "PatientSocialReferralResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "enum": [
+              "COMPLAINT",
+              "SOCIAL_WORKER",
+              "FISSAL",
+              "CONADIS"
+            ],
+            "type": "string"
+          },
+          "complaintChannel": {
+            "type": "string",
+            "nullable": true
+          },
+          "healthCenterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "healthCenterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "issue": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "enum": [
+              "OPEN",
+              "CLOSED"
+            ],
+            "type": "string"
+          },
+          "openedAt": {
+            "type": "string",
+            "format": "date"
+          },
+          "closedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updates": {
+            "description": "Outcome history, newest first.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientSocialReferralUpdateResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "type",
+          "complaintChannel",
+          "healthCenterId",
+          "healthCenterName",
+          "issue",
+          "note",
+          "status",
+          "openedAt",
+          "closedAt",
+          "followUpId",
+          "createdById",
+          "createdAt",
+          "updates"
+        ]
+      },
+      "CreatePatientSocialReferralUpdateDto": {
+        "type": "object",
+        "properties": {
+          "followUpId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome": {
+            "type": "string",
+            "description": "Code from the outcome catalog of the referral type."
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "followUpId",
+          "outcome"
         ]
       },
       "CreatePatientHealthBackgroundAssessmentDto": {
