@@ -20,6 +20,7 @@ import { citaEnvelopeFor } from './cita-envelope';
 import { normalizeReferralFields } from './referral-fields';
 import type { CreateHistoricalMedicalAppointmentDto } from '../../../historical-records/dto/create-historical-medical-appointment.dto';
 import { CatalogValueService } from '../../../catalogs/catalog-value.service';
+import { createAppointmentReminder } from '../../../reminders/appointment-reminder';
 @Injectable()
 export class PatientMedicalAppointmentsService {
   constructor(
@@ -51,7 +52,7 @@ export class PatientMedicalAppointmentsService {
         subjectPatientId: patientId,
       }))
     )
-      throw new NotFoundException('Follow-up not found');
+      throw new NotFoundException('No se encontró el seguimiento.');
     const specialty = await this.catalogValues.resolve(
       'medical_specialty',
       input.specialty,
@@ -62,8 +63,9 @@ export class PatientMedicalAppointmentsService {
       input.nextAppointmentSpecialty,
       { otherText: input.nextAppointmentSpecialtyOther, manager },
     );
+    const { reminderLead, reminderAt, reminderChannel, ...fields } = input;
     const catalogued = {
-      ...normalizeReferralFields(input),
+      ...normalizeReferralFields(fields),
       specialty: specialty.code,
       specialtyOther: specialty.other,
       nextAppointmentSpecialty: nextSpecialty?.code ?? null,
@@ -84,6 +86,11 @@ export class PatientMedicalAppointmentsService {
           { patientId, specialty: specialty.code, isCurrent: true },
           catalogued,
         ));
+    await createAppointmentReminder(
+      manager ?? this.repository.manager,
+      appointment,
+      { lead: reminderLead, remindAt: reminderAt, channel: reminderChannel },
+    );
     await this.invalidations.markDirty(patientId, manager);
     if (dispatchWebhook)
       await this.webhooks.enqueue(
@@ -112,20 +119,20 @@ export class PatientMedicalAppointmentsService {
           subjectPatientId: input.patientId,
         }))
       )
-        throw new NotFoundException('Follow-up not found');
+        throw new NotFoundException('No se encontró el seguimiento.');
       if (
         input.appointmentDate &&
         input.nextAppointmentDate &&
         input.nextAppointmentDate < input.appointmentDate
       )
         throw new BadRequestException(
-          'nextAppointmentDate cannot be before appointmentDate',
+          'La próxima cita no puede ser anterior a esta.',
         );
       if (!input.specialty.trim())
-        throw new BadRequestException('specialty is required');
+        throw new BadRequestException('Selecciona la especialidad.');
       if (input.appointmentTime && !input.appointmentDate)
         throw new BadRequestException(
-          'appointmentTime requires appointmentDate',
+          'Si indicas la hora de la cita, indica también la fecha.',
         );
       if (
         input.healthCenterId &&
@@ -133,7 +140,7 @@ export class PatientMedicalAppointmentsService {
           .getRepository(HealthCenter)
           .existsBy({ id: input.healthCenterId }))
       )
-        throw new NotFoundException('Health center not found');
+        throw new NotFoundException('No se encontró el establecimiento.');
       const specialty = await this.catalogValues.resolve(
         'medical_specialty',
         input.specialty,

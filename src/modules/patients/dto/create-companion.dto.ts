@@ -33,6 +33,6 @@ export class CreateCompanionDto extends CreatePatientDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @MaxLength(50)
+  @MaxLength(100)
   relationship?: string;
 }

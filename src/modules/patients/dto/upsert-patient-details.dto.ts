@@ -133,16 +133,6 @@ export class UpsertPatientDetailsDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  programDropoutReason?: string;
-
-  @ApiPropertyOptional({ format: 'date' })
-  @IsOptional()
-  @IsDateString()
-  programDropoutDate?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
   @IsBoolean()
   transportationViaSepa?: boolean;
 
@@ -182,10 +172,4 @@ export class UpsertPatientDetailsDto {
   @IsOptional()
   @IsDateString()
   attendedEducationalTalkAt?: string;
-
-  @ApiPropertyOptional({ maxLength: 100 })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  programDropoutReasonCode?: string;
 }

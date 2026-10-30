@@ -11,11 +11,13 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Agent } from './agent.entity';
+import { FollowUpAttempt } from './follow-up-attempt.entity';
 import {
   FollowUpPurpose,
   FollowUpStatus,
   FollowUpType,
 } from './follow-up.enums';
+import { Companion } from './companion.entity';
 import { Patient } from './patient.entity';
 import { User } from './user.entity';
 
@@ -23,12 +25,14 @@ import { User } from './user.entity';
 @Check(
   `"type" IN ('WHATSAPP','CALL','VIDEO_CALL','EMAIL','IN_PERSON','FACEBOOK')`,
 )
-@Check(`"status" IN ('SCHEDULED','COMPLETED','CANCELLED','NO_ANSWER')`)
+@Check(
+  `"status" IN ('SCHEDULED','COMPLETED','CANCELLED','NO_ANSWER','OVERDUE')`,
+)
 @Check(
   `"purpose" IN ('FIRST_CONTACT','ENROLLMENT','FOLLOW_UP','PSYCHOONCOLOGY_REFERRAL','OTHER')`,
 )
 @Index('IDX_follow_ups_subject_patient_id', ['subjectPatientId'])
-@Index('IDX_follow_ups_interlocutor_id', ['interlocutorId'])
+@Index('IDX_follow_ups_interlocutor_companion_id', ['interlocutorCompanionId'])
 @Index('IDX_follow_ups_agent_id', ['agentId'])
 @Index('IDX_follow_ups_next_follow_up_id', ['nextFollowUpId'])
 @Index('IDX_follow_ups_status', ['status'])
@@ -46,10 +50,12 @@ export class FollowUp {
   @ManyToOne(() => Patient)
   @JoinColumn({ name: 'subject_patient_id' })
   subjectPatient!: Patient;
-  @Column({ name: 'interlocutor_id', type: 'uuid' }) interlocutorId!: string;
-  @ManyToOne(() => Patient)
-  @JoinColumn({ name: 'interlocutor_id' })
-  interlocutor!: Patient;
+  /** Con quién se habló: un acompañante, o null si fue el propio paciente. */
+  @Column({ name: 'interlocutor_companion_id', type: 'uuid', nullable: true })
+  interlocutorCompanionId!: string | null;
+  @ManyToOne(() => Companion)
+  @JoinColumn({ name: 'interlocutor_companion_id' })
+  interlocutorCompanion!: Companion | null;
   @Column({ name: 'agent_id', type: 'uuid' }) agentId!: string;
   @ManyToOne(() => Agent)
   @JoinColumn({ name: 'agent_id' })
@@ -73,6 +79,8 @@ export class FollowUp {
   nextFollowUp!: FollowUp | null;
   @OneToMany(() => FollowUp, (followUp) => followUp.nextFollowUp)
   previousFollowUps!: FollowUp[];
+  @OneToMany(() => FollowUpAttempt, (attempt) => attempt.followUp)
+  attempts!: FollowUpAttempt[];
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })

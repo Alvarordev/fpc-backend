@@ -2,6 +2,7 @@ import { MedicalAppointmentStatus } from '../../../../../database/entities/medic
 import {
   IsBoolean,
   IsDateString,
+  IsEnum,
   IsIn,
   IsOptional,
   IsString,
@@ -10,6 +11,10 @@ import {
   MaxLength,
 } from 'class-validator';
 import { APPOINTMENT_TIME_PATTERN } from './appointment-time';
+import {
+  ReminderChannel,
+  ReminderLead,
+} from '../../../../../database/entities/reminder-delivery.enums';
 
 export class CreatePatientMedicalAppointmentDto {
   @IsUUID() followUpId!: string;
@@ -33,4 +38,9 @@ export class CreatePatientMedicalAppointmentDto {
   @IsOptional()
   @IsIn(Object.values(MedicalAppointmentStatus))
   status?: MedicalAppointmentStatus;
+  // Reminder created for future scheduled appointments (defaults: ONE_DAY,
+  // EMAIL when the patient has an email).
+  @IsOptional() @IsEnum(ReminderLead) reminderLead?: ReminderLead;
+  @IsOptional() @IsDateString() reminderAt?: string;
+  @IsOptional() @IsEnum(ReminderChannel) reminderChannel?: ReminderChannel;
 }

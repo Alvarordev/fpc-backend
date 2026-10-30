@@ -53,7 +53,7 @@ export class PatientAddressesController {
   @ApiBadRequestResponse({ description: 'Invalid request payload' })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async create(
     @Param('patientId') patientId: string,
     @Body() dto: CreatePatientAddressDto,
@@ -87,7 +87,7 @@ export class PatientAddressesController {
   @ApiOkResponse({ type: PatientAddressResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Address not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la dirección.' })
   async update(
     @Param('patientId') patientId: string,
     @Param('addressId') addressId: string,
@@ -107,7 +107,7 @@ export class PatientAddressesController {
   @ApiNoContentResponse()
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Address not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la dirección.' })
   async deactivate(
     @Param('patientId') patientId: string,
     @Param('addressId') addressId: string,

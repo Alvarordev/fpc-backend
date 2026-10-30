@@ -68,9 +68,9 @@ export class EnrollmentsController {
     description: 'The rating must be an integer from 1 to 5',
   })
   @ApiForbiddenResponse({
-    description: 'Agents can only update their own enrollment',
+    description: 'Solo puedes modificar tus propios enrolamientos.',
   })
-  @ApiNotFoundResponse({ description: 'Enrollment not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el enrolamiento.' })
   updateSurvey(
     @Param('id') id: string,
     @Body() dto: UpdateEnrollmentSurveyDto,

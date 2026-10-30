@@ -60,7 +60,7 @@ export class MedicalAppointmentsController {
       'Invalid payload, or the authenticated user has no agent profile',
   })
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async create(
     @Body() dto: CreateMedicalAppointmentDto,
     @CurrentUser() user: User,
@@ -103,7 +103,7 @@ export class MedicalAppointmentsController {
   @ApiOkResponse({ type: MedicalAppointmentResponseDto })
   @ApiBadRequestResponse({ description: 'Invalid payload' })
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Medical appointment not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró la cita médica.' })
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateMedicalAppointmentDto,

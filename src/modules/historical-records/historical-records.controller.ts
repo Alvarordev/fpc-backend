@@ -1,3 +1,8 @@
+import { interlocutorIdOf } from '../follow-ups/follow-ups.service';
+import {
+  AuditContext,
+  AuditContextKind,
+} from '../../shared/audit/audit-context';
 import {
   Body,
   Controller,
@@ -26,6 +31,7 @@ import { Enrollment } from '../../database/entities/enrollment.entity';
 import { FollowUp } from '../../database/entities/follow-up.entity';
 import { PsychooncologyAppointment } from '../../database/entities/psychooncology-appointment.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
+import { toReminderResponse } from '../reminders/reminder-response.mapper';
 import { User } from '../../database/entities/user.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
@@ -34,7 +40,6 @@ import { ApiErrorResponseDto } from '../../shared/filters/api-error-response.dto
 import { EnrollmentResponseDto } from '../enrollments/dto/enrollment-response.dto';
 import { FollowUpResponseDto } from '../follow-ups/dto/follow-up-response.dto';
 import {
-  ReminderMedicalAppointmentSummaryDto,
   ReminderResponseDto,
 } from '../reminders/dto/reminder-response.dto';
 import { PatientMedicalAppointmentResponseDto } from '../patients/clinical/medical-appointments/dto/patient-medical-appointment-response.dto';
@@ -57,6 +62,7 @@ import { HistoricalRecordsService } from './historical-records.service';
 @ApiTags('historical-records')
 @ApiBearerAuth()
 @Roles(UserRole.ADMIN)
+@AuditContext(AuditContextKind.HISTORICAL_LOAD)
 @ApiUnauthorizedResponse({ description: 'JWT missing, invalid, or expired' })
 export class HistoricalRecordsController {
   constructor(private readonly service: HistoricalRecordsService) {}
@@ -108,7 +114,7 @@ export class HistoricalRecordsController {
     description: 'Historical follow-up update is invalid',
   })
   @ApiForbiddenResponse({ description: 'Only administrators may load history' })
-  @ApiNotFoundResponse({ description: 'Follow-up not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el seguimiento.' })
   updateFollowUp(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() input: UpdateHistoricalFollowUpDto,
@@ -129,7 +135,7 @@ export class HistoricalRecordsController {
     description: 'The follow-up is not historical or belongs to an enrollment',
   })
   @ApiForbiddenResponse({ description: 'Only administrators may load history' })
-  @ApiNotFoundResponse({ description: 'Follow-up not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el seguimiento.' })
   deleteFollowUp(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.deleteFollowUp(id);
   }
@@ -158,7 +164,7 @@ export class HistoricalRecordsController {
     description: 'Historical reminder update is invalid',
   })
   @ApiForbiddenResponse({ description: 'Only administrators may load history' })
-  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
   updateReminder(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() input: UpdateHistoricalReminderDto,
@@ -256,7 +262,7 @@ export class HistoricalRecordsController {
       id: item.id,
       subjectPatientId: item.subjectPatientId,
       subjectPatientName: item.subjectPatient?.fullName ?? null,
-      interlocutorId: item.interlocutorId,
+      interlocutorId: interlocutorIdOf(item),
       agentId: item.agentId,
       type: item.type,
       status: item.status,
@@ -274,38 +280,7 @@ export class HistoricalRecordsController {
   }
 
   private toReminderResponse(this: void, item: Reminder): ReminderResponseDto {
-    const appointment = item.medicalAppointment;
-    const medicalAppointment: ReminderMedicalAppointmentSummaryDto | null =
-      appointment
-        ? {
-            id: appointment.id,
-            specialty: appointment.specialty,
-            healthCenterId: appointment.healthCenterId,
-            healthCenterName: appointment.healthCenter?.name ?? null,
-            appointmentDate: appointment.appointmentDate,
-            appointmentTime: appointment.appointmentTime,
-            status: appointment.status,
-            isFirstConsultation: appointment.isFirstConsultation,
-          }
-        : null;
-    return {
-      id: item.id,
-      subjectPatientId: item.subjectPatientId,
-      createdFromFollowUpId: item.createdFromFollowUpId,
-      assignedAgentId: item.assignedAgentId,
-      dueAt: item.dueAt,
-      dueOn: item.dueOn,
-      description: item.description,
-      kind: item.kind,
-      medicalAppointmentId: item.medicalAppointmentId,
-      medicalAppointment,
-      status: item.status,
-      completedAt: item.completedAt,
-      completedOn: item.completedOn,
-      resultingFollowUpId: item.resultingFollowUpId,
-      createdAt: item.createdAt,
-      isHistorical: item.isHistorical,
-    };
+    return toReminderResponse(item);
   }
 
   private toPsychooncologyResponse(
@@ -343,6 +318,14 @@ export class HistoricalRecordsController {
       noAnswerNote: item.noAnswerNote,
       satisfactionRating: item.satisfactionRating,
       satisfactionComment: item.satisfactionComment,
+      cycleId: item.cycleId,
+      rescheduledToId: item.rescheduledToId,
+      needsReassignment: item.needsReassignment,
+      reminderMode: item.reminderMode,
+      remindAt: item.remindAt,
+      reminderSentAt: item.reminderSentAt,
+      noShowManagedAt: item.noShowManagedAt,
+      noShowManagedById: item.noShowManagedById,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
       isHistorical: item.isHistorical,

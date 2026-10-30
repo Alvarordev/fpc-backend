@@ -75,7 +75,7 @@ export class CreatePatientTreatmentDto {
   treatmentSituation?: string;
   @ValidateIf(
     (dto: CreatePatientTreatmentDto) =>
-      dto.treatmentSituation === TreatmentSituation.ABANDONED,
+      dto.treatmentSituation === TreatmentSituation.ABANDONADO,
   )
   @IsString()
   @IsNotEmpty()
@@ -83,7 +83,7 @@ export class CreatePatientTreatmentDto {
 
   @ValidateIf(
     (dto: CreatePatientTreatmentDto) =>
-      dto.treatmentSituation === TreatmentSituation.INTERRUMPIDO,
+      dto.treatmentSituation === TreatmentSituation.SUSPENDIDO,
   )
   @IsIn(Object.values(TreatmentInterruptionReason))
   @IsNotEmpty()

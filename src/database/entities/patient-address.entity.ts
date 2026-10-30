@@ -13,6 +13,8 @@ import { FollowUp } from './follow-up.entity';
 import { Patient } from './patient.entity';
 import { PERU_DEPARTMENTS, PeruDepartment } from './health-center.entity';
 import { AddressType } from './address-type.enum';
+import { Duration } from './embedded/duration.embedded';
+import { LodgingCostPeriod } from './lodging-cost-period.enum';
 
 @Entity('patient_addresses')
 @Check(`"type" IN ('PERMANENT', 'TEMPORARY')`)
@@ -23,6 +25,10 @@ import { AddressType } from './address-type.enum';
   unique: true,
   where: '"is_primary" = true AND "is_active" = true',
 })
+@Check(
+  'CHK_patient_addresses_lodging_cost_period',
+  `"average_lodging_cost_period" IS NULL OR "average_lodging_cost_period" IN ('NIGHT', 'MONTH')`,
+)
 @Index('IDX_patient_addresses_patient_id', ['patientId'])
 @Index('IDX_patient_addresses_department', ['department'])
 export class PatientAddress {
@@ -49,6 +55,51 @@ export class PatientAddress {
   @Column({ type: 'text', nullable: true }) reference!: string | null;
   @Column({ name: 'location_url', type: 'text', nullable: true })
   locationUrl!: string | null;
+  /** Catalog `location_share_status`: whether the web location was shared. */
+  @Column({
+    name: 'location_share_status',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  locationShareStatus!: string | null;
+  @Column({ name: 'location_share_status_other', type: 'text', nullable: true })
+  locationShareStatusOther!: string | null;
+  /** Catalog `temporary_housing_type`; only for TEMPORARY addresses. */
+  @Column({
+    name: 'housing_type',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  housingType!: string | null;
+  @Column({ name: 'housing_type_other', type: 'text', nullable: true })
+  housingTypeOther!: string | null;
+  @Column({
+    name: 'shelter_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  shelterName!: string | null;
+  @Column(() => Duration, { prefix: 'travel_time_to_hospital' })
+  travelTimeToHospital!: Duration;
+  /** Average spend in soles when renting lodging near the hospital. */
+  @Column({
+    name: 'average_lodging_cost',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
+  averageLodgingCost!: string | null;
+  @Column({
+    name: 'average_lodging_cost_period',
+    type: 'varchar',
+    length: 10,
+    nullable: true,
+  })
+  averageLodgingCostPeriod!: LodgingCostPeriod | null;
   @Column({ name: 'dni_matches_address', type: 'boolean', nullable: true })
   dniMatchesAddress!: boolean | null;
   @Column({ name: 'valid_from', type: 'date', nullable: true })

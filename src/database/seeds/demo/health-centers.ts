@@ -11,7 +11,7 @@ export async function seedHealthCenters({
         name: seed.name,
         slug: seed.slug,
         department: seed.department,
-        category: seed.category,
+        careCategory: seed.category,
         isActive: seed.isActive ?? true,
       }),
     ),

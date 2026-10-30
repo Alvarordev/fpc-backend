@@ -88,14 +88,8 @@ export class CreatePatientNonOncologicalFollowUpDto {
   @IsOptional()
   @IsIn(Object.values(PatientNonOncologicalFollowUpStatus))
   status?: PatientNonOncologicalFollowUpStatus;
-}
 
-export class UpdatePatientNonOncologicalFollowUpDto extends PartialType(
-  OmitType(CreatePatientNonOncologicalFollowUpDto, [
-    'followUpId',
-    'enrollmentId',
-  ] as const),
-) {
+  /** Si se registra ya dado de alta. */
   @ApiPropertyOptional({ format: 'date' })
   @IsOptional()
   @IsDateString()
@@ -107,3 +101,10 @@ export class UpdatePatientNonOncologicalFollowUpDto extends PartialType(
   @IsString()
   dischargeReason?: string | null;
 }
+
+export class UpdatePatientNonOncologicalFollowUpDto extends PartialType(
+  OmitType(CreatePatientNonOncologicalFollowUpDto, [
+    'followUpId',
+    'enrollmentId',
+  ] as const),
+) {}

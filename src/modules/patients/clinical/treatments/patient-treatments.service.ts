@@ -20,6 +20,7 @@ import { normalizeDuration } from '../../../../shared/duration/duration.util';
 import { TreatmentMedicationsService } from './medications/treatment-medications.service';
 import { HealthCenter } from '../../../../database/entities/health-center.entity';
 import { CatalogValueService } from '../../../catalogs/catalog-value.service';
+import { PatientHealthSubcategoryService } from '../../health-subcategory/patient-health-subcategory.service';
 
 @Injectable()
 export class PatientTreatmentsService {
@@ -36,12 +37,15 @@ export class PatientTreatmentsService {
     private readonly medications: TreatmentMedicationsService,
     private readonly dataSource: DataSource,
     private readonly catalogValues: CatalogValueService,
+    private readonly subcategories: PatientHealthSubcategoryService,
   ) {}
 
   async create(
     patientId: string,
     input: CreatePatientTreatmentDto,
     manager?: EntityManager,
+    /** Batch writers (enrollment, historical load) derive once at the end. */
+    options: { deriveSubcategory?: boolean } = {},
   ): Promise<PatientTreatment> {
     await this.patients.assertPatientRole(
       patientId,
@@ -61,13 +65,19 @@ export class PatientTreatmentsService {
           subjectPatientId: patientId,
         }),
       ]);
-      if (!diagnosis) throw new NotFoundException('Diagnosis not found');
+      if (!diagnosis)
+        throw new NotFoundException('No se encontró el diagnóstico.');
       if (diagnosis.patientId !== patientId)
-        throw new ConflictException('Diagnosis does not belong to patient');
-      if (!followUp) throw new NotFoundException('Follow-up not found');
+        throw new ConflictException(
+          'El diagnóstico no pertenece a este paciente.',
+        );
+      if (!followUp)
+        throw new NotFoundException('No se encontró el seguimiento.');
 
       if (input.startDate && input.endDate && input.endDate < input.startDate)
-        throw new BadRequestException('endDate must be on or after startDate');
+        throw new BadRequestException(
+          'La fecha de fin no puede ser anterior a la de inicio.',
+        );
 
       let previousTreatment: PatientTreatment | null = null;
       let seriesId = input.seriesId;
@@ -76,7 +86,7 @@ export class PatientTreatmentsService {
           where: { seriesId, patientId, isCurrent: true },
         });
         if (!previousTreatment)
-          throw new NotFoundException('Treatment series not found');
+          throw new NotFoundException('No se encontró el tratamiento.');
       } else {
         seriesId = crypto.randomUUID();
       }
@@ -96,15 +106,15 @@ export class PatientTreatmentsService {
 
       if (isReferred && (!sourceHealthCenterId || !receivingHealthCenterId))
         throw new BadRequestException(
-          'Referred treatments require source and receiving health centers',
+          'Un tratamiento referido necesita hospital de origen y receptor.',
         );
       if (isReferred && sourceHealthCenterId === receivingHealthCenterId)
         throw new BadRequestException(
-          'Source and receiving health centers must be different',
+          'El hospital de origen y el receptor deben ser distintos.',
         );
       if (!isReferred && sourceHealthCenterId)
         throw new BadRequestException(
-          'A non-referred treatment cannot have a source health center',
+          'Un tratamiento no referido no puede tener hospital de origen.',
         );
 
       const healthCenterIds = [
@@ -116,10 +126,16 @@ export class PatientTreatmentsService {
           .getRepository(HealthCenter)
           .find({ where: { id: In(healthCenterIds), isActive: true } });
         if (activeHealthCenters.length !== new Set(healthCenterIds).size)
-          throw new NotFoundException('Health center not found or inactive');
+          throw new NotFoundException(
+            'El establecimiento no existe o está inactivo.',
+          );
       }
 
-      const { medications: medicationInputs, treatmentTypeOther, ...rest } = input;
+      const {
+        medications: medicationInputs,
+        treatmentTypeOther,
+        ...rest
+      } = input;
       const resolvedType = await this.catalogValues.resolve(
         'treatment_type',
         input.treatmentType,
@@ -155,6 +171,10 @@ export class PatientTreatmentsService {
         input.accessBarrierCode,
         { otherText: input.accessBarrierOther, manager: entityManager },
       );
+      const situation =
+        input.treatmentSituation !== undefined
+          ? (resolvedSituation?.code ?? null)
+          : (previousTreatment?.treatmentSituation ?? null);
       const values = {
         ...rest,
         treatmentType: resolvedType.code,
@@ -182,17 +202,19 @@ export class PatientTreatmentsService {
           : {}),
         patientId,
         seriesId,
+        // Reasons only apply to their situation; an update that does not send
+        // them keeps the ones of the inherited version.
         treatmentAbandonmentReason:
-          input.treatmentSituation === TreatmentSituation.ABANDONED
-            ? (input.treatmentAbandonmentReason ?? null)
+          situation === TreatmentSituation.ABANDONADO
+            ? input.treatmentAbandonmentReason
             : null,
         interruptionReason:
-          input.treatmentSituation === TreatmentSituation.INTERRUMPIDO
-            ? (input.interruptionReason ?? null)
+          situation === TreatmentSituation.SUSPENDIDO
+            ? input.interruptionReason
             : null,
         interruptionReasonOther:
-          input.treatmentSituation === TreatmentSituation.INTERRUMPIDO
-            ? (input.interruptionReasonOther ?? null)
+          situation === TreatmentSituation.SUSPENDIDO
+            ? input.interruptionReasonOther
             : null,
         isReferred,
         sourceHealthCenterId: isReferred ? sourceHealthCenterId : null,
@@ -210,6 +232,7 @@ export class PatientTreatmentsService {
         { seriesId, isCurrent: true },
         values,
         entityManager,
+        { inherit: Boolean(previousTreatment) },
       );
 
       if (medicationInputs?.length) {
@@ -230,6 +253,8 @@ export class PatientTreatmentsService {
         );
       }
 
+      if (options.deriveSubcategory ?? true)
+        await this.subcategories.syncFromTreatments(patientId, entityManager);
       await this.invalidations.markDirty(patientId, entityManager);
       return treatment;
     };

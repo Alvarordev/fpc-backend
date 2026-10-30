@@ -1,4 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  AppointmentStatus,
+  PsychooncologyAppointment,
+} from '../../database/entities/psychooncology-appointment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { UserRole } from '../../database/entities/user-role.enum';
@@ -47,21 +55,34 @@ export class VolunteersService {
       );
     });
   }
-  findAll(user?: User): Promise<Volunteer[]> {
+  findAll(): Promise<Volunteer[]> {
     return this.volunteersRepository.find({
-      where:
-        user?.role === UserRole.VOLUNTEER
-          ? { userId: user.id, isAnonymous: false }
-          : { isAnonymous: false },
+      where: { isAnonymous: false },
       relations: { user: true },
     });
+  }
+  async findByUser(userId: string): Promise<Volunteer> {
+    const volunteer = await this.volunteersRepository.findOne({
+      where: { userId },
+      relations: { user: true },
+    });
+    if (!volunteer) throw new NotFoundException('No se encontró el voluntario.');
+    return volunteer;
+  }
+  async findVisible(id: string, user: User): Promise<Volunteer> {
+    const volunteer = await this.findById(id);
+    if (user.role === UserRole.VOLUNTEER && volunteer.userId !== user.id)
+      throw new ForbiddenException(
+        'Solo puedes ver tu propio perfil.',
+      );
+    return volunteer;
   }
   async findById(id: string): Promise<Volunteer> {
     const volunteer = await this.volunteersRepository.findOne({
       where: { id },
       relations: { user: true },
     });
-    if (!volunteer) throw new NotFoundException('Volunteer not found');
+    if (!volunteer) throw new NotFoundException('No se encontró el voluntario.');
     return volunteer;
   }
   async update(id: string, input: UpdateVolunteerDto): Promise<Volunteer> {
@@ -81,11 +102,35 @@ export class VolunteersService {
   async deactivate(id: string): Promise<Volunteer> {
     const volunteer = await this.findById(id);
     await this.usersService.setActive(volunteer.userId, false);
+    await this.flagFutureSessions(volunteer.id, true);
     return this.findById(id);
   }
   async setAvailability(id: string, isActive: boolean): Promise<Volunteer> {
     const volunteer = await this.findById(id);
     volunteer.isActive = isActive;
-    return this.volunteersRepository.save(volunteer);
+    const saved = await this.volunteersRepository.save(volunteer);
+    if (!isActive) await this.flagFutureSessions(volunteer.id, true);
+    else if (volunteer.user.isActive)
+      await this.flagFutureSessions(volunteer.id, false);
+    return saved;
+  }
+
+  /**
+   * P9: future sessions of a leaving volunteer must be reassigned. The team
+   * sees them in GET /psychooncology-appointments/needs-reassignment; hospital
+   * alerts (AL2) are not the channel for this.
+   */
+  private flagFutureSessions(volunteerId: string, needsReassignment: boolean) {
+    return this.dataSource.transaction((manager) =>
+      manager
+        .createQueryBuilder()
+        .update(PsychooncologyAppointment)
+        .set({ needsReassignment })
+        .where('volunteer_id = :volunteerId', { volunteerId })
+        .andWhere('status = :status', { status: AppointmentStatus.SCHEDULED })
+        .andWhere('is_historical = false')
+        .andWhere('scheduled_at >= now()')
+        .execute(),
+    );
   }
 }

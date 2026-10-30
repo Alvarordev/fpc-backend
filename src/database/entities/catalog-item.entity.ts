@@ -31,6 +31,13 @@ export const CATALOG_KINDS = [
   'country',
   'chemotherapy_route',
   'surgical_procedure',
+  'location_share_status',
+  'temporary_housing_type',
+  'alert_category',
+  'alert_derivation_entity',
+  'reenrollment_reason',
+  'companion_relationship',
+  'educational_talk',
 ] as const;
 
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
@@ -46,6 +53,7 @@ export const OPEN_CATALOG_KINDS = [
   'country',
   'chemotherapy_route',
   'surgical_procedure',
+  'companion_relationship',
 ] as const satisfies readonly CatalogKind[];
 
 export type OpenCatalogKind = (typeof OPEN_CATALOG_KINDS)[number];
@@ -78,6 +86,13 @@ export const CATALOG_KIND_LABELS: Record<CatalogKind, string> = {
   country: 'País',
   chemotherapy_route: 'Vía de quimioterapia',
   surgical_procedure: 'Procedimiento quirúrgico',
+  location_share_status: 'Ubicación web de la vivienda',
+  temporary_housing_type: 'Tipo de vivienda provisional',
+  alert_category: 'Categoría de alerta',
+  alert_derivation_entity: 'Entidad de derivación de alertas',
+  reenrollment_reason: 'Motivo de reenrolamiento',
+  companion_relationship: 'Parentesco',
+  educational_talk: 'Charla de prevención',
 };
 
 export const RESERVED_CATALOG_CODE = 'OTRO';

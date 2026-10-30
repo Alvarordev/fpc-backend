@@ -34,7 +34,7 @@ export class PatientSummaryOnDemandService {
    */
   async get(patientId: string) {
     if (!(await this.patients.existsBy({ id: patientId })))
-      throw new NotFoundException('Patient not found');
+      throw new NotFoundException('No se encontró el paciente.');
 
     const stored = await this.summaries.findOneBy({ patientId });
     if (stored?.status === PatientSummaryStatus.READY) {
@@ -52,7 +52,7 @@ export class PatientSummaryOnDemandService {
   /** Calls the provider again even if a ready summary already exists. */
   async refresh(patientId: string) {
     if (!(await this.patients.existsBy({ id: patientId })))
-      throw new NotFoundException('Patient not found');
+      throw new NotFoundException('No se encontró el paciente.');
 
     const stored = await this.summaries.findOneBy({ patientId });
     return this.generate(patientId, stored);

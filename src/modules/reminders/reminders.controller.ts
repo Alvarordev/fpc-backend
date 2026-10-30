@@ -2,9 +2,12 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -27,10 +30,12 @@ import { CompleteReminderDto } from './dto/complete-reminder.dto';
 import { CreateReminderDto } from './dto/create-reminder.dto';
 import { ListRemindersDto } from './dto/list-reminders.dto';
 import { UpdateReminderDto } from './dto/update-reminder.dto';
+import { SetReminderMessageDto } from './dto/set-reminder-message.dto';
 import {
-  ReminderMedicalAppointmentSummaryDto,
+  ReminderMessageResponseDto,
   ReminderResponseDto,
 } from './dto/reminder-response.dto';
+import { toReminderResponse } from './reminder-response.mapper';
 import { RemindersService } from './reminders.service';
 import { UserRole } from '../../database/entities/user-role.enum';
 
@@ -56,8 +61,8 @@ export class RemindersController {
   @ApiBadRequestResponse({
     description: 'Required agent assignment is missing',
   })
-  @ApiForbiddenResponse({ description: 'Agents cannot reassign reminders' })
-  @ApiNotFoundResponse({ description: 'Agent not found' })
+  @ApiForbiddenResponse({ description: 'No puedes reasignar recordatorios.' })
+  @ApiNotFoundResponse({ description: 'No se encontró el agente.' })
   create(@Body() dto: CreateReminderDto, @CurrentUser() user: User) {
     return this.service.create(dto, user).then(this.toResponse);
   }
@@ -80,7 +85,9 @@ export class RemindersController {
   @ApiOperation({ summary: 'Update a pending reminder' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: ReminderResponseDto })
-  @ApiBadRequestResponse({ description: 'Closed reminders cannot be edited' })
+  @ApiBadRequestResponse({
+    description: 'No se puede editar un recordatorio cerrado.',
+  })
   @ApiForbiddenResponse({
     description: 'Agents can only update their own reminders',
   })
@@ -93,18 +100,90 @@ export class RemindersController {
     return this.service.update(id, dto, user).then(this.toResponse);
   }
 
+  @Get(':id/message')
+  @Roles(...READ)
+  @ApiOperation({
+    summary: 'Get the reminder text ready to copy (manual WhatsApp delivery)',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: ReminderMessageResponseDto })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
+  message(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ): Promise<ReminderMessageResponseDto> {
+    return this.service.getMessage(id, user);
+  }
+
+  @Put(':id/message')
+  @Roles(...WRITE)
+  @ApiOperation({
+    summary:
+      'Save the email text of a pending reminder (empty restores the suggested text)',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: ReminderMessageResponseDto })
+  @ApiBadRequestResponse({
+    description: 'No se puede editar un recordatorio cerrado.',
+  })
+  setMessage(
+    @Param('id') id: string,
+    @Body() dto: SetReminderMessageDto,
+    @CurrentUser() user: User,
+  ): Promise<ReminderMessageResponseDto> {
+    return this.service.setMessage(id, dto.text, user);
+  }
+
+  @Post(':id/send-email')
+  @Roles(...WRITE)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Email the reminder to the patient now',
+    description:
+      'The outcome is stored in deliveryStatus (SENT or FAILED with deliveryError). When email is not configured the reminder ends as FAILED.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: ReminderResponseDto })
+  @ApiBadRequestResponse({
+    description: 'Reminder is not pending or the patient has no email',
+  })
+  @ApiForbiddenResponse({
+    description: 'Agents can only send their own reminders',
+  })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
+  sendEmail(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.service.sendEmail(id, user).then(this.toResponse);
+  }
+
+  @Post(':id/mark-sent')
+  @Roles(...WRITE)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Mark a reminder as delivered manually (e.g. copied to WhatsApp)',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: ReminderResponseDto })
+  @ApiBadRequestResponse({ description: 'Reminder is not pending' })
+  @ApiForbiddenResponse({
+    description: 'Agents can only update their own reminders',
+  })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
+  markSent(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.service.markSent(id, user).then(this.toResponse);
+  }
+
   @Patch(':id/complete')
   @Roles(...WRITE)
   @ApiOperation({ summary: 'Complete a pending reminder' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: ReminderResponseDto })
   @ApiBadRequestResponse({
-    description: 'Reminder is not pending or the follow-up is invalid',
+    description: 'Reminder is not pending',
   })
   @ApiForbiddenResponse({
     description: 'Agents can only complete their own reminders',
   })
-  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
   complete(
     @Param('id') id: string,
     @Body() dto: CompleteReminderDto,
@@ -119,49 +198,17 @@ export class RemindersController {
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: ReminderResponseDto })
   @ApiBadRequestResponse({
-    description: 'Only pending reminders can be dismissed',
+    description: 'Solo se puede descartar un recordatorio pendiente.',
   })
   @ApiForbiddenResponse({
     description: 'Agents can only dismiss their own reminders',
   })
-  @ApiNotFoundResponse({ description: 'Reminder not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el recordatorio.' })
   dismiss(@Param('id') id: string, @CurrentUser() user: User) {
     return this.service.dismiss(id, user).then(this.toResponse);
   }
 
   private toResponse(this: void, item: Reminder): ReminderResponseDto {
-    const appointment = item.medicalAppointment;
-    const medicalAppointment: ReminderMedicalAppointmentSummaryDto | null =
-      appointment
-        ? {
-            id: appointment.id,
-            specialty: appointment.specialty,
-            healthCenterId: appointment.healthCenterId,
-            healthCenterName: appointment.healthCenter?.name ?? null,
-            appointmentDate: appointment.appointmentDate,
-            appointmentTime: appointment.appointmentTime,
-            status: appointment.status,
-            isFirstConsultation: appointment.isFirstConsultation,
-          }
-        : null;
-
-    return {
-      id: item.id,
-      subjectPatientId: item.subjectPatientId,
-      createdFromFollowUpId: item.createdFromFollowUpId,
-      assignedAgentId: item.assignedAgentId,
-      dueAt: item.dueAt,
-      dueOn: item.dueOn,
-      description: item.description,
-      kind: item.kind,
-      medicalAppointmentId: item.medicalAppointmentId,
-      medicalAppointment,
-      status: item.status,
-      completedAt: item.completedAt,
-      completedOn: item.completedOn,
-      resultingFollowUpId: item.resultingFollowUpId,
-      createdAt: item.createdAt,
-      isHistorical: item.isHistorical,
-    };
+    return toReminderResponse(item);
   }
 }

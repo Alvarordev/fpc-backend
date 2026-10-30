@@ -41,7 +41,7 @@ export class UsersController {
   @ApiCreatedResponse({ type: UserResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiConflictResponse({ description: 'Email already exists' })
+  @ApiConflictResponse({ description: 'Ya existe un usuario con ese correo.' })
   async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
     const user = await this.usersService.create(createUserDto);
     return UserResponseDto.from(user);
@@ -84,8 +84,8 @@ export class UsersController {
   @ApiForbiddenResponse({
     description: 'Administrator role required, or target user is an admin',
   })
-  @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiConflictResponse({ description: 'Email already exists' })
+  @ApiNotFoundResponse({ description: 'No se encontró el usuario.' })
+  @ApiConflictResponse({ description: 'Ya existe un usuario con ese correo.' })
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,

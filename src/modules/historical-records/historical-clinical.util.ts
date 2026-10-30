@@ -6,7 +6,10 @@ import { FollowUp } from '../../database/entities/follow-up.entity';
 import { PatientAddress } from '../../database/entities/patient-address.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
 import { PatientDiagnosticStatusEvent } from '../../database/entities/patient-diagnostic-status-event.entity';
-import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
+import {
+  InsuranceType,
+  PatientInsurance,
+} from '../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
 import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-non-oncological-follow-up.entity';
 import { PatientPsychooncologySupportAssessment } from '../../database/entities/patient-psychooncology-support-assessment.entity';
@@ -34,6 +37,7 @@ import { PatientSocialNotesService } from '../patients/social-notes/patient-soci
 import { PatientNonOncologicalFollowUpsService } from '../patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 import { PatientDiagnosticStatusesService } from '../patients/diagnostic-status/patient-diagnostic-statuses.service';
 import { PatientsService } from '../patients/patients.service';
+import { PatientHealthSubcategoryService } from '../patients/health-subcategory/patient-health-subcategory.service';
 import type {
   CreateHistoricalFollowUpDto,
   HistoricalFollowUpTreatmentDto,
@@ -80,6 +84,7 @@ export interface HistoricalClinicalServices {
   addresses: PatientAddressesService;
   healthBackgroundAssessments: PatientHealthBackgroundAssessmentsService;
   socialNotes: PatientSocialNotesService;
+  subcategories: PatientHealthSubcategoryService;
 }
 
 export async function attachHistoricalClinicalData(
@@ -91,7 +96,13 @@ export async function attachHistoricalClinicalData(
   authorId: string,
 ) {
   if (input.details)
-    await services.patients.upsertDetails(patientId, input.details, manager);
+    await upsertHistoricalDetails(
+      services,
+      manager,
+      patientId,
+      followUpId,
+      input.details,
+    );
 
   const createdDiagnoses = new Map<string, PatientDiagnosis>();
   for (const diagnosisInput of input.diagnoses ?? []) {
@@ -112,6 +123,14 @@ export async function attachHistoricalClinicalData(
     input.treatments ?? [],
     createdDiagnoses,
   );
+  if (input.treatments?.length)
+    await syncHistoricalSubcategory(
+      services,
+      manager,
+      patientId,
+      followUpId,
+      input.details,
+    );
 
   if (input.insurance)
     await services.insurance.create(
@@ -175,7 +194,13 @@ export async function upsertHistoricalClinicalData(
   authorId: string,
 ) {
   if (input.details)
-    await services.patients.upsertDetails(patientId, input.details, manager);
+    await upsertHistoricalDetails(
+      services,
+      manager,
+      patientId,
+      followUpId,
+      input.details,
+    );
 
   const createdDiagnoses = new Map<string, PatientDiagnosis>();
   for (const diagnosisInput of input.diagnoses ?? []) {
@@ -187,7 +212,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Diagnosis not found for this historical follow-up',
+          'No se encontró el diagnóstico de este seguimiento histórico.',
         );
       const updatable = Object.fromEntries(
         Object.entries(values).filter(
@@ -216,7 +241,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Treatment not found for this historical follow-up',
+          'No se encontró el tratamiento de este seguimiento histórico.',
         );
       if (diagnosisId) existing.diagnosisId = diagnosisId;
       Object.assign(existing, values);
@@ -233,6 +258,15 @@ export async function upsertHistoricalClinicalData(
     );
   }
 
+  if (input.treatments?.length)
+    await syncHistoricalSubcategory(
+      services,
+      manager,
+      patientId,
+      followUpId,
+      input.details,
+    );
+
   if (input.insurance) {
     const { id, ...values } = input.insurance;
     if (id) {
@@ -242,9 +276,12 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Insurance not found for this historical follow-up',
+          'No se encontró el seguro de este seguimiento histórico.',
         );
-      await repository.save(Object.assign(existing, values));
+      Object.assign(existing, values);
+      if (existing.insuranceType !== InsuranceType.ESSALUD)
+        existing.affiliatedViaSepa = null;
+      await repository.save(existing);
     } else {
       await services.insurance.create(
         patientId,
@@ -263,7 +300,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'SIS affiliation not found for this historical follow-up',
+          'No se encontró la afiliación al SIS de este seguimiento histórico.',
         );
       await repository.save(Object.assign(existing, values));
     } else {
@@ -284,7 +321,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Symptom report not found for this historical follow-up',
+          'No se encontró el reporte de síntomas de este seguimiento histórico.',
         );
       await repository.save(Object.assign(existing, values));
     } else {
@@ -333,7 +370,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Health background assessment not found for this historical follow-up',
+          'No se encontraron los antecedentes de salud de este seguimiento histórico.',
         );
       Object.assign(existing, values);
       await repository.save(existing);
@@ -394,9 +431,14 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing || existing.followUpId !== followUpId)
         throw new NotFoundException(
-          'Address not found for this historical follow-up',
+          'No se encontró la dirección de este seguimiento histórico.',
         );
-      await repository.save(Object.assign(existing, values));
+      await repository.save(
+        repository.merge(
+          existing,
+          await services.addresses.normalize(values, manager),
+        ),
+      );
     } else {
       await services.addresses.create(
         patientId,
@@ -415,7 +457,7 @@ export async function upsertHistoricalClinicalData(
       });
       if (!existing)
         throw new NotFoundException(
-          'Social note not found for this historical follow-up',
+          'No se encontró la nota social de este seguimiento histórico.',
         );
       await repository.save(Object.assign(existing, values));
     } else {
@@ -448,19 +490,11 @@ async function recordHistoricalDiagnosticSearch(
   )
     return;
 
-  const followUp = await manager.getRepository(FollowUp).findOne({
-    where: { id: followUpId, subjectPatientId: patientId },
-  });
-  if (!followUp) return;
-
-  const occurredAt =
-    followUp.completedAt ??
-    followUp.scheduledAt ??
-    (followUp.completedOn
-      ? new Date(`${followUp.completedOn}T12:00:00-05:00`)
-      : followUp.scheduledOn
-        ? new Date(`${followUp.scheduledOn}T12:00:00-05:00`)
-        : null);
+  const occurredAt = await historicalFollowUpOccurredAt(
+    manager,
+    patientId,
+    followUpId,
+  );
   if (!occurredAt) return;
 
   await services.diagnosticStatuses.recordSearching(
@@ -469,6 +503,65 @@ async function recordHistoricalDiagnosticSearch(
     manager,
     occurredAt,
   );
+}
+
+/** When a historical follow-up actually happened, not when it was loaded. */
+async function historicalFollowUpOccurredAt(
+  manager: EntityManager,
+  patientId: string,
+  followUpId: string,
+): Promise<Date | null> {
+  const followUp = await manager.getRepository(FollowUp).findOne({
+    where: { id: followUpId, subjectPatientId: patientId },
+  });
+  if (!followUp) return null;
+
+  return (
+    followUp.completedAt ??
+    followUp.scheduledAt ??
+    (followUp.completedOn
+      ? new Date(`${followUp.completedOn}T12:00:00-05:00`)
+      : followUp.scheduledOn
+        ? new Date(`${followUp.scheduledOn}T12:00:00-05:00`)
+        : null)
+  );
+}
+
+/** Health phase/subcategory history must carry the follow-up's real date. */
+async function upsertHistoricalDetails(
+  services: HistoricalClinicalServices,
+  manager: EntityManager,
+  patientId: string,
+  followUpId: string,
+  details: NonNullable<ClinicalCreateInput['details']>,
+) {
+  const changedAt = await historicalFollowUpOccurredAt(
+    manager,
+    patientId,
+    followUpId,
+  );
+  await services.patients.upsertDetails(patientId, details, manager, {
+    ...(changedAt ? { changedAt } : {}),
+  });
+}
+
+/** Derives the subcategory from treatments unless the load set it explicitly. */
+async function syncHistoricalSubcategory(
+  services: HistoricalClinicalServices,
+  manager: EntityManager,
+  patientId: string,
+  followUpId: string,
+  details: ClinicalCreateInput['details'],
+) {
+  if (details?.healthSubcategory) return;
+  const changedAt = await historicalFollowUpOccurredAt(
+    manager,
+    patientId,
+    followUpId,
+  );
+  await services.subcategories.syncFromTreatments(patientId, manager, {
+    ...(changedAt ? { changedAt } : {}),
+  });
 }
 
 async function persistTreatments(
@@ -487,7 +580,7 @@ async function persistTreatments(
         : undefined);
     if (!diagnosisId)
       throw new BadRequestException(
-        'Historical treatment requires diagnosisId or a valid diagnosisRef',
+        'El tratamiento histórico debe estar vinculado a un diagnóstico.',
       );
     const treatmentValues = { ...treatment };
     delete treatmentValues.diagnosisRef;
@@ -500,6 +593,7 @@ async function persistTreatments(
         diagnosisId,
       },
       manager,
+      { deriveSubcategory: false },
     );
   }
 }
@@ -523,6 +617,9 @@ export async function deleteHistoricalOwnedByFollowUp(
   manager: EntityManager,
   followUpId: string,
 ) {
+  // Versiones vigentes que se van a borrar: al quitarlas, la versión anterior
+  // de su grupo vuelve a ser la vigente (p. ej. SIS tras borrar el cambio a EsSalud).
+  const replacedCurrent = await currentVersionsOwnedBy(manager, followUpId);
   await manager.update(
     FollowUp,
     { nextFollowUpId: followUpId },
@@ -532,11 +629,6 @@ export async function deleteHistoricalOwnedByFollowUp(
     Reminder,
     { createdFromFollowUpId: followUpId },
     { createdFromFollowUpId: null },
-  );
-  await manager.update(
-    Reminder,
-    { resultingFollowUpId: followUpId },
-    { resultingFollowUpId: null },
   );
   await manager.update(
     PsychooncologyAppointment,
@@ -653,4 +745,74 @@ export async function deleteHistoricalOwnedByFollowUp(
   await manager.delete(PatientSocialNote, { followUpId });
   await manager.delete(PatientPsychooncologySupportAssessment, { followUpId });
   await manager.delete(PatientNonOncologicalFollowUp, { followUpId });
+  await restorePreviousVersions(manager, replacedCurrent);
+}
+
+type VersionGroups = {
+  insurancePatients: string[];
+  treatmentSeries: string[];
+  appointments: { patientId: string; specialty: string }[];
+};
+
+async function currentVersionsOwnedBy(
+  manager: EntityManager,
+  followUpId: string,
+): Promise<VersionGroups> {
+  const [insurance, treatments, appointments] = await Promise.all([
+    manager.find(PatientInsurance, {
+      where: { followUpId, isCurrent: true },
+      select: { patientId: true },
+    }),
+    manager.find(PatientTreatment, {
+      where: { followUpId, isCurrent: true },
+      select: { seriesId: true },
+    }),
+    manager.find(PatientMedicalAppointment, {
+      where: { followUpId, isCurrent: true },
+      select: { patientId: true, specialty: true },
+    }),
+  ]);
+  return {
+    insurancePatients: insurance.map((item) => item.patientId),
+    treatmentSeries: treatments.map((item) => item.seriesId),
+    appointments: appointments.map((item) => ({
+      patientId: item.patientId,
+      specialty: item.specialty,
+    })),
+  };
+}
+
+/** Marca como vigente la versión más reciente que quedó en cada grupo, si no hay otra vigente. */
+async function restorePreviousVersions(
+  manager: EntityManager,
+  groups: VersionGroups,
+) {
+  for (const patientId of groups.insurancePatients)
+    await manager.query(
+      `UPDATE patient_insurance SET is_current = true, end_date = NULL
+        WHERE id = (SELECT id FROM patient_insurance WHERE patient_id = $1
+                     ORDER BY start_date DESC NULLS LAST, created_at DESC LIMIT 1)
+          AND NOT EXISTS (SELECT 1 FROM patient_insurance
+                           WHERE patient_id = $1 AND is_current)`,
+      [patientId],
+    );
+  for (const seriesId of groups.treatmentSeries)
+    await manager.query(
+      `UPDATE patient_treatments SET is_current = true
+        WHERE id = (SELECT id FROM patient_treatments WHERE series_id = $1
+                     ORDER BY created_at DESC LIMIT 1)
+          AND NOT EXISTS (SELECT 1 FROM patient_treatments
+                           WHERE series_id = $1 AND is_current)`,
+      [seriesId],
+    );
+  for (const { patientId, specialty } of groups.appointments)
+    await manager.query(
+      `UPDATE patient_medical_appointments SET is_current = true
+        WHERE id = (SELECT id FROM patient_medical_appointments
+                     WHERE patient_id = $1 AND specialty = $2
+                     ORDER BY created_at DESC LIMIT 1)
+          AND NOT EXISTS (SELECT 1 FROM patient_medical_appointments
+                           WHERE patient_id = $1 AND specialty = $2 AND is_current)`,
+      [patientId, specialty],
+    );
 }

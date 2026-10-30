@@ -29,7 +29,7 @@ export class FoundationsController {
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a foundation profile' })
   @ApiCreatedResponse({ type: FoundationResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
+  @ApiForbiddenResponse({ description: 'Esta acción la puede hacer solo un administrador.' })
   create(@Body() input: CreateFoundationDto) {
     return this.foundationsService.create(input).then(this.toResponse);
   }
@@ -47,7 +47,7 @@ export class FoundationsController {
   @ApiOperation({ summary: 'Get a foundation profile' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: FoundationResponseDto })
-  @ApiNotFoundResponse({ description: 'Foundation profile not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el perfil de fundación.' })
   findOne(@Param('id') id: string) {
     return this.foundationsService.findById(id).then(this.toResponse);
   }
@@ -57,8 +57,8 @@ export class FoundationsController {
   @ApiOperation({ summary: 'Update a foundation profile' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: FoundationResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  @ApiNotFoundResponse({ description: 'Foundation profile not found' })
+  @ApiForbiddenResponse({ description: 'Esta acción la puede hacer solo un administrador.' })
+  @ApiNotFoundResponse({ description: 'No se encontró el perfil de fundación.' })
   update(@Param('id') id: string, @Body() input: UpdateFoundationDto) {
     return this.foundationsService.update(id, input).then(this.toResponse);
   }

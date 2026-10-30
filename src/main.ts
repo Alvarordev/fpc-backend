@@ -1,3 +1,4 @@
+import { spanishValidationExceptionFactory } from './shared/validation/spanish-validation';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -26,6 +27,7 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      exceptionFactory: spanishValidationExceptionFactory,
     }),
   );
   app.useGlobalFilters(new HttpExceptionFilter());

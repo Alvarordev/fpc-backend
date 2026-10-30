@@ -6,10 +6,13 @@ import { PassportModule } from '@nestjs/passport';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import ms from 'ms';
+import { PasswordResetToken } from '../../database/entities/password-reset-token.entity';
 import { RefreshToken } from '../../database/entities/refresh-token.entity';
+import { EmailModule } from '../../integrations/email/email.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { PasswordResetService } from './password-reset.service';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/guards/roles.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -28,13 +31,15 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         },
       }),
     }),
-    TypeOrmModule.forFeature([RefreshToken]),
+    TypeOrmModule.forFeature([RefreshToken, PasswordResetToken]),
+    EmailModule,
     ThrottlerModule,
     UsersModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
+    PasswordResetService,
     JwtStrategy,
     {
       provide: APP_GUARD,

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { MedicalAppointmentStatus } from '../../database/entities/medical-appointment-status.enum';
 import { MedicalConsultationStatus } from '../../database/entities/medical-consultation-status.enum';
-import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
 import { PatientDiagnosisMode } from '../../database/entities/patient-diagnosis-mode.enum';
 import { PatientDiagnosticStatus } from '../../database/entities/patient-diagnostic-status.enum';
 import { PatientDiagnosticStatusEvent } from '../../database/entities/patient-diagnostic-status-event.entity';
@@ -11,10 +10,7 @@ import { PatientDiagnosesService } from './clinical/diagnoses/patient-diagnoses.
 import { PatientMedicalAppointmentsService } from './clinical/medical-appointments/patient-medical-appointments.service';
 import { PatientNonOncologicalFollowUpsService } from './clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 import { PatientTreatmentsService } from './clinical/treatments/patient-treatments.service';
-import { FollowUp } from '../../database/entities/follow-up.entity';
 import { Reminder } from '../../database/entities/reminder.entity';
-import { ReminderKind } from '../../database/entities/reminder-kind.enum';
-import { ReminderStatus } from '../../database/entities/reminder-status.enum';
 import { CreatePatientSymptomReportDto } from './symptom-reports/dto/create-patient-symptom-report.dto';
 
 export type SymptomFanOutOptions = {
@@ -83,7 +79,9 @@ export class ClinicalOwnershipService {
     );
   }
 
-  private shouldCreateAppointment(input: CreatePatientSymptomReportDto): boolean {
+  private shouldCreateAppointment(
+    input: CreatePatientSymptomReportDto,
+  ): boolean {
     if (input.hasMedicalConsultation === true) return true;
     return (
       input.consultationStatus === MedicalConsultationStatus.SCHEDULED ||
@@ -145,18 +143,12 @@ export class ClinicalOwnershipService {
     const nextSpecialty = input.nextConsultationSpecialty?.trim();
     if (!nextDate || !nextSpecialty) return;
 
-    const followUp = await manager.getRepository(FollowUp).findOneBy({
-      id: followUpId,
-    });
-    if (!followUp?.agentId) return;
-
     const scheduled = await this.appointments.create(
       patientId,
       {
         followUpId,
         specialty: nextSpecialty,
-        healthCenterId:
-          input.referredHealthCenterId ?? input.healthCenterId,
+        healthCenterId: input.referredHealthCenterId ?? input.healthCenterId,
         appointmentDate: nextDate,
         isFirstConsultation: false,
         status: MedicalAppointmentStatus.SCHEDULED,
@@ -165,25 +157,12 @@ export class ClinicalOwnershipService {
       true,
     );
 
+    // create() attaches the reminder of a future appointment.
     const note = input.nextConsultationNote?.trim();
-    const reminder = await manager.getRepository(Reminder).save(
-      manager.getRepository(Reminder).create({
-        subjectPatientId: patientId,
-        createdFromFollowUpId: followUpId,
-        assignedAgentId: followUp.agentId,
-        dueAt: new Date(`${nextDate}T08:00:00-05:00`),
-        dueOn: nextDate,
-        description: note || `Cita: ${nextSpecialty}`,
-        kind: ReminderKind.MEDICAL_APPOINTMENT,
-        medicalAppointmentId: scheduled.id,
-        status: ReminderStatus.PENDING,
-        completedOn: null,
-        isHistorical: false,
-      }),
-    );
-    await manager
-      .getRepository(PatientMedicalAppointment)
-      .update({ id: scheduled.id }, { reminderId: reminder.id });
+    if (note && scheduled.reminderId)
+      await manager
+        .getRepository(Reminder)
+        .update({ id: scheduled.reminderId }, { description: note });
   }
 
   private async deriveDiagnosisAndTreatment(
@@ -226,7 +205,10 @@ export class ClinicalOwnershipService {
           diagnosisId: diagnosis.id,
         }),
       );
-      if (input.isReceivingReportedTreatment === true && input.reportedTreatment) {
+      if (
+        input.isReceivingReportedTreatment === true &&
+        input.reportedTreatment
+      ) {
         const treatmentType = await this.catalogValues.tryResolve(
           'treatment_type',
           input.reportedTreatment,

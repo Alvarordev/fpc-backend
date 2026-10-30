@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Agent } from './agent.entity';
 import { Alert } from './alert.entity';
+import { User } from './user.entity';
 export enum AlertEventType {
   CREATED = 'CREATED',
   STATUS_CHANGED = 'STATUS_CHANGED',
@@ -17,10 +18,12 @@ export enum AlertEventType {
   COMMENT = 'COMMENT',
   AI_SUMMARY_GENERATED = 'AI_SUMMARY_GENERATED',
   RESOLVED = 'RESOLVED',
+  REPORT_LINKED = 'REPORT_LINKED',
+  PATIENTS_NOTIFIED = 'PATIENTS_NOTIFIED',
 }
 @Entity('alert_events')
 @Check(
-  `"event_type" IN ('CREATED','STATUS_CHANGED','DERIVED','COMMENT','AI_SUMMARY_GENERATED','RESOLVED')`,
+  `"event_type" IN ('CREATED','STATUS_CHANGED','DERIVED','COMMENT','AI_SUMMARY_GENERATED','RESOLVED','REPORT_LINKED','PATIENTS_NOTIFIED')`,
 )
 @Index('IDX_alert_events_alert_id', ['alertId'])
 @Index('IDX_alert_events_alert_id_created_at', ['alertId', 'createdAt'])
@@ -35,6 +38,11 @@ export class AlertEvent {
   @ManyToOne(() => Agent, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'agent_id' })
   agent!: Agent | null;
+  @Column({ name: 'actor_user_id', type: 'uuid', nullable: true })
+  actorUserId!: string | null;
+  @ManyToOne(() => User, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'actor_user_id' })
+  actorUser!: User | null;
   @Column({ name: 'event_type', type: 'varchar', length: 50 })
   eventType!: AlertEventType;
   @Column({ type: 'varchar', length: 255 }) title!: string;

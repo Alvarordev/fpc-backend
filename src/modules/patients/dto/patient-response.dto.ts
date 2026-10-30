@@ -1,3 +1,4 @@
+import { Companion } from '../../../database/entities/companion.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PatientSummaryStatus } from '../../../database/entities/patient-summary.entity';
 import { FollowUp } from '../../../database/entities/follow-up.entity';
@@ -29,6 +30,7 @@ import { PatientPsychooncologySupportAssessment } from '../../../database/entiti
 import { PatientPsychooncologySupportAssessmentResponseDto } from '../clinical/psychooncology-support/dto/patient-psychooncology-support-assessment-response.dto';
 import { PatientNonOncologicalFollowUp } from '../../../database/entities/patient-non-oncological-follow-up.entity';
 import { PatientNonOncologicalFollowUpResponseDto } from '../clinical/non-oncological-follow-up/dto/patient-non-oncological-follow-up-response.dto';
+import { IdentityDocumentType } from '../../../database/entities/identity-document-type.enum';
 
 export class PatientHealthPhaseHistoryResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -125,12 +127,6 @@ export class PatientDetailsResponseDto {
   knowsAboutFissal!: boolean | null;
 
   @ApiProperty({ nullable: true })
-  programDropoutReason!: string | null;
-
-  @ApiProperty({ format: 'date', nullable: true })
-  programDropoutDate!: string | null;
-
-  @ApiProperty({ nullable: true })
   transportationViaSepa!: boolean | null;
 
   @ApiProperty({ nullable: true })
@@ -153,9 +149,6 @@ export class PatientDetailsResponseDto {
 
   @ApiProperty({ format: 'date', nullable: true })
   attendedEducationalTalkAt!: string | null;
-
-  @ApiProperty({ nullable: true })
-  programDropoutReasonCode!: string | null;
 
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
@@ -206,8 +199,6 @@ export class PatientDetailsResponseDto {
       receivesFinancialSupport: details.receivesFinancialSupport,
       hasConadisCard: details.hasConadisCard,
       knowsAboutFissal: details.knowsAboutFissal,
-      programDropoutReason: details.programDropoutReason,
-      programDropoutDate: details.programDropoutDate,
       transportationViaSepa: details.transportationViaSepa,
       transportationSepaProvider: details.transportationSepaProvider,
       transportationSepaProviderOther: details.transportationSepaProviderOther,
@@ -216,7 +207,6 @@ export class PatientDetailsResponseDto {
       shelterSepaProviderOther: details.shelterSepaProviderOther,
       attendedEducationalTalk: details.attendedEducationalTalk,
       attendedEducationalTalkAt: details.attendedEducationalTalkAt,
-      programDropoutReasonCode: details.programDropoutReasonCode,
       createdAt: details.createdAt.toISOString(),
       updatedAt: details.updatedAt.toISOString(),
       healthPhaseHistory: history.map((history) =>
@@ -238,6 +228,9 @@ export class PatientResponseDto {
 
   @ApiProperty({ nullable: true })
   dni!: string | null;
+
+  @ApiProperty({ enum: IdentityDocumentType, nullable: true })
+  documentType!: IdentityDocumentType | null;
 
   @ApiProperty({ format: 'date', nullable: true })
   birthDate!: string | null;
@@ -287,6 +280,7 @@ export class PatientResponseDto {
       fullName: patient.fullName,
       email: patient.email,
       dni: patient.dni,
+      documentType: patient.documentType,
       birthDate: patient.birthDate,
       gender: patient.gender,
       primaryPhone: patient.primaryPhone,
@@ -554,6 +548,48 @@ export class PatientListResponseDto {
   }
 }
 
+/** A1: persona que acompaña a uno o varios pacientes. */
+export class CompanionResponseDto {
+  @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiProperty() fullName!: string;
+  @ApiPropertyOptional({ enum: IdentityDocumentType, nullable: true })
+  documentType!: IdentityDocumentType | null;
+  @ApiPropertyOptional({ nullable: true }) dni!: string | null;
+  @ApiPropertyOptional({ format: 'date', nullable: true })
+  birthDate!: string | null;
+  @ApiPropertyOptional({ nullable: true }) gender!: string | null;
+  @ApiPropertyOptional({ nullable: true }) primaryPhone!: string | null;
+  @ApiPropertyOptional({ nullable: true }) secondaryPhone!: string | null;
+  @ApiProperty() hasWhatsapp!: boolean;
+  @ApiPropertyOptional({ nullable: true }) email!: string | null;
+  @ApiPropertyOptional({
+    format: 'uuid',
+    nullable: true,
+    description: 'Paciente creado desde este contacto',
+  })
+  convertedPatientId!: string | null;
+  @ApiProperty({ format: 'date-time' }) createdAt!: string;
+  @ApiProperty({ format: 'date-time' }) updatedAt!: string;
+
+  static from(companion: Companion): CompanionResponseDto {
+    return {
+      id: companion.id,
+      fullName: companion.fullName,
+      documentType: companion.documentType,
+      dni: companion.dni,
+      birthDate: companion.birthDate,
+      gender: companion.gender,
+      primaryPhone: companion.primaryPhone,
+      secondaryPhone: companion.secondaryPhone,
+      hasWhatsapp: companion.hasWhatsapp,
+      email: companion.email,
+      convertedPatientId: companion.convertedPatientId,
+      createdAt: companion.createdAt.toISOString(),
+      updatedAt: companion.updatedAt.toISOString(),
+    };
+  }
+}
+
 export class CompanionPatientResponseDto {
   @ApiProperty({ format: 'uuid' })
   id!: string;
@@ -585,8 +621,8 @@ export class CompanionPatientResponseDto {
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
 
-  @ApiPropertyOptional({ type: PatientResponseDto })
-  companion?: PatientResponseDto;
+  @ApiPropertyOptional({ type: () => CompanionResponseDto })
+  companion?: CompanionResponseDto;
 
   @ApiPropertyOptional({ type: PatientResponseDto })
   patient?: PatientResponseDto;
@@ -604,7 +640,7 @@ export class CompanionPatientResponseDto {
       companionDisplayName: link.companion?.fullName ?? null,
       createdAt: link.createdAt.toISOString(),
       ...(link.companion
-        ? { companion: PatientResponseDto.from(link.companion) }
+        ? { companion: CompanionResponseDto.from(link.companion) }
         : {}),
       ...(link.patient
         ? { patient: PatientResponseDto.from(link.patient) }

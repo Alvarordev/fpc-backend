@@ -101,10 +101,10 @@ export class PatientDiagnosticStatusesService {
         .setLock('pessimistic_write')
         .where('patient.id = :patientId', { patientId })
         .getOne();
-      if (!patient) throw new NotFoundException('Patient not found');
+      if (!patient) throw new NotFoundException('No se encontró el paciente.');
       if (patient.role !== PatientRole.PATIENT)
         throw new ConflictException(
-          'Only a patient can change diagnostic status',
+          'Solo un paciente puede cambiar de estado diagnóstico.',
         );
       await this.assertFollowUp(patientId, input.followUpId, manager);
 
@@ -114,27 +114,32 @@ export class PatientDiagnosticStatusesService {
         order: { occurredAt: 'DESC', createdAt: 'DESC', id: 'DESC' },
       });
       if (!current)
-        throw new ConflictException('A diagnostic search has not been started');
+        throw new ConflictException(
+          'Todavía no se inició la búsqueda diagnóstica.',
+        );
 
       if (
         input.status !== PatientDiagnosticStatus.CONFIRMED &&
         input.status !== PatientDiagnosticStatus.RULED_OUT
       )
         throw new BadRequestException(
-          'A diagnostic status can only be CONFIRMED or RULED_OUT',
+          'El estado diagnóstico solo puede ser confirmado o descartado.',
         );
       if (
         input.status === PatientDiagnosticStatus.CONFIRMED &&
         !input.diagnosis
       )
         throw new BadRequestException(
-          'A confirmed diagnostic status requires a formal diagnosis',
+          'Para confirmar el diagnóstico, registra el diagnóstico formal.',
         );
       if (input.status === PatientDiagnosticStatus.RULED_OUT && input.diagnosis)
         throw new BadRequestException(
-          'A ruled-out diagnostic status cannot include a formal diagnosis',
+          'Si el diagnóstico se descartó, no registres un diagnóstico formal.',
         );
 
+      const phaseHistoryOptions = input.occurredAt
+        ? { changedAt: new Date(input.occurredAt) }
+        : {};
       let diagnosisId: string | null = null;
       if (input.status === PatientDiagnosticStatus.CONFIRMED) {
         const diagnosisRepository = manager.getRepository(PatientDiagnosis);
@@ -169,6 +174,7 @@ export class PatientDiagnosticStatusesService {
             healthSubcategory,
           },
           manager,
+          phaseHistoryOptions,
         );
       } else {
         if (
@@ -190,6 +196,7 @@ export class PatientDiagnosticStatusesService {
             healthSubcategory: PatientHealthSubcategory.CANCER_RULED_OUT,
           },
           manager,
+          phaseHistoryOptions,
         );
       }
 
@@ -252,7 +259,7 @@ export class PatientDiagnosticStatusesService {
       !ONCOLOGICAL_HEALTH_SUBCATEGORIES.some((item) => item === subcategory)
     ) {
       throw new BadRequestException(
-        'A confirmed diagnostic status requires an oncological health subcategory',
+        'Para confirmar el diagnóstico, elige una subcategoría oncológica.',
       );
     }
     return subcategory;
@@ -267,6 +274,6 @@ export class PatientDiagnosticStatusesService {
       id: followUpId,
       subjectPatientId: patientId,
     });
-    if (!exists) throw new NotFoundException('Follow-up not found');
+    if (!exists) throw new NotFoundException('No se encontró el seguimiento.');
   }
 }

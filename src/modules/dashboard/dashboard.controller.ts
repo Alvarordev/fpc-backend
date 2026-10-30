@@ -20,6 +20,7 @@ import {
   DashboardEpidemiologyResponseDto,
   DashboardManagementResponseDto,
   DashboardProductivityResponseDto,
+  DashboardSatisfactionResponseDto,
 } from './dto/dashboard-indicator-response.dto';
 import { DashboardIndicatorsService } from './dashboard-indicators.service';
 import { DashboardService } from './dashboard.service';
@@ -128,6 +129,22 @@ export class DashboardController {
     @Query() query: DashboardIndicatorQueryDto,
   ): Promise<DashboardEpidemiologyResponseDto> {
     return this.indicators.getEpidemiology(query);
+  }
+
+  @Get('indicators/satisfaction')
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION)
+  @ApiOperation({ summary: 'Get satisfaction survey indicators (c1–c4)' })
+  @ApiOkResponse({ type: DashboardSatisfactionResponseDto })
+  @ApiBadRequestResponse({
+    description: 'The indicator period or timezone is invalid',
+  })
+  @ApiForbiddenResponse({
+    description: 'Administrator or foundation role required',
+  })
+  getSatisfaction(
+    @Query() query: DashboardIndicatorQueryDto,
+  ): Promise<DashboardSatisfactionResponseDto> {
+    return this.indicators.getSatisfaction(query);
   }
 
   @Get()

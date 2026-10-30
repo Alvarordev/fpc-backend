@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayNotEmpty,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -35,7 +36,6 @@ export class EnrollmentContactPersonDto extends OmitType(CreateCompanionDto, [
   'isPrimaryInformant',
   'isPrimaryContact',
   'contactRole',
-  'isCaregiver',
   'relationship',
 ] as const) {
   @IsString() @MaxLength(50) relationship!: string;
@@ -64,8 +64,12 @@ export class EnrollmentFollowUpDto {
   @IsOptional() @IsDateString() completedAt?: string;
 }
 
+/** CH1: el familiar se empareja por nombre con un acompañante del paciente o se crea. */
 export class CreateEnrollmentFamilyTalkInterestDto {
-  @IsString() @MaxLength(255) talkName!: string;
+  @ApiProperty({ description: 'Código (o nombre) del catálogo educational_talk' })
+  @IsString()
+  @MaxLength(255)
+  talk!: string;
   @IsString() @MaxLength(255) familyMemberName!: string;
   @IsOptional() @IsString() @MaxLength(50) familyMemberPhone?: string;
   @IsOptional() @IsString() @MaxLength(255) familyMemberEmail?: string;
@@ -78,7 +82,7 @@ export class EnrollmentDiagnosisDto extends OmitType(
   @ApiProperty({
     required: false,
     description:
-      'Temporary client reference used to associate enrollment treatments; required for diagnoses[] and omitted only by the legacy diagnosis field',
+      'Temporary client reference used to associate treatments; required by enrollments',
   })
   @IsOptional()
   @IsString()
@@ -93,7 +97,7 @@ export class EnrollmentTreatmentDto extends OmitType(
   @ApiProperty({
     required: false,
     description:
-      'Temporary clientRef of the diagnosis for this treatment; required when diagnoses[] is used and omitted only for the legacy diagnosis field',
+      'Temporary clientRef of the diagnosis for this treatment; required by enrollments',
   })
   @IsOptional()
   @IsString()
@@ -133,12 +137,32 @@ export class EnrollmentNonOncologicalFollowUpDto extends OmitType(
   ['followUpId', 'enrollmentId'] as const,
 ) {}
 
+/**
+ * El teléfono del paciente es opcional al enrolar: si el contacto principal es
+ * otra persona, puede no tener uno. Si el paciente es el contacto principal, el
+ * servicio lo exige.
+ */
+export class EnrollmentPatientDto extends OmitType(CreatePatientDto, [
+  'primaryPhone',
+] as const) {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  primaryPhone?: string;
+}
+
 export class CreateEnrollmentDto {
   @IsOptional() @IsUUID() patientId?: string;
+  @ApiPropertyOptional({
+    type: EnrollmentPatientDto,
+    description:
+      'New patient, or the data registered in the wizard to complete a prospect (patientId)',
+  })
   @IsOptional()
   @ValidateNested()
-  @Type(() => CreatePatientDto)
-  patient?: CreatePatientDto;
+  @Type(() => EnrollmentPatientDto)
+  patient?: EnrollmentPatientDto;
   @ValidateNested()
   @Type(() => EnrollmentFollowUpDto)
   followUp!: EnrollmentFollowUpDto;
@@ -152,11 +176,12 @@ export class CreateEnrollmentDto {
   @ValidateNested()
   @Type(() => CreateCompanionDto)
   companion?: CreateCompanionDto;
-  @IsOptional()
+  @ApiProperty({ type: EnrollmentContactInputDto, isArray: true })
   @IsArray()
+  @ArrayNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => EnrollmentContactInputDto)
-  contacts?: EnrollmentContactInputDto[];
+  contacts!: EnrollmentContactInputDto[];
   @IsOptional()
   @ValidateNested()
   @Type(() => UpsertPatientDetailsDto)
@@ -169,10 +194,6 @@ export class CreateEnrollmentDto {
   @ValidateNested()
   @Type(() => EnrollmentSisAffiliationDto)
   sisAffiliation?: EnrollmentSisAffiliationDto;
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => EnrollmentDiagnosisDto)
-  diagnosis?: EnrollmentDiagnosisDto;
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })

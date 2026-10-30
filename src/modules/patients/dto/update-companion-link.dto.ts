@@ -14,5 +14,5 @@ export class UpdateCompanionLinkDto {
   @IsIn(Object.values(CompanionContactRole))
   contactRole?: CompanionContactRole | null;
   @IsOptional() @IsBoolean() isCaregiver?: boolean;
-  @IsOptional() @IsString() @MaxLength(50) relationship?: string;
+  @IsOptional() @IsString() @MaxLength(100) relationship?: string;
 }

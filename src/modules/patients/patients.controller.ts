@@ -1,3 +1,4 @@
+import { UpdateCompanionDto } from './dto/update-companion.dto';
 import {
   Body,
   Controller,
@@ -35,6 +36,7 @@ import { UpdatePatientDto } from './dto/update-patient.dto';
 import { UpsertPatientDetailsDto } from './dto/upsert-patient-details.dto';
 import {
   CompanionPatientResponseDto,
+  CompanionResponseDto,
   PatientDetailsResponseDto,
   PatientDetailsWithSummaryResponseDto,
   PatientListResponseDto,
@@ -67,7 +69,6 @@ const PATIENT_WRITE_ROLES = [
   UserRole.FOUNDATION,
   UserRole.AGENT,
 ];
-const COMPANION_CREATE_ROLES = [...PATIENT_WRITE_ROLES, UserRole.VOLUNTEER];
 
 @Controller('patients')
 @ApiTags('Patients')
@@ -97,21 +98,73 @@ export class PatientsController {
   }
 
   @Post(':id/companions')
-  @Roles(...COMPANION_CREATE_ROLES)
+  @Roles(...PATIENT_WRITE_ROLES)
   @ApiOperation({ summary: 'Create and link a companion to a patient' })
   @ApiParam({ name: 'id', format: 'uuid' })
-  @ApiCreatedResponse({ type: PatientResponseDto })
+  @ApiCreatedResponse({ type: CompanionResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
-  @ApiConflictResponse({ description: 'Patient cannot have companions' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
+  @ApiConflictResponse({
+    description:
+      'Patient cannot have companions, or the companion document already exists',
+  })
   async createCompanion(
     @Param('id') id: string,
     @Body() input: CreateCompanionDto,
     @CurrentUser() user: User,
+  ): Promise<CompanionResponseDto> {
+    return CompanionResponseDto.from(
+      await this.patientsService.createCompanion(id, input, undefined, user),
+    );
+  }
+
+  @Patch(':id/companions/:companionId/person')
+  @Roles(...PATIENT_WRITE_ROLES)
+  @ApiOperation({
+    summary: "Update a companion's personal data",
+    description:
+      'Companions are edited from the record of a patient they accompany; the change applies to every patient they accompany.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiParam({ name: 'companionId', format: 'uuid' })
+  @ApiOkResponse({ type: CompanionResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Companion not linked to this patient' })
+  @ApiConflictResponse({ description: 'The companion document already exists' })
+  async updateCompanion(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('companionId', ParseUUIDPipe) companionId: string,
+    @Body() input: UpdateCompanionDto,
+  ): Promise<CompanionResponseDto> {
+    return CompanionResponseDto.from(
+      await this.patientsService.updateCompanion(id, companionId, input),
+    );
+  }
+
+  @Post(':id/companions/:companionId/convert-to-patient')
+  @Roles(...PATIENT_WRITE_ROLES)
+  @ApiOperation({
+    summary: 'Register a companion as a patient (prospect)',
+    description:
+      'A1 "enroll from this contact": creates an unenrolled patient with the companion data; enroll it afterwards with POST /enrollments. The companion keeps accompanying their patients.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiParam({ name: 'companionId', format: 'uuid' })
+  @ApiCreatedResponse({ type: PatientResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Companion not linked to this patient' })
+  @ApiConflictResponse({
+    description: 'Already converted, or a patient with this document exists',
+  })
+  async convertCompanion(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('companionId', ParseUUIDPipe) companionId: string,
   ): Promise<PatientResponseDto> {
     return PatientResponseDto.from(
-      await this.patientsService.createCompanion(id, input, undefined, user),
+      await this.patientsService.convertCompanionToPatient(id, companionId),
     );
   }
 
@@ -210,7 +263,7 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientSummaryResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async summary(
     @Param('id') id: string,
     @CurrentUser() user: User,
@@ -230,7 +283,7 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientSummaryResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async refreshSummary(
     @Param('id') id: string,
     @CurrentUser() user: User,
@@ -252,7 +305,7 @@ export class PatientsController {
   @ApiForbiddenResponse({
     description: 'Patient is not assigned to the volunteer',
   })
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   timelineForPatient(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Query() query: PatientTimelineQueryDto,
@@ -268,7 +321,7 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientDetailsWithSummaryResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async findOne(
     @Param('id') id: string,
     @CurrentUser() user: User,
@@ -285,7 +338,7 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async update(
     @Param('id') id: string,
     @Body() input: UpdatePatientDto,
@@ -302,7 +355,7 @@ export class PatientsController {
   @ApiOkResponse({ type: PatientResponseDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async deactivate(
     @Param('id') id: string,
     @Body() input: DeactivatePatientDto,
@@ -310,18 +363,6 @@ export class PatientsController {
     return PatientResponseDto.from(
       await this.patientsService.deactivate(id, input),
     );
-  }
-
-  @Patch(':id/reactivate')
-  @Roles(...PATIENT_WRITE_ROLES)
-  @ApiOperation({ summary: 'Reactivate a patient' })
-  @ApiParam({ name: 'id', format: 'uuid' })
-  @ApiOkResponse({ type: PatientResponseDto })
-  @ApiUnauthorizedResponse()
-  @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
-  async reactivate(@Param('id') id: string): Promise<PatientResponseDto> {
-    return PatientResponseDto.from(await this.patientsService.reactivate(id));
   }
 
   @Put(':id/details')
@@ -334,7 +375,7 @@ export class PatientsController {
   @ApiBadRequestResponse({
     description: 'An active diagnosis is required for this subcategory',
   })
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   @ApiConflictResponse({
     description: 'Patient does not have the required role',
   })

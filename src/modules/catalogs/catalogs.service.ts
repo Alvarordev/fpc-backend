@@ -5,8 +5,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { CatalogMerge } from '../../database/entities/catalog-merge.entity';
 import {
   CatalogItem,
   isOpenCatalogKind,
@@ -14,6 +15,7 @@ import {
   type CatalogKind,
 } from '../../database/entities/catalog-item.entity';
 import { UserRole } from '../../database/entities/user-role.enum';
+import { User } from '../../database/entities/user.entity';
 import {
   UbigeoDepartment,
   UbigeoDistrict,
@@ -22,6 +24,7 @@ import {
 import { CreateCatalogItemDto } from './dto/create-catalog-item.dto';
 import { UpdateCatalogItemDto } from './dto/create-catalog-item.dto';
 import type { UbigeoTreeResponseDto } from './dto/ubigeo-response.dto';
+import { CATALOG_CHILD_KINDS, CATALOG_REFERENCES } from './catalog-references';
 
 @Injectable()
 export class CatalogsService {
@@ -34,6 +37,7 @@ export class CatalogsService {
     private readonly provinces: Repository<UbigeoProvince>,
     @InjectRepository(UbigeoDistrict)
     private readonly districts: Repository<UbigeoDistrict>,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   findAll(kind?: CatalogKind, includeInactive = false): Promise<CatalogItem[]> {
@@ -51,7 +55,7 @@ export class CatalogsService {
 
   async findOne(id: string): Promise<CatalogItem> {
     const item = await this.catalogItems.findOne({ where: { id } });
-    if (!item) throw new NotFoundException('Catalog item not found');
+    if (!item) throw new NotFoundException('No se encontró el ítem del catálogo.');
     return item;
   }
 
@@ -60,24 +64,20 @@ export class CatalogsService {
     role: UserRole = UserRole.ADMIN,
   ): Promise<CatalogItem> {
     const code = input.code.trim();
-    if (!code) throw new BadRequestException('code is required');
+    if (!code) throw new BadRequestException('Completa el código.');
     if (code.toUpperCase() === RESERVED_CATALOG_CODE) {
       throw new BadRequestException(
-        `code ${RESERVED_CATALOG_CODE} is reserved and cannot be created`,
+        `El código ${RESERVED_CATALOG_CODE} está reservado; usa otro.`,
       );
     }
-    if (role !== UserRole.ADMIN && !isOpenCatalogKind(input.kind)) {
-      throw new ForbiddenException(
-        'Only administrators can create items for this catalog kind',
-      );
-    }
+    this.assertCanEdit(input.kind, role);
 
     const existing = await this.catalogItems.findOne({
       where: { kind: input.kind, code },
     });
     if (existing) {
       throw new ConflictException(
-        `Catalog item already exists for kind=${input.kind} code=${code}`,
+        `Ya existe un ítem con el código ${code} en este catálogo.`,
       );
     }
 
@@ -95,8 +95,13 @@ export class CatalogsService {
     );
   }
 
-  async update(id: string, input: UpdateCatalogItemDto): Promise<CatalogItem> {
+  async update(
+    id: string,
+    input: UpdateCatalogItemDto,
+    role: UserRole = UserRole.ADMIN,
+  ): Promise<CatalogItem> {
     const item = await this.findOne(id);
+    this.assertCanEdit(item.kind, role);
 
     if (input.label !== undefined) item.label = input.label.trim();
     if (input.parentCode !== undefined) {
@@ -110,16 +115,122 @@ export class CatalogsService {
     return this.findOne(id);
   }
 
-  async archive(id: string): Promise<CatalogItem> {
+  async archive(
+    id: string,
+    role: UserRole = UserRole.ADMIN,
+  ): Promise<CatalogItem> {
     const item = await this.findOne(id);
+    this.assertCanEdit(item.kind, role);
     if (item.isSystem) {
       throw new BadRequestException(
-        'System catalog items cannot be archived; deactivate via PATCH if needed',
+        'Un ítem del sistema no se puede archivar; puedes desactivarlo.',
       );
     }
     item.isActive = false;
     await this.catalogItems.save(item);
     return this.findOne(id);
+  }
+
+  async merge(
+    sourceId: string,
+    targetId: string,
+    actor: User,
+  ): Promise<CatalogMerge> {
+    if (sourceId === targetId)
+      throw new BadRequestException('No puedes fusionar un ítem consigo mismo.');
+
+    return this.dataSource.transaction(async (manager) => {
+      const items = manager.getRepository(CatalogItem);
+      const [source, target] = await Promise.all([
+        items.findOne({
+          where: { id: sourceId },
+          lock: { mode: 'pessimistic_write' },
+        }),
+        items.findOne({
+          where: { id: targetId },
+          lock: { mode: 'pessimistic_write' },
+        }),
+      ]);
+      if (!source || !target)
+        throw new NotFoundException('No se encontró el ítem del catálogo.');
+      if (source.kind !== target.kind)
+        throw new BadRequestException(
+          'Solo se pueden fusionar ítems del mismo catálogo.',
+        );
+      if (source.isSystem)
+        throw new BadRequestException(
+          'Un ítem del sistema no se puede fusionar.',
+        );
+      if (source.metadata?.mergedInto)
+        throw new ConflictException('Ese ítem ya fue fusionado.');
+      if (!target.isActive)
+        throw new BadRequestException('El ítem destino está archivado.');
+
+      const affectedRows: Record<string, number> = {};
+      for (const reference of CATALOG_REFERENCES[source.kind] ?? []) {
+        const key = `${reference.table}.${reference.column}`;
+        const column = `"${reference.column}"`;
+        const result: [unknown, number] = await manager.query<
+          [unknown, number]
+        >(
+          reference.array
+            ? `UPDATE "${reference.table}"
+                  SET ${column} = ARRAY(
+                    SELECT DISTINCT unnest(array_replace(${column}, $1::varchar, $2::varchar))
+                  )
+                WHERE $1 = ANY(${column})`
+            : `UPDATE "${reference.table}" SET ${column} = $2 WHERE ${column} = $1`,
+          [source.code, target.code],
+        );
+        affectedRows[key] = result[1];
+      }
+      for (const childKind of CATALOG_CHILD_KINDS[source.kind] ?? []) {
+        const result = await items.update(
+          { kind: childKind, parentCode: source.code },
+          { parentCode: target.code },
+        );
+        affectedRows[`catalog_items.parent_code(${childKind})`] =
+          result.affected ?? 0;
+      }
+
+      source.isActive = false;
+      source.metadata = { ...(source.metadata ?? {}), mergedInto: target.code };
+      await items.save(source);
+
+      const merges = manager.getRepository(CatalogMerge);
+      return merges.save(
+        merges.create({
+          kind: source.kind,
+          sourceItemId: source.id,
+          targetItemId: target.id,
+          sourceCode: source.code,
+          targetCode: target.code,
+          actorUserId: actor.id,
+          affectedRows,
+        }),
+      );
+    });
+  }
+
+  findMerges(itemId?: string): Promise<CatalogMerge[]> {
+    const query = this.dataSource
+      .getRepository(CatalogMerge)
+      .createQueryBuilder('merge')
+      .orderBy('merge.created_at', 'DESC');
+    if (itemId)
+      query.where(
+        'merge.source_item_id = :itemId OR merge.target_item_id = :itemId',
+        { itemId },
+      );
+    return query.getMany();
+  }
+
+  private assertCanEdit(kind: CatalogKind, role: UserRole) {
+    if (role === UserRole.ADMIN || role === UserRole.FOUNDATION) return;
+    if (role === UserRole.AGENT && isOpenCatalogKind(kind)) return;
+    throw new ForbiddenException(
+      'Solo un administrador o la fundación pueden editar este catálogo.',
+    );
   }
 
   async getUbigeoTree(options: {

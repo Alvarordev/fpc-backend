@@ -336,10 +336,10 @@ export const TREATMENT_FREQUENCIES = [
 ] as const;
 
 export const TREATMENT_SITUATIONS = [
-  'EN_CURSO',
-  'PENDIENTE_DE_INICIO',
-  'INTERRUMPIDO',
-  'FINALIZADO',
+  'EN_PROCESO',
+  'EN_ESPERA',
+  'SUSPENDIDO',
+  'CULMINADO',
 ] as const;
 
 export const MEDICAL_SPECIALTIES = [
@@ -428,6 +428,9 @@ export const FOLLOW_UP_NOTES = {
     'Se detecta ánimo bajo y aislamiento. Se deriva a psicooncología.',
     'La cuidadora principal presenta agotamiento; se ofrece apoyo psicológico.',
     'Paciente solicita apoyo emocional tras el cambio de esquema de tratamiento.',
+  ],
+  REENROLLMENT: [
+    'El paciente retoma contacto con el programa tras su baja; se revisan sus datos y se reenrola.',
   ],
   OTHER: [
     'Llamada de cortesía por fechas festivas.',

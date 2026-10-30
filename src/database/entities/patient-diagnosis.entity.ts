@@ -80,6 +80,9 @@ export class PatientDiagnosis {
   diagnosisSpecialtyOther!: string | null;
   @Column({ name: 'symptom_leading_to_checkup', type: 'text', nullable: true })
   symptomLeadingToCheckup!: string | null;
+  /** How the disease progressed, e.g. metastasis to other organs. */
+  @Column({ name: 'disease_evolution', type: 'text', nullable: true })
+  diseaseEvolution!: string | null;
   @Column({ name: 'first_symptoms_date', type: 'date', nullable: true })
   firstSymptomsDate!: string | null;
   @Column({

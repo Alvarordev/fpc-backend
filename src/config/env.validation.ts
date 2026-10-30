@@ -23,7 +23,7 @@ export const envValidationSchema = Joi.object({
     otherwise: Joi.boolean().default(true),
   }),
   CORS_ORIGIN: Joi.string()
-    .custom((value, helpers) => {
+    .custom((value: unknown, helpers) => {
       const origins = String(value)
         .split(',')
         .map((origin) => origin.trim())
@@ -46,6 +46,12 @@ export const envValidationSchema = Joi.object({
   SEED_STAGING_FORCE: Joi.boolean().optional(),
   GEMINI_API_KEY: Joi.string().trim().optional().allow(''),
   GEMINI_MODEL: Joi.string().trim().default('gemini-2.0-flash'),
+  GEMINI_ASSISTANT_MODELS: Joi.string()
+    .trim()
+    .default('gemini-3-flash-preview,gemini-2.5-flash'),
+  GEMINI_KNOWLEDGE_MODELS: Joi.string()
+    .trim()
+    .default('gemini-3-flash-preview,gemini-2.5-flash-lite'),
   PATIENT_SUMMARY_RATE_LIMIT: Joi.number().integer().min(1).default(10),
   PATIENT_SUMMARY_RATE_LIMIT_WINDOW_SECONDS: Joi.number()
     .integer()
@@ -63,6 +69,17 @@ export const envValidationSchema = Joi.object({
     .min(100)
     .max(30000)
     .default(5000),
+  // Blank disables outgoing email: messages are only logged.
+  RESEND_API_KEY: Joi.string().trim().optional().allow(''),
+  EMAIL_FROM: Joi.string().trim().optional().allow(''),
+  EMAIL_OVERRIDE_TO: Joi.string().trim().email().optional().allow(''),
+  // URL pública del CRM para los enlaces de los correos (p. ej. restablecer contraseña).
+  // Si falta, se usa el primer origen de CORS_ORIGIN.
+  FRONTEND_URL: Joi.string()
+    .trim()
+    .uri({ scheme: ['http', 'https'] })
+    .optional()
+    .allow(''),
   PATIENT_DOCUMENT_STORAGE_DRIVER: Joi.when('NODE_ENV', {
     is: 'production',
     then: Joi.valid('r2').default('r2'),

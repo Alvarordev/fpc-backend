@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -25,12 +26,18 @@ import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { User } from '../../database/entities/user.entity';
-import { AppointmentStatus } from '../../database/entities/psychooncology-appointment.entity';
-import { PsychooncologyAppointment } from '../../database/entities/psychooncology-appointment.entity';
+import {
+  AppointmentStatus,
+  PsychooncologyAppointment,
+} from '../../database/entities/psychooncology-appointment.entity';
 import { CreatePsychooncologyAppointmentDto } from './dto/create-psychooncology-appointment.dto';
 import { FindPsychooncologyAppointmentsQueryDto } from './dto/list-psychooncology-appointments.dto';
 import { UpdatePsychooncologyAppointmentDto } from './dto/update-psychooncology-appointment.dto';
 import { PsychooncologyAppointmentResponseDto } from './dto/psychooncology-appointment-response.dto';
+import { ReschedulePsychooncologyAppointmentDto } from './dto/reschedule-psychooncology-appointment.dto';
+import { SetReminderMessageDto } from '../reminders/dto/set-reminder-message.dto';
+import { AppointmentReminderResponseDto } from './dto/appointment-reminder-response.dto';
+import { UnmanagedNoShowsResponseDto } from './dto/unmanaged-no-shows-response.dto';
 import { PsychooncologyAppointmentsService } from './psychooncology-appointments.service';
 
 const READ = [
@@ -39,13 +46,7 @@ const READ = [
   UserRole.AGENT,
   UserRole.VOLUNTEER,
 ];
-const SCHEDULE = [
-  UserRole.ADMIN,
-  UserRole.FOUNDATION,
-  UserRole.AGENT,
-  UserRole.VOLUNTEER,
-];
-const CANCEL = [UserRole.VOLUNTEER];
+const MANAGE = [UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT];
 
 @Controller('psychooncology-appointments')
 @ApiTags('psychooncology-appointments')
@@ -55,28 +56,53 @@ export class PsychooncologyAppointmentsController {
   constructor(private readonly service: PsychooncologyAppointmentsService) {}
 
   @Post()
-  @Roles(...SCHEDULE)
-  @ApiOperation({ summary: 'Schedule a psycho-oncology appointment' })
+  @Roles(...MANAGE)
+  @ApiOperation({
+    summary: 'Schedule a psycho-oncology appointment on a free slot',
+    description:
+      'Opens a care cycle when the patient has none. After the 4 base sessions, only additional sessions can be scheduled.',
+  })
   @ApiCreatedResponse({ type: PsychooncologyAppointmentResponseDto })
   @ApiBadRequestResponse({
-    description: 'The follow-up does not belong to the patient',
+    description: 'Invalid companion, follow-up, or reminder',
   })
   @ApiConflictResponse({
-    description: 'Availability slot is reserved or volunteer is inactive',
-  })
-  @ApiForbiddenResponse({
     description:
-      'Volunteers can only schedule appointments from their own availability',
+      'Slot reserved or past, volunteer inactive, or base cycle already full',
   })
   @ApiNotFoundResponse({
     description:
       'Patient, follow-up, availability slot, or volunteer not found',
   })
-  create(
-    @Body() dto: CreatePsychooncologyAppointmentDto,
+  create(@Body() dto: CreatePsychooncologyAppointmentDto) {
+    return this.service.create(dto).then(this.toResponse);
+  }
+
+  @Get('needs-reassignment')
+  @Roles(...MANAGE)
+  @ApiOperation({
+    summary: 'List pending sessions of deactivated volunteers to reassign',
+  })
+  @ApiOkResponse({ type: PsychooncologyAppointmentResponseDto, isArray: true })
+  findNeedingReassignment(@CurrentUser() user: User) {
+    return this.service
+      .findNeedingReassignment(user)
+      .then((items) => items.map(this.toResponse));
+  }
+
+  @Get('patients/:patientId/unmanaged-no-shows')
+  @Roles(...READ)
+  @ApiOperation({
+    summary: 'Whether a patient has no-show sessions nobody followed up yet',
+  })
+  @ApiParam({ name: 'patientId', format: 'uuid' })
+  @ApiOkResponse({ type: UnmanagedNoShowsResponseDto })
+  @ApiForbiddenResponse({ description: 'Patient is not accessible' })
+  findUnmanagedNoShows(
+    @Param('patientId') patientId: string,
     @CurrentUser() user: User,
-  ) {
-    return this.service.create(dto, user).then(this.toResponse);
+  ): Promise<UnmanagedNoShowsResponseDto> {
+    return this.service.findUnmanagedNoShows(patientId, user);
   }
 
   @Get()
@@ -88,8 +114,10 @@ export class PsychooncologyAppointmentsController {
   @ApiQuery({
     name: 'status',
     required: false,
-    enum: ['SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_ANSWER'],
+    enum: AppointmentStatus,
   })
+  @ApiQuery({ name: 'cycleId', required: false, format: 'uuid' })
+  @ApiQuery({ name: 'needsReassignment', required: false, type: Boolean })
   @ApiBadRequestResponse({
     description: 'The authenticated volunteer has no profile',
   })
@@ -120,19 +148,23 @@ export class PsychooncologyAppointmentsController {
 
   @Patch(':id')
   @Roles(...READ)
-  @ApiOperation({ summary: 'Update a psycho-oncology appointment' })
+  @ApiOperation({
+    summary: 'Update a psycho-oncology appointment',
+    description:
+      'Volunteers only record results (status COMPLETED/NO_SHOW and session fields) of their own sessions; agents only edit logistics.',
+  })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: PsychooncologyAppointmentResponseDto })
   @ApiBadRequestResponse({
-    description: 'Invalid appointment status transition',
+    description: 'Invalid status transition or reminder',
   })
-  @ApiConflictResponse({ description: 'Closed appointments cannot be updated' })
+  @ApiConflictResponse({
+    description: 'No se puede modificar una cita cancelada o reprogramada.',
+  })
   @ApiForbiddenResponse({
-    description: 'Volunteers have limited update permissions',
+    description: 'The role cannot edit some of the given fields',
   })
-  @ApiNotFoundResponse({
-    description: 'Appointment or availability slot not found',
-  })
+  @ApiNotFoundResponse({ description: 'Appointment not found' })
   update(
     @Param('id') id: string,
     @Body() dto: UpdatePsychooncologyAppointmentDto,
@@ -142,20 +174,92 @@ export class PsychooncologyAppointmentsController {
   }
 
   @Patch(':id/cancel')
-  @Roles(...CANCEL)
+  @Roles(...MANAGE)
   @ApiOperation({ summary: 'Cancel a psycho-oncology appointment' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: PsychooncologyAppointmentResponseDto })
   @ApiConflictResponse({
-    description: 'Closed appointments cannot be cancelled',
+    description: 'Only scheduled or overdue appointments can be cancelled',
   })
-  @ApiNotFoundResponse({
-    description: 'Appointment or availability slot not found',
+  @ApiNotFoundResponse({ description: 'Appointment not found' })
+  cancel(@Param('id') id: string) {
+    return this.service.cancel(id).then(this.toResponse);
+  }
+
+  @Post(':id/reschedule')
+  @Roles(...MANAGE)
+  @ApiOperation({
+    summary: 'Reschedule a session to another free slot',
+    description:
+      'The slot may belong to another volunteer. The original session becomes RESCHEDULED and links to the returned new session.',
   })
-  cancel(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.service
-      .update(id, { status: AppointmentStatus.CANCELLED }, user)
-      .then(this.toResponse);
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiCreatedResponse({ type: PsychooncologyAppointmentResponseDto })
+  @ApiConflictResponse({
+    description:
+      'Appointment not pending, slot reserved or past, or volunteer inactive',
+  })
+  @ApiNotFoundResponse({ description: 'Appointment or slot not found' })
+  reschedule(
+    @Param('id') id: string,
+    @Body() dto: ReschedulePsychooncologyAppointmentDto,
+  ) {
+    return this.service.reschedule(id, dto).then(this.toResponse);
+  }
+
+  @Get(':id/reminder')
+  @Roles(...MANAGE)
+  @ApiOperation({ summary: 'Get the ready-to-copy reminder of a session' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: AppointmentReminderResponseDto })
+  @ApiConflictResponse({ description: 'Video call session without Zoom link' })
+  reminder(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ): Promise<AppointmentReminderResponseDto> {
+    return this.service.reminderMessage(id, user);
+  }
+
+  @Put(':id/reminder/message')
+  @Roles(...MANAGE)
+  @ApiOperation({
+    summary:
+      'Save the reminder text of a session (empty restores the suggested text)',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: AppointmentReminderResponseDto })
+  @ApiConflictResponse({ description: 'Session not pending' })
+  setReminderMessage(
+    @Param('id') id: string,
+    @Body() dto: SetReminderMessageDto,
+    @CurrentUser() user: User,
+  ): Promise<AppointmentReminderResponseDto> {
+    return this.service.setReminderMessage(id, dto.text, user);
+  }
+
+  @Patch(':id/reminder/sent')
+  @Roles(...MANAGE)
+  @ApiOperation({ summary: 'Mark the session reminder as sent manually' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: AppointmentReminderResponseDto })
+  @ApiConflictResponse({
+    description: 'Session not pending, or video call without Zoom link',
+  })
+  markReminderSent(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ): Promise<AppointmentReminderResponseDto> {
+    return this.service.markReminderSent(id, user);
+  }
+
+  @Patch(':id/no-show-managed')
+  @Roles(...MANAGE)
+  @ApiOperation({ summary: 'Mark a no-show session as managed' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: PsychooncologyAppointmentResponseDto })
+  @ApiConflictResponse({ description: 'The session is not a no-show' })
+  markNoShowManaged(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.service.markNoShowManaged(id, user).then(this.toResponse);
   }
 
   private toResponse(
@@ -193,6 +297,14 @@ export class PsychooncologyAppointmentsController {
       noAnswerNote: item.noAnswerNote,
       satisfactionRating: item.satisfactionRating,
       satisfactionComment: item.satisfactionComment,
+      cycleId: item.cycleId,
+      rescheduledToId: item.rescheduledToId,
+      needsReassignment: item.needsReassignment,
+      reminderMode: item.reminderMode,
+      remindAt: item.remindAt,
+      reminderSentAt: item.reminderSentAt,
+      noShowManagedAt: item.noShowManagedAt,
+      noShowManagedById: item.noShowManagedById,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
       isHistorical: item.isHistorical,

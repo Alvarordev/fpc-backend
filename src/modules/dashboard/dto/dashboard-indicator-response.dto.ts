@@ -13,6 +13,13 @@ export class DashboardIndicatorMetaDto {
   @ApiProperty()
   definition!: string;
 
+  @ApiProperty({
+    type: 'object',
+    additionalProperties: { type: 'string' },
+    description: 'Formula and source of each indicator, keyed by field name.',
+  })
+  definitions!: Record<string, string>;
+
   @ApiProperty()
   population!: string;
 
@@ -57,6 +64,17 @@ export class DashboardIndicatorDistributionDto {
   population!: number;
 }
 
+export class DashboardCrossItemDto {
+  @ApiProperty({ example: 'Cáncer de mama' })
+  row!: string;
+
+  @ApiProperty({ example: 'LIMA' })
+  column!: string;
+
+  @ApiProperty({ example: 7 })
+  count!: number;
+}
+
 export class DashboardDemographicsResponseDto {
   @ApiProperty({ type: DashboardIndicatorMetaDto })
   meta!: DashboardIndicatorMetaDto;
@@ -96,6 +114,9 @@ export class DashboardDemographicsResponseDto {
 
   @ApiProperty({ type: DashboardIndicatorDistributionDto })
   epsProvider!: DashboardIndicatorDistributionDto;
+
+  @ApiProperty({ type: DashboardIndicatorDistributionDto })
+  insuranceTypeAtEnrollment!: DashboardIndicatorDistributionDto;
 }
 
 export class DashboardEpidemiologyEventsDto {
@@ -127,6 +148,20 @@ export class DashboardEpidemiologyResponseDto {
 
   @ApiProperty({ type: DashboardIndicatorDistributionDto })
   currentDiagnosticStatuses!: DashboardIndicatorDistributionDto;
+
+  @ApiProperty({
+    type: DashboardCrossItemDto,
+    isArray: true,
+    description: 'Current diagnoses (row) by residence department (column).',
+  })
+  diagnosisByDepartment!: DashboardCrossItemDto[];
+
+  @ApiProperty({
+    type: DashboardCrossItemDto,
+    isArray: true,
+    description: 'Current diagnoses (row) by cancer stage (column).',
+  })
+  diagnosisByStage!: DashboardCrossItemDto[];
 
   @ApiProperty({ type: DashboardEpidemiologyEventsDto })
   events!: DashboardEpidemiologyEventsDto;
@@ -179,7 +214,7 @@ export class DashboardProductivityResponseDto {
 
   @ApiProperty({
     description:
-      'Average days from enrollment to SIS affiliation for patients whose current insurance is SIS and whose affiliation date differs from enrollment. Null when unknown.',
+      'Average, one value per patient, of days from first enrollment to the first SIS affiliation achieved via SEPA. Negative intervals are ignored. Null when unknown.',
     nullable: true,
   })
   avgDaysEnrollmentToSis!: number | null;
@@ -238,6 +273,9 @@ export class DashboardAdherenceResponseDto {
   @ApiProperty()
   abandonedWithBarriers!: number;
 
+  @ApiProperty({ type: DashboardIndicatorDistributionDto })
+  treatmentAbandonmentReasons!: DashboardIndicatorDistributionDto;
+
   @ApiProperty()
   interruptedAdverseReaction!: number;
 
@@ -262,5 +300,51 @@ export class DashboardAbandonmentResponseDto {
   deceased!: number;
 
   @ApiProperty()
+  transferredOut!: number;
+
+  @ApiProperty()
   other!: number;
+
+  @ApiProperty({
+    description: 'Patients whose deactivation happened inside the period.',
+  })
+  dropoutsInPeriod!: number;
+
+  @ApiProperty({
+    description:
+      'Patients re-enrolled inside the period (REENROLLMENT follow-up). Not counted as enrolled.',
+  })
+  reenrolledInPeriod!: number;
+}
+
+export class DashboardSurveySummaryDto {
+  @ApiProperty({ nullable: true, example: 4.5 })
+  average!: number | null;
+
+  @ApiProperty()
+  responses!: number;
+
+  @ApiProperty({
+    type: DashboardIndicatorItemDto,
+    isArray: true,
+    description: 'Answers per rating, from 1 to 5.',
+  })
+  distribution!: DashboardIndicatorItemDto[];
+}
+
+export class DashboardSatisfactionResponseDto {
+  @ApiProperty({ type: DashboardIndicatorMetaDto })
+  meta!: DashboardIndicatorMetaDto;
+
+  @ApiProperty({ type: DashboardSurveySummaryDto })
+  enrollment!: DashboardSurveySummaryDto;
+
+  @ApiProperty({ type: DashboardSurveySummaryDto })
+  threeMonths!: DashboardSurveySummaryDto;
+
+  @ApiProperty({ type: DashboardSurveySummaryDto })
+  talk!: DashboardSurveySummaryDto;
+
+  @ApiProperty({ type: DashboardSurveySummaryDto })
+  psychooncology!: DashboardSurveySummaryDto;
 }

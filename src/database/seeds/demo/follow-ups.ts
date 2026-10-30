@@ -71,8 +71,8 @@ export async function seedFollowUps(
         manager.create(FollowUp, {
           subjectPatientId: patient.id,
           // Companions often answer on the patient's behalf.
-          interlocutorId:
-            companion && rng.bool(0.4) ? companion.id : patient.id,
+          interlocutorCompanionId:
+            companion && rng.bool(0.4) ? companion.id : null,
           agentId: agent.id,
           type: rng.pick(CONTACT_TYPES),
           status: plan.status,

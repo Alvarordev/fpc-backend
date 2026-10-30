@@ -22,5 +22,11 @@ export class CreatePatientInsuranceDto {
   @IsOptional() @IsString() changeReason?: string;
   @IsOptional() @IsDateString() startDate?: string;
   @IsOptional() @IsDateString() endDate?: string;
-  @IsOptional() @IsBoolean() affiliatedViaSepa?: boolean;
+  @ApiPropertyOptional({
+    description:
+      'ESSALUD activation achieved by SEPA. SIS affiliations by SEPA belong to sis-affiliation.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  affiliatedViaSepa?: boolean;
 }

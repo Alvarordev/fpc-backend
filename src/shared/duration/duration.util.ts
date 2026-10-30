@@ -47,10 +47,23 @@ function defaultLabel(
 }
 
 export function normalizeDuration(
-  dto: DurationDto | null | undefined,
+  input: DurationDto | Duration | null | undefined,
 ): Duration {
   const duration = new Duration();
-  if (!dto) {
+  // También recibe la duración ya guardada al fusionar una edición: sus números
+  // llegan como texto y una duración vacía trae todas sus columnas en null.
+  const dto = input
+    ? {
+        valueMin: input.valueMin == null ? undefined : Number(input.valueMin),
+        valueMax: input.valueMax == null ? undefined : Number(input.valueMax),
+        unit: input.unit ?? undefined,
+        label: input.label ?? undefined,
+      }
+    : null;
+  if (
+    !dto ||
+    (dto.valueMin === undefined && dto.valueMax === undefined && !dto.label)
+  ) {
     duration.valueMin = null;
     duration.valueMax = null;
     duration.unit = null;
@@ -60,10 +73,26 @@ export function normalizeDuration(
     return duration;
   }
 
+  if (dto.valueMin === undefined) {
+    if (!dto.label || dto.valueMax !== undefined)
+      throw new BadRequestException(
+        'Una duración sin valor mínimo necesita una etiqueta y no puede tener valor máximo.',
+      );
+    duration.valueMin = null;
+    duration.valueMax = null;
+    duration.unit = dto.unit ?? null;
+    duration.label = dto.label;
+    duration.canonicalMinutesMin = null;
+    duration.canonicalMinutesMax = null;
+    return duration;
+  }
+
+  if (!dto.unit)
+    throw new BadRequestException('Indica la unidad de la duración.');
   const valueMax = dto.valueMax ?? dto.valueMin;
   if (valueMax < dto.valueMin) {
     throw new BadRequestException(
-      'valueMax must be greater than or equal to valueMin',
+      'El valor máximo no puede ser menor que el mínimo.',
     );
   }
 
@@ -80,7 +109,9 @@ export function normalizeDuration(
 
 export function durationFromElapsedDays(days: number): DurationDto {
   if (!Number.isFinite(days) || days < 0)
-    throw new BadRequestException('Elapsed days must be a non-negative number');
+    throw new BadRequestException(
+      'Los días transcurridos no pueden ser negativos.',
+    );
 
   if (days < 60) return { valueMin: days, unit: DurationUnit.DAY };
   if (days < 730)

@@ -106,7 +106,9 @@ export class PatientNonOncologicalFollowUpsService {
         where: { id, patientId },
       });
       if (!existing)
-        throw new NotFoundException('Non-oncological follow-up not found');
+        throw new NotFoundException(
+          'No se encontró el seguimiento no oncológico.',
+        );
 
       const merged = {
         ...existing,
@@ -158,7 +160,7 @@ export class PatientNonOncologicalFollowUpsService {
     });
     if (!existing)
       throw new NotFoundException(
-        'Non-oncological follow-up not found for this historical follow-up',
+        'No se encontró el seguimiento no oncológico de este seguimiento histórico.',
       );
     const normalized = this.normalize({
       ...existing,
@@ -187,7 +189,7 @@ export class PatientNonOncologicalFollowUpsService {
         subjectPatientId: patientId,
       }))
     )
-      throw new NotFoundException('Follow-up not found');
+      throw new NotFoundException('No se encontró el seguimiento.');
     if (
       input.enrollmentId &&
       !(await manager.getRepository(Enrollment).existsBy({
@@ -195,7 +197,7 @@ export class PatientNonOncologicalFollowUpsService {
         patientId,
       }))
     )
-      throw new NotFoundException('Enrollment not found');
+      throw new NotFoundException('No se encontró el enrolamiento.');
   }
 
   private normalize(input: {
@@ -216,21 +218,19 @@ export class PatientNonOncologicalFollowUpsService {
     dischargeReason?: string | null;
   }) {
     const diagnosis = input.diagnosis?.trim();
-    if (!diagnosis) throw new BadRequestException('diagnosis is required');
+    if (!diagnosis) throw new BadRequestException('Selecciona el diagnóstico.');
     if (
       input.hasControls === true &&
       (!input.controlSpecialty?.trim() || !input.controlPeriodicity)
     )
       throw new BadRequestException(
-        'controlSpecialty and controlPeriodicity are required when controls are active',
+        'Indica la especialidad y la frecuencia de los controles.',
       );
     if (
       input.status === PatientNonOncologicalFollowUpStatus.DISCHARGED &&
       !input.dischargeReason?.trim()
     )
-      throw new BadRequestException(
-        'dischargeReason is required when the follow-up is discharged',
-      );
+      throw new BadRequestException('Indica el motivo del alta.');
 
     return {
       followUpId: input.followUpId,

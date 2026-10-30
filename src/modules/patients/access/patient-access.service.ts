@@ -25,7 +25,7 @@ export class PatientAccessService {
 
   async assertCanRead(patientId: string, user: User): Promise<void> {
     if (!(await this.patients.existsBy({ id: patientId })))
-      throw new NotFoundException('Patient not found');
+      throw new NotFoundException('No se encontró el paciente.');
     if (user.role !== UserRole.VOLUNTEER) return;
 
     const volunteerId = await this.volunteerIdFor(user);
@@ -35,7 +35,7 @@ export class PatientAccessService {
         volunteerId: volunteerId!,
       }))
     )
-      throw new ForbiddenException('Patient is not assigned to this volunteer');
+      throw new ForbiddenException('Este paciente no está asignado a ti.');
   }
 
   async scopeQuery<T extends ObjectLiteral>(
@@ -65,7 +65,7 @@ export class PatientAccessService {
     });
     if (!volunteer)
       throw new BadRequestException(
-        'Authenticated user has no volunteer profile',
+        'Tu usuario no tiene perfil de voluntario.',
       );
     return volunteer.id;
   }

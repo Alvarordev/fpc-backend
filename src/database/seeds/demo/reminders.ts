@@ -59,8 +59,6 @@ export async function seedReminders(
         status,
         completedAt: isDone ? addMinutes(dueAt, rng.int(30, 600)) : null,
         completedOn: isDone ? toDateOnly(dueAt) : null,
-        // A completed reminder usually produced the next conversation.
-        resultingFollowUpId: isDone ? rng.pick(history.completed).id : null,
       }),
     );
   }

@@ -66,7 +66,7 @@ export class PatientSocialNotesController {
   @ApiOkResponse({ type: PatientSocialNoteResponseDto, isArray: true })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Patient not found' })
+  @ApiNotFoundResponse({ description: 'No se encontró el paciente.' })
   async findAll(
     @Param('patientId', new ParseUUIDPipe()) patientId: string,
     @CurrentUser() user: User,

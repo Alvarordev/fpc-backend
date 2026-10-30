@@ -64,6 +64,12 @@ export class CreatePatientDiagnosisDto {
   @IsOptional()
   @IsString()
   symptomLeadingToCheckup?: string;
+  /** How the disease progressed, e.g. metastasis to other organs. */
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  diseaseEvolution?: string;
   @ApiPropertyOptional({ nullable: true, type: DurationDto })
   @ValidateIf((_, value: unknown) => value != null)
   @IsOptional()

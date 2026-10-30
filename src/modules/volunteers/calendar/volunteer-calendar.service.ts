@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
-  AppointmentStatus,
+  PENDING_APPOINTMENT_STATUSES,
   PsychooncologyAppointment,
 } from '../../../database/entities/psychooncology-appointment.entity';
 import { VolunteerAvailability } from '../../../database/entities/volunteer-availability.entity';
@@ -28,7 +28,7 @@ export class VolunteerCalendarService {
     to: string,
   ): Promise<VolunteerCalendarResponseDto> {
     if (from > to)
-      throw new BadRequestException('from must be on or before to');
+      throw new BadRequestException('La fecha «Desde» no puede ser posterior a «Hasta».');
 
     const endExclusive = new Date(`${to}T00:00:00.000Z`);
     endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
@@ -40,17 +40,15 @@ export class VolunteerCalendarService {
       this.availability
         .createQueryBuilder('availability')
         .where('availability.date BETWEEN :from AND :to', { from, to })
-        .andWhere('availability.is_historical = false')
         .orderBy('availability.date', 'ASC')
         .addOrderBy('availability.start_time', 'ASC')
         .getMany(),
       this.appointments
         .createQueryBuilder('appointment')
         .innerJoinAndSelect('appointment.patient', 'patient')
-        .where('appointment.status = :status', {
-          status: AppointmentStatus.SCHEDULED,
+        .where('appointment.status IN (:...statuses)', {
+          statuses: PENDING_APPOINTMENT_STATUSES,
         })
-        .andWhere('appointment.is_historical = false')
         .andWhere('appointment.scheduled_at IS NOT NULL')
         .andWhere('appointment.scheduled_at >= :from', {
           from: new Date(`${from}T00:00:00.000Z`),

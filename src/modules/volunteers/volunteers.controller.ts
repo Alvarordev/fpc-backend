@@ -20,6 +20,8 @@ import { UpdateVolunteerDto } from './dto/update-volunteer.dto';
 import { VolunteerResponseDto } from './dto/volunteer-response.dto';
 import { VolunteersService } from './volunteers.service';
 
+const MANAGE = [UserRole.ADMIN, UserRole.FOUNDATION];
+
 @Controller('volunteers')
 @ApiBearerAuth()
 @ApiTags('volunteers')
@@ -27,68 +29,99 @@ import { VolunteersService } from './volunteers.service';
 export class VolunteersController {
   constructor(private readonly volunteersService: VolunteersService) {}
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(...MANAGE)
   @ApiOperation({ summary: 'Create a volunteer' })
   @ApiCreatedResponse({ type: VolunteerResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
+  @ApiForbiddenResponse({
+    description: 'Administrator or foundation role required',
+  })
   create(@Body() input: CreateVolunteerDto) {
     return this.volunteersService.create(input).then(this.toResponse);
   }
   @Get()
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT)
   @ApiOperation({ summary: 'List volunteers' })
   @ApiOkResponse({ type: VolunteerResponseDto, isArray: true })
-  findAll(@CurrentUser() user: User) {
+  @ApiForbiddenResponse({ description: 'Volunteers cannot list volunteers' })
+  findAll() {
     return this.volunteersService
-      .findAll(user)
+      .findAll()
       .then((items) => items.map(this.toResponse));
+  }
+  @Get('me')
+  @Roles(UserRole.VOLUNTEER)
+  @ApiOperation({ summary: 'Get the profile of the authenticated volunteer' })
+  @ApiOkResponse({ type: VolunteerResponseDto })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
+  findMe(@CurrentUser() user: User) {
+    return this.volunteersService.findByUser(user.id).then(this.toResponse);
   }
   @Get(':id')
   @ApiOperation({ summary: 'Get a volunteer' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: VolunteerResponseDto })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
-  findOne(@Param('id') id: string) {
-    return this.volunteersService.findById(id).then(this.toResponse);
+  @ApiForbiddenResponse({
+    description: 'Solo puedes ver tu propio perfil.',
+  })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
+  findOne(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.volunteersService.findVisible(id, user).then(this.toResponse);
   }
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(...MANAGE)
   @ApiOperation({ summary: 'Update a volunteer' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: VolunteerResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiForbiddenResponse({
+    description: 'Administrator or foundation role required',
+  })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   update(@Param('id') id: string, @Body() input: UpdateVolunteerDto) {
     return this.volunteersService.update(id, input).then(this.toResponse);
   }
   @Patch(':id/deactivate')
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Deactivate a volunteer user account' })
+  @Roles(...MANAGE)
+  @ApiOperation({
+    summary: 'Deactivate a volunteer user account',
+    description:
+      'Future sessions of the volunteer are flagged as needing reassignment.',
+  })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: VolunteerResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiForbiddenResponse({
+    description: 'Administrator or foundation role required',
+  })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   deactivate(@Param('id') id: string) {
     return this.volunteersService.deactivate(id).then(this.toResponse);
   }
   @Patch(':id/pause')
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Pause a volunteer' })
+  @Roles(...MANAGE)
+  @ApiOperation({
+    summary: 'Pause a volunteer',
+    description:
+      'Future sessions of the volunteer are flagged as needing reassignment.',
+  })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: VolunteerResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiForbiddenResponse({
+    description: 'Administrator or foundation role required',
+  })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   pause(@Param('id') id: string) {
     return this.volunteersService
       .setAvailability(id, false)
       .then(this.toResponse);
   }
   @Patch(':id/resume')
-  @Roles(UserRole.ADMIN)
+  @Roles(...MANAGE)
   @ApiOperation({ summary: 'Resume a volunteer' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: VolunteerResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  @ApiNotFoundResponse({ description: 'Volunteer not found' })
+  @ApiForbiddenResponse({
+    description: 'Administrator or foundation role required',
+  })
+  @ApiNotFoundResponse({ description: 'No se encontró el voluntario.' })
   resume(@Param('id') id: string) {
     return this.volunteersService
       .setAvailability(id, true)

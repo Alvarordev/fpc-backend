@@ -54,7 +54,7 @@ export class AuthService {
     const user = await this.validateUser(email, password);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Correo o contraseña incorrectos.');
     }
 
     const refreshToken = await this.createRefreshToken(
@@ -80,7 +80,9 @@ export class AuthService {
       });
 
       if (!currentToken) {
-        throw new UnauthorizedException('Invalid refresh token');
+        throw new UnauthorizedException(
+          'Tu sesión expiró. Vuelve a iniciar sesión.',
+        );
       }
 
       if (currentToken.replacedById) {
@@ -101,7 +103,9 @@ export class AuthService {
         !user ||
         !user.isActive
       ) {
-        throw new UnauthorizedException('Invalid refresh token');
+        throw new UnauthorizedException(
+          'Tu sesión expiró. Vuelve a iniciar sesión.',
+        );
       }
 
       const nextToken = await this.createRefreshToken(user, repository);
@@ -116,7 +120,9 @@ export class AuthService {
     });
 
     if (!result) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException(
+        'Tu sesión expiró. Vuelve a iniciar sesión.',
+      );
     }
 
     return result;

@@ -42,7 +42,7 @@ export class UsersService {
       filters.role !== UserRole.FOUNDATION
     ) {
       throw new ForbiddenException(
-        'Only administrators can list users without a foundation role filter',
+        'Solo un administrador puede ver todos los usuarios.',
       );
     }
 
@@ -78,7 +78,7 @@ export class UsersService {
     });
 
     if (existingUser) {
-      throw new ConflictException('Email already exists');
+      throw new ConflictException('Ya existe un usuario con ese correo.');
     }
 
     const passwordHash = await bcrypt.hash(input.password, 12);
@@ -95,7 +95,7 @@ export class UsersService {
     const user = await this.findById(id);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('No se encontró el usuario.');
     }
 
     if (user.role === UserRole.ADMIN) {
@@ -109,7 +109,7 @@ export class UsersService {
           where: { email, id: Not(id) },
         });
         if (existingUser) {
-          throw new ConflictException('Email already exists');
+          throw new ConflictException('Ya existe un usuario con ese correo.');
         }
         user.email = email;
         if (user.role === UserRole.VOLUNTEER) {
@@ -133,7 +133,7 @@ export class UsersService {
     const user = await this.findById(id);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('No se encontró el usuario.');
     }
 
     if (user.role === UserRole.ADMIN) {
@@ -149,7 +149,7 @@ export class UsersService {
       where: { email: normalized, id: Not(id) },
     });
     if (existingUser) {
-      throw new ConflictException('Email already exists');
+      throw new ConflictException('Ya existe un usuario con ese correo.');
     }
 
     user.email = normalized;
@@ -160,7 +160,7 @@ export class UsersService {
     const user = await this.findById(id);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('No se encontró el usuario.');
     }
 
     user.isActive = isActive;

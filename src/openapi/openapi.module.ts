@@ -12,10 +12,19 @@ import { CallCenterService } from '../modules/call-center/call-center.service';
 import { DashboardController } from '../modules/dashboard/dashboard.controller';
 import { DashboardIndicatorsService } from '../modules/dashboard/dashboard-indicators.service';
 import { DashboardService } from '../modules/dashboard/dashboard.service';
+import { KnowledgeController } from '../modules/knowledge/knowledge.controller';
+import { KnowledgeService } from '../modules/knowledge/knowledge.service';
+import { AssistantController } from '../modules/assistant/assistant.controller';
+import { AssistantService } from '../modules/assistant/assistant.service';
+import { AssistantToolsService } from '../modules/assistant/assistant-tools.service';
+import { ReenrollmentsController } from '../modules/enrollments/reenrollments.controller';
+import { ReenrollmentsService } from '../modules/enrollments/reenrollments.service';
 import { AuthController } from '../modules/auth/auth.controller';
 import { AuthService } from '../modules/auth/auth.service';
+import { PasswordResetService } from '../modules/auth/password-reset.service';
 import { EnrollmentsController } from '../modules/enrollments/enrollments.controller';
-import { FamilyTalkInterestsController } from '../modules/enrollments/family-talk-interests.controller';
+import { TalkInterestsController } from '../modules/talk-interests/talk-interests.controller';
+import { TalkInterestsService } from '../modules/talk-interests/talk-interests.service';
 import { EnrollmentsService } from '../modules/enrollments/enrollments.service';
 import { FollowUpsController } from '../modules/follow-ups/follow-ups.controller';
 import { FollowUpsService } from '../modules/follow-ups/follow-ups.service';
@@ -74,6 +83,19 @@ import { HistoricalRecordsService } from '../modules/historical-records/historic
 import { PatientNonOncologicalFollowUpsController } from '../modules/patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.controller';
 import { PatientNonOncologicalFollowUpsService } from '../modules/patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 
+import { ExportsController } from '../modules/exports/exports.controller';
+import { ExportsService } from '../modules/exports/exports.service';
+import { PatientChangeLogController } from '../modules/patients/change-log/patient-change-log.controller';
+import { PatientChangeLogService } from '../modules/patients/change-log/patient-change-log.service';
+import { PsychooncologyCyclesController } from '../modules/psychooncology-appointments/psychooncology-cycles.controller';
+import { PsychooncologyCyclesService } from '../modules/psychooncology-appointments/psychooncology-cycles.service';
+import { ReferralsController } from '../modules/referrals/referrals.controller';
+import { ReferralsService } from '../modules/referrals/referrals.service';
+import { SurveysController } from '../modules/surveys/surveys.controller';
+import { SurveysService } from '../modules/surveys/surveys.service';
+import { SupportTicketsController } from '../modules/support-tickets/support-tickets.controller';
+import { SupportTicketsService } from '../modules/support-tickets/support-tickets.service';
+
 // Controllers only need their route metadata to build the OpenAPI document.
 // Empty providers keep generation independent from infrastructure services.
 @Module({
@@ -86,7 +108,7 @@ import { PatientNonOncologicalFollowUpsService } from '../modules/patients/clini
     FoundationsController,
     AuthController,
     EnrollmentsController,
-    FamilyTalkInterestsController,
+    TalkInterestsController,
     FollowUpsController,
     HealthCentersController,
     CatalogsController,
@@ -114,6 +136,15 @@ import { PatientNonOncologicalFollowUpsService } from '../modules/patients/clini
     VolunteerCalendarController,
     HistoricalRecordsController,
     PatientNonOncologicalFollowUpsController,
+    ExportsController,
+    PatientChangeLogController,
+    PsychooncologyCyclesController,
+    ReferralsController,
+    SurveysController,
+    AssistantController,
+    KnowledgeController,
+    ReenrollmentsController,
+    SupportTicketsController,
   ],
   providers: [
     { provide: AgentsService, useValue: {} },
@@ -124,6 +155,12 @@ import { PatientNonOncologicalFollowUpsService } from '../modules/patients/clini
     { provide: DashboardService, useValue: {} },
     { provide: DashboardIndicatorsService, useValue: {} },
     { provide: AuthService, useValue: {} },
+    { provide: PasswordResetService, useValue: {} },
+    { provide: AssistantService, useValue: {} },
+    { provide: KnowledgeService, useValue: {} },
+    { provide: ReenrollmentsService, useValue: {} },
+    { provide: TalkInterestsService, useValue: {} },
+    { provide: AssistantToolsService, useValue: {} },
     { provide: EnrollmentsService, useValue: {} },
     { provide: FollowUpsService, useValue: {} },
     { provide: HealthCentersService, useValue: {} },
@@ -155,6 +192,12 @@ import { PatientNonOncologicalFollowUpsService } from '../modules/patients/clini
     { provide: VolunteerCalendarService, useValue: {} },
     { provide: HistoricalRecordsService, useValue: {} },
     { provide: PatientNonOncologicalFollowUpsService, useValue: {} },
+    { provide: ExportsService, useValue: {} },
+    { provide: PatientChangeLogService, useValue: {} },
+    { provide: PsychooncologyCyclesService, useValue: {} },
+    { provide: ReferralsService, useValue: {} },
+    { provide: SurveysService, useValue: {} },
+    { provide: SupportTicketsService, useValue: {} },
   ],
 })
 export class OpenApiModule {}

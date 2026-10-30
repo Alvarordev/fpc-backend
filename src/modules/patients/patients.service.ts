@@ -1,3 +1,5 @@
+import { PatientActivityEvent } from '../../database/entities/patient-activity-event.entity';
+import { AuditContextService } from '../../shared/audit/audit-context.service';
 import {
   BadRequestException,
   ConflictException,
@@ -14,11 +16,13 @@ import { DeactivationReason } from '../../database/entities/deactivation-reason.
 import { PatientActivityStatus } from '../../database/entities/patient-activity-status.enum';
 import { PatientDetails } from '../../database/entities/patient-details.entity';
 import { PatientDiagnosis } from '../../database/entities/patient-diagnosis.entity';
+import { PatientHealthPhase } from '../../database/entities/patient-health-phase.enum';
 import { PatientHealthPhaseHistory } from '../../database/entities/patient-health-phase-history.entity';
 import { PatientHealthSubcategoryHistory } from '../../database/entities/patient-health-subcategory-history.entity';
 import {
   HEALTH_SUBCATEGORY_PHASE,
   ONCOLOGICAL_HEALTH_SUBCATEGORIES,
+  PatientHealthSubcategory,
 } from '../../database/entities/patient-health-subcategory.enum';
 import { PatientInsurance } from '../../database/entities/patient-insurance.entity';
 import { PatientMedicalAppointment } from '../../database/entities/patient-medical-appointment.entity';
@@ -31,10 +35,14 @@ import { PatientTreatment } from '../../database/entities/patient-treatment.enti
 import { PatientHealthBackgroundAssessment } from '../../database/entities/patient-health-background-assessment.entity';
 import { Patient } from '../../database/entities/patient.entity';
 import { savePatientOrDniConflict } from './patient-dni-conflict';
+import { applyPatientSearchFilters } from './patient-search-filters';
 import { UserRole } from '../../database/entities/user-role.enum';
 import { CreateCompanionDto } from './dto/create-companion.dto';
 import { type PatientCreationInput } from './dto/create-patient.dto';
-import { DeactivatePatientDto } from './dto/deactivate-patient.dto';
+import {
+  DeactivatePatientDto,
+  ReactivatePatientDto,
+} from './dto/deactivate-patient.dto';
 import {
   ListPatientsDto,
   UNASSIGNED_HEALTH_SUBCATEGORY,
@@ -54,6 +62,9 @@ import { CompanionContactRole } from '../../database/entities/companion-contact-
 import { PatientPsychooncologySupportAssessment } from '../../database/entities/patient-psychooncology-support-assessment.entity';
 import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-non-oncological-follow-up.entity';
 import { CatalogValueService } from '../catalogs/catalog-value.service';
+import { Companion } from '../../database/entities/companion.entity';
+import { UpdateCompanionDto } from './dto/update-companion.dto';
+import { saveCompanionOrDniConflict } from './companion-dni-conflict';
 
 function resolveContactRole(
   contactRole: CompanionContactRole | null | undefined,
@@ -106,6 +117,7 @@ export class PatientsService {
     @InjectRepository(PatientNonOncologicalFollowUp)
     private readonly nonOncologicalFollowUpsRepository: Repository<PatientNonOncologicalFollowUp>,
     private readonly catalogValues: CatalogValueService,
+    private readonly audit: AuditContextService,
   ) {}
 
   assertCanRead(patientId: string, user: User): Promise<void> {
@@ -123,13 +135,13 @@ export class PatientsService {
     const patient = await repository.findOne({
       where: { id: patientId },
     });
-    if (!patient) throw new NotFoundException('Patient not found');
+    if (!patient) throw new NotFoundException('No se encontró el paciente.');
     if (
       patient.role !== expectedRole ||
       (expectedStatus && patient.status !== expectedStatus)
     ) {
       throw new ConflictException(
-        'Patient does not meet the required role or status',
+        'El paciente no está en un estado que permita esta acción.',
       );
     }
     return patient;
@@ -139,6 +151,10 @@ export class PatientsService {
     input: PatientCreationInput,
     manager?: EntityManager,
   ): Promise<Patient> {
+    if (!input.birthDate)
+      throw new BadRequestException(
+        'Registra la fecha de nacimiento del paciente.',
+      );
     const repository =
       manager?.getRepository(Patient) ?? this.patientsRepository;
     const patient = await savePatientOrDniConflict(repository, { ...input });
@@ -169,7 +185,7 @@ export class PatientsService {
     input: CreateCompanionDto,
     manager?: EntityManager,
     user?: User,
-  ): Promise<Patient> {
+  ): Promise<Companion> {
     if (user && user.role === UserRole.VOLUNTEER)
       await this.access.assertCanRead(patientId, user);
     await this.assertPatientRole(
@@ -217,12 +233,7 @@ export class PatientsService {
       PatientStatus.ENROLLED,
       manager,
     );
-    await this.assertPatientRole(
-      input.existingCompanionId,
-      PatientRole.COMPANION,
-      undefined,
-      manager,
-    );
+    await this.findCompanion(input.existingCompanionId, manager);
     const repository =
       manager?.getRepository(CompanionPatient) ??
       this.companionPatientsRepository;
@@ -231,14 +242,15 @@ export class PatientsService {
     });
     if (existing)
       throw new ConflictException(
-        'Companion is already linked to this patient',
+        'El acompañante ya está vinculado a este paciente.',
       );
     const contactRole = resolveContactRole(
       input.contactRole,
       input.isPrimaryContact,
       null,
     );
-    if (contactRole)
+    // Only the primary contact is unique; a patient may have several secondary ones.
+    if (contactRole === CompanionContactRole.PRIMARY)
       await repository.update(
         { patientId, contactRole },
         { contactRole: null, isPrimaryContact: false },
@@ -251,9 +263,114 @@ export class PatientsService {
         contactRole,
         isPrimaryContact: contactRole === CompanionContactRole.PRIMARY,
         isCaregiver: input.isCaregiver ?? false,
-        relationship: input.relationship ?? null,
+        relationship: await this.resolveRelationship(
+          input.relationship,
+          manager,
+        ),
       }),
     );
+  }
+
+  async findCompanion(id: string, manager?: EntityManager): Promise<Companion> {
+    const companion = await (
+      manager?.getRepository(Companion) ??
+      this.dataSource.getRepository(Companion)
+    ).findOneBy({ id });
+    if (!companion)
+      throw new NotFoundException('No se encontró el acompañante.');
+    return companion;
+  }
+
+  /** Datos personales del acompañante; se editan desde la ficha de un paciente al que acompaña. */
+  async updateCompanion(
+    patientId: string,
+    companionId: string,
+    input: UpdateCompanionDto,
+  ): Promise<Companion> {
+    return this.dataSource.transaction(async (manager) => {
+      if (
+        !(await manager
+          .getRepository(CompanionPatient)
+          .existsBy({ patientId, companionId }))
+      )
+        throw new NotFoundException(
+          'El acompañante no está vinculado a este paciente.',
+        );
+      const companion = await this.findCompanion(companionId, manager);
+      Object.assign(companion, input);
+      const saved = await saveCompanionOrDniConflict(
+        manager.getRepository(Companion),
+        companion,
+      );
+      await this.invalidations.markDirty(patientId, manager);
+      return saved;
+    });
+  }
+
+  /**
+   * A1: "enrolar desde este contacto". Crea un prospecto (paciente sin enrolar)
+   * con los datos del acompañante, que se enrola luego con el flujo normal.
+   * El acompañante sigue acompañando a quien ya acompañaba.
+   */
+  async convertCompanionToPatient(
+    patientId: string,
+    companionId: string,
+  ): Promise<Patient> {
+    return this.dataSource.transaction(async (manager) => {
+      if (
+        !(await manager
+          .getRepository(CompanionPatient)
+          .existsBy({ patientId, companionId }))
+      )
+        throw new NotFoundException(
+          'El acompañante no está vinculado a este paciente.',
+        );
+      const companion = await manager
+        .getRepository(Companion)
+        .createQueryBuilder('companion')
+        .setLock('pessimistic_write')
+        .where('companion.id = :companionId', { companionId })
+        .getOne();
+      if (!companion)
+        throw new NotFoundException('No se encontró el acompañante.');
+      if (companion.convertedPatientId)
+        throw new ConflictException({
+          code: 'COMPANION_ALREADY_CONVERTED',
+          message: 'Este acompañante ya fue registrado como paciente.',
+          patientId: companion.convertedPatientId,
+        });
+      const patient = await savePatientOrDniConflict(
+        manager.getRepository(Patient),
+        {
+          fullName: companion.fullName,
+          documentType: companion.documentType,
+          dni: companion.dni,
+          birthDate: companion.birthDate,
+          gender: companion.gender,
+          primaryPhone: companion.primaryPhone,
+          secondaryPhone: companion.secondaryPhone,
+          hasWhatsapp: companion.hasWhatsapp,
+          email: companion.email,
+          role: PatientRole.UNKNOWN,
+          status: PatientStatus.UNENROLLED,
+        },
+      );
+      companion.convertedPatientId = patient.id;
+      await manager.getRepository(Companion).save(companion);
+      return patient;
+    });
+  }
+
+  private async resolveRelationship(
+    value: string | null | undefined,
+    manager?: EntityManager,
+  ): Promise<string | null> {
+    const resolved = await this.catalogValues.resolveOptional(
+      'companion_relationship',
+      value,
+      { manager },
+    );
+    return resolved?.code ?? null;
   }
 
   async updateCompanionLink(
@@ -272,13 +389,16 @@ export class PatientsService {
         where: { id: linkId, patientId },
         relations: { companion: true },
       });
-      if (!link) throw new NotFoundException('Companion link not found');
+      if (!link)
+        throw new NotFoundException(
+          'No se encontró el vínculo con el acompañante.',
+        );
       const contactRole = resolveContactRole(
         input.contactRole,
         input.isPrimaryContact,
         link.contactRole,
       );
-      if (contactRole)
+      if (contactRole === CompanionContactRole.PRIMARY)
         await repository.update(
           { patientId, contactRole },
           { contactRole: null, isPrimaryContact: false },
@@ -286,6 +406,14 @@ export class PatientsService {
       Object.assign(link, input, {
         contactRole,
         isPrimaryContact: contactRole === CompanionContactRole.PRIMARY,
+        ...(input.relationship !== undefined
+          ? {
+              relationship: await this.resolveRelationship(
+                input.relationship,
+                manager,
+              ),
+            }
+          : {}),
       });
       const saved = await repository.save(link);
       await this.invalidations.markDirty(patientId, manager);
@@ -340,22 +468,14 @@ export class PatientsService {
       );
     await this.access.scopeQuery(query, 'patient.id', user);
     if (filters.segment === PatientListSegment.CARE) {
-      query.andWhere(
-        '(patient.status = :careEnrolledStatus OR patient.role = :careCompanionRole)',
-        {
-          careEnrolledStatus: PatientStatus.ENROLLED,
-          careCompanionRole: PatientRole.COMPANION,
-        },
-      );
+      query.andWhere('patient.status = :careEnrolledStatus', {
+        careEnrolledStatus: PatientStatus.ENROLLED,
+      });
     }
     if (filters.segment === PatientListSegment.PROSPECTS) {
-      query.andWhere(
-        'patient.status = :prospectStatus AND patient.role != :prospectCompanionRole',
-        {
-          prospectStatus: PatientStatus.UNENROLLED,
-          prospectCompanionRole: PatientRole.COMPANION,
-        },
-      );
+      query.andWhere('patient.status = :prospectStatus', {
+        prospectStatus: PatientStatus.UNENROLLED,
+      });
     }
     if (filters.role)
       query.andWhere('patient.role = :role', { role: filters.role });
@@ -381,6 +501,7 @@ export class PatientsService {
         '(patient.full_name ILIKE :search OR patient.dni ILIKE :search)',
         { search: `%${filters.search}%` },
       );
+    applyPatientSearchFilters(query, filters);
     const [data, total] = await query
       .orderBy('latestEnrollmentDate', 'DESC', 'NULLS LAST')
       .addOrderBy('patient.created_at', 'DESC')
@@ -489,7 +610,7 @@ export class PatientsService {
       where: { id },
       relations: { details: true },
     });
-    if (!patient) throw new NotFoundException('Patient not found');
+    if (!patient) throw new NotFoundException('No se encontró el paciente.');
     const stored = await this.summaries.findOneBy({ patientId: id });
     return Object.assign(patient, { summary: stored?.summary ?? null });
   }
@@ -592,7 +713,7 @@ export class PatientsService {
         order: { changedAt: 'DESC', id: 'DESC' },
       }),
     ]);
-    if (!patient) throw new NotFoundException('Patient not found');
+    if (!patient) throw new NotFoundException('No se encontró el paciente.');
     return Object.assign(patient, {
       summary: stored?.summary ?? null,
       diagnoses,
@@ -618,38 +739,122 @@ export class PatientsService {
   }
 
   async deactivate(id: string, input: DeactivatePatientDto): Promise<Patient> {
-    const patient = await this.findById(id);
-    patient.activityStatus = PatientActivityStatus.INACTIVE;
-    patient.deactivationReason = input.reason;
-    patient.deactivationReasonDetail =
-      input.reason === DeactivationReason.OTHER ? (input.detail ?? null) : null;
-    patient.deactivatedAt = new Date();
-    patient.deceasedAt = input.deceasedAt ?? null;
-    const deactivated = await this.patientsRepository.save(patient);
-    await this.invalidations.markDirty(id);
-    return deactivated;
+    return this.dataSource.transaction(async (manager) => {
+      const patient = await this.lockPatient(id, manager);
+      await this.assertActivityFollowUp(id, input.followUpId, manager);
+      const occurredAt = new Date();
+      const deceasedAt =
+        input.reason === DeactivationReason.DECEASED
+          ? (input.deceasedAt ?? null)
+          : null;
+      patient.activityStatus = PatientActivityStatus.INACTIVE;
+      patient.deactivationReason = input.reason;
+      patient.deactivationReasonDetail = null;
+      patient.deactivatedAt = occurredAt;
+      patient.deceasedAt = deceasedAt;
+      const deactivated = await manager.getRepository(Patient).save(patient);
+      await this.recordActivity(manager, {
+        patientId: id,
+        status: PatientActivityStatus.INACTIVE,
+        reason: input.reason,
+        reasonDetail: null,
+        deceasedAt,
+        followUpId: input.followUpId ?? null,
+        occurredAt,
+      });
+      await this.invalidations.markDirty(id, manager);
+      return deactivated;
+    });
   }
 
-  async reactivate(id: string): Promise<Patient> {
-    const patient = await this.findById(id);
+  /**
+   * The deactivation stays in patient_activity_events; only the cached
+   * columns on the patient are cleared.
+   */
+  async reactivate(
+    id: string,
+    input: ReactivatePatientDto = {},
+    manager?: EntityManager,
+  ): Promise<Patient> {
+    if (!manager)
+      return this.dataSource.transaction((transactionManager) =>
+        this.reactivate(id, input, transactionManager),
+      );
+    const patient = await this.lockPatient(id, manager);
+    await this.assertActivityFollowUp(id, input.followUpId, manager);
     patient.activityStatus = PatientActivityStatus.REACTIVE;
     patient.deactivationReason = null;
     patient.deactivationReasonDetail = null;
     patient.deactivatedAt = null;
     patient.deceasedAt = null;
-    const reactivated = await this.patientsRepository.save(patient);
-    await this.invalidations.markDirty(id);
+    const reactivated = await manager.getRepository(Patient).save(patient);
+    await this.recordActivity(manager, {
+      patientId: id,
+      status: PatientActivityStatus.REACTIVE,
+      reason: null,
+      reasonDetail: null,
+      deceasedAt: null,
+      followUpId: input.followUpId ?? null,
+      occurredAt: new Date(),
+    });
+    await this.invalidations.markDirty(id, manager);
     return reactivated;
+  }
+
+  private async lockPatient(id: string, manager: EntityManager) {
+    const patient = await manager
+      .getRepository(Patient)
+      .createQueryBuilder('patient')
+      .setLock('pessimistic_write')
+      .where('patient.id = :id', { id })
+      .getOne();
+    if (!patient) throw new NotFoundException('No se encontró el paciente.');
+    return patient;
+  }
+
+  private async assertActivityFollowUp(
+    patientId: string,
+    followUpId: string | undefined,
+    manager: EntityManager,
+  ) {
+    if (
+      followUpId &&
+      !(await manager
+        .getRepository(FollowUp)
+        .existsBy({ id: followUpId, subjectPatientId: patientId }))
+    )
+      throw new NotFoundException('No se encontró el seguimiento.');
+  }
+
+  private recordActivity(
+    manager: EntityManager,
+    event: Omit<
+      PatientActivityEvent,
+      'id' | 'patient' | 'followUp' | 'actor' | 'actorUserId' | 'createdAt'
+    >,
+  ) {
+    const events = manager.getRepository(PatientActivityEvent);
+    return events.save(
+      events.create({
+        ...event,
+        actorUserId: this.audit.current().actorUserId,
+      }),
+    );
   }
 
   async upsertDetails(
     id: string,
     input: UpsertPatientDetailsDto,
     manager?: EntityManager,
+    /**
+     * When the phase/subcategory change really happened. Historical loads pass
+     * the follow-up or enrollment date; omitted, history rows default to now.
+     */
+    options: { changedAt?: Date } = {},
   ): Promise<PatientDetails> {
     if (!manager) {
       return this.dataSource.transaction((transactionManager) =>
-        this.upsertDetails(id, input, transactionManager),
+        this.upsertDetails(id, input, transactionManager, options),
       );
     }
     await this.assertPatientRole(id, PatientRole.PATIENT, undefined, manager);
@@ -664,7 +869,7 @@ export class PatientsService {
       });
       if (!healthCenter)
         throw new NotFoundException(
-          'Primary health center not found or inactive',
+          'El hospital principal no existe o está inactivo.',
         );
     }
     const details = await repository.findOne({
@@ -680,9 +885,13 @@ export class PatientsService {
 
     if (input.healthPhase) {
       healthPhase = (
-        await this.catalogValues.resolve('patient_health_phase', input.healthPhase, {
-          manager,
-        })
+        await this.catalogValues.resolve(
+          'patient_health_phase',
+          input.healthPhase,
+          {
+            manager,
+          },
+        )
       ).code;
     }
     if (hasSubcategoryInput && input.healthSubcategory) {
@@ -709,12 +918,11 @@ export class PatientsService {
         });
         if (!hasActiveDiagnosis) {
           throw new BadRequestException(
-            'An active diagnosis is required for this health subcategory',
+            'Esta subcategoría necesita un diagnóstico activo.',
           );
         }
       }
-      healthPhase =
-        HEALTH_SUBCATEGORY_PHASE[healthSubcategory] ?? healthPhase;
+      healthPhase = HEALTH_SUBCATEGORY_PHASE[healthSubcategory] ?? healthPhase;
     } else if (
       input.healthPhase &&
       previousHealthSubcategory &&
@@ -722,6 +930,11 @@ export class PatientsService {
     ) {
       healthSubcategory = null;
     }
+    if (
+      !healthSubcategory &&
+      healthPhase === PatientHealthPhase.SIGNS_AND_SYMPTOMS
+    )
+      healthSubcategory = PatientHealthSubcategory.SIGNS_AND_SYMPTOMS_PATIENT;
 
     const {
       travelTimeToHospital,
@@ -734,7 +947,6 @@ export class PatientsService {
       shelterSepaProviderOther,
       transportationSepaProvider,
       transportationSepaProviderOther,
-      programDropoutReasonCode,
       healthPhase: _healthPhaseInput,
       healthSubcategory: _healthSubcategoryInput,
       ...rest
@@ -747,7 +959,8 @@ export class PatientsService {
         birthCountry,
         { manager },
       );
-      nextBirthCountry = resolvedCountry?.code ?? (birthCountry?.trim() || null);
+      nextBirthCountry =
+        resolvedCountry?.code ?? (birthCountry?.trim() || null);
     }
     if (birthDepartment !== undefined) {
       nextBirthDepartment = birthDepartment ?? null;
@@ -782,11 +995,6 @@ export class PatientsService {
       transportationSepaProvider,
       { otherText: transportationSepaProviderOther, manager },
     );
-    const resolvedDropout = await this.catalogValues.resolveOptional(
-      'program_dropout_reason',
-      programDropoutReasonCode,
-      { manager },
-    );
     const normalized = {
       ...rest,
       healthPhase,
@@ -800,7 +1008,9 @@ export class PatientsService {
       ...(nativeLanguage !== undefined
         ? { nativeLanguage: resolvedLanguage?.code ?? null }
         : {}),
-      ...(zoneType !== undefined ? { zoneType: resolvedZone?.code ?? null } : {}),
+      ...(zoneType !== undefined
+        ? { zoneType: resolvedZone?.code ?? null }
+        : {}),
       ...(shelterSepaProvider !== undefined
         ? {
             shelterSepaProvider: resolvedShelter?.code ?? null,
@@ -812,9 +1022,6 @@ export class PatientsService {
             transportationSepaProvider: resolvedTransport?.code ?? null,
             transportationSepaProviderOther: resolvedTransport?.other ?? null,
           }
-        : {}),
-      ...(programDropoutReasonCode !== undefined
-        ? { programDropoutReasonCode: resolvedDropout?.code ?? null }
         : {}),
     };
     const saved = await repository.save(
@@ -830,6 +1037,7 @@ export class PatientsService {
         historyRepository.create({
           patientId: id,
           healthPhase,
+          ...(options.changedAt ? { changedAt: options.changedAt } : {}),
         }),
       );
     }
@@ -841,6 +1049,7 @@ export class PatientsService {
         subcategoryHistory.create({
           patientId: id,
           healthSubcategory,
+          ...(options.changedAt ? { changedAt: options.changedAt } : {}),
         }),
       );
     }
@@ -860,28 +1069,26 @@ export class PatientsService {
     patientId: string,
     input: CreateCompanionDto,
     manager: EntityManager,
-  ): Promise<Patient> {
+  ): Promise<Companion> {
     const {
       isPrimaryInformant,
       isPrimaryContact,
       contactRole,
       isCaregiver,
       relationship,
-      ...patientFields
+      ...personFields
     } = input;
-    const patients = manager.getRepository(Patient);
-    const companion = await savePatientOrDniConflict(patients, {
-      ...patientFields,
-      role: PatientRole.COMPANION,
-      status: PatientStatus.UNENROLLED,
-    });
+    const companion = await saveCompanionOrDniConflict(
+      manager.getRepository(Companion),
+      personFields,
+    );
     const links = manager.getRepository(CompanionPatient);
     const resolvedContactRole = resolveContactRole(
       contactRole,
       isPrimaryContact,
       null,
     );
-    if (resolvedContactRole)
+    if (resolvedContactRole === CompanionContactRole.PRIMARY)
       await links.update(
         { patientId, contactRole: resolvedContactRole },
         { contactRole: null, isPrimaryContact: false },
@@ -894,7 +1101,7 @@ export class PatientsService {
         contactRole: resolvedContactRole,
         isPrimaryContact: resolvedContactRole === CompanionContactRole.PRIMARY,
         isCaregiver: isCaregiver ?? false,
-        relationship: relationship ?? null,
+        relationship: await this.resolveRelationship(relationship, manager),
       }),
     );
     return companion;

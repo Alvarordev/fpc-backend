@@ -17,6 +17,22 @@ export function dateOnlyInLimaFromInput(value: string): string {
   return dateOnlyInLima(new Date(value));
 }
 
+/**
+ * Un hecho ya ocurrido (realizado, sin respuesta) no puede tener fecha posterior
+ * a hoy en Lima. Acepta YYYY-MM-DD o fecha-hora; null pasa.
+ */
+export function isNotAfterTodayInLima(
+  value: string | Date | null | undefined,
+  today = dateOnlyInLima(new Date()),
+): boolean {
+  if (!value) return true;
+  const day =
+    value instanceof Date
+      ? dateOnlyInLima(value)
+      : dateOnlyInLimaFromInput(value);
+  return day <= today;
+}
+
 export function isDateOnlyRangeValid(
   start: string | null | undefined,
   end: string | null | undefined,

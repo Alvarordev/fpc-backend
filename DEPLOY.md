@@ -79,6 +79,7 @@ como obligatorios no tienen un valor seguro por defecto.
 | `R2_ACCOUNT_ID`                             | Sí             | ID de la cuenta Cloudflare que contiene el bucket.                                              |
 | `R2_BUCKET_NAME`                            | Sí             | Bucket privado específico del entorno.                                                          |
 | `R2_ENDPOINT`                               | No             | `https://<account-id>.r2.cloudflarestorage.com`; se deriva del account ID si se omite.          |
+| `EMAIL_OVERRIDE_TO`                         | No             | Vacío por defecto. Si se define, todo correo se envía a esa dirección y el asunto lleva `[para: <destinatario original>]`. Usar mientras Resend esté en modo onboarding; quitarla para entregar a pacientes reales. |
 | `SEED_ADMIN_EMAIL`                          | Solo para seed | Email del administrador.                                                                        |
 | `SEED_DEMO_SEED`                            | Solo para seed | Entero; default `20260805`.                                                                     |
 | `SEED_DEMO_NOW`                             | Solo para seed | Fecha opcional para fijar la fecha de referencia.                                               |

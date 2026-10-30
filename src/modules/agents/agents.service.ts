@@ -38,7 +38,7 @@ export class AgentsService {
       where: { id },
       relations: { user: true },
     });
-    if (!agent) throw new NotFoundException('Agent not found');
+    if (!agent) throw new NotFoundException('No se encontró el agente.');
     return agent;
   }
   async update(id: string, input: UpdateAgentDto): Promise<Agent> {

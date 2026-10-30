@@ -48,7 +48,7 @@ export class PatientHealthBackgroundAssessmentsService {
         subjectPatientId: patientId,
       }))
     )
-      throw new NotFoundException('Follow-up not found');
+      throw new NotFoundException('No se encontró el seguimiento.');
 
     const assessmentRepository = manager.getRepository(
       PatientHealthBackgroundAssessment,

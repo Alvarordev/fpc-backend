@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CatalogItem } from '../../database/entities/catalog-item.entity';
+import { CatalogMerge } from '../../database/entities/catalog-merge.entity';
 import {
   UbigeoDepartment,
   UbigeoDistrict,
@@ -14,6 +15,7 @@ import { CatalogValueService } from './catalog-value.service';
   imports: [
     TypeOrmModule.forFeature([
       CatalogItem,
+      CatalogMerge,
       UbigeoDepartment,
       UbigeoProvince,
       UbigeoDistrict,

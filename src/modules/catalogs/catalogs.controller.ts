@@ -9,7 +9,9 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -32,6 +34,11 @@ import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { CatalogsService } from './catalogs.service';
 import { CatalogItemResponseDto } from './dto/catalog-item-response.dto';
+import { CatalogMergeResponseDto } from './dto/catalog-merge-response.dto';
+import {
+  AuditContext,
+  AuditContextKind,
+} from '../../shared/audit/audit-context';
 import {
   CreateCatalogItemDto,
   UpdateCatalogItemDto,
@@ -99,43 +106,95 @@ export class CatalogsController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT)
   @ApiOperation({
-    summary:
-      'Create a catalog item (agents/foundation: open kinds only)',
+    summary: 'Create a catalog item (agents: open kinds only)',
   })
   @ApiCreatedResponse({ type: CatalogItemResponseDto })
   @ApiForbiddenResponse({
     description:
-      'Administrator, foundation, or agent role required; non-admins limited to open kinds',
+      'Administrator, foundation, or agent role required; agents limited to open kinds',
   })
   create(@Body() input: CreateCatalogItemDto, @CurrentUser() user: User) {
     return this.service.create(input, user.role).then(this.toResponse);
   }
 
+  @Get('merges')
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION)
+  @ApiOperation({ summary: 'List catalog merges, newest first' })
+  @ApiQuery({ name: 'itemId', required: false, format: 'uuid' })
+  @ApiOkResponse({ type: CatalogMergeResponseDto, isArray: true })
+  @ApiForbiddenResponse({
+    description: 'Administrator or foundation role required',
+  })
+  findMerges(
+    @Query('itemId', new ParseUUIDPipe({ optional: true })) itemId?: string,
+  ) {
+    return this.service
+      .findMerges(itemId)
+      .then((merges) =>
+        merges.map((merge) => CatalogMergeResponseDto.from(merge)),
+      );
+  }
+
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Update a catalog item' })
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT)
+  @ApiOperation({ summary: 'Update a catalog item (agents: open kinds only)' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: CatalogItemResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  @ApiNotFoundResponse({ description: 'Catalog item not found' })
+  @ApiForbiddenResponse({
+    description:
+      'Administrator, foundation, or agent role required; agents limited to open kinds',
+  })
+  @ApiNotFoundResponse({ description: 'No se encontró el ítem del catálogo.' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() input: UpdateCatalogItemDto,
+    @CurrentUser() user: User,
   ) {
-    return this.service.update(id, input).then(this.toResponse);
+    return this.service.update(id, input, user.role).then(this.toResponse);
   }
 
   @Post(':id/archive')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.FOUNDATION, UserRole.AGENT)
   @ApiOperation({
-    summary: 'Archive (soft-deactivate) a non-system catalog item',
+    summary:
+      'Archive (soft-deactivate) a non-system catalog item (agents: open kinds only)',
   })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: CatalogItemResponseDto })
-  @ApiForbiddenResponse({ description: 'Administrator role required' })
-  @ApiNotFoundResponse({ description: 'Catalog item not found' })
-  archive(@Param('id', ParseUUIDPipe) id: string) {
-    return this.service.archive(id).then(this.toResponse);
+  @ApiForbiddenResponse({
+    description:
+      'Administrator, foundation, or agent role required; agents limited to open kinds',
+  })
+  @ApiNotFoundResponse({ description: 'No se encontró el ítem del catálogo.' })
+  archive(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.service.archive(id, user.role).then(this.toResponse);
+  }
+
+  @Post(':id/merge-into/:targetId')
+  @Roles(UserRole.ADMIN)
+  @AuditContext(AuditContextKind.ADMIN_ADJUSTMENT)
+  @ApiOperation({
+    summary:
+      'Merge a duplicate catalog item into another: re-points every stored reference and archives the duplicate',
+  })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'Duplicate item' })
+  @ApiParam({ name: 'targetId', format: 'uuid', description: 'Item to keep' })
+  @ApiCreatedResponse({ type: CatalogMergeResponseDto })
+  @ApiBadRequestResponse({
+    description:
+      'Different kinds, same item, system source item, or archived target',
+  })
+  @ApiConflictResponse({ description: 'Ese ítem ya fue fusionado.' })
+  @ApiForbiddenResponse({ description: 'Esta acción la puede hacer solo un administrador.' })
+  @ApiNotFoundResponse({ description: 'No se encontró el ítem del catálogo.' })
+  merge(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.service
+      .merge(id, targetId, user)
+      .then((merge) => CatalogMergeResponseDto.from(merge));
   }
 
   private toResponse(

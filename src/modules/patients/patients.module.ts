@@ -1,3 +1,8 @@
+import { Companion } from '../../database/entities/companion.entity';
+import { ChangeLog } from '../../database/entities/change-log.entity';
+import { PatientChangeLogController } from './change-log/patient-change-log.controller';
+import { PatientChangeLogService } from './change-log/patient-change-log.service';
+import { PatientActivityEvent } from '../../database/entities/patient-activity-event.entity';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Enrollment } from '../../database/entities/enrollment.entity';
@@ -66,10 +71,14 @@ import { PatientNonOncologicalFollowUp } from '../../database/entities/patient-n
 import { PatientNonOncologicalFollowUpsController } from './clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.controller';
 import { PatientNonOncologicalFollowUpsService } from './clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 import { ClinicalOwnershipService } from './clinical-ownership.service';
+import { PatientHealthSubcategoryService } from './health-subcategory/patient-health-subcategory.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      ChangeLog,
+      Companion,
+      PatientActivityEvent,
       Patient,
       PatientDetails,
       PatientHealthPhaseHistory,
@@ -105,6 +114,7 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
   ],
   controllers: [
     PatientsController,
+    PatientChangeLogController,
     PatientDiagnosesController,
     PatientInsuranceController,
     PatientMedicalAppointmentsController,
@@ -122,6 +132,7 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
   ],
   providers: [
     PatientsService,
+    PatientChangeLogService,
     HistoryVersioningService,
     PatientDiagnosesService,
     PatientInsuranceService,
@@ -139,6 +150,7 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
     PatientPsychooncologySupportAssessmentsService,
     PatientNonOncologicalFollowUpsService,
     ClinicalOwnershipService,
+    PatientHealthSubcategoryService,
   ],
   exports: [
     PatientsService,
@@ -158,6 +170,7 @@ import { ClinicalOwnershipService } from './clinical-ownership.service';
     PatientPsychooncologySupportAssessmentsService,
     PatientNonOncologicalFollowUpsService,
     ClinicalOwnershipService,
+    PatientHealthSubcategoryService,
   ],
 })
 export class PatientsModule {}

@@ -43,7 +43,7 @@ export class PatientPsychooncologySupportAssessmentsService {
         subjectPatientId: patientId,
       }))
     )
-      throw new NotFoundException('Follow-up not found');
+      throw new NotFoundException('No se encontró el seguimiento.');
 
     const repository = manager.getRepository(
       PatientPsychooncologySupportAssessment,

@@ -1,10 +1,7 @@
-import { IsBoolean, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
-import { PERU_DEPARTMENTS } from '../../../database/entities/health-center.entity';
-import type { PeruDepartment } from '../../../database/entities/health-center.entity';
+import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { IsBoolean, IsOptional } from 'class-validator';
+import { CreateHealthCenterDto } from './create-health-center.dto';
 
-export class UpdateHealthCenterDto {
-  @IsOptional() @IsString() @MaxLength(255) name?: string;
-  @IsOptional() @IsIn(PERU_DEPARTMENTS) department?: PeruDepartment;
-  @IsOptional() @IsString() @MaxLength(50) category?: string;
-  @IsOptional() @IsBoolean() isActive?: boolean;
+export class UpdateHealthCenterDto extends PartialType(CreateHealthCenterDto) {
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() isActive?: boolean;
 }

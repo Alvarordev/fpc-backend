@@ -1,3 +1,4 @@
+import { Companion } from '../../entities/companion.entity';
 import { CompanionPatient } from '../../entities/companion-patient.entity';
 import { DeactivationReason } from '../../entities/deactivation-reason.enum';
 import { PatientActivityStatus } from '../../entities/patient-activity-status.enum';
@@ -34,7 +35,7 @@ export const COMPANION_COUNT = 6;
 export interface DemoPatient {
   patient: Patient;
   /** Present for the first `COMPANION_COUNT` patients; drives interlocutors. */
-  companion: Patient | null;
+  companion: Companion | null;
   healthCenter: HealthCenter;
   isEnrolled: boolean;
   initialHealthPhase: PatientHealthPhase | null;
@@ -132,18 +133,18 @@ export async function seedPatients(
 
   const lost = patientRows[ENROLLED_COUNT - 2];
   lost.activityStatus = PatientActivityStatus.INACTIVE;
-  lost.deactivationReason = DeactivationReason.LOST_CONTACT;
+  lost.deactivationReason = DeactivationReason.UNLOCATABLE;
   lost.deactivatedAt = addDays(now, -rng.int(30, 90));
 
   const patients = await manager.save(patientRows);
 
-  // Companions are patients too (role COMPANION) — they can be the person the
-  // agent actually speaks to, which is what `follow_ups.interlocutor_id` models.
-  const companionRows: Patient[] = [];
+  // Companions (A1) are their own entity — they can be the person the agent
+  // actually speaks to (`follow_ups.interlocutor_companion_id`).
+  const companionRows: Companion[] = [];
   for (let index = 0; index < COMPANION_COUNT; index += 1) {
     const { fullName, gender } = person();
     companionRows.push(
-      manager.create(Patient, {
+      manager.create(Companion, {
         fullName,
         email: null,
         dni: takeDni(),
@@ -152,9 +153,6 @@ export async function seedPatients(
         primaryPhone: phone(),
         secondaryPhone: null,
         hasWhatsapp: rng.bool(0.9),
-        role: PatientRole.COMPANION,
-        status: PatientStatus.UNENROLLED,
-        activityStatus: PatientActivityStatus.ACTIVE,
       }),
     );
   }
@@ -209,7 +207,7 @@ async function seedPatientDetails(
     .map(({ patient, healthCenter, healthPhase }) => {
       const department = healthCenter.department;
       const nativeLanguage = rng.pick(NATIVE_LANGUAGES);
-      const droppedOut = rng.bool(0.12);
+      rng.bool(0.12); // keeps the demo sequence stable
       const travelTimeLabel = rng.pick(TRAVEL_TIMES);
 
       return manager.create(PatientDetails, {
@@ -235,12 +233,6 @@ async function seedPatientDetails(
         receivesFinancialSupport: rng.maybeBool(0.3),
         hasConadisCard: rng.maybeBool(0.2),
         knowsAboutFissal: rng.maybeBool(0.4),
-        programDropoutReason: droppedOut
-          ? 'Se mudó de región y perdió contacto con el equipo.'
-          : null,
-        programDropoutDate: droppedOut
-          ? toDateOnly(addDays(now, -rng.int(15, 120)))
-          : null,
       });
     });
 

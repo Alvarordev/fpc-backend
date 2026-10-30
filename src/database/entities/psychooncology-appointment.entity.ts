@@ -10,10 +10,12 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { FollowUp } from './follow-up.entity';
+import { Companion } from './companion.entity';
 import { Patient } from './patient.entity';
 import { VolunteerAvailability } from './volunteer-availability.entity';
 import { Volunteer } from './volunteer.entity';
 import { User } from './user.entity';
+import { PsychooncologyCycle } from './psychooncology-cycle.entity';
 export enum AppointmentModality {
   CALL = 'CALL',
   VIDEO_CALL = 'VIDEO_CALL',
@@ -27,13 +29,31 @@ export enum AppointmentBeneficiaryType {
 export enum AppointmentStatus {
   SCHEDULED = 'SCHEDULED',
   COMPLETED = 'COMPLETED',
+  NO_SHOW = 'NO_SHOW',
   CANCELLED = 'CANCELLED',
-  NO_ANSWER = 'NO_ANSWER',
+  RESCHEDULED = 'RESCHEDULED',
+  OVERDUE = 'OVERDUE',
 }
+
+export enum AppointmentReminderMode {
+  TWO_HOURS = 'TWO_HOURS',
+  ONE_DAY = 'ONE_DAY',
+  CUSTOM = 'CUSTOM',
+  MANUAL = 'MANUAL',
+}
+
+/** Sessions still waiting to happen: the slot stays reserved. */
+export const PENDING_APPOINTMENT_STATUSES = [
+  AppointmentStatus.SCHEDULED,
+  AppointmentStatus.OVERDUE,
+];
 @Entity('psychooncology_appointments')
 @Check('"session_number" > 0')
 @Check(`"modality" IN ('CALL','VIDEO_CALL')`)
-@Check(`"status" IN ('SCHEDULED','COMPLETED','CANCELLED','NO_ANSWER')`)
+@Check(
+  `"status" IN ('SCHEDULED','COMPLETED','NO_SHOW','CANCELLED','RESCHEDULED','OVERDUE')`,
+)
+@Check(`"reminder_mode" IN ('TWO_HOURS','ONE_DAY','CUSTOM','MANUAL')`)
 @Check(
   `"beneficiary_type" IN ('PATIENT','COMPANION') AND (("beneficiary_type" = 'PATIENT' AND "companion_id" IS NULL) OR ("beneficiary_type" = 'COMPANION' AND "companion_id" IS NOT NULL))`,
 )
@@ -53,6 +73,7 @@ export enum AppointmentStatus {
   'createdAt',
   'id',
 ])
+@Index('IDX_psychooncology_appointments_cycle_id', ['cycleId'])
 @Index('IDX_psychooncology_appointments_historical_loaded_by_id', [
   'historicalLoadedById',
 ])
@@ -71,9 +92,9 @@ export class PsychooncologyAppointment {
   beneficiaryType!: AppointmentBeneficiaryType;
   @Column({ name: 'companion_id', type: 'uuid', nullable: true })
   companionId!: string | null;
-  @ManyToOne(() => Patient)
+  @ManyToOne(() => Companion)
   @JoinColumn({ name: 'companion_id' })
-  companion!: Patient | null;
+  companion!: Companion | null;
   @Column({ name: 'volunteer_id', type: 'uuid' }) volunteerId!: string;
   @ManyToOne(() => Volunteer)
   @JoinColumn({ name: 'volunteer_id' })
@@ -127,6 +148,39 @@ export class PsychooncologyAppointment {
   satisfactionRating!: number | null;
   @Column({ name: 'satisfaction_comment', type: 'text', nullable: true })
   satisfactionComment!: string | null;
+  @Column({ name: 'cycle_id', type: 'uuid', nullable: true })
+  cycleId!: string | null;
+  @ManyToOne(() => PsychooncologyCycle, { nullable: true })
+  @JoinColumn({ name: 'cycle_id' })
+  cycle!: PsychooncologyCycle | null;
+  @Column({ name: 'rescheduled_to_id', type: 'uuid', nullable: true })
+  rescheduledToId!: string | null;
+  @ManyToOne(() => PsychooncologyAppointment, { nullable: true })
+  @JoinColumn({ name: 'rescheduled_to_id' })
+  rescheduledTo!: PsychooncologyAppointment | null;
+  @Column({ name: 'needs_reassignment', type: 'boolean', default: false })
+  needsReassignment!: boolean;
+  @Column({
+    name: 'reminder_mode',
+    type: 'varchar',
+    length: 20,
+    default: AppointmentReminderMode.MANUAL,
+  })
+  reminderMode!: AppointmentReminderMode;
+  @Column({ name: 'remind_at', type: 'timestamptz', nullable: true })
+  remindAt!: Date | null;
+  @Column({ name: 'reminder_sent_at', type: 'timestamptz', nullable: true })
+  reminderSentAt!: Date | null;
+  /** Texto del recordatorio escrito por el agente; null usa el texto sugerido. */
+  @Column({ name: 'reminder_custom_message', type: 'text', nullable: true })
+  reminderCustomMessage!: string | null;
+  @Column({ name: 'no_show_managed_at', type: 'timestamptz', nullable: true })
+  noShowManagedAt!: Date | null;
+  @Column({ name: 'no_show_managed_by_id', type: 'uuid', nullable: true })
+  noShowManagedById!: string | null;
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'no_show_managed_by_id' })
+  noShowManagedBy!: User | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
