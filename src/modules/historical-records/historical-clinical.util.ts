@@ -617,6 +617,9 @@ export async function deleteHistoricalOwnedByFollowUp(
   manager: EntityManager,
   followUpId: string,
 ) {
+  // Versiones vigentes que se van a borrar: al quitarlas, la versión anterior
+  // de su grupo vuelve a ser la vigente (p. ej. SIS tras borrar el cambio a EsSalud).
+  const replacedCurrent = await currentVersionsOwnedBy(manager, followUpId);
   await manager.update(
     FollowUp,
     { nextFollowUpId: followUpId },
@@ -742,4 +745,74 @@ export async function deleteHistoricalOwnedByFollowUp(
   await manager.delete(PatientSocialNote, { followUpId });
   await manager.delete(PatientPsychooncologySupportAssessment, { followUpId });
   await manager.delete(PatientNonOncologicalFollowUp, { followUpId });
+  await restorePreviousVersions(manager, replacedCurrent);
+}
+
+type VersionGroups = {
+  insurancePatients: string[];
+  treatmentSeries: string[];
+  appointments: { patientId: string; specialty: string }[];
+};
+
+async function currentVersionsOwnedBy(
+  manager: EntityManager,
+  followUpId: string,
+): Promise<VersionGroups> {
+  const [insurance, treatments, appointments] = await Promise.all([
+    manager.find(PatientInsurance, {
+      where: { followUpId, isCurrent: true },
+      select: { patientId: true },
+    }),
+    manager.find(PatientTreatment, {
+      where: { followUpId, isCurrent: true },
+      select: { seriesId: true },
+    }),
+    manager.find(PatientMedicalAppointment, {
+      where: { followUpId, isCurrent: true },
+      select: { patientId: true, specialty: true },
+    }),
+  ]);
+  return {
+    insurancePatients: insurance.map((item) => item.patientId),
+    treatmentSeries: treatments.map((item) => item.seriesId),
+    appointments: appointments.map((item) => ({
+      patientId: item.patientId,
+      specialty: item.specialty,
+    })),
+  };
+}
+
+/** Marca como vigente la versión más reciente que quedó en cada grupo, si no hay otra vigente. */
+async function restorePreviousVersions(
+  manager: EntityManager,
+  groups: VersionGroups,
+) {
+  for (const patientId of groups.insurancePatients)
+    await manager.query(
+      `UPDATE patient_insurance SET is_current = true, end_date = NULL
+        WHERE id = (SELECT id FROM patient_insurance WHERE patient_id = $1
+                     ORDER BY start_date DESC NULLS LAST, created_at DESC LIMIT 1)
+          AND NOT EXISTS (SELECT 1 FROM patient_insurance
+                           WHERE patient_id = $1 AND is_current)`,
+      [patientId],
+    );
+  for (const seriesId of groups.treatmentSeries)
+    await manager.query(
+      `UPDATE patient_treatments SET is_current = true
+        WHERE id = (SELECT id FROM patient_treatments WHERE series_id = $1
+                     ORDER BY created_at DESC LIMIT 1)
+          AND NOT EXISTS (SELECT 1 FROM patient_treatments
+                           WHERE series_id = $1 AND is_current)`,
+      [seriesId],
+    );
+  for (const { patientId, specialty } of groups.appointments)
+    await manager.query(
+      `UPDATE patient_medical_appointments SET is_current = true
+        WHERE id = (SELECT id FROM patient_medical_appointments
+                     WHERE patient_id = $1 AND specialty = $2
+                     ORDER BY created_at DESC LIMIT 1)
+          AND NOT EXISTS (SELECT 1 FROM patient_medical_appointments
+                           WHERE patient_id = $1 AND specialty = $2 AND is_current)`,
+      [patientId, specialty],
+    );
 }
