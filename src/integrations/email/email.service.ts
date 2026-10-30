@@ -21,10 +21,12 @@ export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private readonly apiKey: string;
   private readonly from: string;
+  private readonly overrideTo: string;
 
   constructor(config: ConfigService) {
     this.apiKey = (config.get<string>('RESEND_API_KEY') ?? '').trim();
     this.from = (config.get<string>('EMAIL_FROM') ?? '').trim();
+    this.overrideTo = (config.get<string>('EMAIL_OVERRIDE_TO') ?? '').trim();
   }
 
   get enabled(): boolean {
@@ -39,11 +41,18 @@ export class EmailService {
     if (to.length === 0)
       return { status: 'FAILED', error: 'No hay destinatario para el correo.' };
 
+    // EMAIL_OVERRIDE_TO (testing / Resend onboarding): every email goes to
+    // one inbox and the subject keeps the real recipients visible.
+    const recipients = this.overrideTo ? [this.overrideTo] : to;
+    const subject = this.overrideTo
+      ? `[para: ${to.join(', ')}] ${message.subject}`
+      : message.subject;
+
     if (!this.enabled) {
       this.logger.log({
         message: 'RESEND_API_KEY or EMAIL_FROM is not configured, skipping',
-        to,
-        subject: message.subject,
+        to: recipients,
+        subject,
       });
       return { status: 'DISABLED' };
     }
@@ -59,8 +68,8 @@ export class EmailService {
         },
         body: JSON.stringify({
           from: this.from,
-          to,
-          subject: message.subject,
+          to: recipients,
+          subject,
           text: message.text,
           ...(message.html ? { html: message.html } : {}),
         }),
@@ -69,7 +78,7 @@ export class EmailService {
       if (!response.ok) {
         this.logger.warn({
           message: `Resend returned ${response.status}`,
-          subject: message.subject,
+          subject,
         });
         return {
           status: 'FAILED',
@@ -83,7 +92,7 @@ export class EmailService {
       return { status: 'SENT', id: body?.id ?? null };
     } catch (error) {
       const reason = error instanceof Error ? error.message : 'unknown error';
-      this.logger.warn({ message: reason, subject: message.subject });
+      this.logger.warn({ message: reason, subject });
       return {
         status: 'FAILED',
         error:

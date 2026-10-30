@@ -1,4 +1,7 @@
-import { Alert } from '../../database/entities/alert.entity';
+import {
+  Alert,
+  ALERT_SEVERITY_LABELS,
+} from '../../database/entities/alert.entity';
 
 const SIGNATURE = 'Programa SEPA - Fundación Peruana de Cáncer';
 
@@ -25,7 +28,7 @@ export function foundationAlertMessage(alert: Alert) {
       `Ticket: ${alert.ticketNumber ?? '-'}`,
       `Título: ${alert.title}`,
       `Categoría: ${category}`,
-      `Severidad: ${alert.severity}`,
+      `Severidad: ${ALERT_SEVERITY_LABELS[alert.severity] ?? alert.severity}`,
       `Reportada por: ${alert.createdBy?.fullName ?? '-'}`,
       '',
       alert.description,

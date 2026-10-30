@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
-import { Alert, AlertStatus } from '../../database/entities/alert.entity';
+import {
+  Alert,
+  ALERT_SEVERITY_LABELS,
+  AlertStatus,
+} from '../../database/entities/alert.entity';
 import {
   AlertEvent,
   AlertEventType,
@@ -58,7 +62,7 @@ export function buildExecutiveSummary(input: AlertSummaryInput): string {
   }[input.status];
 
   let summary = '📋 RESUMEN EJECUTIVO IA:\n';
-  summary += `La alerta '${input.title}' reportada en '${input.healthCenterName}' se encuentra actualmente en estado ${statusLabel} (Severidad: ${input.severity}). `;
+  summary += `La alerta '${input.title}' reportada en '${input.healthCenterName}' se encuentra actualmente en estado ${statusLabel} (Severidad: ${ALERT_SEVERITY_LABELS[input.severity] ?? input.severity}). `;
 
   if (input.createdAt) {
     summary += `Iniciada el ${formatDate(input.createdAt)} por ${input.createdByName}. `;

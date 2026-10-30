@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
+import { CatalogItem } from '../../database/entities/catalog-item.entity';
 import { FollowUp } from '../../database/entities/follow-up.entity';
 import { MedicalAppointmentStatus } from '../../database/entities/medical-appointment-status.enum';
 import { Patient } from '../../database/entities/patient.entity';
@@ -119,6 +120,16 @@ export async function createAppointmentReminder(
     ],
   );
 
+  const specialtyLabel =
+    appointment.specialty === 'OTRO' && appointment.specialtyOther?.trim()
+      ? appointment.specialtyOther.trim()
+      : ((
+          await manager.getRepository(CatalogItem).findOne({
+            where: { kind: 'medical_specialty', code: appointment.specialty },
+            select: { id: true, label: true },
+          })
+        )?.label ?? appointment.specialty);
+
   const repository = manager.getRepository(Reminder);
   const reminder = await repository.save(
     repository.create({
@@ -128,8 +139,7 @@ export async function createAppointmentReminder(
       assignedAgentId,
       dueAt: startsAt,
       dueOn: appointment.appointmentDate,
-      description:
-        options.description?.trim() || `Cita: ${appointment.specialty}`,
+      description: options.description?.trim() || `Cita: ${specialtyLabel}`,
       kind: ReminderKind.MEDICAL_APPOINTMENT,
       medicalAppointmentId: appointment.id,
       status: ReminderStatus.PENDING,
@@ -160,6 +170,16 @@ export async function syncAppointmentReminder(
   appointment: PatientMedicalAppointment,
   options: AppointmentReminderOptions = {},
 ): Promise<Reminder | null> {
+  const specialtyLabel =
+    appointment.specialty === 'OTRO' && appointment.specialtyOther?.trim()
+      ? appointment.specialtyOther.trim()
+      : ((
+          await manager.getRepository(CatalogItem).findOne({
+            where: { kind: 'medical_specialty', code: appointment.specialty },
+            select: { id: true, label: true },
+          })
+        )?.label ?? appointment.specialty);
+
   const repository = manager.getRepository(Reminder);
   const reminder = appointment.reminderId
     ? await repository.findOneBy({ id: appointment.reminderId })

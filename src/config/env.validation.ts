@@ -72,6 +72,7 @@ export const envValidationSchema = Joi.object({
   // Blank disables outgoing email: messages are only logged.
   RESEND_API_KEY: Joi.string().trim().optional().allow(''),
   EMAIL_FROM: Joi.string().trim().optional().allow(''),
+  EMAIL_OVERRIDE_TO: Joi.string().trim().email().optional().allow(''),
   // URL pública del CRM para los enlaces de los correos (p. ej. restablecer contraseña).
   // Si falta, se usa el primer origen de CORS_ORIGIN.
   FRONTEND_URL: Joi.string()

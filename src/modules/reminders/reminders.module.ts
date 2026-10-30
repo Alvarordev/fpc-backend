@@ -11,6 +11,7 @@ import { PatientSummariesModule } from '../patient-summaries/patient-summaries.m
 import { RemindersController } from './reminders.controller';
 import { RemindersService } from './reminders.service';
 import { PatientAccessModule } from '../patients/access/patient-access.module';
+import { CatalogsModule } from '../catalogs/catalogs.module';
 import { EmailModule } from '../../integrations/email/email.module';
 
 @Module({
@@ -24,6 +25,7 @@ import { EmailModule } from '../../integrations/email/email.module';
     ]),
     PatientAccessModule,
     EmailModule,
+    CatalogsModule,
     PatientSummariesModule,
     PatientsModule,
     forwardRef(() => FollowUpsModule),

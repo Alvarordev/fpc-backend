@@ -27,6 +27,12 @@ export enum AlertSeverity {
   MEDIUM = 'MEDIUM',
   LOW = 'LOW',
 }
+
+export const ALERT_SEVERITY_LABELS: Record<string, string> = {
+  [AlertSeverity.HIGH]: 'alta',
+  [AlertSeverity.MEDIUM]: 'media',
+  [AlertSeverity.LOW]: 'baja',
+};
 /** Seed codes for the alert_category catalog. New options live in catalog_items. */
 export enum AlertCategory {
   GENERAL = 'GENERAL',

@@ -3,12 +3,24 @@ import { ReminderKind } from '../../database/entities/reminder-kind.enum';
 
 const SIGNATURE = 'Programa SEPA - Fundación Peruana de Cáncer';
 
-function formatDate(date: string): string {
-  const [year, month, day] = date.split('-');
-  return `${day}/${month}/${year}`;
+// Date-only values (YYYY-MM-DD) read as "viernes 30 de octubre de 2026".
+export function formatDateEs(date: string): string {
+  const [year, month, day] = date.split('-').map(Number);
+  if (!year || !month || !day) return date;
+  return new Intl.DateTimeFormat('es-PE', {
+    timeZone: 'UTC',
+    dateStyle: 'full',
+  }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
-export function buildReminderMessage(item: Reminder): {
+/**
+ * `specialtyLabel` is the readable label from the medical_specialty catalog;
+ * the appointment row only stores the catalog code (e.g. ONCOLOGIA_MEDICA).
+ */
+export function buildReminderMessage(
+  item: Reminder,
+  specialtyLabel?: string | null,
+): {
   subject: string;
   text: string;
 } {
@@ -19,7 +31,7 @@ export function buildReminderMessage(item: Reminder): {
   if (item.kind === ReminderKind.MEDICAL_APPOINTMENT && appointment) {
     const when = [
       appointment.appointmentDate
-        ? `el ${formatDate(appointment.appointmentDate)}`
+        ? `el ${formatDateEs(appointment.appointmentDate)}`
         : null,
       appointment.appointmentTime
         ? `a las ${appointment.appointmentTime.slice(0, 5)}`
@@ -30,9 +42,10 @@ export function buildReminderMessage(item: Reminder): {
     const where = appointment.healthCenter?.name
       ? ` en ${appointment.healthCenter.name}`
       : '';
+    const specialty = specialtyLabel?.trim() || appointment.specialty;
     return {
       subject: 'Recordatorio de cita médica',
-      text: `${greeting} te recordamos tu cita de ${appointment.specialty}${where}${when ? ` ${when}` : ''}. Si no podrás asistir, avísanos.\n\n${SIGNATURE}`,
+      text: `${greeting} te recordamos tu cita de ${specialty}${where}${when ? ` ${when}` : ''}. Si no podrás asistir, avísanos.\n\n${SIGNATURE}`,
     };
   }
 

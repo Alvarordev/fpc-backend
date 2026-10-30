@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
+import { ALERT_SEVERITY_LABELS } from '../../database/entities/alert.entity';
 import { PatientAccessService } from './access/patient-access.service';
 import {
   FollowUpTimelineEventDto,
@@ -138,12 +139,6 @@ const ALERT_STATUS_LABELS: Record<string, string> = {
   REPORTED: 'reportada',
   IN_REVIEW: 'en revisión',
   RESOLVED: 'resuelta',
-};
-
-const ALERT_SEVERITY_LABELS: Record<string, string> = {
-  HIGH: 'alta',
-  MEDIUM: 'media',
-  LOW: 'baja',
 };
 
 const ALERT_CATEGORY_LABELS: Record<string, string> = {
