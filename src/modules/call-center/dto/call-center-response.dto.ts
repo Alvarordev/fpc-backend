@@ -14,6 +14,7 @@ export class CallCenterFollowUpDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) subjectPatientId!: string;
   @ApiProperty() subjectPatientName!: string;
+  @ApiProperty() patientHasEmail!: boolean;
   @ApiProperty({ format: 'uuid' }) agentId!: string;
   @ApiProperty({ enum: [FollowUpStatus.SCHEDULED, FollowUpStatus.OVERDUE] })
   status!: FollowUpStatus;
@@ -29,6 +30,7 @@ export class CallCenterReminderDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) subjectPatientId!: string;
   @ApiProperty() subjectPatientName!: string;
+  @ApiProperty() patientHasEmail!: boolean;
   @ApiProperty({ format: 'uuid' }) assignedAgentId!: string;
   @ApiProperty() description!: string;
   @ApiProperty({ format: 'date-time', nullable: true }) dueAt!: Date | null;

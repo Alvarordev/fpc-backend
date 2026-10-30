@@ -238,6 +238,10 @@ extraer del código y validar.
 - Modelos: `GEMINI_ASSISTANT_MODELS` (lista en orden; default
   `gemini-3-flash-preview,gemini-2.5-flash`). Ante 429/5xx reintenta y pasa al siguiente.
 - Front implementado: panel global con modos Datos del CRM y Documentos. Streaming queda pendiente.
+- Consultas ampliadas: filtros combinables de pacientes por datos personales,
+  residencia, situación clínica, seguros, tratamientos, acompañantes, fechas y
+  pendientes; catálogo de códigos reales; detalle paginado de tareas por paciente
+  seudonimizado en `get_call_center_workload`. Véase `asistente-datos.md`.
 
 ### Implementado: consulta documental (IA3, IA6, IA7) — 2026-10-29
 

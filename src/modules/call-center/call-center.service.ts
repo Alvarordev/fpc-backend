@@ -23,8 +23,8 @@ const PENDING_FOLLOW_UP = [FollowUpStatus.SCHEDULED, FollowUpStatus.OVERDUE];
 
 // An overdue follow-up stops being pending once it has been rescheduled.
 const isPending = (item: FollowUp) =>
-  (item.status === FollowUpStatus.SCHEDULED ||
-    (item.status === FollowUpStatus.OVERDUE && !item.nextFollowUpId));
+  item.status === FollowUpStatus.SCHEDULED ||
+  (item.status === FollowUpStatus.OVERDUE && !item.nextFollowUpId);
 
 function sundayOf(day: string): string {
   const date = new Date(`${day}T00:00:00Z`);
@@ -74,6 +74,11 @@ export class CallCenterService {
     const patientNames = new Map(
       patients.map((patient) => [patient.id, patient.fullName]),
     );
+    const patientsWithEmail = new Set(
+      patients
+        .filter((patient) => patient.email?.trim())
+        .map((patient) => patient.id),
+    );
 
     const empty = (): CallCenterPendingCountsDto => ({
       today: 0,
@@ -113,7 +118,8 @@ export class CallCenterService {
     for (const reminder of pendingReminders)
       count(
         load.get(reminder.assignedAgentId)?.reminders,
-        reminder.dueOn ?? (reminder.dueAt ? dateOnlyInLima(reminder.dueAt) : null),
+        reminder.dueOn ??
+          (reminder.dueAt ? dateOnlyInLima(reminder.dueAt) : null),
       );
 
     return {
@@ -129,6 +135,7 @@ export class CallCenterService {
         subjectPatientId: followUp.subjectPatientId,
         subjectPatientName:
           patientNames.get(followUp.subjectPatientId) ?? 'Paciente desconocido',
+        patientHasEmail: patientsWithEmail.has(followUp.subjectPatientId),
         agentId: followUp.agentId,
         status: followUp.status,
         type: followUp.type,
@@ -141,6 +148,7 @@ export class CallCenterService {
         subjectPatientId: reminder.subjectPatientId,
         subjectPatientName:
           patientNames.get(reminder.subjectPatientId) ?? 'Paciente desconocido',
+        patientHasEmail: patientsWithEmail.has(reminder.subjectPatientId),
         assignedAgentId: reminder.assignedAgentId,
         description: reminder.description,
         dueAt: reminder.dueAt,

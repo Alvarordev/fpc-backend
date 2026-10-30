@@ -13,6 +13,7 @@ import { AssistantToolsService } from './assistant-tools.service';
 import { AssistantController } from './assistant.controller';
 import { AssistantService } from './assistant.service';
 import { KnowledgeModule } from '../knowledge/knowledge.module';
+import { CatalogsModule } from '../catalogs/catalogs.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { KnowledgeModule } from '../knowledge/knowledge.module';
     AlertsModule,
     CallCenterModule,
     HealthCentersModule,
+    CatalogsModule,
   ],
   controllers: [AssistantController],
   providers: [AssistantService, AssistantToolsService, GeminiAssistantClient],

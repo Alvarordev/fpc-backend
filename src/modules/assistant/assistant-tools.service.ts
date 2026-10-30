@@ -24,6 +24,11 @@ import { FindAlertsDto } from '../alerts/dto/list-alerts.dto';
 import { CallCenterService } from '../call-center/call-center.service';
 import { HealthCentersService } from '../health-centers/health-centers.service';
 import { AssistantPseudonymizer } from './assistant-pseudonyms';
+import { AssistantWorkloadQueryDto } from './dto/assistant-workload-query.dto';
+import { dateOnlyInLima } from '../../shared/date-only/date-only.util';
+import { CatalogsService } from '../catalogs/catalogs.service';
+import { AssistantCatalogQueryDto } from './dto/assistant-catalog-query.dto';
+import { CATALOG_KINDS } from '../../database/entities/catalog-item.entity';
 
 export type AssistantToolContext = {
   user: User;
@@ -118,6 +123,7 @@ export class AssistantToolsService {
     private readonly alerts: AlertsService,
     private readonly callCenter: CallCenterService,
     private readonly healthCenters: HealthCentersService,
+    private readonly catalogs: CatalogsService,
   ) {
     this.tools = [
       this.indicatorsTool(),
@@ -125,6 +131,7 @@ export class AssistantToolsService {
       this.patientsTool(),
       this.alertsTool(),
       this.workloadTool(),
+      this.catalogsTool(),
     ];
   }
 
@@ -172,7 +179,7 @@ export class AssistantToolsService {
       declaration: {
         name: 'get_indicators',
         description:
-          'Indicadores del programa SEPA, los mismos del dashboard. Grupos: demographics (edad, sexo, residencia, educación, seguro, lengua), epidemiology (mortalidad, tipo de cáncer, estadio, por departamento), management (gestión SEPA: afiliaciones, derivaciones, diagnósticos, tratamientos, tiempos), productivity (seguimientos y llamadas por agente), adherence (cumplimiento y barreras de tratamiento), abandonment (abandono y bajas), satisfaction (encuestas). Siempre exige un periodo: period=year con year, period=month con year y month, o un rango from/to. Para "en total" o "a la fecha" usa from=2020-01-01 y to=mañana.',
+          'Indicadores del programa SEPA, los mismos del dashboard. Grupos: demographics (edad, sexo, residencia, educación, seguro, lengua), epidemiology (mortalidad, tipo de cáncer, estadio, por departamento), management (gestión SEPA: afiliaciones, derivaciones, diagnósticos, tratamientos), productivity (tiempos de atención y beneficios recibidos), adherence (cumplimiento y barreras de tratamiento), abandonment (abandono y bajas), satisfaction (encuestas). Exige period=year con year, period=month con year y month, o rango from/to. Para personas con correo o recordatorios pendientes usa search_patients; para sus tareas usa get_call_center_workload.',
         parameters: {
           type: SchemaType.OBJECT,
           properties: {
@@ -197,6 +204,10 @@ export class AssistantToolsService {
               description: 'ID del agente (sale de get_call_center_workload).',
             },
             healthPhase: enumOf(PatientHealthPhase, 'Fase de salud actual.'),
+            healthSubcategory: {
+              type: SchemaType.STRING,
+              description: 'Código de subcategoría de salud.',
+            },
           },
           required: ['group'],
         },
@@ -259,15 +270,106 @@ export class AssistantToolsService {
       declaration: {
         name: 'search_patients',
         description:
-          'Lista pacientes con filtros y devuelve el total. Los pacientes vienen seudonimizados (P-001…): refiérete a ellos solo con ese código. Para contar por indicadores usa get_indicators.',
+          'Busca y cuenta pacientes combinando filtros personales, clínicos y de atención ANTES de paginar. Edad al día de hoy en Lima; residencia principal actual; hospital principal; diagnósticos, seguros y tratamientos vigentes. Diagnóstico y estadio deben coincidir en el MISMO diagnóstico; tipo y situación en el MISMO tratamiento. Consulta get_patient_filter_options para códigos de catálogo y search_health_centers para hospitales: nunca inventes códigos. Incluye históricos. Devuelve códigos P-001… y presencia de contacto sin direcciones ni teléfonos. Para distribuciones usa get_indicators y para tareas concretas get_call_center_workload.',
         parameters: {
           type: SchemaType.OBJECT,
           properties: {
+            gender: {
+              type: SchemaType.STRING,
+              format: 'enum',
+              enum: ['M', 'F', 'OTHER'],
+              description:
+                'Sexo registrado: M masculino, F femenino, OTHER otro.',
+            },
+            minAge: {
+              type: SchemaType.INTEGER,
+              description:
+                'Edad mínima inclusiva, 0–130, al día de hoy en Lima.',
+            },
+            maxAge: {
+              type: SchemaType.INTEGER,
+              description: 'Edad máxima inclusiva, 0–130.',
+            },
+            department: {
+              type: SchemaType.STRING,
+              description:
+                'Departamento de residencia principal actual, p. ej. LIMA.',
+            },
+            healthCenterId: {
+              type: SchemaType.STRING,
+              description:
+                'UUID del hospital PRINCIPAL, obtenido de search_health_centers.',
+            },
+            diagnosis: {
+              type: SchemaType.STRING,
+              description:
+                'Código de cancer_diagnosis, entre los diagnósticos vigentes.',
+            },
+            cancerStage: {
+              type: SchemaType.STRING,
+              description:
+                'Código de cancer_stage del mismo diagnóstico filtrado.',
+            },
+            insuranceType: {
+              type: SchemaType.STRING,
+              description: 'Código de insurance_type del seguro vigente.',
+            },
+            treatmentType: {
+              type: SchemaType.STRING,
+              description:
+                'Código de treatment_type de un tratamiento vigente.',
+            },
+            treatmentSituation: {
+              type: SchemaType.STRING,
+              description:
+                'Código de treatment_situation del mismo tratamiento filtrado.',
+            },
+            enrolledFrom: {
+              type: SchemaType.STRING,
+              description: 'Primer enrolamiento desde AAAA-MM-DD inclusivo.',
+            },
+            enrolledTo: {
+              type: SchemaType.STRING,
+              description: 'Primer enrolamiento antes de AAAA-MM-DD exclusivo.',
+            },
+            lastContactBefore: {
+              type: SchemaType.STRING,
+              description:
+                'Último contacto COMPLETED antes de AAAA-MM-DD exclusivo; excluye quienes nunca tuvieron contacto completado.',
+            },
+            hasPhone: {
+              type: SchemaType.BOOLEAN,
+              description: 'Tiene teléfono principal o auxiliar registrado.',
+            },
+            hasCompanion: {
+              type: SchemaType.BOOLEAN,
+              description:
+                'Tiene al menos un acompañante vinculado, no sólo contacto principal.',
+            },
+            hasPendingFollowUps: {
+              type: SchemaType.BOOLEAN,
+              description:
+                'Tiene seguimientos programados o vencidos sin reemplazo al reagendar.',
+            },
             activityStatus: enumOf(
               PatientActivityStatus,
               'ACTIVE, INACTIVE o REACTIVE.',
             ),
             healthPhase: enumOf(PatientHealthPhase, 'Fase de salud actual.'),
+            healthSubcategory: {
+              type: SchemaType.STRING,
+              description: 'Código de subcategoría de salud.',
+            },
+            hasEmail: {
+              type: SchemaType.BOOLEAN,
+              description:
+                'true: tiene correo registrado; false: no tiene. Omitir para ambos.',
+            },
+            hasPendingReminders: {
+              type: SchemaType.BOOLEAN,
+              description:
+                'true: tiene al menos un recordatorio PENDING (incluye vencidos e históricos); false: no tiene ninguno. No equivale al estado de entrega del aviso.',
+            },
             segment: enumOf(
               PatientListSegment,
               'CARE: pacientes en atención. PROSPECTS: prospectos sin enrolar.',
@@ -289,16 +391,33 @@ export class AssistantToolsService {
         const { data, total } = await this.patients.findAll(filters, user);
         return {
           total,
+          filters,
+          limit: filters.limit,
+          offset: filters.offset,
+          hasMore: filters.offset + data.length < total,
           items: data.map((patient) => ({
             patient: pseudonyms.tokenFor(patient.id, patient.fullName),
+            hasEmail: Boolean(patient.email?.trim()),
+            hasPhone: Boolean(
+              patient.primaryPhone?.trim() || patient.secondaryPhone?.trim(),
+            ),
+            hasWhatsapp: patient.hasWhatsapp,
+            gender: patient.gender,
             status: patient.status,
             activityStatus: patient.activityStatus,
             healthPhase: patient.healthPhase,
             healthSubcategory: patient.healthSubcategory,
-            diagnosis: patient.currentDiagnosis?.diagnosis ?? null,
-            cancerStage: patient.currentDiagnosis?.cancerStage ?? null,
+            latestCurrentDiagnosis: patient.currentDiagnosis
+              ? {
+                  diagnosis: patient.currentDiagnosis.diagnosis,
+                  cancerStage: patient.currentDiagnosis.cancerStage,
+                }
+              : null,
             department: patient.currentDepartment,
-            lastFollowUpAt: patient.latestFollowUp?.completedAt ?? null,
+            lastFollowUpAt:
+              patient.latestFollowUp?.completedAt ??
+              patient.latestFollowUp?.completedOn ??
+              null,
           })),
         };
       },
@@ -349,6 +468,58 @@ export class AssistantToolsService {
     };
   }
 
+  private catalogsTool(): AssistantTool {
+    return {
+      label: 'Opciones de filtros de pacientes',
+      roles: DATA_ROLES,
+      declaration: {
+        name: 'get_patient_filter_options',
+        description:
+          'Resuelve etiquetas en códigos reales de catálogos antes de filtrar pacientes o indicadores. Por ejemplo: kind=cancer_diagnosis y search=mama; kind=treatment_type y search=quimio; kind=treatment_situation y search=proceso. Los ítems inactivos se incluyen porque pueden seguir registrados en pacientes. No contiene datos de pacientes.',
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            kind: enumOf(CATALOG_KINDS, 'Catálogo que deseas consultar.'),
+            search: {
+              type: SchemaType.STRING,
+              description:
+                'Fragmento de etiqueta o código, máximo 100 caracteres.',
+            },
+            limit: {
+              type: SchemaType.INTEGER,
+              description: '1–50, default 20.',
+            },
+            offset: { type: SchemaType.INTEGER, description: 'Desde 0.' },
+          },
+          required: ['kind'],
+        },
+      },
+      run: async (args) => {
+        const filters = await validated(AssistantCatalogQueryDto, args);
+        const normalized = (value: string) =>
+          value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+        const search = normalized(filters.search?.trim() ?? '');
+        const items = (await this.catalogs.findAll(filters.kind, true)).filter(
+          (item) => normalized(`${item.code} ${item.label}`).includes(search),
+        );
+        return {
+          kind: filters.kind,
+          total: items.length,
+          hasMore: filters.offset + filters.limit < items.length,
+          limit: filters.limit,
+          offset: filters.offset,
+          items: items
+            .slice(filters.offset, filters.offset + filters.limit)
+            .map((item) => ({
+              code: item.code,
+              label: item.label,
+              isActive: item.isActive,
+            })),
+        };
+      },
+    };
+  }
+
   private workloadTool(): AssistantTool {
     return {
       label: 'Carga del call center',
@@ -356,15 +527,114 @@ export class AssistantToolsService {
       declaration: {
         name: 'get_call_center_workload',
         description:
-          'Agentes del call center y sus pendientes (seguimientos programados y recordatorios): para hoy, esta semana y vencidos.',
-        parameters: { type: SchemaType.OBJECT, properties: {} },
+          'Consulta pendientes concretos por paciente y agente: seguimientos SCHEDULED/OVERDUE y recordatorios PENDING, con fecha real y si el paciente tiene correo. Incluye vencidos e históricos. Acepta patient=P-001 (obtenido con search_patients o una consulta anterior), agentId y hasEmail. Devuelve totales filtrados, pacientes seudonimizados y páginas de tareas; no envía correos ni modifica datos. Los contadores agents son la carga global por agente.',
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            patient: {
+              type: SchemaType.STRING,
+              description:
+                'Código P-001… de la conversación. Omitir para todos.',
+            },
+            agentId: {
+              type: SchemaType.STRING,
+              description: 'ID de agente obtenido de agents.',
+            },
+            hasEmail: {
+              type: SchemaType.BOOLEAN,
+              description:
+                'Filtra por presencia de correo registrado, sin revelar la dirección.',
+            },
+            limit: {
+              type: SchemaType.INTEGER,
+              description:
+                'Por página de cada tipo de tarea: 1–50, default 20.',
+            },
+            offset: {
+              type: SchemaType.INTEGER,
+              description:
+                'Desplazamiento desde 0 para paginar cada tipo de tarea.',
+            },
+          },
+        },
       },
-      run: async () => {
+      run: async (args, { pseudonyms }) => {
+        const filters = await validated(AssistantWorkloadQueryDto, args);
+        const patientId = filters.patient
+          ? pseudonyms.patientIdFor(filters.patient)
+          : null;
+        if (filters.patient && !patientId)
+          throw new AssistantToolError(
+            'Paciente desconocido en esta conversación. Busca primero con search_patients y usa el código P-001… devuelto.',
+          );
         const workload = await this.callCenter.workload();
+        const matches = (
+          item: { subjectPatientId: string; patientHasEmail: boolean },
+          agentId: string,
+        ) =>
+          (!patientId || item.subjectPatientId === patientId) &&
+          (!filters.agentId || agentId === filters.agentId) &&
+          (filters.hasEmail == null ||
+            item.patientHasEmail === filters.hasEmail);
+        const reminders = workload.pendingReminders.filter((item) =>
+          matches(item, item.assignedAgentId),
+        );
+        const followUps = workload.scheduledFollowUps.filter((item) =>
+          matches(item, item.agentId),
+        );
+        const page = <T>(items: T[]) => ({
+          total: items.length,
+          offset: filters.offset,
+          limit: filters.limit,
+          hasMore: filters.offset + filters.limit < items.length,
+          items: items.slice(filters.offset, filters.offset + filters.limit),
+        });
         return {
           today: workload.today,
           weekEnd: workload.weekEnd,
           agents: workload.load,
+          filters,
+          patientsWithPendingReminders: new Set(
+            reminders.map((item) => item.subjectPatientId),
+          ).size,
+          patientsWithEmailAndPendingReminders: new Set(
+            reminders
+              .filter((item) => item.patientHasEmail)
+              .map((item) => item.subjectPatientId),
+          ).size,
+          pendingReminders: page(
+            reminders.map((item) => ({
+              id: item.id,
+              patient: pseudonyms.tokenFor(
+                item.subjectPatientId,
+                item.subjectPatientName,
+              ),
+              hasEmail: item.patientHasEmail,
+              agentId: item.assignedAgentId,
+              dueOn: item.dueOn,
+              dueAt: item.dueAt,
+              overdue:
+                (item.dueOn ??
+                  (item.dueAt ? dateOnlyInLima(item.dueAt) : workload.today)) <
+                workload.today,
+            })),
+          ),
+          scheduledFollowUps: page(
+            followUps.map((item) => ({
+              id: item.id,
+              patient: pseudonyms.tokenFor(
+                item.subjectPatientId,
+                item.subjectPatientName,
+              ),
+              hasEmail: item.patientHasEmail,
+              agentId: item.agentId,
+              status: item.status,
+              type: item.type,
+              purpose: item.purpose,
+              scheduledOn: item.scheduledOn,
+              scheduledAt: item.scheduledAt,
+            })),
+          ),
         };
       },
     };
