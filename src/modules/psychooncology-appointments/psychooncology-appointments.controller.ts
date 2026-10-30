@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -34,6 +35,7 @@ import { FindPsychooncologyAppointmentsQueryDto } from './dto/list-psychooncolog
 import { UpdatePsychooncologyAppointmentDto } from './dto/update-psychooncology-appointment.dto';
 import { PsychooncologyAppointmentResponseDto } from './dto/psychooncology-appointment-response.dto';
 import { ReschedulePsychooncologyAppointmentDto } from './dto/reschedule-psychooncology-appointment.dto';
+import { SetReminderMessageDto } from '../reminders/dto/set-reminder-message.dto';
 import { AppointmentReminderResponseDto } from './dto/appointment-reminder-response.dto';
 import { UnmanagedNoShowsResponseDto } from './dto/unmanaged-no-shows-response.dto';
 import { PsychooncologyAppointmentsService } from './psychooncology-appointments.service';
@@ -216,6 +218,23 @@ export class PsychooncologyAppointmentsController {
     @CurrentUser() user: User,
   ): Promise<AppointmentReminderResponseDto> {
     return this.service.reminderMessage(id, user);
+  }
+
+  @Put(':id/reminder/message')
+  @Roles(...MANAGE)
+  @ApiOperation({
+    summary:
+      'Save the reminder text of a session (empty restores the suggested text)',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: AppointmentReminderResponseDto })
+  @ApiConflictResponse({ description: 'Session not pending' })
+  setReminderMessage(
+    @Param('id') id: string,
+    @Body() dto: SetReminderMessageDto,
+    @CurrentUser() user: User,
+  ): Promise<AppointmentReminderResponseDto> {
+    return this.service.setReminderMessage(id, dto.text, user);
   }
 
   @Patch(':id/reminder/sent')

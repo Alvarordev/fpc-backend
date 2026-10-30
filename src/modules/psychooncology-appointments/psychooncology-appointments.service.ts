@@ -1,4 +1,5 @@
 import { Companion } from '../../database/entities/companion.entity';
+import { formatDateEs } from '../reminders/reminder-message';
 import { EmailService } from '../../integrations/email/email.service';
 import {
   BadRequestException,
@@ -614,6 +615,21 @@ export class PsychooncologyAppointmentsService {
     return this.toReminder(appointment);
   }
 
+  /** Guarda el texto del recordatorio; vacío vuelve al texto sugerido. */
+  async setReminderMessage(
+    id: string,
+    text: string | null | undefined,
+    user: User,
+  ) {
+    const appointment = await this.findOne(id, user);
+    this.assertPending(appointment, 'editar el recordatorio de');
+    appointment.reminderCustomMessage = text?.trim() || null;
+    await this.appointments.update(appointment.id, {
+      reminderCustomMessage: appointment.reminderCustomMessage,
+    });
+    return this.toReminder(appointment);
+  }
+
   async markReminderSent(id: string, user: User) {
     const appointment = await this.findOne(id, user);
     this.assertPending(appointment, 'recordar');
@@ -823,7 +839,9 @@ export class PsychooncologyAppointmentsService {
           dateStyle: 'full',
           timeStyle: 'short',
         }).format(appointment.scheduledAt)
-      : appointment.scheduledOn;
+      : appointment.scheduledOn
+        ? formatDateEs(appointment.scheduledOn)
+        : 'día por confirmar';
     const volunteer = appointment.volunteer
       ? `${appointment.volunteer.firstName} ${appointment.volunteer.lastName}`
       : null;
@@ -841,9 +859,13 @@ export class PsychooncologyAppointmentsService {
     lines.push(
       'Si no puede asistir, por favor avísenos. Fundación Peruana de Cáncer.',
     );
+    const suggested = lines.join('\n');
     return {
       appointmentId: appointment.id,
-      message: lines.join('\n'),
+      // El texto del agente reemplaza al sugerido en la copia y en el envío.
+      message: appointment.reminderCustomMessage?.trim() || suggested,
+      defaultMessage: suggested,
+      isCustom: Boolean(appointment.reminderCustomMessage),
       reminderMode: appointment.reminderMode,
       remindAt: appointment.remindAt,
       reminderSentAt: appointment.reminderSentAt,
@@ -1087,8 +1109,9 @@ export class PsychooncologyAppointmentsService {
   }
 
   private slotDate(availability: VolunteerAvailability) {
+    // Los horarios del voluntario son hora de Lima (UTC-5, sin horario de verano).
     const scheduledAt = new Date(
-      `${availability.date}T${availability.startTime}Z`,
+      `${availability.date}T${availability.startTime}-05:00`,
     );
     if (Number.isNaN(scheduledAt.valueOf()))
       throw new BadRequestException(

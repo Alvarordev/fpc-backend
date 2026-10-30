@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -29,6 +30,7 @@ import { CompleteReminderDto } from './dto/complete-reminder.dto';
 import { CreateReminderDto } from './dto/create-reminder.dto';
 import { ListRemindersDto } from './dto/list-reminders.dto';
 import { UpdateReminderDto } from './dto/update-reminder.dto';
+import { SetReminderMessageDto } from './dto/set-reminder-message.dto';
 import {
   ReminderMessageResponseDto,
   ReminderResponseDto,
@@ -83,7 +85,9 @@ export class RemindersController {
   @ApiOperation({ summary: 'Update a pending reminder' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: ReminderResponseDto })
-  @ApiBadRequestResponse({ description: 'No se puede editar un recordatorio cerrado.' })
+  @ApiBadRequestResponse({
+    description: 'No se puede editar un recordatorio cerrado.',
+  })
   @ApiForbiddenResponse({
     description: 'Agents can only update their own reminders',
   })
@@ -109,6 +113,25 @@ export class RemindersController {
     @CurrentUser() user: User,
   ): Promise<ReminderMessageResponseDto> {
     return this.service.getMessage(id, user);
+  }
+
+  @Put(':id/message')
+  @Roles(...WRITE)
+  @ApiOperation({
+    summary:
+      'Save the email text of a pending reminder (empty restores the suggested text)',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: ReminderMessageResponseDto })
+  @ApiBadRequestResponse({
+    description: 'No se puede editar un recordatorio cerrado.',
+  })
+  setMessage(
+    @Param('id') id: string,
+    @Body() dto: SetReminderMessageDto,
+    @CurrentUser() user: User,
+  ): Promise<ReminderMessageResponseDto> {
+    return this.service.setMessage(id, dto.text, user);
   }
 
   @Post(':id/send-email')

@@ -57,6 +57,7 @@ import {
   timeInLima,
 } from './appointment-reminder';
 import { buildReminderMessage } from './reminder-message';
+import { CatalogValueService } from '../catalogs/catalog-value.service';
 
 const DISPATCH_BATCH_SIZE = 50;
 
@@ -83,6 +84,7 @@ export class RemindersService {
     private readonly followUpsService: FollowUpsService,
     private readonly email: EmailService,
     private readonly audit: AuditContextService,
+    private readonly catalogValues: CatalogValueService,
   ) {}
 
   async create(input: CreateReminderDto, user: User) {
@@ -91,9 +93,7 @@ export class RemindersService {
       kind === ReminderKind.MEDICAL_APPOINTMENT &&
       !input.medicalAppointment?.specialty?.trim()
     ) {
-      throw new BadRequestException(
-        'Selecciona la especialidad de la cita.',
-      );
+      throw new BadRequestException('Selecciona la especialidad de la cita.');
     }
 
     const [assignedAgentId] = await Promise.all([
@@ -343,7 +343,9 @@ export class RemindersService {
           },
         });
         if (!appointment)
-          throw new NotFoundException('No se encontró la cita médica vinculada.');
+          throw new NotFoundException(
+            'No se encontró la cita médica vinculada.',
+          );
         const referral = normalizeReferralFields(input.medicalAppointment);
         Object.assign(appointment, {
           specialty:
@@ -424,7 +426,9 @@ export class RemindersService {
     const item = await this.findOne(id);
     await this.assertWriteScope(item, user);
     if (item.status !== ReminderStatus.PENDING)
-      throw new BadRequestException('Solo se puede completar un recordatorio pendiente.');
+      throw new BadRequestException(
+        'Solo se puede completar un recordatorio pendiente.',
+      );
 
     if (item.kind === ReminderKind.MEDICAL_APPOINTMENT) {
       if (!input.medicalAppointment) {
@@ -451,7 +455,9 @@ export class RemindersService {
     const item = await this.findOne(id);
     await this.assertWriteScope(item, user);
     if (item.status !== ReminderStatus.PENDING)
-      throw new BadRequestException('Solo se puede descartar un recordatorio pendiente.');
+      throw new BadRequestException(
+        'Solo se puede descartar un recordatorio pendiente.',
+      );
 
     if (
       item.kind === ReminderKind.MEDICAL_APPOINTMENT &&
@@ -469,7 +475,9 @@ export class RemindersService {
     const item = await this.findOne(id);
     await this.assertWriteScope(item, user);
     if (item.status !== ReminderStatus.PENDING)
-      throw new BadRequestException('No se puede editar un recordatorio cerrado.');
+      throw new BadRequestException(
+        'No se puede editar un recordatorio cerrado.',
+      );
     const assignedAgentId = input.assignedAgentId
       ? await this.resolveAgentId(input.assignedAgentId, user)
       : undefined;
@@ -633,7 +641,7 @@ export class RemindersService {
   async getMessage(id: string, user: User) {
     const item = await this.findOne(id);
     await this.access.assertCanRead(item.subjectPatientId, user);
-    const message = buildReminderMessage(item);
+    const message = await this.messageFor(item);
     return {
       reminderId: item.id,
       patientName: item.subjectPatient?.fullName ?? null,
@@ -641,14 +649,33 @@ export class RemindersService {
       email: item.subjectPatient?.email ?? null,
       subject: message.subject,
       text: message.text,
+      defaultText: message.defaultText,
+      isCustom: Boolean(item.customMessage),
     };
+  }
+
+  /** Guarda el texto del correo; vacío vuelve al texto sugerido. */
+  async setMessage(id: string, text: string | null | undefined, user: User) {
+    const item = await this.findOne(id);
+    await this.assertWriteScope(item, user);
+    if (item.status !== ReminderStatus.PENDING)
+      throw new BadRequestException(
+        'No se puede editar un recordatorio cerrado.',
+      );
+    item.customMessage = text?.trim() || null;
+    await this.repository.update(item.id, {
+      customMessage: item.customMessage,
+    });
+    return this.getMessage(id, user);
   }
 
   async sendEmail(id: string, user: User) {
     const item = await this.findOne(id);
     await this.assertWriteScope(item, user);
     if (item.status !== ReminderStatus.PENDING || item.isHistorical)
-      throw new BadRequestException('Solo se puede enviar un recordatorio pendiente.');
+      throw new BadRequestException(
+        'Solo se puede enviar un recordatorio pendiente.',
+      );
     if (!item.subjectPatient?.email)
       throw new BadRequestException('El paciente no tiene correo registrado.');
     await this.deliver(item);
@@ -659,7 +686,9 @@ export class RemindersService {
     const item = await this.findOne(id);
     await this.assertWriteScope(item, user);
     if (item.status !== ReminderStatus.PENDING || item.isHistorical)
-      throw new BadRequestException('Solo se puede marcar un recordatorio pendiente.');
+      throw new BadRequestException(
+        'Solo se puede marcar un recordatorio pendiente.',
+      );
     item.deliveryStatus = ReminderDeliveryStatus.SENT;
     item.sentAt = new Date();
     item.deliveryError = null;
@@ -706,16 +735,44 @@ export class RemindersService {
     }
   }
 
+  /** El texto del agente reemplaza al sugerido; el asunto se mantiene. */
+  private async messageFor(item: Reminder) {
+    const suggested = await this.suggestedMessageFor(item);
+    return {
+      subject: suggested.subject,
+      text: item.customMessage?.trim() || suggested.text,
+      defaultText: suggested.text,
+    };
+  }
+
+  private async suggestedMessageFor(item: Reminder) {
+    const appointment = item.medicalAppointment;
+    if (!appointment?.specialty) return buildReminderMessage(item);
+    const resolved = await this.catalogValues.tryResolve(
+      'medical_specialty',
+      appointment.specialty,
+      { allowInactive: true, otherText: appointment.specialtyOther },
+    );
+    const label =
+      resolved?.code === 'OTRO' && resolved.other
+        ? resolved.other
+        : resolved?.label;
+    return buildReminderMessage(item, label);
+  }
+
   private async deliver(item: Reminder) {
     const email = item.subjectPatient?.email?.trim();
-    const message = buildReminderMessage(item);
+    const message = await this.messageFor(item);
     const result = email
       ? await this.email.send({
           to: email,
           subject: message.subject,
           text: message.text,
         })
-      : ({ status: 'FAILED', error: 'El paciente no tiene correo registrado.' } as const);
+      : ({
+          status: 'FAILED',
+          error: 'El paciente no tiene correo registrado.',
+        } as const);
     const patch =
       result.status === 'SENT'
         ? {
@@ -916,7 +973,9 @@ export class RemindersService {
     completedOn: string | undefined,
   ) {
     if (!isDateOnlyRangeValid(dueOn, completedOn))
-      throw new BadRequestException('La fecha de realización no puede ser anterior a la del recordatorio.');
+      throw new BadRequestException(
+        'La fecha de realización no puede ser anterior a la del recordatorio.',
+      );
   }
 
   private async assertWriteScope(item: Reminder, user: User) {

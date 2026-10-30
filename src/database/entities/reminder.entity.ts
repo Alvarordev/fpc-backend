@@ -101,6 +101,9 @@ export class Reminder {
   sentAt!: Date | null;
   @Column({ name: 'delivery_error', type: 'text', nullable: true })
   deliveryError!: string | null;
+  /** Texto del correo escrito por el agente; null usa el texto sugerido. */
+  @Column({ name: 'custom_message', type: 'text', nullable: true })
+  customMessage!: string | null;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })

@@ -171,6 +171,9 @@ export class PsychooncologyAppointment {
   remindAt!: Date | null;
   @Column({ name: 'reminder_sent_at', type: 'timestamptz', nullable: true })
   reminderSentAt!: Date | null;
+  /** Texto del recordatorio escrito por el agente; null usa el texto sugerido. */
+  @Column({ name: 'reminder_custom_message', type: 'text', nullable: true })
+  reminderCustomMessage!: string | null;
   @Column({ name: 'no_show_managed_at', type: 'timestamptz', nullable: true })
   noShowManagedAt!: Date | null;
   @Column({ name: 'no_show_managed_by_id', type: 'uuid', nullable: true })

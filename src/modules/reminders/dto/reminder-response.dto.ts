@@ -66,4 +66,8 @@ export class ReminderMessageResponseDto {
   @ApiProperty() subject!: string;
   @ApiProperty({ description: 'Plain text ready to copy (e.g. WhatsApp)' })
   text!: string;
+  @ApiProperty({ description: 'Texto sugerido por el sistema' })
+  defaultText!: string;
+  @ApiProperty({ description: 'El agente escribió su propio texto' })
+  isCustom!: boolean;
 }
