@@ -20284,6 +20284,15 @@
             "type": "string",
             "format": "uuid",
             "description": "Follow-up in which the deactivation was decided"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the patient actually left the program (historical loads). Defaults to now."
+          },
+          "reasonDetail": {
+            "type": "string",
+            "description": "Free-text notes about the dropout"
           }
         },
         "required": [

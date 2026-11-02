@@ -742,13 +742,20 @@ export class PatientsService {
     return this.dataSource.transaction(async (manager) => {
       const patient = await this.lockPatient(id, manager);
       await this.assertActivityFollowUp(id, input.followUpId, manager);
-      const occurredAt = new Date();
+      const occurredAt = await this.deactivationDate(
+        id,
+        input.occurredAt,
+        manager,
+      );
+      const reasonDetail = input.reasonDetail?.trim() || null;
       const deceasedAt =
         input.reason === DeactivationReason.DECEASED
           ? (input.deceasedAt ?? null)
           : null;
       patient.activityStatus = PatientActivityStatus.INACTIVE;
       patient.deactivationReason = input.reason;
+      // The patient cache only keeps a detail for legacy OTHER; the notes
+      // live on the activity event.
       patient.deactivationReasonDetail = null;
       patient.deactivatedAt = occurredAt;
       patient.deceasedAt = deceasedAt;
@@ -757,7 +764,7 @@ export class PatientsService {
         patientId: id,
         status: PatientActivityStatus.INACTIVE,
         reason: input.reason,
-        reasonDetail: null,
+        reasonDetail,
         deceasedAt,
         followUpId: input.followUpId ?? null,
         occurredAt,
@@ -799,6 +806,34 @@ export class PatientsService {
     });
     await this.invalidations.markDirty(id, manager);
     return reactivated;
+  }
+
+  /**
+   * Historical loads backdate the dropout to when it really happened (CH-2).
+   * It can't predate the last activity change: the patient's current status
+   * is the latest event, so an older one would be hidden behind it.
+   */
+  private async deactivationDate(
+    patientId: string,
+    occurredAt: string | undefined,
+    manager: EntityManager,
+  ): Promise<Date> {
+    const now = new Date();
+    if (!occurredAt) return now;
+    const date = new Date(occurredAt);
+    if (date > now)
+      throw new BadRequestException(
+        'La fecha de abandono no puede ser futura.',
+      );
+    const last = await manager.getRepository(PatientActivityEvent).findOne({
+      where: { patientId },
+      order: { occurredAt: 'DESC' },
+    });
+    if (last && date < last.occurredAt)
+      throw new BadRequestException(
+        'La fecha de abandono no puede ser anterior al último cambio de estado del paciente.',
+      );
+    return date;
   }
 
   private async lockPatient(id: string, manager: EntityManager) {
