@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsIn, IsOptional, IsUUID } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { DeactivationReason } from '../../../database/entities/deactivation-reason.enum';
 
 /** OTHER only exists for legacy deactivations; new ones pick a catalog reason. */
@@ -24,6 +30,20 @@ export class DeactivatePatientDto {
   @IsOptional()
   @IsUUID()
   followUpId?: string;
+
+  @ApiPropertyOptional({
+    format: 'date-time',
+    description:
+      'When the patient actually left the program (historical loads). Defaults to now.',
+  })
+  @IsOptional()
+  @IsDateString()
+  occurredAt?: string;
+
+  @ApiPropertyOptional({ description: 'Free-text notes about the dropout' })
+  @IsOptional()
+  @IsString()
+  reasonDetail?: string;
 }
 
 export class ReactivatePatientDto {
