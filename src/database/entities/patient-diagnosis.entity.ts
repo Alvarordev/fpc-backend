@@ -46,7 +46,15 @@ export class PatientDiagnosis {
   @ManyToOne(() => FollowUp)
   @JoinColumn({ name: 'follow_up_id' })
   followUp!: FollowUp;
+  /** Existing diagnoses remain the general diagnosis. */
   @Column({ type: 'text' }) diagnosis!: string;
+  @Column({
+    name: 'specific_diagnosis',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  specificDiagnosis!: string | null;
   @Column({ name: 'diagnosis_other', type: 'text', nullable: true })
   diagnosisOther!: string | null;
   @Column({ name: 'cancer_stage', type: 'varchar', length: 100, nullable: true })

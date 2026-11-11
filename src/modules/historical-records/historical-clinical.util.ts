@@ -219,6 +219,13 @@ export async function upsertHistoricalClinicalData(
           ([key]) => key !== 'mode' && key !== 'replacementDiagnosisId',
         ),
       );
+      if (values.specificDiagnosis !== undefined) {
+        updatable.specificDiagnosis =
+          await services.diagnoses.resolveSpecificDiagnosis(
+            values.specificDiagnosis,
+            manager,
+          );
+      }
       await repository.save(Object.assign(existing, updatable));
       if (clientRef) createdDiagnoses.set(clientRef, existing);
       continue;

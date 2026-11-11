@@ -17,6 +17,15 @@ import { DurationDto } from '../../../../../shared/duration/duration.dto';
 export class CreatePatientDiagnosisDto {
   @IsUUID() followUpId!: string;
   @IsString() diagnosis!: string;
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: 'Optional cancer_specific_diagnosis catalog code',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  specificDiagnosis?: string | null;
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
   @IsString()

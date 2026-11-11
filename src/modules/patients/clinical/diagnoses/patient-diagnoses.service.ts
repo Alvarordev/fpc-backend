@@ -141,6 +141,10 @@ export class PatientDiagnosesService {
       input.diagnosis,
       { otherText: diagnosisOther, manager },
     );
+    const specificDiagnosis = await this.resolveSpecificDiagnosis(
+      input.specificDiagnosis,
+      manager,
+    );
     const resolvedSpecialty = await this.catalogValues.resolveOptional(
       'medical_specialty',
       input.diagnosisSpecialty,
@@ -165,6 +169,7 @@ export class PatientDiagnosesService {
     const values = {
       ...rest,
       diagnosis: resolvedDiagnosis.code,
+      specificDiagnosis,
       diagnosisOther: resolvedDiagnosis.other,
       diagnosisSpecialty: resolvedSpecialty?.code ?? null,
       diagnosisSpecialtyOther: resolvedSpecialty?.other ?? null,
@@ -262,6 +267,9 @@ export class PatientDiagnosesService {
       followUpId: _followUpId,
       changeReason,
       waitTimeForDiagnosis,
+      diagnosis: generalDiagnosis,
+      diagnosisOther,
+      specificDiagnosis,
       diagnosisSpecialty,
       diagnosisSpecialtyOther,
       cancerStage,
@@ -270,6 +278,29 @@ export class PatientDiagnosesService {
     const next: Partial<PatientDiagnosis> = {};
     for (const [key, value] of Object.entries(rest))
       if (value !== undefined) (next as Record<string, unknown>)[key] = value;
+
+    // Preserve legacy codes and their other text when the selection is unchanged.
+    if (
+      generalDiagnosis !== undefined &&
+      (generalDiagnosis !== diagnosis.diagnosis || diagnosisOther !== undefined)
+    ) {
+      const resolved = await this.catalogValues.resolve(
+        'cancer_diagnosis',
+        generalDiagnosis,
+        { otherText: diagnosisOther, manager },
+      );
+      next.diagnosis = resolved.code;
+      next.diagnosisOther = resolved.other;
+    }
+    if (
+      specificDiagnosis !== undefined &&
+      specificDiagnosis !== diagnosis.specificDiagnosis
+    ) {
+      next.specificDiagnosis = await this.resolveSpecificDiagnosis(
+        specificDiagnosis,
+        manager,
+      );
+    }
 
     // Re-sending the same specialty without its "other" text keeps that text.
     const keepsSpecialty =
@@ -342,6 +373,18 @@ export class PatientDiagnosesService {
     await this.invalidations.markDirty(patientId, manager);
     return saved;
   }
+  async resolveSpecificDiagnosis(
+    value: string | null | undefined,
+    manager?: EntityManager,
+  ): Promise<string | null> {
+    const resolved = await this.catalogValues.resolveOptional(
+      'cancer_specific_diagnosis',
+      value,
+      { manager },
+    );
+    return resolved?.code ?? null;
+  }
+
   async findAll(patientId: string, user: User) {
     await this.patients.assertCanRead(patientId, user);
     return this.repository.find({

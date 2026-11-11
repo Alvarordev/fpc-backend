@@ -15,6 +15,7 @@ export const CATALOG_KINDS = [
   'native_language',
   'medical_specialty',
   'cancer_diagnosis',
+  'cancer_specific_diagnosis',
   'entry_source',
   'entry_sub_source',
   'zone_type',
@@ -50,6 +51,7 @@ export type CatalogKind = (typeof CATALOG_KINDS)[number];
 /** Kinds AGENT/FOUNDATION may create via POST /catalogs (same idea as hospitals). */
 export const OPEN_CATALOG_KINDS = [
   'cancer_diagnosis',
+  'cancer_specific_diagnosis',
   'medical_specialty',
   'treatment_type',
   'native_language',
@@ -78,7 +80,8 @@ export const CATALOG_KIND_LABELS: Record<CatalogKind, string> = {
   eps_provider: 'Proveedor EPS',
   native_language: 'Lengua nativa',
   medical_specialty: 'Especialidad médica',
-  cancer_diagnosis: 'Diagnóstico oncológico',
+  cancer_diagnosis: 'Diagnóstico general',
+  cancer_specific_diagnosis: 'Diagnóstico específico',
   entry_source: 'Punto de ingreso',
   entry_sub_source: 'Cómo se enteró concretamente',
   zone_type: 'Tipo de zona',

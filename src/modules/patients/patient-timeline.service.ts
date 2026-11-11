@@ -396,6 +396,7 @@ export class PatientTimelineService {
         ) AS occurred_at,
         jsonb_build_object(
           'diagnosis', diagnosis.diagnosis,
+          'specificDiagnosis', diagnosis.specific_diagnosis,
           'cancerStage', diagnosis.cancer_stage,
            'diagnosisDate', diagnosis.diagnosis_date,
            'diagnosisSpecialty', diagnosis.diagnosis_specialty,

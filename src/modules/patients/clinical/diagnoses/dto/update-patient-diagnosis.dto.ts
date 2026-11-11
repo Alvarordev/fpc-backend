@@ -14,8 +14,8 @@ import { Type } from 'class-transformer';
 import { DurationDto } from '../../../../../shared/duration/duration.dto';
 
 /**
- * Corrects an active diagnosis in place. The diagnosis code itself is not
- * editable: a different diagnosis is recorded with mode REPLACE instead.
+ * Corrects an active diagnosis in place, including its general and specific
+ * catalog codes. Clinical changes over time still use mode REPLACE.
  * Omitted fields keep their value; null clears a nullable field.
  */
 export class UpdatePatientDiagnosisDto {
@@ -35,6 +35,28 @@ export class UpdatePatientDiagnosisDto {
   @IsString()
   @MaxLength(100)
   cancerStage?: string | null;
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Corrected general diagnosis catalog code',
+  })
+  @ValidateIf((_, value: unknown) => value !== undefined)
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  diagnosis?: string;
+  @ApiPropertyOptional({ type: String, nullable: true })
+  @IsOptional()
+  @IsString()
+  diagnosisOther?: string | null;
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: 'Optional cancer_specific_diagnosis catalog code; null clears it',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  specificDiagnosis?: string | null;
   @ApiPropertyOptional({ format: 'date', nullable: true })
   @ValidateIf((_, value: unknown) => value !== null)
   @IsOptional()

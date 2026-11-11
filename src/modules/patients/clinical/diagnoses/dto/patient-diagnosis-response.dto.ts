@@ -16,6 +16,9 @@ export class PatientDiagnosisResponseDto {
   @ApiProperty()
   diagnosis!: string;
 
+  @ApiProperty({ type: String, nullable: true })
+  specificDiagnosis!: string | null;
+
   @ApiProperty({ nullable: true })
   cancerStage!: string | null;
 
@@ -76,6 +79,7 @@ export class PatientDiagnosisResponseDto {
       patientId: diagnosis.patientId,
       followUpId: diagnosis.followUpId,
       diagnosis: diagnosis.diagnosis,
+      specificDiagnosis: diagnosis.specificDiagnosis ?? null,
       cancerStage: diagnosis.cancerStage,
       diagnosisDate: diagnosis.diagnosisDate,
       firstSymptomsDate: diagnosis.firstSymptomsDate,

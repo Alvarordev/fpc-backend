@@ -3968,6 +3968,7 @@
                 "native_language",
                 "medical_specialty",
                 "cancer_diagnosis",
+                "cancer_specific_diagnosis",
                 "entry_source",
                 "entry_sub_source",
                 "zone_type",
@@ -14686,6 +14687,12 @@
       "EnrollmentDiagnosisDto": {
         "type": "object",
         "properties": {
+          "specificDiagnosis": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100,
+            "description": "Optional cancer_specific_diagnosis catalog code"
+          },
           "diagnosisOther": {
             "type": "string",
             "nullable": true
@@ -17069,6 +17076,7 @@
               "native_language",
               "medical_specialty",
               "cancer_diagnosis",
+              "cancer_specific_diagnosis",
               "entry_source",
               "entry_sub_source",
               "zone_type",
@@ -18875,6 +18883,10 @@
           "diagnosis": {
             "type": "string"
           },
+          "specificDiagnosis": {
+            "type": "string",
+            "nullable": true
+          },
           "cancerStage": {
             "type": "string",
             "nullable": true
@@ -18964,6 +18976,7 @@
           "patientId",
           "followUpId",
           "diagnosis",
+          "specificDiagnosis",
           "cancerStage",
           "diagnosisDate",
           "firstSymptomsDate",
@@ -20328,6 +20341,12 @@
       "CreatePatientDiagnosisDto": {
         "type": "object",
         "properties": {
+          "specificDiagnosis": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100,
+            "description": "Optional cancer_specific_diagnosis catalog code"
+          },
           "diagnosisOther": {
             "type": "string",
             "nullable": true
@@ -20431,6 +20450,21 @@
             "type": "string",
             "nullable": true,
             "maxLength": 100
+          },
+          "diagnosis": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Corrected general diagnosis catalog code"
+          },
+          "diagnosisOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "specificDiagnosis": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100,
+            "description": "Optional cancer_specific_diagnosis catalog code; null clears it"
           },
           "diagnosisDate": {
             "type": "string",
@@ -21864,6 +21898,12 @@
       "DiagnosticStatusDiagnosisDto": {
         "type": "object",
         "properties": {
+          "specificDiagnosis": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100,
+            "description": "Optional cancer_specific_diagnosis catalog code"
+          },
           "diagnosisOther": {
             "type": "string",
             "nullable": true
@@ -23995,6 +24035,12 @@
       "UpdateHistoricalDiagnosisDto": {
         "type": "object",
         "properties": {
+          "specificDiagnosis": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100,
+            "description": "Optional cancer_specific_diagnosis catalog code"
+          },
           "diagnosisOther": {
             "type": "string",
             "nullable": true

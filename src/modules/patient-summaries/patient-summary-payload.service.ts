@@ -152,6 +152,7 @@ export class PatientSummaryPayloadService {
         : null,
       diagnoses: diagnoses.map((item) => ({
         diagnosis: item.diagnosis,
+        specificDiagnosis: item.specificDiagnosis ?? null,
         stage: item.cancerStage,
         date: item.diagnosisDate,
         firstSymptomsDate: item.firstSymptomsDate,
