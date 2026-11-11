@@ -15295,6 +15295,16 @@
           "noMedicalConsultationReason": {
             "type": "string"
           },
+          "appointmentGranted": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "grantedAppointmentDate": {
+            "type": "string"
+          },
+          "appointmentNotGrantedReason": {
+            "type": "string"
+          },
           "nextConsultationSpecialty": {
             "type": "string",
             "maxLength": 255
@@ -19561,6 +19571,19 @@
             "format": "date",
             "deprecated": true
           },
+          "appointmentGranted": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "grantedAppointmentDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "appointmentNotGrantedReason": {
+            "type": "string",
+            "nullable": true
+          },
           "isAwaitingDiagnosis": {
             "type": "boolean",
             "nullable": true,
@@ -19696,6 +19719,9 @@
           "hasMedicalConsultation",
           "noMedicalConsultationReason",
           "firstConsultationDate",
+          "appointmentGranted",
+          "grantedAppointmentDate",
+          "appointmentNotGrantedReason",
           "isAwaitingDiagnosis",
           "hasReferral",
           "referredHealthCenterId",
@@ -21422,6 +21448,16 @@
             "nullable": true
           },
           "noMedicalConsultationReason": {
+            "type": "string"
+          },
+          "appointmentGranted": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "grantedAppointmentDate": {
+            "type": "string"
+          },
+          "appointmentNotGrantedReason": {
             "type": "string"
           },
           "nextConsultationSpecialty": {
@@ -24323,6 +24359,16 @@
             "nullable": true
           },
           "noMedicalConsultationReason": {
+            "type": "string"
+          },
+          "appointmentGranted": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "grantedAppointmentDate": {
+            "type": "string"
+          },
+          "appointmentNotGrantedReason": {
             "type": "string"
           },
           "nextConsultationSpecialty": {
