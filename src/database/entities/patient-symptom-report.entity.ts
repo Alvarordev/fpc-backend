@@ -87,6 +87,12 @@ export class PatientSymptomReport {
   noMedicalConsultationReason!: string | null;
   @Column({ name: 'first_consultation_date', type: 'date', nullable: true })
   firstConsultationDate!: string | null;
+  @Column({ name: 'appointment_granted', type: 'boolean', nullable: true })
+  appointmentGranted!: boolean | null;
+  @Column({ name: 'granted_appointment_date', type: 'date', nullable: true })
+  grantedAppointmentDate!: string | null;
+  @Column({ name: 'appointment_not_granted_reason', type: 'text', nullable: true })
+  appointmentNotGrantedReason!: string | null;
   @Column({ name: 'is_awaiting_diagnosis', type: 'boolean', nullable: true })
   isAwaitingDiagnosis!: boolean | null;
   @Column({ name: 'has_referral', type: 'boolean', nullable: true })

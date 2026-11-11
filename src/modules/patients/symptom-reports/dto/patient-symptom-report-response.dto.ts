@@ -66,6 +66,12 @@ export class PatientSymptomReportResponseDto {
 
   @ApiProperty({ format: 'date', nullable: true, deprecated: true })
   firstConsultationDate!: string | null;
+  @ApiProperty({ type: Boolean, nullable: true })
+  appointmentGranted!: boolean | null;
+  @ApiProperty({ type: String, format: 'date', nullable: true })
+  grantedAppointmentDate!: string | null;
+  @ApiProperty({ type: String, nullable: true })
+  appointmentNotGrantedReason!: string | null;
 
   @ApiProperty({ nullable: true, deprecated: true })
   isAwaitingDiagnosis!: boolean | null;
@@ -150,6 +156,9 @@ export class PatientSymptomReportResponseDto {
       hasMedicalConsultation: report.hasMedicalConsultation,
       noMedicalConsultationReason: report.noMedicalConsultationReason,
       firstConsultationDate: report.firstConsultationDate,
+      appointmentGranted: report.appointmentGranted,
+      grantedAppointmentDate: report.grantedAppointmentDate,
+      appointmentNotGrantedReason: report.appointmentNotGrantedReason,
       isAwaitingDiagnosis: report.isAwaitingDiagnosis,
       hasReferral: report.hasReferral,
       referredHealthCenterId: report.referredHealthCenterId,

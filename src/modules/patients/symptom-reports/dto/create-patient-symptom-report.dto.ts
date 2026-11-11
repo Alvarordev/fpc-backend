@@ -47,6 +47,12 @@ export class CreatePatientSymptomReportDto {
   @IsOptional()
   @IsDateString()
   firstConsultationDate?: string;
+  @IsOptional() @IsBoolean() appointmentGranted?: boolean | null;
+  @IsOptional()
+  @IsDateString()
+  @Matches(DATE_ONLY_PATTERN)
+  grantedAppointmentDate?: string;
+  @IsOptional() @IsString() appointmentNotGrantedReason?: string;
   @ApiPropertyOptional({ deprecated: true })
   @IsOptional()
   @IsBoolean()

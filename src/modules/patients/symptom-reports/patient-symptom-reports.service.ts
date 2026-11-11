@@ -147,6 +147,9 @@ export class PatientSymptomReportsService {
           'Indica por qué no tuvo consulta médica.',
         );
       normalized.firstConsultationDate = undefined;
+      normalized.appointmentGranted = undefined;
+      normalized.grantedAppointmentDate = undefined;
+      normalized.appointmentNotGrantedReason = undefined;
       normalized.isAwaitingDiagnosis = undefined;
       normalized.hasReferral = undefined;
       normalized.referredHealthCenterId = undefined;
@@ -162,10 +165,18 @@ export class PatientSymptomReportsService {
         throw new BadRequestException(
           'Selecciona el establecimiento y la especialidad de la consulta.',
         );
-      if (!input.firstConsultationDate)
-        throw new BadRequestException(
-          'Indica la fecha de la primera consulta.',
-        );
+      if (input.appointmentGranted === true) {
+        if (!input.grantedAppointmentDate)
+          throw new BadRequestException('Indica la fecha de la cita.');
+        normalized.appointmentNotGrantedReason = undefined;
+      } else if (input.appointmentGranted === false) {
+        if (!present(input.appointmentNotGrantedReason))
+          throw new BadRequestException('Indica por qué no le dieron la cita.');
+        normalized.grantedAppointmentDate = undefined;
+      } else {
+        normalized.grantedAppointmentDate = undefined;
+        normalized.appointmentNotGrantedReason = undefined;
+      }
       if (
         input.nextConsultationDate &&
         !present(input.nextConsultationSpecialty)
