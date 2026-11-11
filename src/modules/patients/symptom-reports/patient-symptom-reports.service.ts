@@ -146,6 +146,9 @@ export class PatientSymptomReportsService {
           'noMedicalConsultationReason is required when no consultation was made',
         );
       normalized.firstConsultationDate = undefined;
+      normalized.appointmentGranted = undefined;
+      normalized.grantedAppointmentDate = undefined;
+      normalized.appointmentNotGrantedReason = undefined;
       normalized.isAwaitingDiagnosis = undefined;
       normalized.hasReferral = undefined;
       normalized.referredHealthCenterId = undefined;
@@ -161,10 +164,22 @@ export class PatientSymptomReportsService {
         throw new BadRequestException(
           'healthCenterId and specialty are required when a consultation was made',
         );
-      if (!input.firstConsultationDate)
-        throw new BadRequestException(
-          'firstConsultationDate is required when a consultation was made',
-        );
+      if (input.appointmentGranted === true) {
+        if (!input.grantedAppointmentDate)
+          throw new BadRequestException(
+            'grantedAppointmentDate is required when the appointment was granted',
+          );
+        normalized.appointmentNotGrantedReason = undefined;
+      } else if (input.appointmentGranted === false) {
+        if (!present(input.appointmentNotGrantedReason))
+          throw new BadRequestException(
+            'appointmentNotGrantedReason is required when the appointment was not granted',
+          );
+        normalized.grantedAppointmentDate = undefined;
+      } else {
+        normalized.grantedAppointmentDate = undefined;
+        normalized.appointmentNotGrantedReason = undefined;
+      }
       if (input.nextConsultationDate && !present(input.nextConsultationSpecialty))
         throw new BadRequestException(
           'nextConsultationSpecialty is required when nextConsultationDate is set',
