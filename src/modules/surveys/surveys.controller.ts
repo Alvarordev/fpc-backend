@@ -18,7 +18,9 @@ import { SurveyType } from '../../database/entities/survey.entity';
 import { CreateSurveyDto } from './dto/create-survey.dto';
 import { ListSurveysDto } from './dto/list-surveys.dto';
 import { SurveyScriptQueryDto } from './dto/survey-script-query.dto';
+import { PendingSurveysQueryDto } from './dto/pending-surveys-query.dto';
 import {
+  PendingSurveyDto,
   PendingThreeMonthSurveyDto,
   SurveyResponseDto,
   SurveyScriptResponseDto,
@@ -88,5 +90,22 @@ export class SurveysController {
   })
   pendingThreeMonths(): Promise<PendingThreeMonthSurveyDto[]> {
     return this.service.pendingThreeMonths();
+  }
+
+  @Get('pending')
+  @Roles(...WRITE)
+  @ApiOperation({
+    summary:
+      'Patients pending a survey of the given type. ENROLLMENT is scoped to the agent who enrolled them; PSYCHOONCOLOGY = 4+ completed sessions; THREE_MONTHS = 90+ days enrolled; TALK = attended an educational talk.',
+  })
+  @ApiOkResponse({ type: PendingSurveyDto, isArray: true })
+  @ApiForbiddenResponse({
+    description: 'Volunteers cannot see pending surveys',
+  })
+  pending(
+    @Query() query: PendingSurveysQueryDto,
+    @CurrentUser() user: User,
+  ): Promise<PendingSurveyDto[]> {
+    return this.service.pending(query.type, user);
   }
 }

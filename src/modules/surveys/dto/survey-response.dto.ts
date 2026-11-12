@@ -37,3 +37,20 @@ export class PendingThreeMonthSurveyDto {
   @ApiProperty({ format: 'date' }) enrolledOn!: string;
   @ApiProperty() daysSinceEnrollment!: number;
 }
+
+export class PendingSurveyDto {
+  @ApiProperty({ format: 'uuid' }) patientId!: string;
+  @ApiProperty() fullName!: string;
+  @ApiProperty({ nullable: true, type: String }) documentNumber!: string | null;
+  @ApiProperty({ nullable: true, type: String }) primaryPhone!: string | null;
+  @ApiProperty({
+    format: 'date',
+    nullable: true,
+    type: String,
+    description:
+      'Fecha que origina el pendiente: enrolamiento, 4.ª sesión o asistencia a charla.',
+  })
+  since!: string | null;
+  @ApiProperty({ description: 'Contexto legible del pendiente.' })
+  detail!: string;
+}

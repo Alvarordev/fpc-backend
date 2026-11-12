@@ -11422,6 +11422,57 @@
         ]
       }
     },
+    "/surveys/pending": {
+      "get": {
+        "operationId": "SurveysController_pending",
+        "parameters": [
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ENROLLMENT",
+                "THREE_MONTHS",
+                "PSYCHOONCOLOGY",
+                "TALK"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PendingSurveyDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Volunteers cannot see pending surveys"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Patients pending a survey of the given type. ENROLLMENT is scoped to the agent who enrolled them; PSYCHOONCOLOGY = 4+ completed sessions; THREE_MONTHS = 90+ days enrolled; TALK = attended an educational talk.",
+        "tags": [
+          "surveys"
+        ]
+      }
+    },
     "/assistant/messages": {
       "post": {
         "description": "Runs the agent with read-only tool calls and stores the question and answer. Patients are pseudonymised for the model and rehydrated in the response.",
@@ -25947,9 +25998,10 @@
           },
           "rating": {
             "type": "number",
-            "minimum": 1,
+            "minimum": 0,
             "maximum": 5,
-            "example": 5
+            "example": 5,
+            "description": "0 = No indica"
           },
           "comment": {
             "type": "string",
@@ -26129,6 +26181,44 @@
           "primaryPhone",
           "enrolledOn",
           "daysSinceEnrollment"
+        ]
+      },
+      "PendingSurveyDto": {
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "documentNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "since": {
+            "type": "string",
+            "nullable": true,
+            "format": "date",
+            "description": "Fecha que origina el pendiente: enrolamiento, 4.ª sesión o asistencia a charla."
+          },
+          "detail": {
+            "type": "string",
+            "description": "Contexto legible del pendiente."
+          }
+        },
+        "required": [
+          "patientId",
+          "fullName",
+          "documentNumber",
+          "primaryPhone",
+          "since",
+          "detail"
         ]
       },
       "AskAssistantDto": {

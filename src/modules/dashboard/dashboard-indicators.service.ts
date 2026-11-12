@@ -1360,6 +1360,7 @@ export class DashboardIndicatorsService {
       FROM surveys survey
       JOIN cohort ON cohort.patient_id = survey.patient_id
       WHERE survey.answered_at >= ${p.from} AND survey.answered_at < ${p.to}
+        AND survey.rating BETWEEN 1 AND 5
       GROUP BY survey.type, survey.rating
     `;
   }

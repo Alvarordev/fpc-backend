@@ -25,10 +25,15 @@ export class CreateSurveyDto {
   @IsEnum(SurveyType)
   type!: SurveyType;
 
-  @ApiProperty({ minimum: 1, maximum: 5, example: 5 })
+  @ApiProperty({
+    minimum: 0,
+    maximum: 5,
+    example: 5,
+    description: '0 = No indica',
+  })
   @Type(() => Number)
   @IsInt()
-  @Min(1)
+  @Min(0)
   @Max(5)
   rating!: number;
 
