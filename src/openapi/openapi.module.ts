@@ -82,6 +82,8 @@ import { PatientPsychooncologySupportAssessmentsController } from '../modules/pa
 import { PatientPsychooncologySupportAssessmentsService } from '../modules/patients/clinical/psychooncology-support/patient-psychooncology-support-assessments.service';
 import { HistoricalRecordsController } from '../modules/historical-records/historical-records.controller';
 import { HistoricalRecordsService } from '../modules/historical-records/historical-records.service';
+import { RecordDeletionsController } from '../modules/record-deletions/record-deletions.controller';
+import { RecordDeletionsService } from '../modules/record-deletions/record-deletions.service';
 import { PatientNonOncologicalFollowUpsController } from '../modules/patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.controller';
 import { PatientNonOncologicalFollowUpsService } from '../modules/patients/clinical/non-oncological-follow-up/patient-non-oncological-follow-ups.service';
 
@@ -138,6 +140,7 @@ import { SupportTicketsService } from '../modules/support-tickets/support-ticket
     VolunteersController,
     VolunteerCalendarController,
     HistoricalRecordsController,
+    RecordDeletionsController,
     PatientNonOncologicalFollowUpsController,
     ExportsController,
     PatientChangeLogController,
@@ -195,6 +198,7 @@ import { SupportTicketsService } from '../modules/support-tickets/support-ticket
     { provide: VolunteersService, useValue: {} },
     { provide: VolunteerCalendarService, useValue: {} },
     { provide: HistoricalRecordsService, useValue: {} },
+    { provide: RecordDeletionsService, useValue: {} },
     { provide: PatientNonOncologicalFollowUpsService, useValue: {} },
     { provide: ExportsService, useValue: {} },
     { provide: PatientChangeLogService, useValue: {} },

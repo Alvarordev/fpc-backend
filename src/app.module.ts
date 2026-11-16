@@ -36,6 +36,7 @@ import { EmbeddedUnderscoreNamingStrategy } from './database/embedded-underscore
 import { TalkInterestsModule } from './modules/talk-interests/talk-interests.module';
 import { AssistantModule } from './modules/assistant/assistant.module';
 import { HistoricalRecordsModule } from './modules/historical-records/historical-records.module';
+import { RecordDeletionsModule } from './modules/record-deletions/record-deletions.module';
 
 import { SupportTicketsModule } from './modules/support-tickets/support-tickets.module';
 @Module({
@@ -104,6 +105,7 @@ import { SupportTicketsModule } from './modules/support-tickets/support-tickets.
     SurveysModule,
     ExportsModule,
     HistoricalRecordsModule,
+    RecordDeletionsModule,
     AssistantModule,
     TalkInterestsModule,
     AuditModule,

@@ -3490,6 +3490,61 @@
         "tags": [
           "follow-ups"
         ]
+      },
+      "delete": {
+        "description": "Works for any follow-up except an enrollment. Deletes the diagnoses, treatments, appointments, alerts, assessments, notes and social referrals recorded in it; records from other follow-ups that point to it only lose the link. Versioned records it replaced (insurance, treatments, appointments) become current again.",
+        "operationId": "RecordDeletionsController_deleteFollowUp",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may delete records"
+          },
+          "404": {
+            "description": "No se encontró el seguimiento.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The follow-up is an enrollment, or treatments from other follow-ups depend on its diagnoses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a follow-up and everything recorded in it",
+        "tags": [
+          "Record deletions (admin)"
+        ]
       }
     },
     "/follow-ups/{id}/schedule-next": {
@@ -6026,6 +6081,100 @@
         "summary": "Correct an active patient diagnosis",
         "tags": [
           "Patient diagnoses"
+        ]
+      },
+      "delete": {
+        "description": "Diagnostic status events and documents keep their data and lose the link. With withTreatments=true its treatments are deleted too. restoreDiagnosisId makes a retired diagnosis active again in the same transaction.",
+        "operationId": "RecordDeletionsController_deleteDiagnosis",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "diagnosisId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "withTreatments",
+            "required": false,
+            "in": "query",
+            "description": "Also delete the treatments recorded under the diagnosis. Without it, a diagnosis with treatments is rejected with 409.",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "restoreDiagnosisId",
+            "required": false,
+            "in": "query",
+            "description": "A retired diagnosis of the same patient to make active again, e.g. the one a mistaken REPLACE retired.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid query, or restoreDiagnosisId is the deleted diagnosis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may delete records"
+          },
+          "404": {
+            "description": "Diagnosis (or the one to restore) not found for the patient",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The diagnosis has treatments and withTreatments is not set, or the diagnosis to restore is already active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a patient diagnosis",
+        "tags": [
+          "Record deletions (admin)"
         ]
       }
     },
@@ -10349,6 +10498,62 @@
         "summary": "Update a historical psycho-oncology appointment",
         "tags": [
           "historical-records"
+        ]
+      }
+    },
+    "/patients/{patientId}/treatments/{treatmentId}": {
+      "delete": {
+        "description": "Deletes the treatment and its medications; documents lose the link. If it was the current version of its series, the latest remaining version becomes current.",
+        "operationId": "RecordDeletionsController_deleteTreatment",
+        "parameters": [
+          {
+            "name": "patientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "treatmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "401": {
+            "description": "JWT missing, invalid, or expired"
+          },
+          "403": {
+            "description": "Only administrators may delete records"
+          },
+          "404": {
+            "description": "Treatment not found for the patient",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a patient treatment",
+        "tags": [
+          "Record deletions (admin)"
         ]
       }
     },

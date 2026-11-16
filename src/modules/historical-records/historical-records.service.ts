@@ -34,10 +34,10 @@ import {
 import { UpdateHistoricalPsychooncologyAppointmentDto } from './dto/update-historical-psychooncology-appointment.dto';
 import {
   attachHistoricalClinicalData,
-  deleteHistoricalOwnedByFollowUp,
   upsertHistoricalClinicalData,
   type HistoricalClinicalServices,
 } from './historical-clinical.util';
+import { deleteRecordsOwnedByFollowUp } from '../record-deletions/record-cascade';
 
 @Injectable()
 export class HistoricalRecordsService {
@@ -199,7 +199,7 @@ export class HistoricalRecordsService {
           'No se puede eliminar el seguimiento de enrolamiento',
         );
 
-      await deleteHistoricalOwnedByFollowUp(manager, id);
+      await deleteRecordsOwnedByFollowUp(manager, id);
       await this.followUps.deleteHistorical(id, manager);
     });
   }
