@@ -8,6 +8,7 @@ import {
   ServiceUnavailableException,
   UnsupportedMediaTypeException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Readable } from 'node:stream';
 import {
@@ -28,6 +29,10 @@ import {
 import { UserRole } from '../../database/entities/user-role.enum';
 import { User } from '../../database/entities/user.entity';
 import {
+  EmailService,
+  type EmailMessage,
+} from '../../integrations/email/email.service';
+import {
   PATIENT_DOCUMENT_STORAGE,
   type PatientDocumentStorage,
 } from '../../integrations/storage/patient-document-storage';
@@ -39,6 +44,10 @@ import { CreateSupportTicketDto } from './dto/create-support-ticket.dto';
 import { CreateSupportTicketMessageDto } from './dto/create-support-ticket-message.dto';
 import { ListSupportTicketsDto } from './dto/list-support-tickets.dto';
 import { UpdateSupportTicketDto } from './dto/update-support-ticket.dto';
+import {
+  ticketNewMessageEmail,
+  ticketStatusChangedEmail,
+} from './support-ticket-emails';
 
 export const MAX_SUPPORT_TICKET_IMAGES = 6;
 export const MAX_SUPPORT_TICKET_IMAGE_BYTES = 10_485_760;
@@ -78,6 +87,8 @@ export class SupportTicketsService {
     private readonly dataSource: DataSource,
     @Inject(PATIENT_DOCUMENT_STORAGE)
     private readonly storage: PatientDocumentStorage,
+    private readonly email: EmailService,
+    private readonly config: ConfigService,
   ) {}
 
   async create(
@@ -152,6 +163,17 @@ export class SupportTicketsService {
         .getRepository(SupportTicket)
         .update(ticket.id, { reporterActivityAt: new Date() });
     });
+
+    if (ticket.createdById !== user.id)
+      this.notifyReporter(ticket, (to) =>
+        ticketStatusChangedEmail({
+          to,
+          ticket,
+          previousStatus: ticket.status,
+          status: input.status,
+          ticketsUrl: this.ticketsUrl(),
+        }),
+      );
     return this.findOne(id, user);
   }
 
@@ -205,6 +227,16 @@ export class SupportTicketsService {
         );
     });
 
+    if (!isReporter)
+      this.notifyReporter(ticket, (to) =>
+        ticketNewMessageEmail({
+          to,
+          ticket,
+          body,
+          imageCount: images.length,
+          ticketsUrl: this.ticketsUrl(),
+        }),
+      );
     return this.findOne(id, user);
   }
 
@@ -240,6 +272,32 @@ export class SupportTicketsService {
     } catch {
       throw new ServiceUnavailableException('Image is unavailable');
     }
+  }
+
+  /**
+   * Avisa por correo a quien reportó el ticket. Va después de guardar y no
+   * bloquea ni hace fallar la acción: un correo que no sale solo se registra.
+   */
+  private notifyReporter(
+    ticket: SupportTicket,
+    build: (to: string) => EmailMessage,
+  ): void {
+    const reporter = ticket.createdBy;
+    if (!reporter?.email || !reporter.isActive) return;
+    void this.email.send(build(reporter.email)).then((result) => {
+      if (result.status === 'FAILED')
+        this.logger.warn(
+          `Ticket #${ticket.ticketNumber}: no se pudo enviar el correo al reportante (${result.error})`,
+        );
+    });
+  }
+
+  private ticketsUrl(): string {
+    const configured = this.config.get<string>('FRONTEND_URL')?.trim();
+    const fallback = (this.config.get<string>('CORS_ORIGIN') ?? '')
+      .split(',')[0]
+      .trim();
+    return `${(configured || fallback).replace(/\/+$/, '')}/tickets`;
   }
 
   private async changeStatus(
